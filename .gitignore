@@ -27,3 +27,17 @@ vendor/eraser/
 
 # --- dispatch harness leakage ---
 .preflight-state.json
+
+# --- self-monitoring / health (PII-bearing: snapshots, dispatch queue, reports) ---
+snapshots/
+needs-fix/
+heartbeat.json
+health-report.txt
+run-log.jsonl
+
+# --- automated escalation (PII-bearing: letters, complaints, audit trail) ---
+escalations/
+letters/
+complaints/
+audit-log.jsonl
+escalation-rules.json
