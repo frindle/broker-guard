@@ -19,3 +19,26 @@ def classify_failure(error: dict) -> str:
     elif kind in ('captcha', 'timeout'):
         return 'broker_side'
     return 'tool_side'
+
+
+def build_report(runs):
+    ok = 0
+    failed = 0
+    by_broker = {}
+    for run in runs:
+        if run['ok']:
+            ok += 1
+        else:
+            failed += 1
+        broker_id = run['broker_id']
+        counts = by_broker.setdefault(broker_id, {'ok': 0, 'failed': 0})
+        if run['ok']:
+            counts['ok'] += 1
+        else:
+            counts['failed'] += 1
+    return {
+        'total': len(runs),
+        'ok': ok,
+        'failed': failed,
+        'by_broker': by_broker,
+    }
