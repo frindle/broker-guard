@@ -5,6 +5,7 @@ The ``presence`` table's schema is owned by ``state.init_db`` -- columns
 ``identity_key``, ``broker_id``, ``first_seen``, ``last_seen`` (the check-time
 column is ``last_seen``).
 """
+import json
 import sqlite3
 
 
@@ -35,3 +36,23 @@ def query_presence_history(conn: sqlite3.Connection, broker_id: str | None = Non
         }
         for row in cur.fetchall()
     ]
+
+
+def load_health_summary(lines: list[str]) -> dict:
+    """Return the most recent ``build_report`` JSON line from a rolling log.
+
+    Each element of ``lines`` is one JSON object as written by
+    ``broker_guard/health.py``'s ``build_report`` (keys ``total``, ``ok``,
+    ``failed``, ``by_broker``). Only the LAST line that parses to a dict is
+    returned; unparseable lines, non-object JSON and ``None`` entries are
+    skipped without raising. An empty list or an all-invalid one yields the
+    zeroed summary ``{'total': 0, 'ok': 0, 'failed': 0, 'by_broker': {}}``.
+    """
+    for line in reversed(lines):
+        try:
+            report = json.loads(line)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(report, dict):
+            return report
+    return {"total": 0, "ok": 0, "failed": 0, "by_broker": {}}
