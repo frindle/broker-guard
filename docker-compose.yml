@@ -1,0 +1,119 @@
+# broker-guard -- a scheduled/looping job, not a webserver. Nothing is published.
+#
+# Deployment note: IP / MAC / network placement is deliberately NOT decided here.
+# Plain bridge networking is used below; see the commented `macvlan` block at the
+# bottom for where a static homelab IP would be wired in.
+
+services:
+  broker-guard:
+    build:
+      context: .
+      args:
+        # false -> much smaller image, SERP-only detection (no Chromium).
+        INSTALL_BROWSERS: "true"
+    image: broker-guard:local
+    container_name: broker-guard
+    restart: unless-stopped
+
+    # No ports. This service only makes outbound calls.
+
+    volumes:
+      # PERSISTENT STATE + PII. None of this is baked into the image; all of it
+      # is gitignored and dockerignored. Back it up like you would a password DB.
+      #   ./state/profile.local.json  <- your identity (copy profile.example.json)
+      #   ./state/brokers.json        <- broker dataset, pulled from the PUBLIC repo
+      #   ./state/state.sqlite        <- presence history
+      - ./state:/data
+      # Structured JSON logs, alert digests and the heartbeat file.
+      - ./logs:/logs
+      # The vendored eraser binary + its config. Read-only: the container has no
+      # business rewriting the removal engine.
+      # Build it first:  cd vendor/eraser && go build -o ../../state/bin/eraser ./cmd/eraser
+      - ./state/bin:/opt/eraser/bin:ro
+      - ./state/eraser-config:/home/guard/.eraser:ro
+
+    environment:
+      # --- paths (match the volumes above; defaults already set in the image) ---
+      BG_PROFILE_PATH: /data/profile.local.json
+      BG_BROKERS_PATH: /data/brokers.json
+      BG_STATE_PATH: /data/state.sqlite
+      BG_LOG_DIR: /logs
+
+      # --- scheduling ---
+      BG_INTERVAL_SECONDS: "86400"   # one sweep per day; minimum accepted is 60
+      BG_RUN_ONCE: "false"
+
+      # --- SearXNG (self-hosted; REQUIRED for SERP detection) ---
+      # Point this at YOUR instance. Leave unset to disable SERP detection.
+      BG_SEARXNG_URL: "${BG_SEARXNG_URL:-}"
+      BG_SEARXNG_TIMEOUT_S: "20"
+      # Optional Authorization header value if your SearXNG sits behind auth.
+      BG_SEARXNG_AUTH: "${BG_SEARXNG_AUTH:-}"
+
+      # --- browser checks ---
+      BG_PLAYWRIGHT_ENABLED: "false"  # set true only if you built with browsers
+      BG_PLAYWRIGHT_HEADLESS: "true"
+      BG_PLAYWRIGHT_TIMEOUT_MS: "30000"
+
+      # --- removal engine ---
+      # Disabled by default, and DRY RUN by default even once enabled, so no
+      # opt-out request is ever sent until you deliberately turn both off.
+      BG_ERASER_ENABLED: "false"
+      BG_ERASER_DRY_RUN: "true"
+      BG_ERASER_BIN: /opt/eraser/bin/eraser
+      BG_ERASER_TIMEOUT_S: "300"
+
+      # --- alerting ---
+      # Optional. Your own webhook (Home Assistant, ntfy, ...). Unset = file only.
+      BG_ALERT_WEBHOOK_URL: "${BG_ALERT_WEBHOOK_URL:-}"
+      BG_ALERT_LOG_PATH: /logs/alerts.jsonl
+
+      # --- captcha solving (third-party service; optional) ---
+      BG_CAPTCHA_API_KEY: "${BG_CAPTCHA_API_KEY:-}"
+
+      # --- logging ---
+      BG_LOG_LEVEL: INFO
+      BG_MAX_RETRIES: "3"
+      # Leave FALSE. True disables the PII redaction in the logs.
+      BG_LOG_PII: "false"
+
+      TZ: "${TZ:-UTC}"
+
+    # Hardening: this process needs no privileges and writes only to its volumes.
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+# ---------------------------------------------------------------------------
+# HOMELAB NETWORKING -- intentionally left as plain bridge above.
+#
+# To give this container a static IP on the LAN (macvlan), uncomment the block
+# below, set `networks:` on the service, and adjust parent/subnet/gateway to
+# match your own network. Decide this per-deployment, not in the repo.
+#
+# networks:
+#   lan:
+#     driver: macvlan
+#     driver_opts:
+#       parent: eth0            # <- your host NIC
+#     ipam:
+#       config:
+#         - subnet: 10.0.0.0/20  # <- your subnet
+#           gateway: 10.0.0.1    # <- your gateway
+#
+# ...and on the service:
+#   networks:
+#     lan:
+#       ipv4_address: 10.0.0.x   # <- the static IP you want
+#       # mac_address: 02:42:...  # only if your setup needs a pinned MAC
+# ---------------------------------------------------------------------------

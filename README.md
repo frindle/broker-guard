@@ -28,6 +28,100 @@ profile -> brokers -> serpwatch -> playwright_checks -> state -> alert -> eraser
 - **orchestrator**: the full loop
 - **scheduler**: launchd/cron wiring
 
+### Runtime layer (wires the pure modules to real I/O)
+- **config**: env-var config + profile/dataset validation (`BG_*`, see below)
+- **logging_setup**: structured JSON logs with PII redaction (emails, phones,
+  and search-query strings are stripped before anything is written)
+- **retry**: exponential backoff with full jitter for flaky network calls
+- **searx_client**: real SearXNG HTTP client (the `searx_search` callable)
+- **browser**: real headless-Chromium `page_action` (READ-only: it reads page
+  text and matches identity terms; it never fills or submits a form)
+- **eraser_bridge**: real `eraser` subprocess invocation (`shell=False`, argv
+  list, strict broker-id allowlist, always timeout-bounded, dry-run by default)
+- **sinks**: alert sinks -- append-only JSONL file and an optional webhook
+- **service**: the actual entrypoint and interval loop (`python -m broker_guard`)
+
+## Running
+
+```bash
+cp profile.example.json profile.local.json   # then fill in YOUR identity
+python -m broker_guard --check-config        # validate env + inputs, exit
+python -m broker_guard --once                # one cycle, then exit
+python -m broker_guard                       # loop on BG_INTERVAL_SECONDS
+pytest tests/ -q                             # run the test suite
+```
+
+## Running with Docker
+
+This is a **looping/scheduled job, not a webserver** — no port is exposed.
+
+```bash
+docker compose build          # add --build-arg INSTALL_BROWSERS=false to skip Chromium
+mkdir -p state logs
+cp profile.example.json state/profile.local.json   # then fill it in
+cp data/brokers.example.json state/brokers.json    # or pull the real public dataset
+docker compose run --rm broker-guard --check-config
+docker compose up -d
+docker compose logs -f
+```
+
+**Playwright:** `broker_guard/browser.py` launches a real headless Chromium, so
+the Dockerfile runs `playwright install --with-deps chromium`. It only ever
+*reads* broker pages; opt-out submission goes through the vendored `eraser`
+engine, never through the browser. Browser checks are **off by default**
+(`BG_PLAYWRIGHT_ENABLED=false`) — build with `INSTALL_BROWSERS=false` for a much
+smaller SERP-only image.
+
+### Volumes (PII — never baked into the image)
+Both are gitignored and dockerignored. Back them up like a password database.
+
+| Mount | Holds |
+| --- | --- |
+| `./state:/data` | `profile.local.json` (your identity), `brokers.json` (dataset), `state.sqlite` (presence history) |
+| `./logs:/logs` | JSON logs, `alerts.jsonl` digests, `heartbeat.json` |
+| `./state/bin:/opt/eraser/bin:ro` | the compiled `eraser` binary |
+| `./state/eraser-config:/home/guard/.eraser:ro` | eraser's own config/profile |
+
+Build the eraser binary first:
+`cd vendor/eraser && go build -o ../../state/bin/eraser ./cmd/eraser`
+
+### Environment variables
+All config is read from the environment; nothing is hardcoded and no secret is
+ever written to a log.
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `BG_PROFILE_PATH` | `/data/profile.local.json` | your identity file |
+| `BG_BROKERS_PATH` | `/data/brokers.json` | broker dataset (no PII) |
+| `BG_STATE_PATH` | `/data/state.sqlite` | presence history db |
+| `BG_LOG_DIR` | `/logs` | log + heartbeat directory |
+| `BG_INTERVAL_SECONDS` | `86400` | sweep interval; minimum 60 |
+| `BG_RUN_ONCE` | `false` | run a single cycle and exit |
+| `BG_SEARXNG_URL` | *(unset)* | your self-hosted SearXNG; unset disables SERP detection |
+| `BG_SEARXNG_AUTH` | *(unset)* | optional `Authorization` header value |
+| `BG_SEARXNG_TIMEOUT_S` | `20` | per-request timeout |
+| `BG_SEARXNG_ENGINES` | *(unset)* | restrict to specific SearXNG engines |
+| `BG_PLAYWRIGHT_ENABLED` | `false` | enable headless browser checks |
+| `BG_PLAYWRIGHT_HEADLESS` | `true` | run Chromium headless |
+| `BG_PLAYWRIGHT_TIMEOUT_MS` | `30000` | per-page timeout |
+| `BG_ERASER_ENABLED` | `false` | enable the removal engine |
+| `BG_ERASER_DRY_RUN` | `true` | **keep true until you mean it** — no request is sent while set |
+| `BG_ERASER_BIN` | `eraser` | path to the compiled binary |
+| `BG_ERASER_TIMEOUT_S` | `300` | subprocess timeout |
+| `BG_ALERT_WEBHOOK_URL` | *(unset)* | your own webhook (HA, ntfy…); unset = file sink only |
+| `BG_ALERT_LOG_PATH` | `$BG_LOG_DIR/alerts.jsonl` | append-only digest file |
+| `BG_CAPTCHA_API_KEY` | *(unset)* | third-party captcha solver key |
+| `BG_MAX_RETRIES` | `3` | attempts per network call |
+| `BG_LOG_LEVEL` | `INFO` | log level |
+| `BG_LOG_PII` | `false` | **leave false** — true disables log redaction |
+
+Two safety interlocks are on by default: `BG_ERASER_ENABLED=false` and
+`BG_ERASER_DRY_RUN=true`, so no opt-out request is ever transmitted until both
+are deliberately changed.
+
+Networking is plain bridge; see the commented `macvlan` block at the bottom of
+`docker-compose.yml` for where a static homelab IP would go.
+
 ## Reuse (do not reimplement)
 - Removal engine: **eraser** (vendored under `vendor/eraser/`), called via CLI.
 - Broker seed data: `data/brokers.json` (maintained in the SEPARATE PUBLIC repo; pulled at runtime; contains NO personal data).

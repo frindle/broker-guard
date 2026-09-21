@@ -1,0 +1,55 @@
+# Keep PII and bulk out of the build context.
+# Anything listed here CANNOT end up baked into an image layer.
+
+# --- PII / identity (NEVER into an image) ---
+.env
+profile.local.json
+profile.*.local.json
+*.local.json
+data/state.sqlite
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+logs/
+results/
+serpwatch-hits/
+removals/
+*.removal.json
+snapshots/
+needs-fix/
+heartbeat.json
+health-report.txt
+run-log.jsonl
+escalations/
+letters/
+complaints/
+audit-log.jsonl
+escalation-rules.json
+data/brokers.json
+
+# --- vendored Go source: not needed at runtime ---
+# The eraser BINARY is mounted in at runtime (BG_ERASER_BIN); its ~40MB of Go
+# source has no business in a Python image.
+vendor/
+
+# --- dev / VCS / build noise ---
+.git/
+.gitignore
+.github/
+.claude/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tests/
+Dockerfile
+docker-compose.yml
+.dockerignore
+.preflight-state.json
+*.md
+!README.md

@@ -12,6 +12,8 @@ profile.*.local.json
 # --- runtime data tied to Penn's identity (NEVER commit) ---
 data/state.sqlite
 *.sqlite
+*.sqlite-wal
+*.sqlite-shm
 *.db
 logs/
 results/
@@ -24,6 +26,11 @@ data/brokers.json
 
 # --- vendored removal engine (cloned, not committed) ---
 vendor/eraser/
+
+# --- docker runtime volumes (PII: profile, state db, logs, eraser config) ---
+state/
+alerts.jsonl
+.env.local
 
 # --- dispatch harness leakage ---
 .preflight-state.json
