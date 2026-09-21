@@ -61,7 +61,10 @@ token is required in THAT file, not the target.)
 
 ## Scope
 
-Only edit `broker_guard/webui.py`; do not edit `verify.sh`, `test_fixture.py` or `TASK.md`.
+Edit `broker_guard/webui.py`. You may also add `fastapi` and `httpx` to
+`requirements.txt` (FastAPI is a new dependency this slice introduces; `httpx`
+is required by `fastapi.testclient.TestClient`) -- do not edit `verify.sh`,
+`test_fixture.py` or `TASK.md`.
 test_fixture.py is the test fixture -- changing it invalidates the check.
 
 ## Keep every changed line exercised (relevance)
