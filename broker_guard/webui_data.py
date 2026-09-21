@@ -7,6 +7,7 @@ column is ``last_seen``).
 """
 import json
 import sqlite3
+from datetime import datetime
 
 
 def query_presence_history(conn: sqlite3.Connection, broker_id: str | None = None, limit: int = 200) -> list[dict]:
@@ -56,3 +57,30 @@ def load_health_summary(lines: list[str]) -> dict:
         if isinstance(report, dict):
             return report
     return {"total": 0, "ok": 0, "failed": 0, "by_broker": {}}
+
+
+def escalation_countdowns(records: list[dict], now_iso: str) -> list[dict]:
+    """Turn escalation records into webUI countdown rows.
+
+    Each input record is ``{'broker_id': str, 'stage': str,
+    'deadline_iso': str}``. Returns one dict per record with exactly the keys
+    ``broker_id``, ``stage``, ``deadline_iso`` (copied through unchanged),
+    ``seconds_remaining`` (int whole seconds of deadline minus now; negative
+    once the deadline has passed) and ``overdue`` (bool, true exactly when
+    ``seconds_remaining < 0`` -- a deadline equal to now is NOT overdue).
+    Rows are sorted by ``seconds_remaining`` ascending, so the most overdue /
+    most urgent rows come first. An empty ``records`` list returns ``[]``.
+    """
+    now = datetime.fromisoformat(now_iso)
+    rows = []
+    for record in records:
+        deadline = datetime.fromisoformat(record["deadline_iso"])
+        seconds_remaining = int((deadline - now).total_seconds())
+        rows.append({
+            "broker_id": record["broker_id"],
+            "stage": record["stage"],
+            "deadline_iso": record["deadline_iso"],
+            "seconds_remaining": seconds_remaining,
+            "overdue": seconds_remaining < 0,
+        })
+    return sorted(rows, key=lambda row: row["seconds_remaining"])
