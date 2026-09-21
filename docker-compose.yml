@@ -14,8 +14,12 @@ services:
     image: broker-guard:local
     container_name: broker-guard
     restart: unless-stopped
+    network_mode: bridge
 
-    # No ports. This service only makes outbound calls.
+    # No ports. This service only makes outbound calls. network_mode: bridge
+    # puts it straight on the host's default docker0 bridge instead of a
+    # dedicated per-project network -- one less network cluttering `docker
+    # network ls` per compose stack.
 
     volumes:
       # PERSISTENT STATE + PII. None of this is baked into the image; all of it
