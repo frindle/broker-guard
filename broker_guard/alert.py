@@ -11,9 +11,14 @@ def batch_digest(events):
     counts = {}
     items = []
     seen = set()
-    for event in events:
-        kind = event.get("kind")
-        broker_id = event.get("broker_id")
+    for event in events or []:
+        if not isinstance(event, dict):
+            # A non-dict event used to raise AttributeError and lose the whole
+            # digest; group it under (None, None) like any other unlabelled one.
+            kind = broker_id = None
+        else:
+            kind = event.get("kind")
+            broker_id = event.get("broker_id")
         counts[kind] = counts.get(kind, 0) + 1
         pair = (kind, broker_id)
         if pair not in seen:
@@ -40,7 +45,7 @@ def format_notification(digest: dict) -> dict:
         message = "No new broker alert activity."
         lines = []
     else:
-        total = sum(counts.values())
+        total = sum(counts.values()) if isinstance(counts, dict) else 0
         title = "{} new broker alert(s)".format(total)
         lines = []
         for item in items:
@@ -60,3 +65,32 @@ def format_notification(digest: dict) -> dict:
         "ha": {"service": "notify.hass", "data": {"title": title, "message": message}},
         "obsidian_md": obsidian_md,
     }
+
+
+def events_from_cycle(cycle_result: dict) -> list[dict]:
+    """Convert an ``orchestrator.run_cycle`` result into ``batch_digest`` events.
+
+    ``run_cycle`` hands its ``alert_sink`` a single
+    ``{identity_key, new_appearances, now_iso}`` payload, but ``batch_digest``
+    consumes a LIST of ``{kind, broker_id}`` events. The two slices were
+    authored against different shapes; this is the adapter between them.
+
+    Both ``new_appearances`` and ``resolved`` are emitted, so a digest can
+    report removals landing as well as new listings appearing.
+    """
+    if not isinstance(cycle_result, dict):
+        return []
+    now_iso = cycle_result.get("now_iso") or cycle_result.get("ran_at")
+    identity_key = cycle_result.get("identity_key")
+    events = []
+    for kind, field in (("new_appearance", "new_appearances"), ("resolved", "resolved")):
+        for broker_id in cycle_result.get(field) or []:
+            events.append(
+                {
+                    "kind": kind,
+                    "broker_id": broker_id,
+                    "identity_key": identity_key,
+                    "at": now_iso,
+                }
+            )
+    return events
