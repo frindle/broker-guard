@@ -5,6 +5,7 @@ The ``presence`` table's schema is owned by ``state.init_db`` -- columns
 ``identity_key``, ``broker_id``, ``first_seen``, ``last_seen`` (the check-time
 column is ``last_seen``).
 """
+import hmac
 import json
 import sqlite3
 from datetime import datetime
@@ -84,3 +85,9 @@ def escalation_countdowns(records: list[dict], now_iso: str) -> list[dict]:
             "overdue": seconds_remaining < 0,
         })
     return sorted(rows, key=lambda row: row["seconds_remaining"])
+
+
+def verify_token(provided: str | None, expected: str) -> bool:
+    if not provided or not expected:
+        return False
+    return hmac.compare_digest(provided.encode("utf-8"), expected.encode("utf-8"))
