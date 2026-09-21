@@ -111,4 +111,6 @@ def load_recent_alerts(lines: list[str], limit: int = 50) -> list[dict]:
             continue
         if isinstance(entry, dict):
             valid.append(entry)
+    if limit <= 0:
+        return []
     return list(reversed(valid[-limit:]))
