@@ -1,6 +1,20 @@
 import hashlib
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+
+def _parse_ts(value: str) -> datetime:
+    """Parse an ISO-8601 timestamp, tolerating a trailing 'Z'.
+
+    Naive timestamps are assumed UTC so that a naive and an aware timestamp
+    can always be compared without raising TypeError.
+    """
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("expected a non-empty ISO-8601 timestamp string")
+    dt = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 
 
 def audit_entry(action: dict, actor: str, ts_iso: str, prev_hash: str) -> dict:
@@ -15,18 +29,24 @@ def audit_entry(action: dict, actor: str, ts_iso: str, prev_hash: str) -> dict:
 
 
 def next_escalation_actions(status: dict, rules: list[dict]) -> list[dict]:
-    matched = [rule for rule in rules if rule.get("field") in status and status[rule["field"]] == rule["equals"]]
-    return sorted(matched, key=lambda rule: rule["priority"])
+    matched = [
+        rule
+        for rule in rules
+        if isinstance(rule, dict)
+        and rule.get("field") in status
+        and status[rule["field"]] == rule.get("equals")
+    ]
+    return sorted(matched, key=lambda rule: rule.get("priority", 0))
 
 
 def is_overdue(submitted_iso: str, now_iso: str, sla_days: int) -> bool:
-    deadline = datetime.fromisoformat(submitted_iso) + timedelta(days=sla_days)
-    return datetime.fromisoformat(now_iso) > deadline
+    deadline = _parse_ts(submitted_iso) + timedelta(days=sla_days)
+    return _parse_ts(now_iso) > deadline
 
 
 def days_remaining(submitted_iso: str, now_iso: str, sla_days: int) -> int:
-    deadline = datetime.fromisoformat(submitted_iso) + timedelta(days=sla_days)
-    return (deadline - datetime.fromisoformat(now_iso)).days
+    deadline = _parse_ts(submitted_iso) + timedelta(days=sla_days)
+    return (deadline - _parse_ts(now_iso)).days
 
 
 def render_letter(template: str, context: dict) -> str:
@@ -62,10 +82,21 @@ def render_letter(template: str, context: dict) -> str:
 
 
 def route_escalation(action_kind: str, config: dict) -> dict:
+    """Decide whether an escalation of *action_kind* may be sent automatically.
+
+    Every branch returns the SAME three keys, so callers can rely on the shape:
+    ``auto_send``, ``requires_confirm`` and ``requires_human_confirm``.
+    Anything that is not auto-sent requires a confirmation; ``fcra_freeze``
+    additionally requires a *human* (never an agent) to confirm.
+    """
+    if not isinstance(config, dict):
+        config = {}
     if action_kind == "broker_facing":
-        return {"auto_send": True, "requires_confirm": False}
+        # Broker-facing follow-ups are low-risk and tier-1 auto.
+        return {"auto_send": True, "requires_confirm": False, "requires_human_confirm": False}
     if action_kind == "regulator_complaint":
-        return {"auto_send": bool(config.get("auto_file_regulator_complaints", False)), "requires_confirm_X": True}
+        auto = bool(config.get("auto_file_regulator_complaints", False))
+        return {"auto_send": auto, "requires_confirm": not auto, "requires_human_confirm": not auto}
     if action_kind == "fcra_freeze":
-        return {"auto_send": False, "requires_human_confirm": True}
-    return {"auto_send": False, "requires_confirm": True}
+        return {"auto_send": False, "requires_confirm": True, "requires_human_confirm": True}
+    return {"auto_send": False, "requires_confirm": True, "requires_human_confirm": True}
