@@ -1,10 +1,25 @@
+"""CAPTCHA solving with provider fallback.
+
+SECURITY NOTE: any provider here is a THIRD PARTY that receives whatever is in
+``challenge``. Never put profile PII in a challenge payload -- pass only the
+site key, page URL and challenge image/audio. Provider credentials belong in
+environment variables (see ``broker_guard.config``), never in this module.
+"""
+
+
 def solve(challenge: dict, providers: list) -> dict:
     attempts = []
-    for provider in providers:
+    for provider in providers or []:
+        name = getattr(provider, "__name__", "unknown")
         try:
             result = provider(challenge)
         except Exception as exc:
-            attempts.append({"ok": False, "provider": getattr(provider, "__name__", "unknown"), "error": str(exc)})
+            attempts.append({"ok": False, "provider": name, "error": str(exc)})
+            continue
+        if not isinstance(result, dict):
+            # A provider returning a bare token/None used to raise
+            # AttributeError and abort the whole fallback chain.
+            attempts.append({"ok": False, "provider": name, "error": "provider returned a non-dict result"})
             continue
         if not result.get("ok"):
             attempts.append(dict(result))
@@ -19,6 +34,8 @@ def solve_audio(audio_url, transcribe):
     try:
         transcript = transcribe(audio_url)
     except Exception:
+        return {'ok': False, 'provider': 'whisper', 'token': None}
+    if not isinstance(transcript, str):
         return {'ok': False, 'provider': 'whisper', 'token': None}
     token = transcript.strip().lower()
     if not token:

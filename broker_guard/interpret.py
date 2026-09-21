@@ -26,6 +26,8 @@ def build_interpret_prompt(page_text: str, names: list[str], location: str | Non
 
 def parse_interpretation(raw: str) -> dict:
     """Parse the first {...} JSON object out of raw; never raises."""
+    if not isinstance(raw, str):
+        return {"error": "expected a string reply, got " + type(raw).__name__}
     start = raw.find("{")
     if start == -1:
         return {"error": "no complete {...} object found in reply"}

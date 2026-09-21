@@ -1,11 +1,17 @@
-"""Stub for broker_guard/health.py -- implement per TASK.md."""
+"""Self-monitoring: heartbeat staleness, failure classification, backoff, reports."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+
+def _parse_ts(value: str) -> datetime:
+    """ISO-8601 parse tolerating 'Z'; naive input is treated as UTC."""
+    dt = datetime.fromisoformat(value.strip().replace('Z', '+00:00'))
+    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def heartbeat_stale(last_beat_iso: str, now_iso: str, max_age_s: int) -> bool:
-    last_beat = datetime.fromisoformat(last_beat_iso.replace('Z', '+00:00'))
-    now = datetime.fromisoformat(now_iso.replace('Z', '+00:00'))
+    last_beat = _parse_ts(last_beat_iso)
+    now = _parse_ts(now_iso)
     age_s = (now - last_beat).total_seconds()
     return bool(age_s > max_age_s)
 
@@ -28,23 +34,31 @@ def update_run_status(prev: dict, ok: bool, now_iso: str, base_backoff_s: int = 
         prev = {}
     consecutive_failures = prev.get("consecutive_failures", 0) + 1
     delay = min(base_backoff_s * 2 ** (consecutive_failures - 1), max_backoff_s)
-    now = datetime.fromisoformat(now_iso.replace('Z', '+00:00'))
+    now = _parse_ts(now_iso)
     next_retry = (now + timedelta(seconds=delay)).isoformat()
     return {"status": "failing", "consecutive_failures": consecutive_failures, "next_retry": next_retry}
 
 
 def build_report(runs):
+    """Aggregate per-broker run outcomes into totals plus a per-broker breakdown.
+
+    Runs missing 'ok' count as failures and runs missing 'broker_id' are
+    bucketed under '<unknown>', so a malformed run entry degrades the report
+    instead of raising KeyError mid-report.
+    """
+    runs = list(runs or [])
     ok = 0
     failed = 0
     by_broker = {}
     for run in runs:
-        if run['ok']:
+        run = run if isinstance(run, dict) else {}
+        if run.get('ok'):
             ok += 1
         else:
             failed += 1
-        broker_id = run['broker_id']
+        broker_id = run.get('broker_id', '<unknown>')
         counts = by_broker.setdefault(broker_id, {'ok': 0, 'failed': 0})
-        if run['ok']:
+        if run.get('ok'):
             counts['ok'] += 1
         else:
             counts['failed'] += 1

@@ -6,8 +6,13 @@ MANUAL_ACTION_SOURCES = ("captcha_fallback", "photo_id", "kba", "email_confirm")
 def build_manual_action(source: str, broker_id: str, context: dict) -> dict:
     if source not in MANUAL_ACTION_SOURCES:
         raise ValueError("source must be one of captcha_fallback, photo_id, kba, email_confirm")
-    if "key" not in context:
-        raise ValueError("context must include key")
+    if not isinstance(context, dict):
+        raise ValueError("context must be a dict")
+    for required in ("key", "now"):
+        # 'now' was read unchecked while 'key' was validated, so a caller
+        # omitting it got a bare KeyError instead of this message.
+        if required not in context:
+            raise ValueError(f"context must include {required}")
     return {
         "id": hashlib.sha256(f'{broker_id}|{source}|{context["key"]}'.encode('utf-8')).hexdigest(),
         "broker_id": broker_id,

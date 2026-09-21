@@ -1,4 +1,10 @@
-"""Stub for broker_guard/scheduler.py -- implement per TASK.md."""
+"""Scheduling helpers: launchd plists, cron lines and next-run arithmetic.
+
+These build the *descriptors* for an external scheduler. The container image
+does not use them -- ``broker_guard.service`` runs its own interval loop -- but
+they remain the supported way to run broker-guard from launchd or cron on a
+host, and ``next_run_time`` is used by the service loop to log its next wake.
+"""
 
 from datetime import datetime, timedelta, timezone
 
@@ -18,7 +24,11 @@ def build_cron_line(schedule_expr: str, command: str) -> str:
 
 
 def next_run_time(last_run_iso: str, interval_seconds: int) -> str:
-    dt = datetime.fromisoformat(last_run_iso.replace("Z", "+00:00"))
+    if not isinstance(last_run_iso, str) or not last_run_iso.strip():
+        raise ValueError("last_run_iso must be a non-empty ISO-8601 string")
+    if not isinstance(interval_seconds, int) or isinstance(interval_seconds, bool):
+        raise ValueError("interval_seconds must be an int")
+    dt = datetime.fromisoformat(last_run_iso.strip().replace("Z", "+00:00"))
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return (dt + timedelta(seconds=interval_seconds)).astimezone(timezone.utc).isoformat()

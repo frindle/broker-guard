@@ -17,9 +17,15 @@ def load_brokers(path):
         data = json.load(fh)
     if not isinstance(data, dict) or "brokers" not in data:
         raise ValueError("expected an object with a 'brokers' list")
+    if not isinstance(data["brokers"], list):
+        raise ValueError("'brokers' must be a list")
     brokers = []
     seen = set()
     for record in data["brokers"]:
+        if not isinstance(record, dict):
+            # Without this, `"id" not in record` would silently substring-match
+            # a string record and let a malformed entry through.
+            raise ValueError("each broker must be a JSON object")
         missing = [k for k in ("id", "name", "url") if k not in record]
         if missing:
             raise ValueError(
@@ -29,6 +35,8 @@ def load_brokers(path):
             if isinstance(value, str):
                 value = value.strip()
             out[key] = value
+        if not isinstance(out["id"], str) or not out["id"]:
+            raise ValueError("broker 'id' must be a non-empty string")
         out["id"] = out["id"].lower()
         if out["id"] in seen:
             continue
