@@ -67,6 +67,9 @@ def _empty_conn():
     return conn
 
 
+# Model-drafted; NOT yet read by a human.
+DRAFT_UNCONFIRMED = True
+
 CASES = [
     # Empty table: must be [] and must not raise.
     ("empty table returns []", lambda: target.query_presence_history(_empty_conn()), []),
