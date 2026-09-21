@@ -91,3 +91,24 @@ def verify_token(provided: str | None, expected: str) -> bool:
     if not provided or not expected:
         return False
     return hmac.compare_digest(provided.encode("utf-8"), expected.encode("utf-8"))
+
+
+def load_recent_alerts(lines: list[str], limit: int = 50) -> list[dict]:
+    """Return the LAST ``limit`` valid alert digests, newest first.
+
+    Each element of ``lines`` is one JSON object as appended to
+    ``logs/alerts.jsonl`` (an alert digest). Blank lines and lines that fail
+    to parse are skipped without raising; non-object JSON is not a valid
+    entry either. The file's natural append order is oldest-to-newest, so the
+    result is the last ``limit`` valid entries in REVERSED (newest-first)
+    order. An empty list or an all-invalid one returns ``[]``.
+    """
+    valid = []
+    for line in lines:
+        try:
+            entry = json.loads(line)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(entry, dict):
+            valid.append(entry)
+    return list(reversed(valid[-limit:]))
