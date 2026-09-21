@@ -4,6 +4,34 @@ Both functions are pure: they depend only on their two arguments, perform no
 I/O and touch no module-level state. Inputs may be empty or contain duplicates;
 outputs are always plain lists of str, deduplicated and sorted lexicographically.
 """
+import sqlite3
+
+
+def init_db(path: str):
+    """Open (creating if needed) the sqlite db at ``path`` and return the connection.
+
+    Idempotent: safe to call more than once on the same path -- CREATE TABLE IF
+    NOT EXISTS means no exception and no data loss. The ``presence`` table's
+    composite primary key (identity_key, broker_id) is what
+    ``record_presence``'s ON CONFLICT upsert relies on.
+    """
+    conn = sqlite3.connect(path)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS presence ("
+        "identity_key TEXT, "
+        "broker_id TEXT, "
+        "first_seen TEXT, "
+        "last_seen TEXT, "
+        "PRIMARY KEY (identity_key, broker_id))"
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS broker_status ("
+        "broker_id TEXT, "
+        "identity_key TEXT, "
+        "status TEXT, "
+        "updated_at TEXT)"
+    )
+    return conn
 
 
 def new_appearances(prev: list[str], current: list[str]) -> list[str]:
