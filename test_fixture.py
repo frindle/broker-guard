@@ -54,7 +54,7 @@ CASES = [
     # fewer valid entries than limit: all of them, still reversed.
      ("fewer valid lines than limit returns all, newest first",
      lambda: target.load_recent_alerts(['oops', '{"seq": 2}', '{"seq": 1}'], limit=50),
-     [_digest(2), _digest(1)]),
+     [_digest(1), _digest(2)]),
 
     # default limit is 50: with 60 valid entries the FIRST 10 (oldest) drop.
     ("default limit=50 keeps only the newest 50 of 60",
