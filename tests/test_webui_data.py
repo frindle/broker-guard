@@ -150,7 +150,14 @@ def test_broker_stepper_confirmed_marks_data_removed_done():
 
 def test_scan_status_never_run_and_not_running():
     result = webui_data.scan_status(None, {}, 86400)
-    assert result == {"running": False, "last_run_at": None, "last_run_ok": None, "next_run_at": None}
+    assert result == {
+        "running": False, "last_run_at": None, "last_run_ok": None, "next_run_at": None,
+        # No scan has ever run in this process, so there is nothing to say
+        # about progress or per-broker outcomes -- None, never a fabricated
+        # zero that would read as "checked everything, found no errors".
+        "progress": None, "progress_line": None,
+        "detection_line": None, "detection_errors": None,
+    }
 
 
 def test_scan_status_running_from_jobs_summary():

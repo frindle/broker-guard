@@ -13,7 +13,7 @@ import pytest
 from broker_guard import service
 from broker_guard.config import load_config
 from broker_guard.eraser_bridge import EraserBridge, EraserUnavailable
-from broker_guard.searx_client import SearxClient
+from broker_guard.searx_client import PermanentSearxError, SearxClient, SearxError
 from broker_guard.sinks import CompositeAlertSink, FileAlertSink, WebhookAlertSink
 from broker_guard.state import StateStore
 
@@ -349,16 +349,23 @@ def test_searx_client_feeds_serpwatch_end_to_end(cfg, deps_factory):
     assert all(r["url"] == "http://searx.invalid:8080/search" for r in session.requests)
 
 
-def test_searx_client_returns_empty_on_total_failure_rather_than_raising():
+def test_searx_client_raises_on_total_failure_instead_of_faking_zero_results():
+    """The regression this inverts: the client used to return [] when every
+    attempt failed, which is byte-for-byte the same value a successful
+    search of an unlisted person returns. A SearXNG outage therefore
+    reported as "found nothing" for all 827 brokers. It must raise so
+    run_serpwatch can count the broker as errored."""
     session = FakeSession([FakeResponse(503)] * 5)
     client = SearxClient("http://searx.invalid:8080", session=session, sleep=lambda _: None)
-    assert client("anything") == []
+    with pytest.raises(SearxError):
+        client("anything")
 
 
 def test_searx_client_never_retries_a_4xx():
     session = FakeSession([FakeResponse(403)])
     client = SearxClient("http://searx.invalid:8080", session=session, sleep=lambda _: None)
-    assert client("anything") == []
+    with pytest.raises(PermanentSearxError):
+        client("anything")
     assert len(session.requests) == 1
 
 

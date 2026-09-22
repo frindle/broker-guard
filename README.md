@@ -128,6 +128,8 @@ ever written to a log.
 | `BG_SEARXNG_AUTH` | *(unset)* | optional `Authorization` header value |
 | `BG_SEARXNG_TIMEOUT_S` | `20` | per-request timeout |
 | `BG_SEARXNG_ENGINES` | *(unset)* | restrict to specific SearXNG engines |
+| `BG_SEARXNG_MIN_INTERVAL_S` | `2.0` | minimum seconds between two SearXNG requests (see below) |
+| `BG_SEARXNG_JITTER_S` | `1.0` | extra uniform `0..N` seconds added to that gap |
 | `BG_PLAYWRIGHT_ENABLED` | `false` | enable headless browser checks |
 | `BG_PLAYWRIGHT_HEADLESS` | `true` | run Chromium headless |
 | `BG_PLAYWRIGHT_TIMEOUT_MS` | `30000` | per-page timeout |
@@ -145,6 +147,36 @@ ever written to a log.
 Two safety interlocks are on by default: `BG_ERASER_ENABLED=false` and
 `BG_ERASER_DRY_RUN=true`, so no opt-out request is ever transmitted until both
 are deliberately changed.
+
+### SearXNG pacing — do not turn this down
+
+A full cycle is ~827 brokers × one query per identity value: thousands of
+requests. Unpaced, they went out as fast as network RTT allowed, and the
+self-hosted SearXNG instance's **upstream** engines (Brave, Google CSE,
+DuckDuckGo, Startpage, Wikipedia) responded by rate-limiting and CAPTCHA-walling
+it — a block that can take up to ~2 weeks to clear, during which every query
+returns nothing.
+
+`BG_SEARXNG_MIN_INTERVAL_S` (default `2.0`) plus `BG_SEARXNG_JITTER_S` (default
+`0`–`1.0` extra) enforce a gap between successive requests, inside
+`SearxClient` itself so retries and any future caller are covered too. At that
+rate a full sweep takes a few hours, which is fine: the default scan interval is
+a day. Lowering these to "speed up" a scan is how the instance got blocked.
+
+### Scan progress and error counting
+
+The dashboard shows a live per-broker counter while a sweep runs
+("Checking brokers: 412/827 — 3 found, 0 errors.") and, once it finishes,
+the outcome tally for the completed run. Each broker lands in exactly one
+bucket — `hit`, `checked`, `error` or `skipped` — and `error` is kept strictly
+distinct from `checked`.
+
+That distinction is the point: a search failure used to be swallowed and
+counted as "checked, found nothing", so a total SearXNG outage produced a
+confident `hit_brokers: 0` and looked like good news. A cycle now reports
+"checked 827, 0 errors" and "checked 487, 340 errors" as visibly different
+states. One broker's failure still never aborts the cycle — it is just no
+longer invisible.
 
 Networking is plain bridge; see the commented `macvlan` block at the bottom of
 `docker-compose.yml` for where a static homelab IP would go.

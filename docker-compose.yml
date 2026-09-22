@@ -91,6 +91,16 @@ services:
       BG_SEARXNG_TIMEOUT_S: "20"
       # Optional Authorization header value if your SearXNG sits behind auth.
       BG_SEARXNG_AUTH: "${BG_SEARXNG_AUTH:-}"
+      # Pacing: minimum seconds between two SearXNG requests, plus a uniform
+      # 0..JITTER on top. A full cycle is ~827 brokers x one query per
+      # identity value -- thousands of requests. Unpaced, they went out as
+      # fast as RTT allowed and got the instance's UPSTREAM engines (Brave,
+      # Google CSE, DuckDuckGo, Startpage, Wikipedia) rate-limited and
+      # CAPTCHA-walled, which can take up to ~2 weeks to clear. At 2-3s a
+      # request a full sweep takes hours -- which is fine, the default scan
+      # interval is a day. Do not lower these to "speed up" a scan.
+      BG_SEARXNG_MIN_INTERVAL_S: "${BG_SEARXNG_MIN_INTERVAL_S:-2.0}"
+      BG_SEARXNG_JITTER_S: "${BG_SEARXNG_JITTER_S:-1.0}"
 
       # --- browser checks ---
       # Env-substituted, same reason as BG_SERVE_WEB above: a hardcoded

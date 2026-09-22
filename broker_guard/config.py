@@ -64,6 +64,16 @@ def _env_int(env, name, default):
         raise ConfigError(f"{name} must be an integer, got {raw!r}")
 
 
+def _env_float(env, name, default):
+    raw = _env_str(env, name)
+    if raw is None:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        raise ConfigError(f"{name} must be a number, got {raw!r}")
+
+
 def _env_bool(env, name, default=False):
     raw = _env_str(env, name)
     if raw is None:
@@ -107,6 +117,13 @@ class Config:
     searxng_auth: str | None = None
     searxng_timeout_s: int = 20
     searxng_engines: str | None = None
+    # Minimum seconds between two successive SearXNG requests, plus a
+    # uniform 0..searxng_jitter_s on top -- see
+    # searx_client.SearxClient._wait_for_slot. A full cycle is thousands of
+    # requests; without this they went out as fast as RTT allowed and got
+    # the instance's upstream engines CAPTCHA-blocked for days.
+    searxng_min_interval_s: float = 2.0
+    searxng_jitter_s: float = 1.0
 
     alert_webhook_url: str | None = None
     alert_log_path: str = "logs/alerts.jsonl"
@@ -169,6 +186,8 @@ def load_config(env=None) -> Config:
         searxng_auth=_env_str(env, "BG_SEARXNG_AUTH"),
         searxng_timeout_s=_env_int(env, "BG_SEARXNG_TIMEOUT_S", 20),
         searxng_engines=_env_str(env, "BG_SEARXNG_ENGINES"),
+        searxng_min_interval_s=_env_float(env, "BG_SEARXNG_MIN_INTERVAL_S", 2.0),
+        searxng_jitter_s=_env_float(env, "BG_SEARXNG_JITTER_S", 1.0),
         alert_webhook_url=_env_str(env, "BG_ALERT_WEBHOOK_URL"),
         eraser_bin=_env_str(env, "BG_ERASER_BIN", "eraser"),
         eraser_enabled=_env_bool(env, "BG_ERASER_ENABLED", False),
@@ -196,6 +215,8 @@ def load_config(env=None) -> Config:
         raise ConfigError("BG_MAX_RETRIES must be >= 0")
     if cfg.searxng_timeout_s <= 0 or cfg.eraser_timeout_s <= 0:
         raise ConfigError("timeouts must be positive")
+    if cfg.searxng_min_interval_s < 0 or cfg.searxng_jitter_s < 0:
+        raise ConfigError("BG_SEARXNG_MIN_INTERVAL_S/BG_SEARXNG_JITTER_S must be >= 0")
     if cfg.eraser_enabled and not cfg.eraser_bin:
         raise ConfigError("BG_ERASER_ENABLED is set but BG_ERASER_BIN is empty")
     if not (0 < cfg.web_port < 65536):

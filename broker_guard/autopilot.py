@@ -116,6 +116,21 @@ class AutopilotDependencies:
 
     store: object = None            # StateStore-like (is_seen/record_appearance/seen_brokers/touch/forget/set_status/get_status)
     presence_checker: object = None  # callable(broker, identity_key) -> bool
+    # callable() -> presence_checker, invoked ONCE PER SCAN CYCLE.
+    #
+    # ``presence_checker`` above is a closure over a set of broker ids
+    # computed when it was BUILT (see service.build_presence_checker: it runs
+    # the whole SERP sweep eagerly and captures the result). build_dependencies
+    # used to build it exactly once, at process start, and hand the same frozen
+    # closure to every cycle of run_forever -- so the deployed BG_SERVE_WEB
+    # container ran precisely one real scan, at boot, and then re-reported
+    # those same startup results every day forever. Rebuilding per cycle is
+    # what makes a scheduled re-scan actually re-scan (and what lets the live
+    # progress counter advance during a cycle rather than only at boot).
+    #
+    # Optional: when None, ``presence_checker`` is used as-is, which is what
+    # every test that injects a plain predicate relies on.
+    presence_checker_factory: object = None
     submit_removal: object = None   # callable(broker_id, eraser_profile_dict) -> result dict
     eraser_monitor: object = None   # callable() -> result dict, or None if eraser is disabled
     eraser_status: object = None    # callable() -> result dict, or None if eraser is disabled
@@ -144,8 +159,16 @@ def run_scan_cycle(identity, brokers: list, deps: AutopilotDependencies,
     identity_key = identity.identity_key
     now_iso = deps.now()
 
+    # Rebuild the presence checker for THIS cycle when a factory is wired
+    # (the real deployment), so each scheduled scan is a genuinely fresh
+    # sweep rather than a replay of the one taken at process start. See
+    # AutopilotDependencies.presence_checker_factory.
+    presence_checker = deps.presence_checker
+    if deps.presence_checker_factory is not None:
+        presence_checker = deps.presence_checker_factory()
+
     result = run_cycle(
-        identity_key, brokers, deps.presence_checker, deps.store,
+        identity_key, brokers, presence_checker, deps.store,
         deps.alert_sink or (lambda payload: None), now_iso,
     )
 
@@ -180,11 +203,25 @@ def run_scan_cycle(identity, brokers: list, deps: AutopilotDependencies,
             deps.store.forget(identity_key, broker_id)
             forgotten.append(broker_id)
 
+    # Carry the per-leg detection tallies (see service._counting_observer)
+    # through to the caller, so run_forever can put a real error count in the
+    # heartbeat and the dashboard can distinguish "checked 827, found 0" from
+    # "827 checks failed". Absent on a hand-injected test checker, which is
+    # fine -- the key is simply omitted rather than faked as zero.
+    serp_stats = getattr(presence_checker, "serp_stats", None)
+    browser_stats = getattr(presence_checker, "browser_stats", None)
+    if serp_stats is not None or browser_stats is not None:
+        result["detection"] = {"serp": dict(serp_stats or {}),
+                               "browser": dict(browser_stats or {})}
+        result["detection_errors"] = ((serp_stats or {}).get("error", 0)
+                                      + (browser_stats or {}).get("error", 0))
+
     log.info("autopilot scan cycle complete", extra={
         "new": len(result["new_appearances"]),
         "auto_sent": sum(1 for d in decisions.values() if d["action"] == "auto_send"),
         "queued": sum(1 for d in decisions.values() if d["action"] == "queue"),
         "forgotten": len(forgotten),
+        "detection_errors": result.get("detection_errors"),
     })
 
     result["decisions"] = decisions
@@ -231,9 +268,18 @@ def build_dependencies(cfg: Config) -> AutopilotDependencies:
     from broker_guard.eraser_bridge import EraserBridge
 
     base = service_mod.build_dependencies(cfg)
-    identity = profile_mod.load_profile(cfg.profile_path)
-    broker_list = brokers_mod.load_brokers(cfg.brokers_path)
-    presence_checker = service_mod.build_presence_checker(identity, broker_list, base, cfg)
+
+    def presence_checker_factory():
+        """Run a FRESH sweep for the cycle that is about to start.
+
+        The profile and broker list are re-read here too, not captured
+        once: a profile edited through the /identity page, or a
+        regenerated brokers.json, then takes effect on the next scheduled
+        scan instead of requiring a container restart.
+        """
+        identity = profile_mod.load_profile(cfg.profile_path)
+        broker_list = brokers_mod.load_brokers(cfg.brokers_path)
+        return service_mod.build_presence_checker(identity, broker_list, base, cfg)
 
     eraser_monitor = eraser_status = None
     if cfg.eraser_enabled:
@@ -244,7 +290,8 @@ def build_dependencies(cfg: Config) -> AutopilotDependencies:
 
     return AutopilotDependencies(
         store=base.store,
-        presence_checker=presence_checker,
+        presence_checker=None,
+        presence_checker_factory=presence_checker_factory,
         submit_removal=base.removal,
         eraser_monitor=eraser_monitor,
         eraser_status=eraser_status,
@@ -315,6 +362,15 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
                 if isinstance(result, dict):
                     payload["present"] = len(result.get("current", []))
                     payload["new"] = len(result.get("new_appearances", []))
+                    # Persisted so the dashboard can render "last scan:
+                    # checked 827, 0 errors" vs "... 340 errors" AFTER the
+                    # cycle ends, when the in-memory progress counter has
+                    # gone inactive. A cycle that errored everywhere is not
+                    # a successful cycle that found nothing.
+                    detection = result.get("detection")
+                    if isinstance(detection, dict):
+                        payload["detection"] = detection
+                        payload["detection_errors"] = result.get("detection_errors", 0)
                 service_mod.write_heartbeat(cfg, payload)
             except Exception as exc:
                 log.exception("autopilot scan cycle failed",

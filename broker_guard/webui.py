@@ -39,6 +39,7 @@ from broker_guard import eraser_config as eraser_config_mod
 from broker_guard import exposure as exposure_mod
 from broker_guard import freeze as freeze_mod
 from broker_guard import profile as profile_mod
+from broker_guard import progress as progress_mod
 from broker_guard import profiles as profiles_mod
 from broker_guard import service as service_mod
 from broker_guard import state as state_mod
@@ -163,6 +164,48 @@ def _read_heartbeat(cfg: Config) -> dict | None:
 
 # --- / : dashboard -----------------------------------------------------------
 
+def _scan_line(scan: dict) -> str:
+    """The one-line scan indicator, as PLAIN TEXT.
+
+    Shared by the ``/`` template and the ``/status`` JSON the poll loop
+    consumes, so the text a page is first served and the text it refreshes
+    itself to are produced by the SAME function rather than two copies that
+    can drift.
+
+    Returned unescaped on purpose, because those two consumers have
+    opposite needs: the template escapes it on the way into HTML, while
+    the poll loop assigns it to ``textContent`` (already inert, and where
+    pre-escaped entities would render literally as "&amp;"). Escaping here
+    would be wrong for one of them whichever way it went, so each
+    insertion point does its own.
+
+    Three honest states, in priority order:
+
+    1. A sweep is live -> the running counter ("Checking brokers: 412/827
+       -- 3 found, 0 errors."). Falls back to the old bare sentence only
+       when no counter exists (e.g. a /scan job that has not started its
+       first phase yet).
+    2. A scan has finished -> timestamp, ok/failed, next run, AND the
+       per-broker outcome tally when the heartbeat carries one. A run that
+       errored on every broker used to render identically to a clean one;
+       now "827 broker(s), 340 error(s)" is right there in the line.
+    3. Nothing has ever run.
+    """
+    if scan.get("running"):
+        return scan.get("progress_line") or "Scan in progress right now."
+    if scan.get("last_run_at"):
+        line = "Last scan: {} ({}). Next scan around: {}.".format(
+            format_scan_timestamp(scan["last_run_at"]) or scan["last_run_at"],
+            "ok" if scan.get("last_run_ok") else "failed",
+            format_scan_timestamp(scan.get("next_run_at")) or "unknown",
+        )
+        detection_line = scan.get("detection_line")
+        if detection_line:
+            line += " " + detection_line
+        return line
+    return "No scan has run yet in this deployment."
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
     """The Removals dashboard. Every number below is wired to a real,
@@ -201,7 +244,8 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
     heartbeat = _read_heartbeat(cfg)
     with _JOBS_LOCK:
         jobs_summary = {jid: j.get("status") for jid, j in jobs.items()}
-    scan = webui_data.scan_status(heartbeat, jobs_summary, cfg.interval_seconds)
+    scan = webui_data.scan_status(heartbeat, jobs_summary, cfg.interval_seconds,
+                                   progress=progress_mod.snapshot())
 
     in_progress = status_counts["pending"] + status_counts["submitted"]
     chips = "".join([
@@ -257,17 +301,7 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
     else:
         notif_html = '<p class="muted">No status changes recorded yet.</p>'
 
-    if scan["running"]:
-        scan_line = "Scan in progress right now."
-    elif scan["last_run_at"]:
-        ok_text = "ok" if scan["last_run_ok"] else "failed"
-        scan_line = "Last scan: {} ({}). Next scan around: {}.".format(
-            html.escape(format_scan_timestamp(scan["last_run_at"]) or scan["last_run_at"]),
-            ok_text,
-            html.escape(format_scan_timestamp(scan["next_run_at"]) or "unknown"),
-        )
-    else:
-        scan_line = "No scan has run yet in this deployment."
+    scan_line = html.escape(_scan_line(scan))
 
     # The #scanline text already reflected an in-flight scan on page load,
     # but the button itself always rendered plain-and-enabled -- so coming
@@ -276,16 +310,15 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
     # even though the server already knew one was. Render the same
     # disabled/"Scanning..." state the click handler produces.
     if scan["running"]:
-        # The page-load poll below can only ask /status about THIS
-        # process's in-memory /scan jobs. scan["running"] is also true for
-        # an autopilot background cycle (heartbeat status=running), which
-        # /status knows nothing about -- polling in that case would see an
-        # empty jobs map, conclude "finished" and reload immediately, over
-        # and over, for as long as the cycle lasts. So the button always
-        # shows the honest disabled state, but the auto-refresh only
-        # attaches when there is a job /status can actually report on.
-        has_pollable_job = any(s in ("running", "queued") for s in jobs_summary.values())
-        scan_btn_attrs = ' disabled data-scan-running="1"' if has_pollable_job else " disabled"
+        # The poll loop below now asks /status for the SERVER's own view of
+        # whether a scan is running (scan.running), rather than inferring it
+        # from this process's in-memory /scan job map. That map is empty
+        # during an autopilot background cycle, which used to make the poll
+        # conclude "finished" and reload immediately, over and over, for the
+        # whole cycle -- so the auto-refresh had to be withheld in exactly
+        # the case a live counter is most useful. With the authoritative
+        # signal available it can always attach.
+        scan_btn_attrs = ' disabled data-scan-running="1"'
         scan_btn_label = "Scanning..."
     else:
         scan_btn_attrs = ""
@@ -317,40 +350,46 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
   </div>
 </div>
 <script>
+// ONE poll loop, used by both entry points below: the "Run scan now"
+// click and the page-load resume for a scan that was already in flight.
+// It reads /status (no job_id), whose `scan` block is the server's own
+// authoritative view -- covering the autopilot background thread's cycle
+// as well as this process's /scan jobs -- and repaints #scanline from
+// scan.line every tick, which is what turns the old static "Scan in
+// progress right now." into a live "Checking brokers: 412/827 -- 3
+// found, 0 errors."
+//
+// Deliberately NOT a second mechanism alongside a job_id poll: the two
+// used to answer "is it done?" from different sources and could disagree.
+function pollScan() {{
+  var btn = document.getElementById('runScanBtn');
+  var line = document.getElementById('scanline');
+  fetch('/status').then(function (r) {{ return r.json(); }}).then(function (s) {{
+    var scan = (s && s.scan) || {{}};
+    if (!scan.running) {{ location.reload(); return; }}
+    if (btn) {{ btn.disabled = true; btn.textContent = 'Scanning...'; }}
+    if (line && scan.line) {{ line.textContent = scan.line; }}
+    setTimeout(pollScan, 1500);
+  }}).catch(function () {{ setTimeout(pollScan, 1500); }});
+}}
+
 function runScanNow() {{
   var btn = document.getElementById('runScanBtn');
   btn.disabled = true; btn.textContent = 'Starting...';
-  fetch('/scan', {{method: 'POST'}}).then(function(r) {{ return r.json(); }}).then(function(job) {{
-    function poll() {{
-      fetch('/status?job_id=' + job.job_id).then(function(r) {{ return r.json(); }}).then(function(s) {{
-        if (s.status === 'done' || s.status === 'error') {{ location.reload(); }}
-        else {{ btn.textContent = 'Scanning...'; setTimeout(poll, 1500); }}
-      }});
-    }}
-    poll();
-  }});
+  // /scan registers the job as 'queued' BEFORE responding, so scan.running
+  // is already true by the time this resolves -- no race where the first
+  // poll sees "not running" and reloads the page instantly.
+  fetch('/scan', {{method: 'POST'}}).then(function () {{ pollScan(); }})
+    .catch(function () {{ pollScan(); }});
 }}
 
-// Page-load poll for a scan that was already running when this page was
-// served (started before a navigation away and back). Mirrors the
-// runScanNow poll loop above, but off the no-job_id /status branch --
-// that returns {{jobs: {{<job_id>: <status>}}}} for EVERY job, which is
-// all we have here: the job id that started this scan belonged to a page
-// we have since navigated away from.
+// Resume the counter for a scan that was already running when this page
+// was served (an autopilot cycle, or a /scan started before navigating
+// away and back).
 (function () {{
   var btn = document.getElementById('runScanBtn');
   if (!btn || btn.getAttribute('data-scan-running') !== '1') {{ return; }}
-  function pollRunning() {{
-    fetch('/status').then(function (r) {{ return r.json(); }}).then(function (s) {{
-      var jobs = (s && s.jobs) || {{}};
-      var stillRunning = Object.keys(jobs).some(function (id) {{
-        return jobs[id] === 'running' || jobs[id] === 'queued';
-      }});
-      if (!stillRunning) {{ location.reload(); }}
-      else {{ setTimeout(pollRunning, 1500); }}
-    }}).catch(function () {{ setTimeout(pollRunning, 1500); }});
-  }}
-  pollRunning();
+  pollScan();
 }})();
 </script>
 """.format(
@@ -552,7 +591,16 @@ def get_status(job_id: str | None = None, cfg: Config = Depends(get_config),
     pending = sum(1 for r in rows if r["removal_status"] in (None, "pending"))
     with _JOBS_LOCK:
         jobs_summary = {jid: j.get("status") for jid, j in jobs.items()}
-    return {"brokers": rows, "pending_removals": pending, "jobs": jobs_summary}
+    # `scan` is what the dashboard's poll loop actually consumes: the live
+    # per-broker counter plus the same rendered line the page was served
+    # with. `jobs` stays for backward compatibility with anything already
+    # polling it, but it is no longer the signal the UI decides on -- it is
+    # blind to the autopilot background thread's own cycle.
+    scan = webui_data.scan_status(_read_heartbeat(cfg), jobs_summary, cfg.interval_seconds,
+                                   progress=progress_mod.snapshot())
+    scan["line"] = _scan_line(scan)
+    return {"brokers": rows, "pending_removals": pending, "jobs": jobs_summary,
+            "scan": scan}
 
 
 @app.post("/brokers/{broker_id}/remove")

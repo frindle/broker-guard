@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 
 from broker_guard import broker_normalize, brokers as brokers_mod
 from broker_guard import health, profile as profile_mod, scheduler, serpwatch
-from broker_guard import playwright_checks
+from broker_guard import playwright_checks, progress as progress_mod
 from broker_guard.config import Config, ConfigError, load_config, validate_runtime_paths
 from broker_guard.eraser import needs_reverify, status_after_removal
 from broker_guard.logging_setup import setup_logging
@@ -64,7 +64,29 @@ class Dependencies:
                 log.warning("closer failed", extra={"error": str(exc)})
 
 
-def build_presence_checker(identity, brokers, deps, cfg):
+def _empty_stats() -> dict:
+    """A zeroed per-leg outcome tally.
+
+    Pre-seeded with every key rather than built up lazily so a consumer can
+    read ``stats["error"]`` unconditionally -- a missing key defaulting to 0
+    reads identically to a real zero, which is the exact ambiguity this
+    whole error-counting change exists to remove.
+    """
+    return {"hit": 0, "checked": 0, "error": 0, "skipped": 0}
+
+
+def _counting_observer(stats: dict, progress):
+    """Fan one per-broker outcome out to *stats* and to the live *progress*."""
+
+    def _observe(broker_id, outcome, hits=0, errors=0):
+        if outcome in stats:
+            stats[outcome] += 1
+        progress.record(outcome)
+
+    return _observe
+
+
+def build_presence_checker(identity, brokers, deps, cfg, progress=None):
     """Fuse SERP hits and browser checks into ``presence_checker(broker, key)``.
 
     This is the join the per-slice modules never had: ``run_serpwatch``
@@ -72,26 +94,57 @@ def build_presence_checker(identity, brokers, deps, cfg):
     keyed by broker_id, and ``run_cycle`` wants a per-broker predicate. A
     broker counts as present if EITHER source says so; a browser check that
     errored is not evidence of absence, so it defers to the SERP result.
+
+    ``progress`` is a ``broker_guard.progress.ScanProgress`` (defaulting to
+    the process-wide one) that both legs feed per broker, so the dashboard
+    can show "412/827 checked, 3 found, 0 errors" WHILE the cycle runs
+    instead of a bare "scan in progress" for the next hour. Pass an
+    isolated instance in a test to avoid touching process-wide state.
+
+    The returned checker also carries ``serp_stats``/``browser_stats``
+    attributes -- the per-leg outcome tallies -- so ``run_once`` can put
+    real error counts in the cycle result rather than only in a log line.
     """
     name_variants = profile_mod.name_variants(identity)
+    progress = progress if progress is not None else progress_mod.current()
 
     serp_ids = set()
+    serp_stats = _empty_stats()
     if deps.searx_search is not None:
+        progress.start(progress_mod.PHASE_SERP, len(brokers))
         hits = serpwatch.run_serpwatch(
             brokers, identity.phones, identity.emails, name_variants,
             identity.addresses, deps.searx_search,
+            observer=_counting_observer(serp_stats, progress),
         )
         serp_ids = {hit.broker_id for hit in hits}
-        log.info("serpwatch complete", extra={"brokers": len(brokers), "hit_brokers": len(serp_ids)})
+        progress.finish()
+        # `errors` is the whole point of this line: a cycle that logged
+        # `hit_brokers: 0` used to be indistinguishable from one where every
+        # single broker's search failed. Now it is not.
+        log.info("serpwatch complete", extra={
+            "brokers": len(brokers),
+            "hit_brokers": len(serp_ids),
+            "checked": serp_stats["checked"],
+            "errors": serp_stats["error"],
+            "skipped": serp_stats["skipped"],
+        })
 
     browser_results = {}
+    browser_stats = _empty_stats()
     if deps.page_action is not None:
         terms = name_variants + identity.phones + identity.emails
         checks = playwright_checks.build_site_checks(brokers, terms)
-        browser_results = playwright_checks.run_playwright_checks(checks, deps.page_action)
+        progress.start(progress_mod.PHASE_BROWSER, len(checks))
+        browser_results = playwright_checks.run_playwright_checks(
+            checks, deps.page_action,
+            observer=_counting_observer(browser_stats, progress),
+        )
+        progress.finish()
         errored = sum(1 for r in browser_results.values() if not r["checked"])
         log.info("browser checks complete",
-                 extra={"checks": len(checks), "errored": errored})
+                 extra={"checks": len(checks), "errored": errored,
+                        "hits": browser_stats["hit"], "checked": browser_stats["checked"]})
 
     def presence_checker(broker, identity_key):
         broker_id = broker["id"]
@@ -114,6 +167,8 @@ def build_presence_checker(identity, brokers, deps, cfg):
 
     presence_checker.serp_ids = serp_ids
     presence_checker.browser_results = browser_results
+    presence_checker.serp_stats = serp_stats
+    presence_checker.browser_stats = browser_stats
     return presence_checker
 
 
@@ -160,11 +215,27 @@ def run_once(cfg: Config, deps: Dependencies) -> dict:
             or "", True,
         )
     ]
+    # Detection health, kept SEPARATE from result["errors"].
+    #
+    # result["errors"] is orchestrator.run_cycle's list of brokers whose
+    # presence_checker RAISED (i.e. browser check errored -> PresenceUnknown).
+    # It has never included a SERP failure, because a failed SERP query was
+    # silently turned into "no hit" long before the checker ran. These two
+    # fields are that missing signal -- a cycle can now say "827 brokers,
+    # 340 of them errored" instead of an unqualified "0 found".
+    result["detection"] = {
+        "serp": dict(presence_checker.serp_stats),
+        "browser": dict(presence_checker.browser_stats),
+    }
+    result["detection_errors"] = (
+        presence_checker.serp_stats["error"] + presence_checker.browser_stats["error"]
+    )
     log.info("cycle complete", extra={
         "present": len(result["current"]),
         "new": len(result["new_appearances"]),
         "resolved": len(result["resolved"]),
         "errors": len(result["errors"]),
+        "detection_errors": result["detection_errors"],
         "removals": len(result["removals"]),
     })
     return result
@@ -203,7 +274,13 @@ def build_dependencies(cfg: Config) -> Dependencies:
                 cfg.searxng_url, timeout_s=cfg.searxng_timeout_s, auth=cfg.searxng_auth,
                 engines=cfg.searxng_engines, attempts=max(1, cfg.max_retries),
                 base_delay=cfg.retry_base_delay_s,
+                min_interval_s=cfg.searxng_min_interval_s,
+                jitter_s=cfg.searxng_jitter_s,
             )
+            log.info("searxng enabled", extra={
+                "min_interval_s": cfg.searxng_min_interval_s,
+                "jitter_s": cfg.searxng_jitter_s,
+            })
         except PermanentSearxError as exc:
             log.error("searxng disabled", extra={"error": str(exc)})
     else:

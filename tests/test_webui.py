@@ -771,19 +771,32 @@ def test_running_scan_page_polls_the_jobs_summary_branch_of_status(cfg):
     assert "location.reload()" in resp.text
 
 
-def test_autopilot_only_scan_disables_the_button_without_a_reload_loop(cfg, tmp_path):
-    """scan_status() also reports running for an autopilot cycle, which
-    /status knows nothing about. Polling there would see an empty jobs map,
-    conclude "finished" and reload forever -- so the button is disabled but
-    the auto-refresh is deliberately NOT attached."""
+def test_autopilot_only_scan_attaches_the_poll_and_status_agrees_it_is_running(cfg, tmp_path):
+    """An autopilot background cycle (heartbeat status=running, empty jobs
+    map) must now BOTH disable the button and attach the poll.
+
+    Previously the poll was withheld here: it decided "is it still running?"
+    from /status's jobs summary, which is empty during an autopilot cycle,
+    so it would have concluded "finished" and reloaded in a loop. The poll
+    now reads /status's `scan.running` -- the server's own view, which
+    covers the autopilot thread -- so the live counter works in exactly the
+    case it was previously unavailable. This asserts the reload-loop is
+    still impossible, by checking /status reports running: True here."""
     os.makedirs(cfg.log_dir, exist_ok=True)
     with open(os.path.join(cfg.log_dir, "heartbeat.json"), "w", encoding="utf-8") as fh:
         json.dump({"status": "running", "last_run": "2026-01-01T00:00:00+00:00", "ok": True}, fh)
 
     webui.app.dependency_overrides[webui.get_config] = lambda: cfg
     webui.app.dependency_overrides[webui.get_jobs] = lambda: {}
-    resp = TestClient(webui.app).get("/")
+    client = TestClient(webui.app)
+    resp = client.get("/")
 
     assert "Scan in progress right now." in resp.text
-    assert 'id="runScanBtn" onclick="runScanNow()" disabled>Scanning...' in resp.text
-    assert 'data-scan-running="1"' not in resp.text
+    assert 'id="runScanBtn" onclick="runScanNow()" disabled data-scan-running="1">Scanning...' \
+        in resp.text
+
+    # The poll's own source of truth says "still running" -- so it keeps
+    # polling instead of reloading forever.
+    scan = client.get("/status").json()["scan"]
+    assert scan["running"] is True
+    assert scan["line"] == "Scan in progress right now."

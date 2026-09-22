@@ -354,7 +354,62 @@ def broker_stepper(row: dict, scan_interval_seconds: int) -> dict:
     return {"steps": steps, "current_index": current_index}
 
 
-def scan_status(heartbeat: dict | None, jobs_summary: dict, scan_interval_seconds: int) -> dict:
+def scan_progress_line(progress: dict | None) -> str | None:
+    """Render a live ``ScanProgress`` snapshot as one honest sentence.
+
+    Examples::
+
+        "Checking brokers: 412/827 -- 3 found, 0 errors."
+        "Checking broker sites: 12/95 -- 0 found, 4 errors."
+
+    Returns None when there is nothing truthful to say (no snapshot, or a
+    phase that has not started), so the caller falls back to its own text
+    rather than rendering "0/0".
+
+    Errors are ALWAYS shown, including when the count is zero: "0 errors"
+    is the load-bearing half of the sentence. A line that only appeared
+    when something went wrong would leave the normal case looking exactly
+    like the old, uninformative "scan in progress", which is the state
+    this whole feature exists to replace.
+    """
+    if not isinstance(progress, dict):
+        return None
+    total = progress.get("total") or 0
+    processed = progress.get("processed") or 0
+    if total <= 0 and processed <= 0:
+        return None
+    label = "Checking broker sites" if progress.get("phase") == "browser" else "Checking brokers"
+    counted = "{}/{}".format(processed, total) if total > 0 else str(processed)
+    return "{}: {} -- {} found, {} errors.".format(
+        label, counted, progress.get("hits") or 0, progress.get("errors") or 0,
+    )
+
+
+def last_scan_detection_line(heartbeat: dict | None) -> str | None:
+    """"Checked 827 brokers, 340 errors." for the FINISHED scan, from the
+    heartbeat's persisted ``detection`` block (see autopilot.run_forever).
+
+    Returns None for a heartbeat written before this field existed, or by
+    the headless ``service.main`` loop -- an older heartbeat honestly has
+    nothing to say here rather than implying a clean zero.
+    """
+    if not isinstance(heartbeat, dict):
+        return None
+    detection = heartbeat.get("detection")
+    if not isinstance(detection, dict):
+        return None
+    serp = detection.get("serp") if isinstance(detection.get("serp"), dict) else {}
+    browser = detection.get("browser") if isinstance(detection.get("browser"), dict) else {}
+    checked = sum((leg.get("checked", 0) + leg.get("hit", 0)) for leg in (serp, browser))
+    errors = sum(leg.get("error", 0) for leg in (serp, browser))
+    skipped = sum(leg.get("skipped", 0) for leg in (serp, browser))
+    if checked == 0 and errors == 0 and skipped == 0:
+        return None
+    return "Checked {} broker(s), {} error(s).".format(checked, errors)
+
+
+def scan_status(heartbeat: dict | None, jobs_summary: dict, scan_interval_seconds: int,
+                 progress: dict | None = None) -> dict:
     """The dashboard's scan-status indicator, from two REAL sources:
 
     * ``heartbeat`` -- the parsed contents of ``logs/heartbeat.json`` (see
@@ -382,16 +437,37 @@ def scan_status(heartbeat: dict | None, jobs_summary: dict, scan_interval_second
     been running for minutes looked identical to "never run yet" the whole
     time it was in progress, since jobs_summary only ever tracks THIS
     process's manual /scan jobs.
+
+    ``progress`` is an optional ``broker_guard.progress.ScanProgress``
+    snapshot (a plain dict -- this function stays pure and imports
+    nothing). When a phase is live it supplies ``progress_line``, the
+    "412/827 checked, 3 found, 0 errors" granularity the bare "running"
+    boolean never had, and it is a third, independent reason to report
+    ``running``: it is true the instant a sweep starts, without waiting
+    for a heartbeat write.
     """
     running = (
         any(status == "running" for status in jobs_summary.values())
         or bool(heartbeat) and heartbeat.get("status") == "running"
+        or bool(progress) and bool(progress.get("active"))
     )
+    # Only a LIVE phase may contribute the live counter line. A finished
+    # cycle's counters are deliberately kept readable in the snapshot (see
+    # ScanProgress.finish), so without this check the dashboard would go on
+    # claiming "Checking brokers: 827/827" hours after the scan ended.
+    live_progress = progress if (progress and progress.get("active")) else None
+    common = {
+        "running": running,
+        "progress": progress or None,
+        "progress_line": scan_progress_line(live_progress),
+        "detection_line": last_scan_detection_line(heartbeat),
+        "detection_errors": (heartbeat or {}).get("detection_errors"),
+    }
     if not heartbeat:
-        return {"running": running, "last_run_at": None, "last_run_ok": None, "next_run_at": None}
+        return {**common, "last_run_at": None, "last_run_ok": None, "next_run_at": None}
     last_run_at = heartbeat.get("last_run")
     return {
-        "running": running,
+        **common,
         "last_run_at": last_run_at,
         "last_run_ok": heartbeat.get("ok"),
         "next_run_at": estimate_next_scan(last_run_at, scan_interval_seconds),
