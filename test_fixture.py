@@ -11,6 +11,9 @@ Cases:
   * two seeded rows -> every value rendered in the HTML
   * zero rows -> page still renders (header present, no data rows), no crash
   * hostile values -> html-escaped, raw ``<script>`` never reaches the output
+  * page skeleton intact -- doctype, title, h1, table open/close, body close
+    all present (each is its own line in the reference impl; dropping any one
+    must be caught)
 """
 import sys
 import importlib.util
@@ -82,6 +85,24 @@ CASES = [
                  "first_seen": "2024-01-01T00:00:00Z", "last_seen": "2024-06-01T00:00:00Z"},
             ])
         ),
+        True,
+    ),
+]
+
+
+SKELETON = (
+    "<!DOCTYPE html>",
+    "<html><head><title>Broker Guard -- Brokers</title></head><body>",
+    "<h1>Brokers</h1>",
+    '<table border="1">',
+    "</table>",
+    "</body></html>",
+)
+
+CASES = CASES + [
+    (
+        "page skeleton intact: doctype/title/h1/table open+close/body close all present",
+        lambda: (lambda out, seen: all(s in out for s in SKELETON))(*_render([])),
         True,
     ),
 ]

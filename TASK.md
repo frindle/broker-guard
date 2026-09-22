@@ -34,8 +34,11 @@ Behaviour that must NOT change:
 
 ## Scope
 
-Only edit `broker_guard/webui.py`; do not edit `verify.sh`, `test_fixture.py` or `TASK.md`.
-test_fixture.py is the test fixture -- changing it invalidates the check.
+Only edit `broker_guard/webui.py` (the fix) and `test_fixture.py` (for this
+refine pass: add adversarial cases that catch the surviving mutations); do not
+edit `verify.sh`. `refimpl.py` and `TASK.md` may change only to keep themselves
+accurate. Never weaken or delete existing fixture cases, and never edit the
+reference impl to dodge a mutation.
 
 ## Keep every changed line exercised (relevance)
 
