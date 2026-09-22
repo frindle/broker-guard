@@ -100,16 +100,58 @@ Both are gitignored and dockerignored. Back them up like a password database.
 
 | Mount | Holds |
 | --- | --- |
-| `./state:/data` | `profile.local.json` (your identity), `brokers.json` (dataset, auto-generated if absent), `state.sqlite` (presence history), `id_documents/` + `freeze_state.json` (web UI only) |
+| `./state:/data` | `profile.local.json` (your identity), `brokers.json` (dataset, auto-generated if absent), `state.sqlite` (presence history), `settings.json` (UI-editable runtime settings), `id_documents/` + `freeze_state.json` (web UI only) |
 | `./logs:/logs` | JSON logs, `alerts.jsonl` digests, `heartbeat.json` |
 | `./state/eraser-config:/home/guard/.eraser:ro` | eraser's own config/profile |
 
 The `eraser` binary itself is built into the image (see the Dockerfile's
 `eraser-builder` stage) — no separate volume, no host-side Go toolchain.
 
+### Settings (`/settings`) — the UI beats the env var
+
+Nine runtime settings are editable in the web dashboard and persisted to
+`/data/settings.json` (`BG_SETTINGS_PATH`), next to `state.sqlite` and
+`profiles.json`. Precedence, per setting:
+
+```
+saved in settings.json   >   BG_* environment variable   >   built-in default
+```
+
+So a fresh deployment behaves exactly as before — the env vars still decide
+everything until someone saves something on the page — and once a value *is*
+saved, it wins from then on, **including across a redeploy**. That last part is
+the point: the Unraid host redeploys with `git fetch && git reset --hard
+origin/main && docker compose build && docker compose up -d`, so any hand-edit
+to the tracked `docker-compose.yml` is silently reverted. That was the root
+cause of the recurring "Playwright detection turned itself off again" reports.
+
+| Setting | When a change takes effect |
+| --- | --- |
+| `BG_PLAYWRIGHT_ENABLED` | next autopilot scan cycle (detection layer is rebuilt) |
+| `BG_SEARXNG_URL` | next autopilot scan cycle |
+| `BG_SEARXNG_MIN_INTERVAL_S` | next autopilot scan cycle |
+| `BG_SEARXNG_JITTER_S` | next autopilot scan cycle |
+| `BG_ERASER_ENABLED` | next removal (re-resolved per call) |
+| `BG_ERASER_DRY_RUN` | next removal |
+| `BG_ALERT_WEBHOOK_URL` | next alert |
+| `BG_CAPTCHA_API_KEY` | immediately (write-only — never rendered back into the page) |
+| `BG_INTERVAL_SECONDS` | next loop tick — it does not interrupt a sleep already running, so worst case is one confirmation interval (6h by default) |
+
+Anything triggered from the dashboard (the **Run scan now** button) picks up
+every setting immediately, because each request rebuilds its config.
+
+`BG_SERVE_WEB` is deliberately **not** on that page: it decides whether the
+dashboard runs at all, so it cannot be toggled from inside the dashboard. It
+stays an environment variable — put `BG_SERVE_WEB=true` in a gitignored `.env`.
+
+Each row on the page shows the effective value *and* which tier it came from
+(`stored` / `env` / `default`), plus a checkbox to drop a stored override and
+fall back to the environment variable again.
+
 ### Environment variables
 All config is read from the environment; nothing is hardcoded and no secret is
-ever written to a log.
+ever written to a log. The variables marked **UI** below are the fallback tier
+for a setting that `/settings` can override (see above).
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
@@ -119,27 +161,28 @@ ever written to a log.
 | `BG_LOG_DIR` | `/logs` | log + heartbeat directory |
 | `BG_ID_DOCUMENTS_DIR` | `data/id_documents` | encrypted ID-document uploads (web UI only) |
 | `BG_FREEZE_STATE_PATH` | `data/freeze_state.json` | credit-freeze tracker state (web UI only) |
+| `BG_SETTINGS_PATH` | `data/settings.json` | UI-editable settings store (see above); env-only, a store cannot relocate itself |
 | `BG_SERVE_WEB` | `false` | serve the web dashboard + autopilot loop instead of the headless loop |
 | `BG_WEB_PORT` | `8000` | port for the web dashboard (only meaningful with `BG_SERVE_WEB=true`) |
 | `BG_CRYPTO_KEY` | *(unset)* | Fernet key encrypting ID documents + freeze PINs at rest; required only for those two features |
-| `BG_INTERVAL_SECONDS` | `86400` | sweep interval; minimum 60 |
+| `BG_INTERVAL_SECONDS` | `86400` | **UI** sweep interval; minimum 60 |
 | `BG_RUN_ONCE` | `false` | run a single cycle and exit |
-| `BG_SEARXNG_URL` | *(unset)* | your self-hosted SearXNG; unset disables SERP detection |
+| `BG_SEARXNG_URL` | *(unset)* | **UI** your self-hosted SearXNG; unset disables SERP detection |
 | `BG_SEARXNG_AUTH` | *(unset)* | optional `Authorization` header value |
 | `BG_SEARXNG_TIMEOUT_S` | `20` | per-request timeout |
 | `BG_SEARXNG_ENGINES` | *(unset)* | restrict to specific SearXNG engines |
-| `BG_SEARXNG_MIN_INTERVAL_S` | `2.0` | minimum seconds between two SearXNG requests (see below) |
-| `BG_SEARXNG_JITTER_S` | `1.0` | extra uniform `0..N` seconds added to that gap |
-| `BG_PLAYWRIGHT_ENABLED` | `false` | enable headless browser checks |
+| `BG_SEARXNG_MIN_INTERVAL_S` | `2.0` | **UI** minimum seconds between two SearXNG requests (see below) |
+| `BG_SEARXNG_JITTER_S` | `1.0` | **UI** extra uniform `0..N` seconds added to that gap |
+| `BG_PLAYWRIGHT_ENABLED` | `false` | **UI** enable headless browser checks |
 | `BG_PLAYWRIGHT_HEADLESS` | `true` | run Chromium headless |
 | `BG_PLAYWRIGHT_TIMEOUT_MS` | `30000` | per-page timeout |
-| `BG_ERASER_ENABLED` | `false` | enable the removal engine |
-| `BG_ERASER_DRY_RUN` | `true` | **keep true until you mean it** — no request is sent while set |
+| `BG_ERASER_ENABLED` | `false` | **UI** enable the removal engine |
+| `BG_ERASER_DRY_RUN` | `true` | **UI** — **keep true until you mean it**; no request is sent while set |
 | `BG_ERASER_BIN` | `eraser` | path to the compiled binary |
 | `BG_ERASER_TIMEOUT_S` | `300` | subprocess timeout |
-| `BG_ALERT_WEBHOOK_URL` | *(unset)* | your own webhook (HA, ntfy…); unset = file sink only |
+| `BG_ALERT_WEBHOOK_URL` | *(unset)* | **UI** your own webhook (HA, ntfy…); unset = file sink only |
 | `BG_ALERT_LOG_PATH` | `$BG_LOG_DIR/alerts.jsonl` | append-only digest file |
-| `BG_CAPTCHA_API_KEY` | *(unset)* | third-party captcha solver key |
+| `BG_CAPTCHA_API_KEY` | *(unset)* | **UI** third-party captcha solver key |
 | `BG_MAX_RETRIES` | `3` | attempts per network call |
 | `BG_LOG_LEVEL` | `INFO` | log level |
 | `BG_LOG_PII` | `false` | **leave false** — true disables log redaction |
@@ -177,6 +220,34 @@ confident `hit_brokers: 0` and looked like good news. A cycle now reports
 "checked 827, 0 errors" and "checked 487, 340 errors" as visibly different
 states. One broker's failure still never aborts the cycle — it is just no
 longer invisible.
+
+### Silent detection failures (a failure must never read as a removal)
+
+A broker is reported **resolved** — and its presence row deleted, which is what
+makes a *re*appearance detectable — only when it was actually checked and found
+absent. Anything that merely *looks* like an absence has to raise instead, so
+`orchestrator.run_cycle` buckets it under `errors` and leaves the broker's state
+alone. Two failure modes used to slip through, because neither raised:
+
+- **SearXNG answering 200 with nothing in it.** When the instance's upstream
+  engines are all rate-limited or CAPTCHA-walled it returns a valid, empty
+  `results: []` for every query — the same value a genuine "not listed" search
+  returns. `searx_client` now also reads the `unresponsive_engines` field
+  SearXNG ships alongside the results and raises `SearxError` when an *empty*
+  result set came back with either every `BG_SEARXNG_ENGINES` engine
+  unresponsive, or (when no engine set is pinned) three or more of them. A
+  single flaky engine is **not** an outage — SearXNG falls back to the others,
+  and flagging that would turn ordinary flakiness into a cycle-wide error storm.
+  Non-empty results never raise, however many engines are down: if something
+  answered and found something, that is real signal.
+- **A broker's bot wall.** A Cloudflare/CAPTCHA challenge page navigates fine
+  and returns 200; the identity terms are correctly absent from it, because it
+  is not the broker's listing page. `browser.bot_wall_reason` matches a short,
+  conservative signature list (plus HTTP 401/403/429) and reports `{"error": …}`
+  rather than `{"found": false}`. Generic CAPTCHA-widget wording only counts on
+  a near-empty page, since a real opt-out page may legitimately embed one. A
+  404, and a broker's own "no results found" copy, are genuine absences and are
+  left alone.
 
 ### Per-broker scan results on /brokers
 

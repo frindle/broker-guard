@@ -42,6 +42,7 @@ from broker_guard import profile as profile_mod
 from broker_guard import progress as progress_mod
 from broker_guard import profiles as profiles_mod
 from broker_guard import service as service_mod
+from broker_guard import settings as settings_mod
 from broker_guard import state as state_mod
 from broker_guard import webui_data
 from broker_guard import webui_style as style
@@ -69,13 +70,17 @@ ID_DOC_SIDES = ("front", "back")
 # --- dependencies (overridable in tests) ------------------------------------
 
 def get_config() -> Config:
-    """Fresh Config from the environment on every request.
+    """Fresh Config on every request: the environment tier, with the stored
+    (UI-editable) settings overlaid on top of it.
 
     Deliberately NOT cached at import/module time: a webserver process
     outlives a single request, and tests need a clean, isolated Config per
-    test without mutating shared process environment.
+    test without mutating shared process environment. Re-reading the settings
+    store per request is also what makes a setting saved on ``/settings``
+    apply to the very next page load -- including to a ``/scan`` started from
+    the dashboard, which builds its dependencies from this same Config.
     """
-    return load_config()
+    return settings_mod.effective_config(load_config())
 
 
 # In-memory /scan job store. Module-level so a job survives past the request
@@ -1530,3 +1535,217 @@ def freeze_pin_set(bureau_key: str, pin: str = Form(...), cfg: Config = Depends(
     freeze_mod.save_freeze_state(cfg.freeze_state_path, identity.identity_key, state)
     log.info("freeze pin stored", extra={"bureau_key": bureau_key})
     return {"bureau_key": bureau_key, "has_pin": True}
+
+
+# --- settings ---------------------------------------------------------------
+
+_SETTINGS_SOURCE_TONE = {
+    settings_mod.SOURCE_STORED: "success",
+    settings_mod.SOURCE_ENV: "progress",
+    settings_mod.SOURCE_DEFAULT: "neutral",
+}
+
+_SETTINGS_SOURCE_LABEL = {
+    settings_mod.SOURCE_STORED: "saved here",
+    settings_mod.SOURCE_ENV: "env var",
+    settings_mod.SOURCE_DEFAULT: "built-in default",
+}
+
+
+def _setting_input_html(resolved: "settings_mod.ResolvedSetting") -> str:
+    """The editable control for one setting.
+
+    Three shapes, one per need rather than one generic text box:
+
+    * **bool** -> a two-option ``<select>``, NOT a checkbox. An unchecked
+      checkbox submits nothing at all, which is indistinguishable from "this
+      field wasn't on the form" -- exactly the ambiguity that makes a
+      save-everything form silently drop a "turn this off".
+    * **secret** -> an empty password field. The stored value is NEVER
+      rendered back into the page, matching ``freeze_pin_set``'s rule (no
+      GET-the-plaintext route exists for the freeze PIN either); blank on
+      submit means "keep what is stored", so a save of the rest of the form
+      cannot wipe the key by omission.
+    * everything else -> a text box pre-filled with the current EFFECTIVE
+      value, so saving an untouched form is a no-op in value terms (it does
+      move the source from env/default to stored, which is the point).
+    """
+    spec = resolved.spec
+    name = style.escape_attr(spec.key)
+
+    if spec.secret:
+        placeholder = ("stored -- leave blank to keep it"
+                       if resolved.value else "not set")
+        return ('<input class="inp" type="password" name="{name}" value="" '
+                'autocomplete="new-password" placeholder="{ph}">').format(
+            name=name, ph=style.escape_attr(placeholder))
+
+    if spec.kind == "bool":
+        on = " selected" if resolved.value else ""
+        off = "" if resolved.value else " selected"
+        return ('<select class="inp" name="{name}">'
+                '<option value="true"{on}>on</option>'
+                '<option value="false"{off}>off</option></select>').format(
+            name=name, on=on, off=off)
+
+    value = "" if resolved.value is None else str(resolved.value)
+    return '<input class="inp" type="text" name="{name}" value="{value}">'.format(
+        name=name, value=style.escape_attr(value))
+
+
+def _setting_row_html(resolved: "settings_mod.ResolvedSetting") -> str:
+    spec = resolved.spec
+    source_note = _SETTINGS_SOURCE_LABEL.get(resolved.source, resolved.source)
+    if resolved.source == settings_mod.SOURCE_ENV:
+        source_note = "{} ({})".format(source_note, spec.env)
+
+    reset_html = ""
+    if resolved.stored:
+        # Only offered when there IS a stored override to drop -- a "revert to
+        # env" control on a value that is already coming from the env would be
+        # a no-op dressed up as an action.
+        reset_html = (
+            '<label class="muted" style="display:flex;gap:6px;align-items:center;'
+            'font-size:12px;margin-top:6px;">'
+            '<input type="checkbox" name="reset" value="{key}"> '
+            'Forget this override and use {env} again</label>'
+        ).format(key=style.escape_attr(spec.key), env=html.escape(spec.env))
+
+    return """
+<div class="field" style="border-top:1px solid var(--border);padding-top:14px;">
+  <label>{label} {badge}</label>
+  <div class="muted" style="font-size:12px;margin:-2px 0 4px;">
+    Currently <strong>{current}</strong> &middot; from {source_note} &middot;
+    env var <code>{env}</code>
+  </div>
+  {input_html}
+  <div class="muted" style="font-size:12px;">{help}</div>
+  {reset_html}
+</div>
+""".format(
+        label=html.escape(spec.label),
+        badge=style.badge(resolved.source, _SETTINGS_SOURCE_TONE.get(resolved.source, "neutral")),
+        current=html.escape(resolved.display() or "(blank)"),
+        source_note=html.escape(source_note),
+        env=html.escape(spec.env),
+        input_html=_setting_input_html(resolved),
+        help=html.escape(spec.help),
+        reset_html=reset_html,
+    )
+
+
+@app.get("/settings", response_class=HTMLResponse)
+def settings_get(saved: str = "", cfg: Config = Depends(get_config)):
+    """The runtime settings page.
+
+    Every row shows the effective value AND which tier it came from (saved
+    here / env var / built-in default). That source column is not decoration:
+    the incidents this page exists to end ("the web UI turned itself off
+    again", "Playwright detection turned itself off again") were all a value
+    silently coming from a tier nobody was looking at.
+    """
+    store_path = settings_mod.store_path(cfg)
+    resolved = settings_mod.resolve(store_path)
+    rows_html = "".join(_setting_row_html(r) for r in resolved)
+    saved_note = ""
+    if saved:
+        saved_note = ('<div class="encnote">Saved to <code>{path}</code>. '
+                      'Detection settings apply on the next scan cycle; the scan '
+                      'interval applies on the next loop tick.</div>').format(
+            path=html.escape(store_path))
+
+    body = """
+<div class="page-head"><h1>Settings</h1></div>
+<p class="muted" style="max-width:720px;">These are saved to
+<code>{path}</code> on the data volume -- <strong>not</strong> to
+<code>docker-compose.yml</code>. That is the whole point: the host redeploys with
+<code>git reset --hard</code>, which silently reverts any hand-edit to a tracked file,
+so a setting changed here survives a rebuild and a redeploy. A setting you have not
+touched still comes from its <code>BG_*</code> environment variable exactly as before.</p>
+<p class="muted" style="max-width:720px;font-size:13px;">Precedence, per setting:
+<strong>saved here</strong> &rarr; <strong>environment variable</strong> &rarr;
+<strong>built-in default</strong>. <code>BG_SERVE_WEB</code> is deliberately absent:
+it decides whether this dashboard runs at all, so it cannot be turned off from inside
+it -- that one stays an environment variable (put it in <code>.env</code>).</p>
+{saved_note}
+<div class="card" style="max-width:720px;">
+  <form method="post" action="/settings">
+    {rows}
+    <button type="submit" class="btn" style="margin-top:16px;">Save settings</button>
+  </form>
+</div>
+""".format(path=html.escape(store_path), saved_note=saved_note, rows=rows_html)
+    return style.render_page("Settings", "settings", body)
+
+
+@app.post("/settings")
+def settings_post(
+    playwright_enabled: str = Form(""),
+    searxng_url: str = Form(""),
+    searxng_min_interval_s: str = Form(""),
+    searxng_jitter_s: str = Form(""),
+    alert_webhook_url: str = Form(""),
+    eraser_enabled: str = Form(""),
+    eraser_dry_run: str = Form(""),
+    captcha_api_key: str = Form(""),
+    interval_seconds: str = Form(""),
+    reset: list[str] = Form([]),
+    cfg: Config = Depends(get_config),
+):
+    """Persist the settings form into ``cfg.settings_path``.
+
+    Fields are declared one by one rather than swept out of the raw form body
+    so an unknown/renamed field is a 422 from FastAPI rather than a silently
+    ignored edit, and so this signature is the readable list of what the page
+    can change.
+
+    Validation happens in ``settings.update_settings`` BEFORE anything is
+    written, so a bad value (a negative pacing interval, a non-http SearXNG
+    URL, a scan interval under the 60s floor) rejects the whole submission
+    with a 400 and leaves the stored settings exactly as they were -- the same
+    "a bad submission never overwrites good data" rule ``identity_post``
+    follows.
+    """
+    submitted = {
+        "playwright_enabled": playwright_enabled,
+        "searxng_url": searxng_url,
+        "searxng_min_interval_s": searxng_min_interval_s,
+        "searxng_jitter_s": searxng_jitter_s,
+        "alert_webhook_url": alert_webhook_url,
+        "eraser_enabled": eraser_enabled,
+        "eraser_dry_run": eraser_dry_run,
+        "captcha_api_key": captcha_api_key,
+        "interval_seconds": interval_seconds,
+    }
+
+    to_reset = {key for key in reset if key in settings_mod.SPEC_BY_KEY}
+    unknown_reset = [key for key in reset if key not in settings_mod.SPEC_BY_KEY]
+    if unknown_reset:
+        raise HTTPException(status_code=400,
+                            detail="unknown setting(s): " + ", ".join(sorted(unknown_reset)))
+
+    changes = {}
+    for key, raw in submitted.items():
+        spec = settings_mod.SPEC_BY_KEY[key]
+        if key in to_reset:
+            # None == delete the stored override == fall back to the env var.
+            changes[key] = None
+            continue
+        if spec.secret and not raw.strip():
+            # Blank secret means "leave the stored one alone", NOT "clear it".
+            # Clearing a secret is the reset checkbox, which is explicit.
+            continue
+        changes[key] = raw
+
+    try:
+        settings_mod.update_settings(settings_mod.store_path(cfg), changes)
+    except settings_mod.SettingsError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    log.info("runtime settings saved", extra={
+        # Names only. The values include a third-party API credential, and
+        # config.SECRET_ENV_KEYS exists precisely so these never reach a log.
+        "changed": sorted(changes),
+        "reset": sorted(to_reset),
+    })
+    return RedirectResponse(url="/settings?saved=1", status_code=303)

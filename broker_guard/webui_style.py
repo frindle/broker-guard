@@ -76,6 +76,10 @@ NAV_ITEMS = (
     ("identity", "/identity", "Profile"),
     ("exposure", "/exposure", "Exposure"),
     ("freeze", "/freeze", "Credit freeze"),
+    # The runtime knobs that used to be editable ONLY as env vars in the
+    # tracked docker-compose.yml -- and therefore silently reverted by every
+    # `git reset --hard` redeploy. See broker_guard/settings.py.
+    ("settings", "/settings", "Settings"),
 )
 
 PAGE_CSS = """

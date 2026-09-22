@@ -263,11 +263,88 @@ def build_dependencies(cfg: Config) -> AutopilotDependencies:
     wiring (searx/playwright presence detection, eraser availability, alert
     sink, state store) rather than duplicating it -- this module only adds
     the kind-aware decision layer on top.
+
+    *cfg* is the ENVIRONMENT tier (see ``config.py``). Everything below that
+    depends on a UI-editable setting re-resolves it through
+    ``settings.effective_config`` at the moment it is used, not once here --
+    otherwise a setting changed in the dashboard would not take effect until
+    the container was restarted, which is precisely the failure mode the
+    settings store exists to remove. Concretely:
+
+    * **detection** (SearXNG URL, the pacing pair, the Playwright toggle) --
+      the layer is torn down and rebuilt at the start of a scan cycle, but
+      only when ``settings.detection_fingerprint`` actually changed, so an
+      unchanged setting does not relaunch Chromium every cycle.
+    * **removal** (eraser enabled / dry run) -- re-resolved per removal, which
+      is free: ``EraserBridge`` builds an argv, it does not spawn anything.
+    * **alerting** (webhook URL) -- the composite sink is rebuilt only when
+      the URL changes, so its ``last_notification`` survives across cycles.
+    * **eraser monitor/status** -- re-resolved per confirmation pass.
+
+    The one knob that is NOT live here is ``interval_seconds``; see
+    ``run_forever``.
     """
     from broker_guard import service as service_mod
+    from broker_guard import settings as settings_mod
     from broker_guard.eraser_bridge import EraserBridge
+    from broker_guard.sinks import build_alert_sink
 
-    base = service_mod.build_dependencies(cfg)
+    def live_cfg() -> Config:
+        return settings_mod.effective_config(cfg)
+
+    boot_cfg = live_cfg()
+    base = service_mod.build_dependencies(boot_cfg)
+
+    # The detection layer currently in hand, plus the settings fingerprint it
+    # was built from and its own teardown. Seeded from `base` (which
+    # build_dependencies already constructed) so the common "nothing changed"
+    # path builds nothing at all on the first cycle.
+    detection = {
+        "fingerprint": settings_mod.detection_fingerprint(boot_cfg),
+        "searx_search": base.searx_search,
+        "page_action": base.page_action,
+        # base.closers owns this generation's teardown already (it is closed by
+        # base.close(), which is in our closers list below); a REBUILD hands
+        # ownership of the superseded generation to us, see below.
+        "closers": [],
+        "owned": False,
+    }
+
+    def _drop_detection():
+        """Close the superseded detection layer (today: the Playwright
+        browser). Closing it is what stops a settings change from leaking one
+        live Chromium per edit."""
+        for closer in detection["closers"]:
+            try:
+                closer()
+            except Exception as exc:  # pragma: no cover - teardown best effort
+                log.warning("detection closer failed", extra={"error": str(exc)})
+        detection["closers"] = []
+        if not detection["owned"]:
+            # First rebuild: the generation being dropped is base's, so close
+            # base's detection closers here rather than leaving them to run at
+            # process exit against an object we have already replaced.
+            for closer in list(base.closers):
+                try:
+                    closer()
+                except Exception as exc:  # pragma: no cover
+                    log.warning("detection closer failed", extra={"error": str(exc)})
+            base.closers.clear()
+            detection["owned"] = True
+
+    def _detection_deps(live: Config):
+        fingerprint = settings_mod.detection_fingerprint(live)
+        if fingerprint != detection["fingerprint"]:
+            log.info("detection settings changed; rebuilding detection layer")
+            _drop_detection()
+            searx_search, page_action, closers = service_mod.build_detection(live)
+            detection.update(fingerprint=fingerprint, searx_search=searx_search,
+                             page_action=page_action, closers=closers)
+        return service_mod.Dependencies(
+            searx_search=detection["searx_search"],
+            page_action=detection["page_action"],
+            store=base.store,
+        )
 
     def presence_checker_factory():
         """Run a FRESH sweep for the cycle that is about to start.
@@ -275,28 +352,59 @@ def build_dependencies(cfg: Config) -> AutopilotDependencies:
         The profile and broker list are re-read here too, not captured
         once: a profile edited through the /identity page, or a
         regenerated brokers.json, then takes effect on the next scheduled
-        scan instead of requiring a container restart.
+        scan instead of requiring a container restart. The same now goes for
+        the detection settings themselves.
         """
-        identity = profile_mod.load_profile(cfg.profile_path)
-        broker_list = brokers_mod.load_brokers(cfg.brokers_path)
-        return service_mod.build_presence_checker(identity, broker_list, base, cfg)
+        live = live_cfg()
+        identity = profile_mod.load_profile(live.profile_path)
+        broker_list = brokers_mod.load_brokers(live.brokers_path)
+        return service_mod.build_presence_checker(
+            identity, broker_list, _detection_deps(live), live,
+        )
 
-    eraser_monitor = eraser_status = None
-    if cfg.eraser_enabled:
-        bridge = EraserBridge(cfg.eraser_bin, cfg.eraser_timeout_s, cfg.eraser_dry_run)
-        if bridge.available():
-            eraser_monitor = bridge.monitor
-            eraser_status = bridge.status
+    def submit_removal(broker_id, eraser_profile):
+        removal = service_mod.build_removal(live_cfg())
+        if removal is None:
+            # Removals are switched off right now -- report intent without
+            # pretending anything was sent (run_scan_cycle's own
+            # submit_removal-is-None branch does the same, and this keeps the
+            # two paths saying the same thing).
+            return {"success": False, "detail": "removal engine disabled"}
+        return removal(broker_id, eraser_profile)
+
+    alerting = {"url": boot_cfg.alert_webhook_url, "sink": base.alert_sink}
+
+    def alert_sink(payload):
+        live = live_cfg()
+        if live.alert_webhook_url != alerting["url"]:
+            log.info("alert webhook changed; rebuilding alert sink")
+            alerting.update(url=live.alert_webhook_url, sink=build_alert_sink(live))
+        return alerting["sink"](payload)
+
+    def _confirmation_bridge():
+        live = live_cfg()
+        if not live.eraser_enabled:
+            return None
+        bridge = EraserBridge(live.eraser_bin, live.eraser_timeout_s, live.eraser_dry_run)
+        return bridge if bridge.available() else None
+
+    def eraser_monitor():
+        bridge = _confirmation_bridge()
+        return None if bridge is None else bridge.monitor()
+
+    def eraser_status():
+        bridge = _confirmation_bridge()
+        return None if bridge is None else bridge.status()
 
     return AutopilotDependencies(
         store=base.store,
         presence_checker=None,
         presence_checker_factory=presence_checker_factory,
-        submit_removal=base.removal,
+        submit_removal=submit_removal,
         eraser_monitor=eraser_monitor,
         eraser_status=eraser_status,
-        alert_sink=base.alert_sink,
-        closers=list(base.closers) + [base.close],
+        alert_sink=alert_sink,
+        closers=[_drop_detection, base.close],
     )
 
 
@@ -328,13 +436,48 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     ``service.main``'s pattern) but is an injection seam: a test passes a
     fake that increments a counter and sets ``stop`` after N calls, so the
     state machine can be exercised without real time.
+
+    Scan interval, and why it is "next tick" rather than immediate
+    ----------------------------------------------------------------
+    ``intervals.scan_seconds`` is re-read from the settings store at the TOP
+    OF EVERY TICK (``_live_scan_seconds``), so changing "Scan interval" in the
+    dashboard needs no container restart. It does not interrupt a sleep that
+    is already in progress: the loop's sleep is ``stop.wait``, the same event
+    that carries SIGTERM, and waking it early for a settings poll would mean
+    either a second polling thread or shortening every tick for every
+    deployment -- real complexity for a knob whose smallest legal value is 60
+    seconds and whose realistic value is a day. The practical bound is
+    therefore the tick, i.e. ``min(scan_seconds, confirmation_seconds)`` --
+    6 hours with the shipped defaults, and immediately at the next tick
+    whenever the loop is already ticking faster than that. A change that
+    someone wants to see take effect right now is one "Run scan now" click on
+    the dashboard, which builds its deps from the live settings anyway.
     """
+    from broker_guard import settings as settings_mod
+
     sleep = sleep or stop.wait
     identity = profile_mod.load_profile(cfg.profile_path)
     broker_list = brokers_mod.load_brokers(cfg.brokers_path)
 
-    tick_seconds = max(1, min(intervals.scan_seconds, intervals.confirmation_seconds))
-    elapsed_since_scan = intervals.scan_seconds
+    def _live_scan_seconds() -> int:
+        """The scan interval as of right now: the stored setting if the
+        dashboard has set one, otherwise whatever this loop was started with
+        (which is ``cfg.interval_seconds``, i.e. the env tier) -- never
+        silently overriding a caller that passed an explicit, non-config
+        interval, which is what every test here does."""
+        try:
+            live = settings_mod.effective_config(cfg)
+        except Exception as exc:  # pragma: no cover - defensive
+            log.warning("settings re-read failed; keeping current interval",
+                        extra={"error": str(exc)})
+            return intervals.scan_seconds
+        if live.interval_seconds != cfg.interval_seconds:
+            return live.interval_seconds
+        return intervals.scan_seconds
+
+    scan_seconds = _live_scan_seconds()
+    tick_seconds = max(1, min(scan_seconds, intervals.confirmation_seconds))
+    elapsed_since_scan = scan_seconds
     elapsed_since_confirmation = intervals.confirmation_seconds
 
     # service.main()'s headless loop calls service.write_heartbeat every
@@ -348,7 +491,13 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     from broker_guard import service as service_mod
 
     while not stop.is_set():
-        if elapsed_since_scan >= intervals.scan_seconds:
+        # Re-read at the top of every tick, so a "Scan interval" change made
+        # in the dashboard is picked up without a restart (see the docstring
+        # for why this is next-tick rather than mid-sleep).
+        scan_seconds = _live_scan_seconds()
+        tick_seconds = max(1, min(scan_seconds, intervals.confirmation_seconds))
+
+        if elapsed_since_scan >= scan_seconds:
             started = deps.now()
             # Written BEFORE the cycle runs too, with status=running: without
             # this, the dashboard's scan_status() has no signal at all during
@@ -410,11 +559,16 @@ def main(argv=None) -> int:  # pragma: no cover - thin CLI wrapper, exercised ma
     parser.add_argument("--once", action="store_true", help="run one scan + one confirmation pass, then exit")
     args = parser.parse_args(argv)
 
+    from broker_guard import settings as settings_mod
+
     try:
         cfg = load_config()
     except ConfigError as exc:
         print(f"config error: {exc}", file=sys.stderr)
         return 2
+
+    # Same overlay as service.main: stored (dashboard) > env > default.
+    cfg = settings_mod.effective_config(cfg)
 
     problems = validate_runtime_paths(cfg)
     if problems:

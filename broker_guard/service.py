@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from broker_guard import broker_normalize, brokers as brokers_mod
 from broker_guard import health, profile as profile_mod, scheduler, serpwatch
 from broker_guard import playwright_checks, progress as progress_mod
+from broker_guard import settings as settings_mod
 from broker_guard.config import Config, ConfigError, load_config, validate_runtime_paths
 from broker_guard.eraser import needs_reverify, status_after_removal
 from broker_guard.logging_setup import setup_logging
@@ -76,7 +77,7 @@ def _empty_stats() -> dict:
     return {"hit": 0, "checked": 0, "error": 0, "skipped": 0}
 
 
-def _counting_observer(stats: dict, progress):
+def _counting_observer(stats: dict, progress, error_ids=None):
     """Fan one per-broker outcome out to *stats* and to the live *progress*.
 
     ``record_outcome`` (not ``record``) is what keeps the broker_id: the
@@ -88,6 +89,8 @@ def _counting_observer(stats: dict, progress):
     def _observe(broker_id, outcome, hits=0, errors=0):
         if outcome in stats:
             stats[outcome] += 1
+        if error_ids is not None and outcome == "error":
+            error_ids.add(broker_id)
         progress.record_outcome(broker_id, outcome, hits, errors)
 
     return _observe
@@ -150,8 +153,11 @@ def build_presence_checker(identity, brokers, deps, cfg, progress=None):
     This is the join the per-slice modules never had: ``run_serpwatch``
     returns a list of PresenceResult, ``run_playwright_checks`` returns a dict
     keyed by broker_id, and ``run_cycle`` wants a per-broker predicate. A
-    broker counts as present if EITHER source says so; a browser check that
-    errored is not evidence of absence, so it defers to the SERP result.
+    broker counts as present if EITHER source says so; a leg that errored is
+    not evidence of absence, so it defers to the other leg, and a broker
+    neither leg could actually check raises ``PresenceUnknown`` rather than
+    reporting a false "absent" (which ``run_cycle`` would report as
+    ``resolved`` and autopilot would act on with ``store.forget()``).
 
     ``progress`` is a ``broker_guard.progress.ScanProgress`` (defaulting to
     the process-wide one) that both legs feed per broker, so the dashboard
@@ -183,13 +189,14 @@ def build_presence_checker(identity, brokers, deps, cfg, progress=None):
     progress.begin_cycle(identity_key=identity.identity_key, total=len(brokers))
 
     serp_ids = set()
+    serp_error_ids = set()
     serp_stats = _empty_stats()
     if deps.searx_search is not None:
         progress.start(progress_mod.PHASE_SERP, len(brokers))
         hits = serpwatch.run_serpwatch(
             scan_order, identity.phones, identity.emails, name_variants,
             identity.addresses, deps.searx_search,
-            observer=_counting_observer(serp_stats, progress),
+            observer=_counting_observer(serp_stats, progress, serp_error_ids),
         )
         serp_ids = {hit.broker_id for hit in hits}
         progress.finish()
@@ -237,9 +244,31 @@ def build_presence_checker(identity, brokers, deps, cfg, progress=None):
             raise PresenceUnknown(
                 "{}: check failed: {}".format(broker_id, result["error"])
             )
+        if broker_id in serp_error_ids:
+            # The SERP leg FAILED for this broker (every query against it
+            # errored -- SearXNG unreachable, or answering 200s with nothing
+            # because its upstream engines are all walled) and the browser leg
+            # has no opinion either. That is unknown, not absent.
+            #
+            # This used to fall through to `return False`. serpwatch counted
+            # the failure in serp_stats, but that tally is only a log line and
+            # a dashboard number -- it never reached run_cycle, so the broker
+            # was still reported as "not present" and, if it had a presence
+            # row, as `resolved` -> store.forget(). Raising is what puts the
+            # SERP leg behind the same safety net the browser leg already had.
+            #
+            # Note the ordering: a broker the browser CHECKED cleanly returns
+            # above, on the strength of a successful direct read of the
+            # broker's own site, which is better evidence than the search
+            # index. A SERP failure only decides brokers the browser leg did
+            # not resolve.
+            raise PresenceUnknown(
+                "{}: SERP check failed; presence unknown".format(broker_id)
+            )
         return False
 
     presence_checker.serp_ids = serp_ids
+    presence_checker.serp_error_ids = serp_error_ids
     presence_checker.browser_results = browser_results
     presence_checker.serp_stats = serp_stats
     presence_checker.browser_stats = browser_stats
@@ -332,12 +361,22 @@ def write_heartbeat(cfg: Config, payload: dict) -> None:
         log.warning("heartbeat write failed", extra={"path": path, "error": str(exc)})
 
 
-def build_dependencies(cfg: Config) -> Dependencies:
-    """Construct the REAL implementations from config."""
+def build_detection(cfg: Config) -> tuple:
+    """The two presence-detection legs for *cfg*: ``(searx_search,
+    page_action, closers)``.
+
+    Split out of ``build_dependencies`` so the autopilot can tear this layer
+    down and rebuild it MID-PROCESS when the SearXNG URL / pacing pair /
+    Playwright toggle change through the dashboard, without also rebuilding
+    (and re-opening) the state db, the alert sink and the removal bridge. See
+    ``settings.detection_fingerprint`` for the exact set of values that
+    invalidates a previously-built layer.
+
+    ``closers`` is this layer's own teardown (today: the Playwright browser),
+    and is the caller's to run -- exactly once, when it drops the layer.
+    """
     from broker_guard.browser import make_page_action
-    from broker_guard.eraser_bridge import EraserBridge, noop_bridge
     from broker_guard.searx_client import PermanentSearxError, SearxClient
-    from broker_guard.sinks import build_alert_sink
 
     closers = []
 
@@ -358,23 +397,45 @@ def build_dependencies(cfg: Config) -> Dependencies:
         except PermanentSearxError as exc:
             log.error("searxng disabled", extra={"error": str(exc)})
     else:
-        log.warning("BG_SEARXNG_URL not set; SERP detection disabled")
+        log.warning("no SearXNG URL configured; SERP detection disabled")
 
     page_action = None
     if cfg.playwright_enabled:
         page_action, closer = make_page_action(cfg.playwright_timeout_ms, cfg.playwright_headless)
         closers.append(closer)
 
-    removal = None
-    if cfg.eraser_enabled:
-        bridge = EraserBridge(cfg.eraser_bin, cfg.eraser_timeout_s, cfg.eraser_dry_run)
-        if bridge.available():
-            removal = bridge.submit_removal
-            log.info("eraser enabled", extra={"dry_run": cfg.eraser_dry_run})
-        else:
-            log.error("eraser binary not found; removals disabled",
-                      extra={"eraser_bin": cfg.eraser_bin})
-            removal = noop_bridge
+    return searx_search, page_action, closers
+
+
+def build_removal(cfg: Config):
+    """The removal callable for *cfg*, or ``None`` when removals are off.
+
+    Also split out of ``build_dependencies`` (same reason as
+    ``build_detection``): the autopilot re-resolves it per scan cycle, so
+    flipping "Removal engine enabled"/"DRY RUN" in the dashboard takes effect
+    on the next cycle rather than on the next container restart. Cheap to
+    build -- ``EraserBridge`` is argv construction, not a subprocess.
+    """
+    from broker_guard.eraser_bridge import EraserBridge, noop_bridge
+
+    if not cfg.eraser_enabled:
+        return None
+    bridge = EraserBridge(cfg.eraser_bin, cfg.eraser_timeout_s, cfg.eraser_dry_run)
+    if bridge.available():
+        log.info("eraser enabled", extra={"dry_run": cfg.eraser_dry_run})
+        return bridge.submit_removal
+    log.error("eraser binary not found; removals disabled",
+              extra={"eraser_bin": cfg.eraser_bin})
+    return noop_bridge
+
+
+def build_dependencies(cfg: Config) -> Dependencies:
+    """Construct the REAL implementations from config."""
+    from broker_guard.sinks import build_alert_sink
+
+    searx_search, page_action, closers = build_detection(cfg)
+
+    removal = build_removal(cfg)
 
     return Dependencies(
         searx_search=searx_search,
@@ -403,6 +464,15 @@ def main(argv=None) -> int:
     except ConfigError as exc:
         print(f"config error: {exc}", file=sys.stderr)
         return 2
+
+    # Overlay whatever was set through the dashboard on top of the environment
+    # tier (see settings.py's precedence section). Applied here rather than
+    # inside load_config so a Config stays "purely what the env said" and the
+    # overlay is a visible, single step. BG_SERVE_WEB is deliberately NOT part
+    # of the overlay: it is read from `cfg` below, off the environment, because
+    # a toggle for it could only live in a UI that BG_SERVE_WEB=false means
+    # isn't running.
+    cfg = settings_mod.effective_config(cfg)
 
     logger = setup_logging(cfg.log_level, cfg.log_dir, cfg.log_pii)
     logger.info("broker-guard starting", extra={"config": cfg.redacted()})

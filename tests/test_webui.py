@@ -41,6 +41,12 @@ def cfg(tmp_path, profile_file, brokers_file):
         # an unpinned path would have tests writing real PII-shaped files
         # into the repo's data/ directory.
         profiles_path=str(tmp_path / "profiles.json"),
+        # Same reasoning as profiles_path above: /settings WRITES this file,
+        # so an unpinned path would have tests dropping a real settings.json
+        # into the repo's data/ directory -- and, worse, would make every
+        # other test's effective config depend on whatever a previous local
+        # run happened to leave there.
+        settings_path=str(tmp_path / "settings.json"),
         eraser_config_path=str(tmp_path / "eraser-config.yaml"),
         crypto_key=Fernet.generate_key().decode("ascii"),
     )
@@ -947,3 +953,144 @@ def test_status_includes_the_per_broker_map_only_when_asked(client, clean_progre
     full = client.get("/status?brokers=1").json()
     assert full["scan"]["progress"]["brokers"]["alpha"]["outcome"] == "checked"
     assert "not yet checked" in full["scan"]["outcome_line"]
+
+
+# --- /settings ---------------------------------------------------------------
+
+SETTINGS_FORM = {
+    "playwright_enabled": "false",
+    "searxng_url": "",
+    "searxng_min_interval_s": "2.0",
+    "searxng_jitter_s": "1.0",
+    "alert_webhook_url": "",
+    "eraser_enabled": "false",
+    "eraser_dry_run": "true",
+    "captcha_api_key": "",
+    "interval_seconds": "86400",
+}
+
+
+def test_settings_page_renders_every_setting_with_its_source(client, cfg):
+    from broker_guard import settings as settings_mod
+
+    resp = client.get("/settings")
+
+    assert resp.status_code == 200
+    for spec in settings_mod.SETTING_SPECS:
+        assert spec.label in resp.text
+        assert spec.env in resp.text          # the env var is named, not hidden
+    # Nothing has been saved yet, so every row must say so rather than
+    # implying the dashboard owns the value.
+    assert "built-in default" in resp.text
+    # The per-row source badge renders the bare tier name; none should say
+    # "stored" yet. (The prose above the form mentions "saved here", so match
+    # the badge itself rather than that phrase.)
+    assert ">stored<" not in resp.text
+    # BG_SERVE_WEB is the one deliberate omission (bootstrap paradox).
+    assert "BG_SERVE_WEB" not in resp.text.split("Precedence")[0]
+
+
+def test_settings_page_shows_stored_values_and_labels_them_stored(client, cfg):
+    from broker_guard import settings as settings_mod
+
+    settings_mod.update_settings(cfg.settings_path, {
+        "playwright_enabled": True, "searxng_url": "http://searx.invalid:8080"})
+
+    resp = client.get("/settings")
+
+    assert "http://searx.invalid:8080" in resp.text
+    assert ">stored<" in resp.text
+    # ...and offers to drop the override and go back to the env var.
+    assert 'name="reset" value="playwright_enabled"' in resp.text
+
+
+def test_settings_post_persists_to_the_store(client, cfg):
+    from broker_guard import settings as settings_mod
+
+    resp = client.post("/settings", data={**SETTINGS_FORM,
+                                          "playwright_enabled": "true",
+                                          "searxng_url": "http://searx.invalid:8080",
+                                          "interval_seconds": "3600"},
+                       follow_redirects=False)
+
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/settings?saved=1"
+    stored = settings_mod.load_settings(cfg.settings_path)
+    assert stored["playwright_enabled"] is True
+    assert stored["searxng_url"] == "http://searx.invalid:8080"
+    assert stored["interval_seconds"] == 3600
+    assert json.loads(open(cfg.settings_path, encoding="utf-8").read())["interval_seconds"] == 3600
+
+
+def test_settings_post_rejects_a_bad_value_and_keeps_the_old_store(client, cfg):
+    from broker_guard import settings as settings_mod
+
+    client.post("/settings", data={**SETTINGS_FORM, "interval_seconds": "3600"},
+                follow_redirects=False)
+
+    for bad in ({"interval_seconds": "10"}, {"searxng_url": "nope"},
+                {"searxng_min_interval_s": "-4"}):
+        resp = client.post("/settings", data={**SETTINGS_FORM, **bad},
+                           follow_redirects=False)
+        assert resp.status_code == 400, bad
+
+    assert settings_mod.load_settings(cfg.settings_path)["interval_seconds"] == 3600
+
+
+def test_settings_reset_checkbox_removes_the_stored_override(client, cfg):
+    from broker_guard import settings as settings_mod
+
+    settings_mod.update_settings(cfg.settings_path, {"playwright_enabled": True})
+
+    client.post("/settings", data={**SETTINGS_FORM, "reset": "playwright_enabled"},
+                follow_redirects=False)
+
+    assert "playwright_enabled" not in settings_mod.load_settings(cfg.settings_path)
+
+
+def test_settings_never_renders_the_captcha_key_back_into_the_page(client, cfg):
+    """Same rule as the credit-freeze PIN: a secret goes in, it never comes
+    back out over HTTP. A blank secret field means 'keep the stored one', so
+    saving the rest of the form cannot silently wipe the key either."""
+    from broker_guard import settings as settings_mod
+
+    client.post("/settings", data={**SETTINGS_FORM, "captcha_api_key": "super-secret-key"},
+                follow_redirects=False)
+    assert settings_mod.load_settings(cfg.settings_path)["captcha_api_key"] == "super-secret-key"
+
+    resp = client.get("/settings")
+    assert "super-secret-key" not in resp.text
+    assert 'type="password"' in resp.text
+    assert "leave blank to keep it" in resp.text
+
+    # Save the form again with the secret field blank -> still stored.
+    client.post("/settings", data=SETTINGS_FORM, follow_redirects=False)
+    assert settings_mod.load_settings(cfg.settings_path)["captcha_api_key"] == "super-secret-key"
+
+
+def test_settings_nav_entry_is_present_on_every_page(client):
+    for path in ("/", "/brokers", "/identity", "/settings"):
+        resp = client.get(path)
+        assert resp.status_code == 200, path
+        assert 'href="/settings"' in resp.text, path
+
+
+def test_get_config_overlays_the_stored_settings(tmp_path, monkeypatch):
+    """The dependency every route uses must return the OVERLAID config, or a
+    setting saved on /settings would not reach /scan, the eraser bridge or
+    anything else that reads Config."""
+    from broker_guard import settings as settings_mod
+
+    store = str(tmp_path / "settings.json")
+    monkeypatch.setenv("BG_SETTINGS_PATH", store)
+    monkeypatch.setenv("BG_PLAYWRIGHT_ENABLED", "false")
+    monkeypatch.setenv("BG_INTERVAL_SECONDS", "86400")
+
+    assert webui.get_config().playwright_enabled is False
+
+    settings_mod.update_settings(store, {"playwright_enabled": True,
+                                         "interval_seconds": 3600})
+
+    live = webui.get_config()
+    assert live.playwright_enabled is True
+    assert live.interval_seconds == 3600

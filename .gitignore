@@ -21,6 +21,12 @@ serpwatch-hits/
 removals/
 *.removal.json
 
+# --- UI-editable runtime settings (see broker_guard/settings.py). Written by
+# the /settings page onto the data volume; holds a third-party API key, and is
+# per-deployment state, not source. ---
+data/settings.json
+settings.json
+
 # --- broker dataset: maintained in the SEPARATE PUBLIC repo, pulled at runtime ---
 data/brokers.json
 

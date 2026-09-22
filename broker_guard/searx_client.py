@@ -14,6 +14,12 @@ Two further properties this client owns, both learned the hard way:
   rather than returning ``[]`` -- a value indistinguishable from a successful
   search of someone who is not listed. ``serpwatch.run_serpwatch`` owns "one
   failure must not abort the cycle", and now counts what it catches.
+* **Systemic blindness is a failure, not an absence.** A 200 carrying
+  ``results: []`` is ambiguous: it is what a healthy instance returns for a
+  person who is not listed AND what an instance whose upstream engines are
+  all rate-limited returns for everyone. ``_blindness_reason`` reads the
+  ``unresponsive_engines`` field SearXNG ships alongside the results and
+  raises when the empty answer means "nothing was actually searched".
 """
 import logging
 import random
@@ -30,6 +36,21 @@ log = logging.getLogger("broker_guard.searx")
 # why this exists and why the default is this conservative.
 DEFAULT_MIN_INTERVAL_S = 2.0
 DEFAULT_JITTER_S = 1.0
+
+# How many of SearXNG's upstream engines must be unresponsive before an EMPTY
+# result set is treated as "detection is blind" rather than "nobody is listed".
+#
+# Why a threshold at all, and why this number: SearXNG is designed to survive a
+# single flaky engine -- if Brave times out but Google CSE, DuckDuckGo,
+# Startpage and Wikipedia all answered, an empty result set is real evidence of
+# absence and must stay usable. Treating one hiccup as an outage would turn
+# ordinary partial flakiness into a cycle-wide error storm, which is its own
+# way of destroying the signal. This instance runs ~5 upstream engines, so 3 is
+# "the majority of our coverage did not answer" -- at that point an empty
+# result set carries no information about the person and must not be allowed to
+# read as a verified absence. When `engines=` pins an explicit engine set we do
+# better than a count: see _blindness_reason.
+DEFAULT_UNRESPONSIVE_THRESHOLD = 3
 
 # Transport-level failures worth retrying. Import lazily so the module can be
 # imported (and unit-tested with an injected session) without `requests`.
@@ -54,6 +75,43 @@ def _safe_error(exc) -> str:
     """
     first_line = str(exc).splitlines()[0] if str(exc) else ""
     return "{}: {}".format(type(exc).__name__, first_line[:200])
+
+
+def unresponsive_engine_names(payload) -> list[str]:
+    """Engine names from a SearXNG response's ``unresponsive_engines``.
+
+    SearXNG builds this field from ``UnresponsiveEngine(engine, error_type,
+    suspended)`` via ``webutils.get_translated_errors``, which emits
+    ``(engine, translated_message)`` pairs -- so over the JSON API each
+    element arrives as a two-element ARRAY whose first item is the engine
+    name. Older/other builds have shipped it as a bare string or as an
+    object, so all three shapes are accepted and anything unrecognized is
+    ignored: this function must never raise, because a parsing surprise in a
+    diagnostic field must not take down a search that otherwise worked.
+    """
+    raw = payload.get("unresponsive_engines") if isinstance(payload, dict) else None
+    if not isinstance(raw, (list, tuple)):
+        return []
+    names = []
+    for item in raw:
+        if isinstance(item, str):
+            name = item
+        elif isinstance(item, (list, tuple)) and item:
+            name = item[0]
+        elif isinstance(item, dict):
+            name = item.get("engine") or item.get("name")
+        else:
+            continue
+        if isinstance(name, str) and name.strip():
+            names.append(name.strip())
+    return names
+
+
+def _engine_set(engines: str | None) -> set[str]:
+    """The comma-separated ``engines=`` parameter as a normalized set."""
+    if not engines:
+        return set()
+    return {part.strip().lower() for part in engines.split(",") if part.strip()}
 
 
 class SearxError(RuntimeError):
@@ -81,7 +139,8 @@ class SearxClient:
                  max_results: int = 25,
                  min_interval_s: float = DEFAULT_MIN_INTERVAL_S,
                  jitter_s: float = DEFAULT_JITTER_S,
-                 monotonic=None, rng=None):
+                 monotonic=None, rng=None,
+                 unresponsive_threshold: int = DEFAULT_UNRESPONSIVE_THRESHOLD):
         if not base_url:
             raise PermanentSearxError("BG_SEARXNG_URL is not set; serpwatch cannot run")
         parts = urlsplit(base_url.strip())
@@ -96,6 +155,7 @@ class SearxClient:
         self.timeout_s = timeout_s
         self.auth = auth
         self.engines = engines
+        self.unresponsive_threshold = max(1, int(unresponsive_threshold))
         self.attempts = max(1, attempts)
         self.base_delay = base_delay
         self.max_results = max_results
@@ -190,8 +250,66 @@ class SearxClient:
             raise SearxError("searxng response was not a JSON object")
         results = payload.get("results")
         if not isinstance(results, list):
-            return []
-        return [r for r in results if isinstance(r, dict)][: self.max_results]
+            results = []
+        results = [r for r in results if isinstance(r, dict)]
+        if not results:
+            # Empty results are the dangerous case: `[]` from a healthy
+            # instance means "this person is not listed", and `[]` from an
+            # instance whose upstream engines are all rate-limited or
+            # CAPTCHA-walled means "we learned nothing" -- the same value for
+            # opposite facts. `unresponsive_engines` is how SearXNG tells the
+            # two apart on a 200, so consult it before handing `[]` back as
+            # trustable evidence of absence.
+            reason = self._blindness_reason(payload)
+            if reason:
+                # SearxError (transient) rather than PermanentSearxError: a
+                # rate-limited engine recovers, so this is exactly the class
+                # with_retry is meant to retry, and -- once retries are
+                # exhausted -- the class serpwatch counts as an error rather
+                # than a clean check.
+                raise SearxError(reason)
+        return results[: self.max_results]
+
+    def _blindness_reason(self, payload: dict) -> str | None:
+        """Why an empty result set cannot be trusted, or None if it can.
+
+        Two regimes, because how confidently we can call an outage depends on
+        whether we know the denominator:
+
+        * ``engines=`` pinned (``BG_SEARXNG_ENGINES``): we know exactly which
+          engines this query was supposed to consult, so the test is the
+          strongest one available -- EVERY engine we asked for is unresponsive.
+          Nothing answered, so nothing was searched.
+        * ``engines=`` unset: SearXNG picks the engine set from its own config
+          and the response does not report which were tried, so there is no
+          denominator to compare against. Fall back to a count
+          (``unresponsive_threshold``, default 3): see
+          DEFAULT_UNRESPONSIVE_THRESHOLD for why a count and why that number.
+
+        Only ever consulted for an EMPTY result set. If some engines answered
+        and found something, that is real signal and no number of dead engines
+        changes it.
+        """
+        dead = unresponsive_engine_names(payload)
+        if not dead:
+            return None
+        asked = _engine_set(self.engines)
+        if asked:
+            dead_set = {name.lower() for name in dead}
+            if asked.issubset(dead_set):
+                return (
+                    "searxng returned no results and all {} configured engine(s) "
+                    "were unresponsive: {}".format(len(asked), ", ".join(sorted(dead_set)))
+                )
+            return None
+        if len(dead) >= self.unresponsive_threshold:
+            return (
+                "searxng returned no results and {} engine(s) were unresponsive "
+                "(threshold {}): {}".format(
+                    len(dead), self.unresponsive_threshold, ", ".join(sorted(dead))
+                )
+            )
+        return None
 
     def __call__(self, query: str) -> list[dict]:
         """Search, retrying transient failures; RAISES if all attempts fail.

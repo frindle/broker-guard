@@ -50,6 +50,30 @@ services:
       - ./state/eraser-config:/home/guard/.eraser:ro
 
     environment:
+      # =====================================================================
+      # SETTINGS THAT ARE NOW EDITABLE IN THE WEB UI (/settings)
+      # =====================================================================
+      # BG_PLAYWRIGHT_ENABLED, BG_SEARXNG_URL, BG_SEARXNG_MIN_INTERVAL_S,
+      # BG_SEARXNG_JITTER_S, BG_ALERT_WEBHOOK_URL, BG_ERASER_ENABLED,
+      # BG_ERASER_DRY_RUN, BG_CAPTCHA_API_KEY and BG_INTERVAL_SECONDS are all
+      # still read from here -- but only as the FALLBACK tier. Precedence is:
+      #
+      #     saved in /data/settings.json  >  the variable below  >  the
+      #     built-in default in broker_guard/config.py
+      #
+      # Change them on the dashboard's Settings page instead of editing this
+      # file. An edit made here is reverted by the next redeploy (the host
+      # runs `git fetch && git reset --hard origin/main && docker compose
+      # build && docker compose up -d`, and this file is tracked) -- which is
+      # the actual root cause of the recurring "the web UI turned itself off
+      # again" / "Playwright detection turned itself off again" reports. A
+      # value saved on /settings lives on the /data volume and survives.
+      #
+      # BG_SERVE_WEB is the ONE exception and stays env-only on purpose: if it
+      # is false there is no running web UI in which to expose a toggle for
+      # it. Put that one in `.env` (see below).
+      # =====================================================================
+
       # --- paths (match the volumes above; defaults already set in the image) ---
       BG_PROFILE_PATH: /data/profile.local.json
       BG_BROKERS_PATH: /data/brokers.json
@@ -65,6 +89,12 @@ services:
       # onto the writable /data volume explicitly.
       BG_EXPOSURE_CACHE_PATH: /data/exposure_cache.json
       BG_PROFILES_PATH: /data/profiles.json
+      # The UI-editable settings store -- see broker_guard/settings.py and the
+      # "SETTINGS THAT ARE NOW EDITABLE IN THE WEB UI" note below. On the /data
+      # volume with everything else persistent, so `git reset --hard` on a
+      # redeploy cannot touch it. This path itself is env-only: a store cannot
+      # relocate itself from inside its own UI.
+      BG_SETTINGS_PATH: /data/settings.json
 
       # --- web dashboard (off by default -- headless loop only) ---
       # Set true to serve broker_guard/webui.py + run the autopilot loop as
@@ -82,10 +112,14 @@ services:
       BG_CRYPTO_KEY: "${BG_CRYPTO_KEY:-}"
 
       # --- scheduling ---
-      BG_INTERVAL_SECONDS: "86400"   # one sweep per day; minimum accepted is 60
+      # UI-editable (/settings). Takes effect at the autopilot loop's next
+      # tick -- it does not interrupt a sleep already in progress. One sweep
+      # per day; minimum accepted is 60, enforced on the stored value too.
+      BG_INTERVAL_SECONDS: "${BG_INTERVAL_SECONDS:-86400}"
       BG_RUN_ONCE: "false"
 
       # --- SearXNG (self-hosted; REQUIRED for SERP detection) ---
+      # UI-editable (/settings); live from the next autopilot scan cycle.
       # Point this at YOUR instance. Leave unset to disable SERP detection.
       BG_SEARXNG_URL: "${BG_SEARXNG_URL:-}"
       BG_SEARXNG_TIMEOUT_S: "20"
@@ -103,29 +137,35 @@ services:
       BG_SEARXNG_JITTER_S: "${BG_SEARXNG_JITTER_S:-1.0}"
 
       # --- browser checks ---
-      # Env-substituted, same reason as BG_SERVE_WEB above: a hardcoded
-      # literal here gets silently wiped back to "false" by every
-      # `git reset --hard` redeploy. Put `BG_PLAYWRIGHT_ENABLED=true` in
-      # `.env` (requires INSTALL_BROWSERS=true at build time above, which is
-      # already the default in this file).
+      # UI-editable (/settings); live from the next autopilot scan cycle --
+      # that is now the preferred way to turn this on, and the one that
+      # survives a redeploy. The `${...}` substitution + gitignored `.env`
+      # fallback below is KEPT as the env tier (it is still how you preseed
+      # the value before the UI has ever been opened), it is simply no longer
+      # the only way to set it. Requires INSTALL_BROWSERS=true at build time
+      # above, which is already the default in this file.
       BG_PLAYWRIGHT_ENABLED: "${BG_PLAYWRIGHT_ENABLED:-false}"
       BG_PLAYWRIGHT_HEADLESS: "true"
       BG_PLAYWRIGHT_TIMEOUT_MS: "30000"
 
       # --- removal engine ---
+      # Both UI-editable (/settings); live from the next autopilot scan cycle.
       # Disabled by default, and DRY RUN by default even once enabled, so no
       # opt-out request is ever sent until you deliberately turn both off.
-      BG_ERASER_ENABLED: "false"
-      BG_ERASER_DRY_RUN: "true"
+      BG_ERASER_ENABLED: "${BG_ERASER_ENABLED:-false}"
+      BG_ERASER_DRY_RUN: "${BG_ERASER_DRY_RUN:-true}"
       BG_ERASER_BIN: /opt/eraser/bin/eraser
       BG_ERASER_TIMEOUT_S: "300"
 
       # --- alerting ---
+      # UI-editable (/settings); live from the next autopilot cycle.
       # Optional. Your own webhook (Home Assistant, ntfy, ...). Unset = file only.
       BG_ALERT_WEBHOOK_URL: "${BG_ALERT_WEBHOOK_URL:-}"
       BG_ALERT_LOG_PATH: /logs/alerts.jsonl
 
       # --- captcha solving (third-party service; optional) ---
+      # UI-editable (/settings), where it is write-only: the stored value is
+      # never rendered back into the page, same rule as the credit-freeze PIN.
       BG_CAPTCHA_API_KEY: "${BG_CAPTCHA_API_KEY:-}"
 
       # --- logging ---

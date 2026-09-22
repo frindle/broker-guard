@@ -19,6 +19,37 @@ FAKE_CITY = "Springfield"
 FAKE_STATE = "IL"
 
 
+@pytest.fixture(autouse=True)
+def isolated_settings_store(tmp_path, monkeypatch):
+    """Point the UI-editable settings store (broker_guard/settings.py) at a
+    per-test temp path, for EVERY test.
+
+    Autouse and unconditional on purpose. The store is consulted by
+    ``settings.effective_config``, which ``webui.get_config``,
+    ``service.main`` and the autopilot's per-cycle re-read all go through --
+    so a developer who has ever opened ``/settings`` on a local run would
+    otherwise have their real ``./data/settings.json`` silently overriding
+    the env/Config values half this suite asserts on. A test that wants a
+    populated store writes to ``settings_store`` below; everything else gets
+    a guaranteed-absent file, i.e. the documented first-boot behavior.
+    """
+    from broker_guard import config as config_mod
+    from broker_guard import settings as settings_mod
+
+    path = str(tmp_path / "settings-store.json")
+    monkeypatch.setenv("BG_SETTINGS_PATH", path)
+    monkeypatch.setattr(settings_mod, "DEFAULT_SETTINGS_PATH", path)
+    monkeypatch.setattr(config_mod, "DEFAULT_SETTINGS_PATH", path)
+    return path
+
+
+@pytest.fixture
+def settings_store(isolated_settings_store):
+    """The path the autouse isolation fixture redirected the store to, for a
+    test that wants to seed or assert on stored settings."""
+    return isolated_settings_store
+
+
 @pytest.fixture
 def fake_profile_dict():
     return {

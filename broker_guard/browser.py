@@ -21,6 +21,97 @@ log = logging.getLogger("broker_guard.browser")
 # never execute a download.
 _BLOCKED_RESOURCE_TYPES = ("image", "media", "font")
 
+# --- Bot-wall detection -------------------------------------------------
+#
+# Why this exists: a CAPTCHA / Cloudflare challenge page navigates fine. The
+# request returns 200, the DOM loads, `inner_text("body")` yields real text --
+# and the identity terms are (correctly!) absent from it, because it is a
+# challenge page, not the broker's listing. Without this check that came back
+# as a clean, error-free `{"found": false}`, i.e. "verified not present",
+# which autopilot eventually turns into `store.forget()` -- deleting the
+# presence row for a broker that is still publishing the person's PII.
+#
+# Two tiers, because the false-positive cost is real: a broker's genuine "no
+# results for that name" page wrongly called a bot wall becomes a permanent
+# error for that broker and its listing state can never resolve.
+#
+# STRONG signatures are full-page interstitials whose wording no listing page
+# would contain. They stand on their own.
+_BOT_WALL_STRONG = (
+    "checking your browser before accessing",
+    "checking if the site connection is secure",
+    "enable javascript and cookies to continue",
+    "ddos protection by cloudflare",
+    "sorry, you have been blocked",           # Cloudflare block page
+    "you are unable to access",               # Cloudflare block page subtitle
+    "pardon our interruption",                # PerimeterX / HUMAN
+    "request unsuccessful. incapsula incident id",  # Imperva
+    "our systems have detected unusual traffic",    # Google
+    "please complete the security check to access",
+    "why do i have to complete a captcha",
+)
+
+# WEAK signatures are the generic challenge widget wording -- which a real
+# broker page may legitimately contain, because many broker search and opt-out
+# forms embed a reCAPTCHA next to their actual content. On its own that is NOT
+# a bot wall. It only counts when the page has essentially nothing else on it
+# (see _MAX_CHALLENGE_TEXT_LEN): a challenge interstitial is a few hundred
+# characters, a real listing page is thousands.
+_BOT_WALL_WEAK = (
+    "verify you are human",
+    "verifying you are human",
+    "i'm not a robot",
+    "i am not a robot",
+    "press and hold to confirm you are",
+    "complete the captcha",
+    "captcha challenge",
+)
+
+# Titles are matched on the whole (normalized) title, not as substrings, so a
+# listing page titled "John Smith - Just a moment away from ..." cannot match.
+_BOT_WALL_TITLES = (
+    "just a moment...",
+    "just a moment",
+    "attention required! | cloudflare",
+    "access denied",
+    "security check",
+    "one moment, please",
+)
+
+# A page shorter than this has no content to speak of; only then does a weak
+# (generic CAPTCHA-widget) signature count as a bot wall.
+_MAX_CHALLENGE_TEXT_LEN = 1500
+
+# Statuses that mean the broker's edge refused us rather than answered us.
+# NOT 404: a broker legitimately 404s a search URL for a name it has no
+# records for, and that is a genuine "not present", not an error.
+_BOT_WALL_STATUSES = (401, 403, 429)
+
+
+def bot_wall_reason(text: str | None, title: str | None = None,
+                    status: int | None = None) -> str | None:
+    """Why this page is a bot wall rather than broker content, or None.
+
+    Pure and side-effect free so the signature list can be tested against
+    fixture page text without a browser. Returning None must stay the
+    overwhelmingly common case: every false positive here converts a real,
+    usable check into a permanent error for that broker.
+    """
+    if status in _BOT_WALL_STATUSES:
+        return "bot wall: HTTP {}".format(status)
+    haystack = (text or "").lower()
+    normalized_title = " ".join((title or "").split()).lower()
+    if normalized_title and normalized_title in _BOT_WALL_TITLES:
+        return "bot wall: challenge page title {!r}".format(normalized_title)
+    for needle in _BOT_WALL_STRONG:
+        if needle in haystack:
+            return "bot wall: page says {!r}".format(needle)
+    if len(haystack.strip()) <= _MAX_CHALLENGE_TEXT_LEN:
+        for needle in _BOT_WALL_WEAK:
+            if needle in haystack:
+                return "bot wall: near-empty page says {!r}".format(needle)
+    return None
+
 
 class BrowserUnavailable(RuntimeError):
     """Playwright is not installed or no browser binary is present."""
@@ -102,8 +193,17 @@ class PlaywrightChecker:
                     else route.continue_()
                 ),
             )
-            page.goto(url, wait_until="domcontentloaded", timeout=self.timeout_ms)
+            response = page.goto(url, wait_until="domcontentloaded", timeout=self.timeout_ms)
             text = page.inner_text("body")
+            # `goto` returns the main-document Response, so the status is
+            # available without wiring a page.on("response") listener (which
+            # would also fire for every subresource and need filtering back
+            # down to the document).
+            status = getattr(response, "status", None) if response is not None else None
+            try:
+                title = page.title()
+            except Exception:  # pragma: no cover - title is best-effort
+                title = ""
         except Exception as exc:
             return {"error": "{}: {}".format(type(exc).__name__, exc)}
         finally:
@@ -114,6 +214,24 @@ class PlaywrightChecker:
                     except Exception:
                         pass
 
+        # Ask "did we actually see the broker's page?" BEFORE asking "are the
+        # identity terms on it?". A challenge page answers the second question
+        # with a truthful "no" that means nothing at all.
+        wall = bot_wall_reason(text, title, status)
+        if wall:
+            log.warning("bot wall on broker site", extra={
+                "broker_id": check.get("broker_id"), "reason": wall,
+            })
+            # {"error": ...}, never {"found": False}: interpret_check_result
+            # maps this to checked=False, which service.build_presence_checker
+            # turns into PresenceUnknown, which run_cycle buckets under
+            # `errors` -- and an errored broker is excluded from `resolved`,
+            # so autopilot never calls store.forget() on it.
+            return {"error": wall}
+
+        # The title is used for bot-wall detection only and deliberately NOT
+        # added to the hit haystack: widening what counts as a hit is a
+        # separate decision from this one.
         candidate = {"title": "", "snippet": text or "", "url": url}
         return {"found": is_people_search_hit(candidate, check.get("terms") or [])}
 

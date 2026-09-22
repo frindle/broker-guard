@@ -3,6 +3,14 @@
 Every secret and endpoint is read from the environment. Nothing is hardcoded
 and nothing is written back out. See README "Running with Docker" for the full
 variable list.
+
+A ``Config`` built here is exactly the ENVIRONMENT tier. A subset of these
+values is additionally UI-editable and persisted on the /data volume
+(``broker_guard/settings.py``); that overlay is applied by callers, on top of
+a Config, via ``settings.effective_config(cfg)`` -- never silently from inside
+``load_config``, so "what the environment says" and "what someone set in the
+dashboard" stay two distinguishable things (which is what lets ``/settings``
+honestly label each value's source).
 """
 import os
 from dataclasses import dataclass, field
@@ -28,6 +36,12 @@ DEFAULT_EXPOSURE_CACHE_PATH = "data/exposure_cache.json"
 # actually reads (see profiles.py's module docstring for the v1 scope this
 # implies).
 DEFAULT_PROFILES_PATH = "data/profiles.json"
+# The UI-editable settings store (see broker_guard/settings.py). Lives on the
+# same writable /data volume as state.sqlite/profiles.json -- deliberately NOT
+# in a tracked file, because the Unraid redeploy is `git reset --hard`, which
+# silently reverts every manual edit to a tracked docker-compose.yml. This path
+# itself is env-only and never UI-editable: a store cannot relocate itself.
+DEFAULT_SETTINGS_PATH = "data/settings.json"
 # Mirrors eraser_config.DEFAULT_ERASER_CONFIG_PATH -- duplicated as a literal
 # rather than imported so config.py (which eraser_config.py itself imports
 # from) never has to import eraser_config back.
@@ -102,6 +116,18 @@ class Config:
     freeze_state_path: str = DEFAULT_FREEZE_STATE_PATH
     exposure_cache_path: str = DEFAULT_EXPOSURE_CACHE_PATH
     profiles_path: str = DEFAULT_PROFILES_PATH
+    # Where the UI-editable settings overlay lives (broker_guard/settings.py).
+    # Config itself never reads it -- the overlay is applied by callers via
+    # settings.effective_config(cfg), so a Config is always "the environment
+    # tier" and the overlay is always visibly a separate, later step.
+    #
+    # ``None`` (the default for a hand-constructed Config) means "wherever
+    # settings.DEFAULT_SETTINGS_PATH points", resolved at use time by
+    # settings.store_path -- NOT baked in here. load_config always fills it in
+    # from BG_SETTINGS_PATH. The indirection is what lets the test suite
+    # redirect the store globally, so a developer's real ./data/settings.json
+    # can never leak into a test's effective config.
+    settings_path: str | None = None
     # Where the Profiles UI syncs eraser's profiles: list (see
     # eraser_config.sync_profiles) -- a Config field, not the module's own
     # DEFAULT_ERASER_CONFIG_PATH constant used directly, so tests can point
@@ -180,6 +206,7 @@ def load_config(env=None) -> Config:
         freeze_state_path=_env_str(env, "BG_FREEZE_STATE_PATH", DEFAULT_FREEZE_STATE_PATH),
         exposure_cache_path=_env_str(env, "BG_EXPOSURE_CACHE_PATH", DEFAULT_EXPOSURE_CACHE_PATH),
         profiles_path=_env_str(env, "BG_PROFILES_PATH", DEFAULT_PROFILES_PATH),
+        settings_path=_env_str(env, "BG_SETTINGS_PATH", DEFAULT_SETTINGS_PATH),
         eraser_config_path=_env_str(env, "BG_ERASER_CONFIG_PATH", DEFAULT_ERASER_CONFIG_PATH),
         crypto_key=_env_str(env, "BG_CRYPTO_KEY"),
         searxng_url=_env_str(env, "BG_SEARXNG_URL"),
