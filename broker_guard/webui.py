@@ -26,6 +26,7 @@ import os
 import re
 import tempfile
 import threading
+import urllib.parse
 import uuid
 from datetime import datetime, timezone
 
@@ -268,10 +269,32 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
     else:
         scan_line = "No scan has run yet in this deployment."
 
+    # The #scanline text already reflected an in-flight scan on page load,
+    # but the button itself always rendered plain-and-enabled -- so coming
+    # BACK to the dashboard mid-scan (click "Run scan now", navigate to
+    # /brokers, navigate back) looked identical to no scan running at all,
+    # even though the server already knew one was. Render the same
+    # disabled/"Scanning..." state the click handler produces.
+    if scan["running"]:
+        # The page-load poll below can only ask /status about THIS
+        # process's in-memory /scan jobs. scan["running"] is also true for
+        # an autopilot background cycle (heartbeat status=running), which
+        # /status knows nothing about -- polling in that case would see an
+        # empty jobs map, conclude "finished" and reload immediately, over
+        # and over, for as long as the cycle lasts. So the button always
+        # shows the honest disabled state, but the auto-refresh only
+        # attaches when there is a job /status can actually report on.
+        has_pollable_job = any(s in ("running", "queued") for s in jobs_summary.values())
+        scan_btn_attrs = ' disabled data-scan-running="1"' if has_pollable_job else " disabled"
+        scan_btn_label = "Scanning..."
+    else:
+        scan_btn_attrs = ""
+        scan_btn_label = "Run scan now"
+
     body = """
 <div class="page-head">
   <div><h1>Removals</h1><div class="muted" id="scanline">{scan_line}</div></div>
-  <button class="btn secondary" id="runScanBtn" onclick="runScanNow()">Run scan now</button>
+  <button class="btn secondary" id="runScanBtn" onclick="runScanNow()"{scan_btn_attrs}>{scan_btn_label}</button>
 </div>
 <div class="chips">{chips}</div>
 <div class="grid-main">
@@ -307,11 +330,34 @@ function runScanNow() {{
     poll();
   }});
 }}
+
+// Page-load poll for a scan that was already running when this page was
+// served (started before a navigation away and back). Mirrors the
+// runScanNow poll loop above, but off the no-job_id /status branch --
+// that returns {{jobs: {{<job_id>: <status>}}}} for EVERY job, which is
+// all we have here: the job id that started this scan belonged to a page
+// we have since navigated away from.
+(function () {{
+  var btn = document.getElementById('runScanBtn');
+  if (!btn || btn.getAttribute('data-scan-running') !== '1') {{ return; }}
+  function pollRunning() {{
+    fetch('/status').then(function (r) {{ return r.json(); }}).then(function (s) {{
+      var jobs = (s && s.jobs) || {{}};
+      var stillRunning = Object.keys(jobs).some(function (id) {{
+        return jobs[id] === 'running' || jobs[id] === 'queued';
+      }});
+      if (!stillRunning) {{ location.reload(); }}
+      else {{ setTimeout(pollRunning, 1500); }}
+    }}).catch(function () {{ setTimeout(pollRunning, 1500); }});
+  }}
+  pollRunning();
+}})();
 </script>
 """.format(
         scan_line=scan_line, chips=chips, area=area, notif_html=notif_html,
         stackbar=style.stacked_bar(kind_segments), kind_legend=kind_legend,
         donut=donut, action_legend=action_legend,
+        scan_btn_attrs=scan_btn_attrs, scan_btn_label=scan_btn_label,
     )
 
     return style.render_page("Dashboard", "dashboard", body, action_needed_count=action_needed)
@@ -585,24 +631,80 @@ def normalize_phone(raw: str) -> str:
 
 
 @app.get("/identity", response_class=HTMLResponse)
-def identity_get(cfg: Config = Depends(get_config)):
-    try:
-        loaded = profile_mod.load_profile(cfg.profile_path)
-    except Exception:
-        loaded = None
+def identity_get(edit: str = "", cfg: Config = Depends(get_config)):
+    """The ONE identity page: the profiles list with the active profile
+    pinned to the top and pre-selected in the editable identity form.
 
-    first_name = loaded.first_name if loaded is not None else ""
-    middle_name = loaded.middle_name if loaded is not None else ""
-    last_name = loaded.last_name if loaded is not None else ""
-    emails = "\n".join(loaded.emails) if loaded is not None else ""
-    phones = "\n".join(loaded.phones) if loaded is not None else ""
-    addresses = "\n".join(loaded.addresses) if loaded is not None else ""
-    eraser_profile = (loaded.eraser_profile or "") if loaded is not None else ""
+    This replaces the old split between a single-identity "Profile" page
+    and a separate "Profiles" list -- two disconnected places to manage
+    who you are, where a profile added on one never showed up on the
+    other. There is still exactly one identity store per surface: the
+    profiles list (``cfg.profiles_path``) is the source of truth for the
+    UI, and whichever entry is active is mirrored into the single
+    ``cfg.profile_path`` the scan/autopilot loop reads -- that loop's
+    contract is unchanged (see ``profiles.py``'s module docstring).
+
+    ``?edit=<id>`` opens a non-active profile for editing in place on this
+    same page (posting to ``/profiles/<id>``); the active profile is
+    always edited through the main form at the top (``POST /identity``).
+    """
+    # One-time backfill for a deployment that already had a populated
+    # profile.local.json before this merge shipped -- a no-op once the
+    # profiles list is non-empty, so it is safe on every page load.
+    try:
+        profiles_mod.migrate_legacy_profile_if_needed(cfg.profiles_path, cfg.profile_path)
+    except (OSError, ValueError) as exc:
+        log.warning("legacy profile migration skipped", extra={"error": str(exc)})
+
+    try:
+        all_profiles = profiles_mod.load_profiles(cfg.profiles_path)
+    except (OSError, ValueError) as exc:
+        log.warning("profiles list unreadable", extra={"error": str(exc)})
+        all_profiles = []
+
+    active = next((p for p in all_profiles if p.active), None)
+    others = [p for p in all_profiles if active is None or p.id != active.id]
+
+    if active is not None:
+        first_name, middle_name, last_name = active.first_name, active.middle_name, active.last_name
+        emails = "\n".join(active.emails)
+        phones = "\n".join(active.phones)
+        addresses = "\n".join(active.addresses)
+        eraser_profile = active.eraser_profile or ""
+        active_heading = "Active profile -- {}".format(active.full_name or active.id)
+    else:
+        # No profiles at all (and nothing to migrate): a blank form that
+        # creates the first -- which add_profile marks active for us.
+        first_name = middle_name = last_name = ""
+        emails = phones = addresses = eraser_profile = ""
+        active_heading = "Active profile"
+
+    rows_html = "".join(_profile_row_html(p) for p in others)
+    if not others:
+        empty_note = (
+            "No profiles yet." if active is None
+            else "No other profiles yet -- add one below."
+        )
+        rows_html = '<tr><td colspan="4" class="muted" style="padding:16px;">{}</td></tr>'.format(empty_note)
+
+    edit_card = ""
+    if edit:
+        try:
+            editing = profiles_mod.get_profile(cfg.profiles_path, edit)
+        except (profiles_mod.ProfileNotFound, OSError, ValueError):
+            raise HTTPException(status_code=404, detail="unknown profile")
+        edit_card = _profile_edit_card_html(editing)
 
     body = """
 <div class="page-head"><h1>Profile</h1></div>
+<p class="muted" style="max-width:680px;">Every identity Broker Guard manages, in one place. The
+<strong>active</strong> profile is the one the dashboard, scan and autopilot loop run against, and
+it is the one mirrored into eraser's config for <code>--profile &lt;id&gt;</code> on the CLI.
+Scanning several profiles at once is a planned follow-up -- switching the active one here is what
+changes who gets scanned today.</p>
 <div class="grid-main">
   <div class="card">
+    <h2>{active_heading}</h2>
     <form method="post" action="/identity">
       <div class="field"><label>First name</label>
         <input class="inp" type="text" name="first_name" value="{first_name}"></div>
@@ -630,13 +732,39 @@ def identity_get(cfg: Config = Depends(get_config)):
       <div class="field"><input type="file" name="file"></div>
       <button type="submit" class="btn secondary">Upload</button>
     </form>
-    <p class="muted" style="margin-top:18px;">Managing more than one identity? See <a href="/profiles" style="color:var(--teal-ink);font-weight:600;">Profiles</a>.</p>
+  </div>
+</div>
+{edit_card}
+<div class="grid-main" style="margin-top:24px;">
+  <div class="card">
+    <h2>Other profiles</h2>
+    <table class="dtable">
+      <tr style="text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--faint);">
+        <th style="padding-bottom:8px;">Name / id</th><th>Emails</th><th>Phones</th><th></th>
+      </tr>
+      {rows}
+    </table>
+  </div>
+  <div class="card">
+    <h2>Add a profile</h2>
+    <p class="muted" style="font-size:13px;">Added profiles are inactive until you make one active.</p>
+    <form method="post" action="/profiles">
+      <div class="field"><label>First name</label><input class="inp" type="text" name="first_name" required></div>
+      <div class="field"><label>Middle name</label><input class="inp" type="text" name="middle_name"></div>
+      <div class="field"><label>Last name</label><input class="inp" type="text" name="last_name" required></div>
+      <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="2"></textarea></div>
+      <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="2"></textarea></div>
+      <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="2"></textarea></div>
+      <button type="submit" class="btn">Add profile</button>
+    </form>
   </div>
 </div>
 """.format(
+        active_heading=html.escape(active_heading),
         first_name=html.escape(first_name), middle_name=html.escape(middle_name),
         last_name=html.escape(last_name), emails=html.escape(emails), phones=html.escape(phones),
         addresses=html.escape(addresses), eraser_profile=html.escape(eraser_profile),
+        rows=rows_html, edit_card=edit_card,
     )
     return style.render_page("Profile", "identity", body)
 
@@ -709,6 +837,18 @@ def identity_post(
         except OSError:
             pass
         raise
+
+    # ...and mirror the same save onto the ACTIVE entry in the profiles
+    # list (creating it if this is the first identity ever saved), so the
+    # merged page's list and the legacy file the scan loop reads can never
+    # drift apart. Deliberately AFTER the validated write above: a bad
+    # submission is rejected before either store is touched.
+    try:
+        profiles_mod.upsert_active_profile(cfg.profiles_path, data)
+    except (OSError, ValueError) as exc:
+        log.warning("profiles list upsert failed", extra={"error": str(exc)})
+    else:
+        _sync_eraser_profiles(cfg)
 
     return RedirectResponse(url="/identity", status_code=303)
 
@@ -895,14 +1035,37 @@ def _sync_eraser_profiles(cfg: Config) -> None:
         log.warning("eraser profiles sync failed", extra={"error": str(exc)})
 
 
+def _sync_active_profile_to_legacy(cfg: Config) -> None:
+    """Mirror whichever profile is active into cfg.profile_path -- the
+    single profile.local.json that service.run_once/autopilot read.
+
+    This is the ONLY direction the merged UI writes that file outside
+    ``POST /identity`` (which writes it directly, after validating). The
+    scan loop's contract is unchanged by the merge: it still reads exactly
+    one Identity from cfg.profile_path; this just keeps that one file
+    pointing at whichever profile the list says is active.
+    """
+    try:
+        profiles_mod.sync_active_to_legacy(cfg.profiles_path, cfg.profile_path)
+    except (OSError, ValueError) as exc:
+        log.warning("active profile sync to legacy file failed", extra={"error": str(exc)})
+
+
 def _profile_row_html(p: "profiles_mod.NamedProfile") -> str:
+    """One non-active profile's row on the merged /identity page. "Make
+    active" is what switches which identity the scan loop runs against;
+    "Edit" opens this profile in place on the same page rather than
+    navigating to a second, divergent profile UI."""
     return """
 <tr>
   <td><strong>{name}</strong><br><span class="sub faint" style="font-size:12px;">{pid}</span></td>
   <td>{emails}</td>
   <td>{phones}</td>
   <td style="display:flex;gap:8px;">
-    <a class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;" href="/profiles/{pid_attr}/edit">Edit</a>
+    <form method="post" action="/profiles/{pid_attr}/activate">
+      <button type="submit" class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;">Make active</button>
+    </form>
+    <a class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;" href="/identity?edit={pid_attr}">Edit</a>
     <form method="post" action="/profiles/{pid_attr}/remove" onsubmit="return confirm('Remove this profile? Its eraser send history is kept and reappears if re-added with the same id.');">
       <button type="submit" class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;">Remove</button>
     </form>
@@ -916,45 +1079,45 @@ def _profile_row_html(p: "profiles_mod.NamedProfile") -> str:
     )
 
 
-@app.get("/profiles", response_class=HTMLResponse)
-def profiles_page(cfg: Config = Depends(get_config)):
-    profiles = profiles_mod.load_profiles(cfg.profiles_path)
-    rows_html = "".join(_profile_row_html(p) for p in profiles)
-    if not profiles:
-        rows_html = '<tr><td colspan="4" class="muted" style="padding:16px;">No profiles yet.</td></tr>'
-
-    body = """
-<div class="page-head"><h1>Profiles</h1></div>
-<p class="muted" style="max-width:640px;">Manage every identity eraser can send removals for. This
-list is synced into eraser's own <code>profiles:</code> config so <code>--profile &lt;id&gt;</code>
-keeps working from the CLI. The dashboard/scan/autopilot loop still runs against the single active
-profile on the <a href="/identity" style="color:var(--teal-ink);font-weight:600;">Profile</a> page --
-multi-profile scanning is a planned follow-up, not wired here yet.</p>
-<div class="grid-main">
+def _profile_edit_card_html(p: "profiles_mod.NamedProfile") -> str:
+    """The in-place edit card for a NON-active profile (``/identity?edit=
+    <id>``). The active profile is edited through the main form at the top
+    of the page instead, which posts to /identity."""
+    return """
+<div class="grid-main" style="margin-top:24px;">
   <div class="card">
-    <h2>Add a profile</h2>
-    <form method="post" action="/profiles">
-      <div class="field"><label>First name</label><input class="inp" type="text" name="first_name" required></div>
-      <div class="field"><label>Middle name</label><input class="inp" type="text" name="middle_name"></div>
-      <div class="field"><label>Last name</label><input class="inp" type="text" name="last_name" required></div>
-      <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="2"></textarea></div>
-      <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="2"></textarea></div>
-      <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="2"></textarea></div>
-      <button type="submit" class="btn">Add profile</button>
+    <h2>Edit profile -- {name}</h2>
+    <form method="post" action="/profiles/{pid_attr}">
+      <div class="field"><label>First name</label><input class="inp" type="text" name="first_name" value="{first_name}" required></div>
+      <div class="field"><label>Middle name</label><input class="inp" type="text" name="middle_name" value="{middle_name}"></div>
+      <div class="field"><label>Last name</label><input class="inp" type="text" name="last_name" value="{last_name}" required></div>
+      <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="3">{emails}</textarea></div>
+      <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="3">{phones}</textarea></div>
+      <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="3">{addresses}</textarea></div>
+      <button type="submit" class="btn">Save</button>
+      <a class="btn secondary" href="/identity" style="margin-left:8px;">Cancel</a>
     </form>
   </div>
-  <div class="card">
-    <h2>All profiles</h2>
-    <table class="dtable">
-      <tr style="text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--faint);">
-        <th style="padding-bottom:8px;">Name / id</th><th>Emails</th><th>Phones</th><th></th>
-      </tr>
-      {rows}
-    </table>
-  </div>
 </div>
-""".format(rows=rows_html)
-    return style.render_page("Profiles", "profiles", body)
+""".format(
+        name=html.escape(p.full_name or p.id), pid_attr=style.escape_attr(p.id),
+        first_name=html.escape(p.first_name), middle_name=html.escape(p.middle_name),
+        last_name=html.escape(p.last_name),
+        emails=html.escape("\n".join(p.emails)), phones=html.escape("\n".join(p.phones)),
+        addresses=html.escape("\n".join(p.addresses)),
+    )
+
+
+@app.get("/profiles")
+def profiles_page(cfg: Config = Depends(get_config)):
+    """Thin alias -- /identity IS the profiles page now.
+
+    Kept (rather than deleted) so bookmarks, the old nav entry and any
+    external link still land somewhere useful instead of 404ing. It
+    renders nothing of its own: keeping a second copy of this UI is
+    exactly the two-divergent-pages problem the merge removed.
+    """
+    return RedirectResponse(url="/identity", status_code=303)
 
 
 @app.post("/profiles")
@@ -974,44 +1137,51 @@ def profiles_add(
     phone_list = _dedupe_case_insensitive([normalize_phone(p) for p in _split_list(phones)])
 
     try:
-        profiles_mod.add_profile(cfg.profiles_path, {
+        created = profiles_mod.add_profile(cfg.profiles_path, {
             "first_name": first_name, "middle_name": middle_name, "last_name": last_name,
             "emails": email_list, "phones": phone_list, "addresses": _split_list(addresses),
         })
     except profiles_mod.ProfileValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
+    # add_profile auto-activates the very first profile -- which means it
+    # is now the identity the scan loop runs against, so mirror it into
+    # the legacy file that loop reads.
+    if created.active:
+        _sync_active_profile_to_legacy(cfg)
     _sync_eraser_profiles(cfg)
-    return RedirectResponse(url="/profiles", status_code=303)
+    return RedirectResponse(url="/identity", status_code=303)
 
 
-@app.get("/profiles/{profile_id}/edit", response_class=HTMLResponse)
+@app.get("/profiles/{profile_id}/edit")
 def profiles_edit_get(profile_id: str, cfg: Config = Depends(get_config)):
+    """Thin alias for the old standalone edit page -- editing now happens
+    in place on /identity. Still 404s an unknown id rather than bouncing
+    to a page that would silently show something else."""
     try:
         p = profiles_mod.get_profile(cfg.profiles_path, profile_id)
     except profiles_mod.ProfileNotFound:
         raise HTTPException(status_code=404, detail="unknown profile")
-
-    body = """
-<div class="page-head"><h1>Edit profile</h1></div>
-<div class="card" style="max-width:520px;">
-  <form method="post" action="/profiles/{pid_attr}">
-    <div class="field"><label>First name</label><input class="inp" type="text" name="first_name" value="{first_name}" required></div>
-    <div class="field"><label>Middle name</label><input class="inp" type="text" name="middle_name" value="{middle_name}"></div>
-    <div class="field"><label>Last name</label><input class="inp" type="text" name="last_name" value="{last_name}" required></div>
-    <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="3">{emails}</textarea></div>
-    <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="3">{phones}</textarea></div>
-    <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="3">{addresses}</textarea></div>
-    <button type="submit" class="btn">Save</button>
-  </form>
-</div>
-""".format(
-        pid_attr=style.escape_attr(p.id), first_name=html.escape(p.first_name),
-        middle_name=html.escape(p.middle_name), last_name=html.escape(p.last_name),
-        emails=html.escape("\n".join(p.emails)), phones=html.escape("\n".join(p.phones)),
-        addresses=html.escape("\n".join(p.addresses)),
+    return RedirectResponse(
+        url="/identity?edit={}".format(urllib.parse.quote(p.id, safe="")),
+        status_code=303,
     )
-    return style.render_page("Edit profile", "profiles", body)
+
+
+@app.post("/profiles/{profile_id}/activate")
+def profiles_activate(profile_id: str, cfg: Config = Depends(get_config)):
+    """Switch which profile is active -- i.e. which single identity the
+    dashboard/scan/autopilot loop runs against. Mirrors the newly active
+    profile into cfg.profile_path (the loop's unchanged one-Identity
+    contract) and re-syncs eraser's list."""
+    try:
+        profiles_mod.set_active(cfg.profiles_path, profile_id)
+    except profiles_mod.ProfileNotFound:
+        raise HTTPException(status_code=404, detail="unknown profile")
+
+    _sync_active_profile_to_legacy(cfg)
+    _sync_eraser_profiles(cfg)
+    return RedirectResponse(url="/identity", status_code=303)
 
 
 @app.post("/profiles/{profile_id}")
@@ -1032,7 +1202,7 @@ def profiles_edit_post(
     phone_list = _dedupe_case_insensitive([normalize_phone(p) for p in _split_list(phones)])
 
     try:
-        profiles_mod.update_profile(cfg.profiles_path, profile_id, {
+        updated = profiles_mod.update_profile(cfg.profiles_path, profile_id, {
             "first_name": first_name, "middle_name": middle_name, "last_name": last_name,
             "emails": email_list, "phones": phone_list, "addresses": _split_list(addresses),
         })
@@ -1041,8 +1211,12 @@ def profiles_edit_post(
     except profiles_mod.ProfileValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
+    # Editing the active profile has to reach the legacy file too, or the
+    # scan loop would keep running against the pre-edit identity.
+    if updated.active:
+        _sync_active_profile_to_legacy(cfg)
     _sync_eraser_profiles(cfg)
-    return RedirectResponse(url="/profiles", status_code=303)
+    return RedirectResponse(url="/identity", status_code=303)
 
 
 @app.post("/profiles/{profile_id}/remove")
@@ -1050,14 +1224,23 @@ def profiles_remove(profile_id: str, cfg: Config = Depends(get_config)):
     """Delete from broker-guard's own store (and re-sync eraser's list to
     match) -- never touches eraser's history.db, so this profile's send
     history is preserved and reappears if a profile with this same id is
-    ever re-added (see profiles.py's module docstring)."""
+    ever re-added (see profiles.py's module docstring).
+
+    Removing the ACTIVE profile promotes another one (remove_profile keeps
+    the one-active invariant); that promoted profile is mirrored into the
+    legacy file so the scan loop is never left pointing at a deleted
+    identity. Removing the LAST profile leaves the legacy file alone
+    rather than truncating it -- see ``sync_active_to_legacy``.
+    """
     try:
-        profiles_mod.remove_profile(cfg.profiles_path, profile_id)
+        promoted = profiles_mod.remove_profile(cfg.profiles_path, profile_id)
     except profiles_mod.ProfileNotFound:
         raise HTTPException(status_code=404, detail="unknown profile")
 
+    if promoted is not None:
+        _sync_active_profile_to_legacy(cfg)
     _sync_eraser_profiles(cfg)
-    return RedirectResponse(url="/profiles", status_code=303)
+    return RedirectResponse(url="/identity", status_code=303)
 
 
 @app.post("/freeze/{bureau_key}/pin")

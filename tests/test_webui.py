@@ -4,6 +4,7 @@ browser or subprocess. All identity data is the shared FAKE_* fixtures from
 conftest.py.
 """
 import json
+import os
 import time
 
 import pytest
@@ -35,6 +36,12 @@ def cfg(tmp_path, profile_file, brokers_file):
         log_dir=str(tmp_path / "logs"),
         id_documents_dir=str(tmp_path / "id_documents"),
         freeze_state_path=str(tmp_path / "freeze_state.json"),
+        # Pinned to tmp_path, NOT left on Config's data/profiles.json
+        # default: /identity now migrates-and-writes the profiles list, so
+        # an unpinned path would have tests writing real PII-shaped files
+        # into the repo's data/ directory.
+        profiles_path=str(tmp_path / "profiles.json"),
+        eraser_config_path=str(tmp_path / "eraser-config.yaml"),
         crypto_key=Fernet.generate_key().decode("ascii"),
     )
 
@@ -80,6 +87,7 @@ def test_identity_get_empty_profile_does_not_crash(tmp_path, brokers_file):
         brokers_path=brokers_file,
         state_path=str(tmp_path / "state.sqlite"),
         log_dir=str(tmp_path / "logs"),
+        profiles_path=str(tmp_path / "profiles.json"),
     )
     webui.app.dependency_overrides[webui.get_config] = lambda: cfg
     client = TestClient(webui.app)
@@ -483,8 +491,24 @@ def test_exposure_page_does_not_500_when_cache_dir_is_fresh(client, cfg, tmp_pat
 
 # --- /profiles : CRUD + eraser-sync (v1 scope) ------------------------------
 
-def test_profiles_page_empty_state(client):
-    resp = client.get("/profiles")
+def test_profiles_url_redirects_to_the_merged_identity_page(client):
+    """/identity IS the profiles page now -- /profiles is a thin alias for
+    old bookmarks, not a second, divergent identity UI."""
+    resp = client.get("/profiles", follow_redirects=False)
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/identity"
+
+
+def test_identity_page_empty_state_when_there_is_nothing_to_migrate(tmp_path, brokers_file):
+    cfg = Config(
+        profile_path=str(tmp_path / "missing_profile.json"),
+        brokers_path=brokers_file,
+        state_path=str(tmp_path / "state.sqlite"),
+        log_dir=str(tmp_path / "logs"),
+        profiles_path=str(tmp_path / "profiles.json"),
+    )
+    webui.app.dependency_overrides[webui.get_config] = lambda: cfg
+    resp = TestClient(webui.app).get("/identity")
     assert resp.status_code == 200
     assert "No profiles yet" in resp.text
 
@@ -539,3 +563,227 @@ def test_profiles_add_edit_remove_round_trip(client, cfg, tmp_path):
 def test_profiles_edit_unknown_id_is_404(client):
     resp = client.get("/profiles/does-not-exist/edit")
     assert resp.status_code == 404
+
+
+# --- the merged Identity page: one surface for "who am I" -------------------
+
+def test_identity_page_migrates_an_existing_legacy_profile_into_the_list(client, cfg):
+    """A deployment that already had a populated profile.local.json before
+    this merge shipped must see that identity in the list automatically --
+    without re-entering it."""
+    from broker_guard import profiles as profiles_mod
+
+    assert profiles_mod.load_profiles(cfg.profiles_path) == []
+
+    resp = client.get("/identity")
+    assert resp.status_code == 200
+
+    migrated = profiles_mod.load_profiles(cfg.profiles_path)
+    assert len(migrated) == 1
+    assert migrated[0].first_name == FAKE_FIRST
+    assert migrated[0].last_name == FAKE_LAST
+    assert migrated[0].active is True
+    # ...and it is pinned into the editable form at the top of the page.
+    assert FAKE_FIRST in resp.text
+    assert "Active profile" in resp.text
+
+
+def test_identity_migration_runs_once_and_does_not_duplicate(client, cfg):
+    from broker_guard import profiles as profiles_mod
+
+    client.get("/identity")
+    client.get("/identity")
+    assert len(profiles_mod.load_profiles(cfg.profiles_path)) == 1
+
+
+def test_identity_post_upserts_the_active_profile_in_the_list(client, cfg):
+    """The bug this merge fixes: a save on the Profile page used to touch
+    only profile.local.json, so it never showed up in the profiles list."""
+    from broker_guard import profiles as profiles_mod
+
+    client.get("/identity")  # migrate the legacy profile in
+    original = profiles_mod.load_profiles(cfg.profiles_path)[0]
+
+    resp = client.post("/identity", data={
+        "first_name": FAKE_FIRST, "middle_name": "", "last_name": FAKE_LAST,
+        "emails": "updated@example.invalid", "phones": "", "addresses": "",
+        "eraser_profile": "",
+    }, follow_redirects=False)
+    assert resp.status_code == 303
+
+    saved = profiles_mod.load_profiles(cfg.profiles_path)
+    assert len(saved) == 1, "a save must UPDATE the active profile, not append a new one"
+    assert saved[0].id == original.id, "the profile id is immutable"
+    assert saved[0].emails == ["updated@example.invalid"]
+    assert saved[0].active is True, "saving must not de-activate the active profile"
+    # and the legacy file the scan loop reads got it too
+    assert profile_mod.load_profile(cfg.profile_path).emails == ["updated@example.invalid"]
+
+
+def test_identity_post_with_no_profiles_yet_creates_the_active_one(client, cfg, tmp_path):
+    from broker_guard import profiles as profiles_mod
+
+    cfg.profile_path = str(tmp_path / "fresh_profile.local.json")
+    resp = client.post("/identity", data={
+        "first_name": "Jane", "middle_name": "", "last_name": "Doe",
+        "emails": FAKE_EMAIL, "phones": "", "addresses": "", "eraser_profile": "",
+    }, follow_redirects=False)
+    assert resp.status_code == 303
+
+    saved = profiles_mod.load_profiles(cfg.profiles_path)
+    assert [p.id for p in saved] == ["jane-doe"]
+    assert saved[0].active is True
+
+
+def test_activate_switches_which_profile_the_scan_loop_reads(client, cfg):
+    """The whole point of one merged page: switching the active profile
+    must reach the single profile.local.json service.run_once reads."""
+    from broker_guard import profiles as profiles_mod
+
+    client.get("/identity")  # migrates the legacy profile in, as active
+    first = profiles_mod.load_profiles(cfg.profiles_path)[0]
+
+    resp = client.post("/profiles", data={
+        "first_name": "Jane", "last_name": "Doe", "emails": FAKE_EMAIL,
+    }, follow_redirects=False)
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/identity"
+
+    # A second profile is added INACTIVE -- adding must not silently
+    # repoint the scan loop at someone else.
+    by_id = {p.id: p for p in profiles_mod.load_profiles(cfg.profiles_path)}
+    assert by_id["jane-doe"].active is False
+    assert by_id[first.id].active is True
+    assert profile_mod.load_profile(cfg.profile_path).first_name == FAKE_FIRST
+
+    resp = client.post("/profiles/jane-doe/activate", follow_redirects=False)
+    assert resp.status_code == 303
+
+    by_id = {p.id: p for p in profiles_mod.load_profiles(cfg.profiles_path)}
+    assert by_id["jane-doe"].active is True
+    assert by_id[first.id].active is False, "at most one profile is ever active"
+
+    loaded = profile_mod.load_profile(cfg.profile_path)
+    assert (loaded.first_name, loaded.last_name) == ("Jane", "Doe")
+
+
+def test_activate_unknown_id_is_404(client):
+    resp = client.post("/profiles/does-not-exist/activate")
+    assert resp.status_code == 404
+
+
+def test_removing_the_active_profile_promotes_another_and_resyncs(client, cfg):
+    from broker_guard import profiles as profiles_mod
+
+    client.get("/identity")
+    first = profiles_mod.load_profiles(cfg.profiles_path)[0]
+    client.post("/profiles", data={"first_name": "Jane", "last_name": "Doe"})
+
+    resp = client.post(f"/profiles/{first.id}/remove", follow_redirects=False)
+    assert resp.status_code == 303
+
+    remaining = profiles_mod.load_profiles(cfg.profiles_path)
+    assert [p.id for p in remaining] == ["jane-doe"]
+    assert remaining[0].active is True, "removing the active profile must promote another"
+    assert profile_mod.load_profile(cfg.profile_path).first_name == "Jane"
+
+
+def test_editing_a_non_active_profile_leaves_the_legacy_file_alone(client, cfg):
+    from broker_guard import profiles as profiles_mod
+
+    client.get("/identity")
+    client.post("/profiles", data={"first_name": "Jane", "last_name": "Doe"})
+
+    resp = client.post("/profiles/jane-doe", data={
+        "first_name": "Jane", "last_name": "Doe", "emails": "jane@example.invalid",
+    }, follow_redirects=False)
+    assert resp.status_code == 303
+
+    assert profiles_mod.get_profile(cfg.profiles_path, "jane-doe").emails == ["jane@example.invalid"]
+    # The scan loop still reads the ACTIVE profile, untouched by that edit.
+    assert profile_mod.load_profile(cfg.profile_path).first_name == FAKE_FIRST
+
+
+def test_identity_edit_query_param_renders_that_profile_in_place(client, cfg):
+    client.get("/identity")
+    client.post("/profiles", data={"first_name": "Jane", "last_name": "Doe"})
+
+    resp = client.get("/identity?edit=jane-doe")
+    assert resp.status_code == 200
+    assert 'action="/profiles/jane-doe"' in resp.text
+    assert "Edit profile -- Jane Doe" in resp.text
+
+
+def test_identity_edit_query_param_unknown_id_is_404(client):
+    client.get("/identity")
+    resp = client.get("/identity?edit=does-not-exist")
+    assert resp.status_code == 404
+
+
+def test_old_profiles_edit_url_redirects_into_the_merged_page(client):
+    client.get("/identity")
+    client.post("/profiles", data={"first_name": "Jane", "last_name": "Doe"})
+    resp = client.get("/profiles/jane-doe/edit", follow_redirects=False)
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/identity?edit=jane-doe"
+
+
+def test_nav_has_a_single_identity_entry(client):
+    """Two nav tabs ("Profile" and "Profiles") is what made people think
+    there were two places to manage identity."""
+    from broker_guard import webui_style
+
+    keys = [key for key, _href, _label in webui_style.NAV_ITEMS]
+    assert "identity" in keys
+    assert "profiles" not in keys
+
+
+# --- dashboard: "Run scan now" reflects a scan already in flight -----------
+
+def test_run_scan_button_renders_disabled_when_a_scan_is_already_running(cfg):
+    """Regression: the #scanline text said "Scan in progress right now."
+    but the button still rendered plain/enabled, so returning to / mid-scan
+    looked identical to nothing happening."""
+    webui.app.dependency_overrides[webui.get_config] = lambda: cfg
+    webui.app.dependency_overrides[webui.get_jobs] = lambda: {"job-1": {"status": "running"}}
+    resp = TestClient(webui.app).get("/")
+
+    assert resp.status_code == 200
+    assert "Scan in progress right now." in resp.text
+    assert 'id="runScanBtn" onclick="runScanNow()" disabled data-scan-running="1">Scanning...' in resp.text
+
+
+def test_run_scan_button_is_enabled_when_no_scan_is_running(client):
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert 'id="runScanBtn" onclick="runScanNow()">Run scan now' in resp.text
+    assert 'data-scan-running="1"' not in resp.text
+
+
+def test_running_scan_page_polls_the_jobs_summary_branch_of_status(cfg):
+    """The page-load poll has no job_id to poll (the job was started from a
+    page we navigated away from), so it must use /status's jobs summary."""
+    webui.app.dependency_overrides[webui.get_config] = lambda: cfg
+    webui.app.dependency_overrides[webui.get_jobs] = lambda: {"job-1": {"status": "running"}}
+    resp = TestClient(webui.app).get("/")
+
+    assert "fetch('/status')" in resp.text
+    assert "location.reload()" in resp.text
+
+
+def test_autopilot_only_scan_disables_the_button_without_a_reload_loop(cfg, tmp_path):
+    """scan_status() also reports running for an autopilot cycle, which
+    /status knows nothing about. Polling there would see an empty jobs map,
+    conclude "finished" and reload forever -- so the button is disabled but
+    the auto-refresh is deliberately NOT attached."""
+    os.makedirs(cfg.log_dir, exist_ok=True)
+    with open(os.path.join(cfg.log_dir, "heartbeat.json"), "w", encoding="utf-8") as fh:
+        json.dump({"status": "running", "last_run": "2026-01-01T00:00:00+00:00", "ok": True}, fh)
+
+    webui.app.dependency_overrides[webui.get_config] = lambda: cfg
+    webui.app.dependency_overrides[webui.get_jobs] = lambda: {}
+    resp = TestClient(webui.app).get("/")
+
+    assert "Scan in progress right now." in resp.text
+    assert 'id="runScanBtn" onclick="runScanNow()" disabled>Scanning...' in resp.text
+    assert 'data-scan-running="1"' not in resp.text

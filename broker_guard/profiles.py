@@ -50,6 +50,33 @@ from eraser's ``profiles:`` list. It never touches eraser's ``history.db``
 -- those rows stay tagged with the now-unreferenced profile id and become
 reachable again if a profile with that same id is ever re-added, exactly
 matching ``cmd_profile.go``'s documented behavior.
+
+The "Identity" tab IS the active profile (post-merge)
+--------------------------------------------------------
+Live feedback after v1 shipped: having a separate "Identity" page and
+"Profiles" section was confusing -- two places to manage identity data,
+and a profile added on one didn't show up on the other. The fix is NOT a
+new third store; it is one invariant on this list: at most one
+``NamedProfile.active`` is ``True`` at a time (enforced by every writer
+below -- ``add_profile``, ``set_active``, ``remove_profile``), and the
+merged ``/identity`` page in ``webui.py`` is just this list with that one
+entry pinned to the top and pre-selected for editing. Editing it (still
+via ``POST /identity``, unchanged route/validation) upserts the active
+entry here too (``upsert_active_profile``), so a save always shows up in
+the list. ``migrate_legacy_profile_if_needed`` is the one-time backfill
+for a deployment that already had a ``profile.local.json`` before this
+merge shipped, so that pre-existing identity appears in the list too,
+without the person having to re-enter it.
+
+This still does NOT touch the scan-loop boundary described above:
+whichever profile is ``active`` here is mirrored into the same, single
+``profile.local.json`` the loop already read before this merge -- the
+loop's contract ("read exactly one Identity from ``Config.profile_path``")
+is unchanged. Only the UI now offers one place to view/switch it, plus
+sync FROM the multi-profile list back to that single legacy file whenever
+the active profile changes (edit, add-the-first-one, remove-the-active-
+one, or an explicit "Set active"). Concurrently scanning N profiles is
+still the same stated follow-up, not part of this change either.
 """
 import json
 import os
@@ -103,6 +130,13 @@ class NamedProfile:
     phones: list = field(default_factory=list)
     addresses: list = field(default_factory=list)
     eraser_profile: str | None = None
+    # Exactly one profile in the list this came from is ever ``True`` at a
+    # time (see "The Identity tab IS the active profile" above) -- the one
+    # whose data is mirrored into the legacy ``profile.local.json`` that
+    # ``service``/``autopilot`` actually read. Every writer in this module
+    # (add_profile/set_active/remove_profile) maintains that invariant;
+    # load_profiles trusts what's on disk rather than re-deriving it.
+    active: bool = False
 
     @property
     def full_name(self) -> str:
@@ -156,6 +190,7 @@ def load_profiles(path: str) -> list[NamedProfile]:
             phones=_as_str_list(entry.get("phones")),
             addresses=_as_str_list(entry.get("addresses")),
             eraser_profile=entry.get("eraser_profile"),
+            active=bool(entry.get("active", False)),
         ))
     return out
 
@@ -194,7 +229,14 @@ def add_profile(path: str, data: dict) -> NamedProfile:
     """Create a new profile from *data* (same keys as the identity form:
     first_name/middle_name/last_name/emails/phones/addresses/eraser_profile).
     The id is ALWAYS derived here via ``slugify_profile_id`` -- a caller
-    never supplies one, so two profiles can never collide."""
+    never supplies one, so two profiles can never collide.
+
+    If *path* has no profiles at all yet, the new one is automatically
+    ``active`` -- there is always exactly one active profile once the list
+    is non-empty. A caller that already migrated/created an active profile
+    (the normal case once the merged UI has been opened once -- see
+    ``migrate_legacy_profile_if_needed``) just adds a second, inactive
+    entry; switching which one is active is ``set_active``, not this."""
     first_name = (data.get("first_name") or "").strip()
     last_name = (data.get("last_name") or "").strip()
     _validate_names(first_name, last_name)
@@ -210,6 +252,7 @@ def add_profile(path: str, data: dict) -> NamedProfile:
         phones=_as_str_list(data.get("phones")),
         addresses=_as_str_list(data.get("addresses")),
         eraser_profile=(data.get("eraser_profile") or None),
+        active=not profiles,
     )
     profiles.append(profile)
     save_profiles(path, profiles)
@@ -235,6 +278,13 @@ def update_profile(path: str, profile_id: str, data: dict) -> NamedProfile:
                 phones=_as_str_list(data.get("phones")) if "phones" in data else existing.phones,
                 addresses=_as_str_list(data.get("addresses")) if "addresses" in data else existing.addresses,
                 eraser_profile=(data.get("eraser_profile") if "eraser_profile" in data else existing.eraser_profile) or None,
+                # Editing a profile must never change WHICH profile is active
+                # -- ``active`` is owned by set_active/add_profile/
+                # remove_profile, and *data* (an identity form submission)
+                # never carries it. Rebuilding the dataclass without this
+                # silently reset it to the ``False`` default, which
+                # de-activated the active profile on every save.
+                active=existing.active,
             )
             profiles[i] = updated
             save_profiles(path, profiles)
@@ -242,16 +292,182 @@ def update_profile(path: str, profile_id: str, data: dict) -> NamedProfile:
     raise ProfileNotFound(profile_id)
 
 
-def remove_profile(path: str, profile_id: str) -> None:
+def remove_profile(path: str, profile_id: str) -> "NamedProfile | None":
     """Delete a profile from broker-guard's own store. Does NOT touch
     eraser's history.db -- see module docstring's "Removal keeps history"
     section. Raises ``ProfileNotFound`` for an unknown id rather than
-    silently no-op'ing, so a caller's "removed" confirmation is honest."""
+    silently no-op'ing, so a caller's "removed" confirmation is honest.
+
+    Maintains the one-active invariant: removing the ACTIVE profile would
+    otherwise leave a non-empty list with nothing active (and nothing
+    mirrored into ``profile.local.json``), so the first remaining profile
+    is promoted. Returns the profile that is active afterwards when that
+    promotion happened -- the caller's cue to re-sync the legacy file --
+    and ``None`` when the active profile was untouched or the list is now
+    empty.
+    """
     profiles = load_profiles(path)
     remaining = [p for p in profiles if p.id != profile_id]
     if len(remaining) == len(profiles):
         raise ProfileNotFound(profile_id)
+
+    removed_the_active_one = any(p.id == profile_id and p.active for p in profiles)
+    promoted = None
+    if removed_the_active_one and remaining:
+        remaining = [
+            NamedProfile(**{**p.to_dict(), "active": (i == 0)})
+            for i, p in enumerate(remaining)
+        ]
+        promoted = remaining[0]
+
     save_profiles(path, remaining)
+    return promoted
+
+
+def set_active(path: str, profile_id: str) -> NamedProfile:
+    """Make *profile_id* the one active profile, clearing ``active`` on
+    every other entry (the invariant in the module docstring). Returns the
+    now-active profile so the caller can mirror it into the legacy
+    ``profile.local.json`` the scan loop reads -- see
+    ``sync_active_to_legacy``."""
+    profiles = load_profiles(path)
+    if not any(p.id == profile_id for p in profiles):
+        raise ProfileNotFound(profile_id)
+    updated = [
+        NamedProfile(**{**p.to_dict(), "active": (p.id == profile_id)})
+        for p in profiles
+    ]
+    save_profiles(path, updated)
+    return next(p for p in updated if p.id == profile_id)
+
+
+def get_active_profile(path: str) -> "NamedProfile | None":
+    """The one profile flagged ``active``, or ``None`` when the list is
+    empty. If several are somehow flagged (hand-edited profiles.json), the
+    first wins -- ``load_profiles`` trusts the file rather than rewriting
+    it, so this resolves the ambiguity read-side without a surprise write."""
+    for p in load_profiles(path):
+        if p.active:
+            return p
+    return None
+
+
+def upsert_active_profile(path: str, data: dict) -> NamedProfile:
+    """Write the identity form's *data* onto the ACTIVE profile, creating
+    that profile if the list has none yet.
+
+    This is what the merged ``POST /identity`` calls so a save on the
+    Profile page always shows up in the profiles list, instead of the two
+    stores drifting apart (see the module docstring's "The 'Identity' tab
+    IS the active profile" section). The active entry's id is preserved,
+    same immutable-id rule as ``update_profile``.
+    """
+    active = get_active_profile(path)
+    if active is not None:
+        return update_profile(path, active.id, data)
+    created = add_profile(path, data)
+    if not created.active:
+        # Degenerate case: a non-empty list where nothing was flagged
+        # active (e.g. a profiles.json written before this field existed
+        # and hand-edited since). add_profile only auto-activates into an
+        # EMPTY list, so restore the invariant explicitly here.
+        created = set_active(path, created.id)
+    return created
+
+
+def to_legacy_profile_dict(profile: NamedProfile) -> dict:
+    """The ``profile.local.json`` shape (``profile.load_profile``'s input)
+    for *profile*. Deliberately drops ``id``/``active`` -- those are this
+    module's bookkeeping, not part of the single-Identity contract the
+    scan loop reads."""
+    return {
+        "first_name": profile.first_name,
+        "middle_name": profile.middle_name,
+        "last_name": profile.last_name,
+        "emails": list(profile.emails),
+        "phones": list(profile.phones),
+        "addresses": list(profile.addresses),
+        "eraser_profile": profile.eraser_profile,
+    }
+
+
+def write_legacy_profile(legacy_path: str, profile: NamedProfile) -> None:
+    """Mirror *profile* into the single legacy ``profile.local.json`` that
+    ``service.run_once``/``autopilot`` read. Atomic (tmp + ``os.replace``)
+    and owner-only, same as ``save_profiles`` -- same class of PII."""
+    parent = os.path.dirname(os.path.abspath(legacy_path)) or "."
+    os.makedirs(parent, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=parent, prefix=".profile-", suffix=".json.tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(to_legacy_profile_dict(profile), fh, indent=2)
+        os.replace(tmp_path, legacy_path)
+    except Exception:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+        raise
+    try:
+        os.chmod(legacy_path, 0o600)
+    except OSError:
+        pass
+
+
+def sync_active_to_legacy(profiles_path: str, legacy_path: str) -> "NamedProfile | None":
+    """Mirror whichever profile is active into *legacy_path*. Returns the
+    profile written, or ``None`` when there is no active profile (an empty
+    list) -- in which case the legacy file is deliberately left ALONE
+    rather than truncated, so removing the last profile never leaves the
+    scan loop with an unreadable identity mid-cycle."""
+    active = get_active_profile(profiles_path)
+    if active is None:
+        return None
+    write_legacy_profile(legacy_path, active)
+    return active
+
+
+def migrate_legacy_profile_if_needed(profiles_path: str, legacy_path: str) -> "NamedProfile | None":
+    """One-time backfill: a deployment that already had a populated
+    ``profile.local.json`` before the Identity/Profiles merge shipped gets
+    that identity added to the profiles list automatically, as the active
+    profile, so it shows up on the merged page without the person
+    re-entering anything.
+
+    Runs only when the profiles list is EMPTY -- once there is at least one
+    profile the list is the source of truth and this is a no-op, so it is
+    safe (and cheap) to call on every page load. A missing or unparseable
+    legacy file is also a no-op: there is simply nothing to migrate, which
+    is not an error.
+
+    Returns the migrated profile, or ``None`` when nothing was migrated.
+    """
+    if load_profiles(profiles_path):
+        return None
+    if not os.path.exists(legacy_path):
+        return None
+
+    # Imported lazily, not at module scope: this module deliberately has no
+    # import-time dependency on profile.py (see NamedProfile's docstring).
+    # load_profile is reused rather than re-parsed here so the migrated
+    # entry gets the exact same normalization the scan loop already sees --
+    # notably profile.py's city/state -> address-line synthesis.
+    from broker_guard import profile as _profile_mod
+
+    try:
+        identity = _profile_mod.load_profile(legacy_path)
+    except (OSError, ValueError):
+        return None
+
+    return add_profile(profiles_path, {
+        "first_name": identity.first_name,
+        "middle_name": identity.middle_name,
+        "last_name": identity.last_name,
+        "emails": list(identity.emails),
+        "phones": list(identity.phones),
+        "addresses": list(identity.addresses),
+        "eraser_profile": identity.eraser_profile,
+    })
 
 
 def get_profile(path: str, profile_id: str) -> NamedProfile:

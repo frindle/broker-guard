@@ -69,8 +69,11 @@ NAV_ITEMS = (
     ("dashboard", "/", "Dashboard"),
     ("brokers", "/brokers", "Brokers"),
     ("action", "/brokers#action-needed", "Action needed"),
+    # One nav entry, not two: /identity IS the profiles list now (the
+    # active profile pinned on top). /profiles still redirects there for
+    # old bookmarks, but giving it its own tab is what made people think
+    # they were two separate places to manage identity.
     ("identity", "/identity", "Profile"),
-    ("profiles", "/profiles", "Profiles"),
     ("exposure", "/exposure", "Exposure"),
     ("freeze", "/freeze", "Credit freeze"),
 )
