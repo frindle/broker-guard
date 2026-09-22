@@ -40,6 +40,49 @@ def query_presence_history(conn: sqlite3.Connection, broker_id: str | None = Non
     ]
 
 
+def query_broker_status(conn: sqlite3.Connection, identity_key: str | None = None, limit: int = 200) -> list[dict]:
+    """Return presence rows LEFT JOINed with their ``broker_status`` row.
+
+    This is the surface no UI read before: ``state.StateStore.set_status``/
+    ``get_status`` write ``broker_status`` every cycle, but nothing displayed
+    it. One row per (identity_key, broker_id) pair that has a presence
+    record, ordered by ``last_seen DESC``, optionally filtered to one
+    identity, capped at ``limit``. A broker with presence but no status row
+    yet (removal never submitted) gets ``removal_status: None`` -- that is
+    itself meaningful ("seen, nothing sent"), not an error. Never writes.
+    """
+    if identity_key is None:
+        cur = conn.execute(
+            "SELECT p.identity_key, p.broker_id, p.first_seen, p.last_seen, "
+            "s.status, s.updated_at "
+            "FROM presence p LEFT JOIN broker_status s "
+            "ON p.identity_key = s.identity_key AND p.broker_id = s.broker_id "
+            "ORDER BY p.last_seen DESC LIMIT ?",
+            (limit,),
+        )
+    else:
+        cur = conn.execute(
+            "SELECT p.identity_key, p.broker_id, p.first_seen, p.last_seen, "
+            "s.status, s.updated_at "
+            "FROM presence p LEFT JOIN broker_status s "
+            "ON p.identity_key = s.identity_key AND p.broker_id = s.broker_id "
+            "WHERE p.identity_key = ? "
+            "ORDER BY p.last_seen DESC LIMIT ?",
+            (identity_key, limit),
+        )
+    return [
+        {
+            "identity_key": row[0],
+            "broker_id": row[1],
+            "first_seen": row[2],
+            "last_seen": row[3],
+            "removal_status": row[4],
+            "status_updated_at": row[5],
+        }
+        for row in cur.fetchall()
+    ]
+
+
 def load_health_summary(lines: list[str]) -> dict:
     """Return the most recent ``build_report`` JSON line from a rolling log.
 

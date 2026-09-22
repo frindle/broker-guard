@@ -12,12 +12,15 @@ DEFAULT_PROFILE_PATH = "profile.local.json"
 DEFAULT_BROKERS_PATH = "data/brokers.json"
 DEFAULT_STATE_PATH = "data/state.sqlite"
 DEFAULT_LOG_DIR = "logs"
+DEFAULT_ID_DOCUMENTS_DIR = "data/id_documents"
+DEFAULT_FREEZE_STATE_PATH = "data/freeze_state.json"
 
 # Keys whose values must never be logged, echoed or written to an alert body.
 SECRET_ENV_KEYS = (
     "BG_CAPTCHA_API_KEY",
     "BG_ALERT_WEBHOOK_URL",
     "BG_SEARXNG_AUTH",
+    "BG_CRYPTO_KEY",
 )
 
 
@@ -67,6 +70,13 @@ class Config:
     brokers_path: str = DEFAULT_BROKERS_PATH
     state_path: str = DEFAULT_STATE_PATH
     log_dir: str = DEFAULT_LOG_DIR
+    id_documents_dir: str = DEFAULT_ID_DOCUMENTS_DIR
+    freeze_state_path: str = DEFAULT_FREEZE_STATE_PATH
+
+    # Fernet key (url-safe base64, as produced by cryptography.fernet.Fernet.
+    # generate_key()) used to encrypt ID-document uploads and freeze PINs at
+    # rest. Never sourced/generated internally -- see crypto.py.
+    crypto_key: str | None = field(default=None, repr=False)
 
     searxng_url: str | None = None
     searxng_auth: str | None = None
@@ -98,7 +108,7 @@ class Config:
         """A dict of this config safe to log: secrets replaced with a marker."""
         out = {}
         for key, value in self.__dict__.items():
-            if key in ("captcha_api_key", "searxng_auth", "alert_webhook_url"):
+            if key in ("captcha_api_key", "searxng_auth", "alert_webhook_url", "crypto_key"):
                 out[key] = "<set>" if value else None
             else:
                 out[key] = value
@@ -117,6 +127,9 @@ def load_config(env=None) -> Config:
         brokers_path=_env_str(env, "BG_BROKERS_PATH", DEFAULT_BROKERS_PATH),
         state_path=_env_str(env, "BG_STATE_PATH", DEFAULT_STATE_PATH),
         log_dir=_env_str(env, "BG_LOG_DIR", DEFAULT_LOG_DIR),
+        id_documents_dir=_env_str(env, "BG_ID_DOCUMENTS_DIR", DEFAULT_ID_DOCUMENTS_DIR),
+        freeze_state_path=_env_str(env, "BG_FREEZE_STATE_PATH", DEFAULT_FREEZE_STATE_PATH),
+        crypto_key=_env_str(env, "BG_CRYPTO_KEY"),
         searxng_url=_env_str(env, "BG_SEARXNG_URL"),
         searxng_auth=_env_str(env, "BG_SEARXNG_AUTH"),
         searxng_timeout_s=_env_int(env, "BG_SEARXNG_TIMEOUT_S", 20),

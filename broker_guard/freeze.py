@@ -22,7 +22,9 @@ security-freeze landing page instead of guessing a specific path, and the
 entry is commented ``# needs-verification`` -- check the live page before
 surfacing that link to a user.
 """
-from dataclasses import dataclass
+import json
+import os
+from dataclasses import asdict, dataclass
 
 from broker_guard.crypto import decrypt_field, encrypt_field
 
@@ -186,6 +188,71 @@ def transition(state: BureauFreezeState, new_status: str, now_iso: str) -> Burea
     state.status = new_status
     state.last_updated = now_iso
     return state
+
+
+# --- persistence -------------------------------------------------------------
+#
+# There is no database table for freeze state (unlike presence/broker_status
+# in state.py) because it is small, per-identity, and already carries a
+# ciphertext PIN -- a flat JSON file mirrors exposure.py's ExposureCache
+# pattern: one file, owner-only (0600) permissions, never logged.
+
+DEFAULT_FREEZE_STATE_PATH = "data/freeze_state.json"
+
+
+def _load_all(path: str) -> dict:
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_all(path: str, data: dict) -> None:
+    parent = os.path.dirname(os.path.abspath(path))
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh)
+    try:
+        os.chmod(path, 0o600)
+    except OSError:
+        pass
+
+
+def load_freeze_states(path: str, identity_key: str) -> dict[str, BureauFreezeState]:
+    """Load every tracked :class:`BureauFreezeState` for *identity_key*.
+
+    Bureaus with no stored state are simply absent from the result (the
+    caller decides whether that means "not_started" by default). A missing
+    or unreadable file returns ``{}`` rather than raising.
+    """
+    all_data = _load_all(path)
+    identity_data = all_data.get(identity_key) or {}
+    out = {}
+    for bureau_key, fields in identity_data.items():
+        if not isinstance(fields, dict):
+            continue
+        out[bureau_key] = BureauFreezeState(
+            bureau_key=fields.get("bureau_key", bureau_key),
+            status=fields.get("status", STATUS_NOT_STARTED),
+            pin_token=fields.get("pin_token"),
+            last_updated=fields.get("last_updated"),
+            reminder_date=fields.get("reminder_date"),
+        )
+    return out
+
+
+def save_freeze_state(path: str, identity_key: str, state: BureauFreezeState) -> None:
+    """Persist one bureau's state for *identity_key*, leaving every other
+    bureau/identity in the file untouched (read-merge-write)."""
+    all_data = _load_all(path)
+    identity_data = all_data.setdefault(identity_key, {})
+    identity_data[state.bureau_key] = asdict(state)
+    _save_all(path, all_data)
 
 
 def semi_automate_freeze(bureau_key: str) -> dict:
