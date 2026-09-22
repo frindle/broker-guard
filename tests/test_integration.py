@@ -225,6 +225,31 @@ def test_main_rejects_a_bad_interval(base_env, monkeypatch):
     assert service.main(["--check-config"]) == 2
 
 
+def test_exposure_cache_and_profiles_paths_are_env_configurable(tmp_path):
+    """New Config fields (exposure_cache_path, profiles_path,
+    eraser_config_path) added for the /exposure 500 fix and the Profiles
+    feature -- each has a real default and is overridable via its own
+    BG_* env var, same convention as every other path field."""
+    from broker_guard.config import DEFAULT_EXPOSURE_CACHE_PATH, DEFAULT_PROFILES_PATH
+
+    default_cfg = load_config({})
+    assert default_cfg.exposure_cache_path == DEFAULT_EXPOSURE_CACHE_PATH
+    assert default_cfg.profiles_path == DEFAULT_PROFILES_PATH
+    assert default_cfg.eraser_config_path.endswith(".eraser/config.yaml")
+
+    custom_exposure = str(tmp_path / "custom_exposure.json")
+    custom_profiles = str(tmp_path / "custom_profiles.json")
+    custom_eraser = str(tmp_path / "custom_eraser.yaml")
+    cfg = load_config({
+        "BG_EXPOSURE_CACHE_PATH": custom_exposure,
+        "BG_PROFILES_PATH": custom_profiles,
+        "BG_ERASER_CONFIG_PATH": custom_eraser,
+    })
+    assert cfg.exposure_cache_path == custom_exposure
+    assert cfg.profiles_path == custom_profiles
+    assert cfg.eraser_config_path == custom_eraser
+
+
 def test_main_runs_one_real_cycle_and_exits(base_env, monkeypatch, tmp_path):
     for key, value in base_env.items():
         monkeypatch.setenv(key, value)

@@ -10,8 +10,10 @@ import yaml
 from broker_guard.eraser_config import (
     build_eraser_config,
     provision_eraser_config,
+    sync_profiles,
 )
 from broker_guard.profile import Identity
+from broker_guard.profiles import NamedProfile
 
 FAKE_FIRST = "Testy"
 FAKE_LAST = "Mctestface"
@@ -149,3 +151,71 @@ def test_reprovisioning_merges_onto_the_file_it_just_wrote(tmp_path):
         reloaded = yaml.safe_load(fh)
     assert reloaded["profile"]["first_name"] == "Updated"
     assert reloaded["email"]["smtp"]["host"] == "smtp.example.invalid"
+
+
+# --- sync_profiles: the full profiles: list (broker_guard/profiles.py) ---
+
+def test_sync_profiles_writes_a_flat_named_entry_per_profile(tmp_path):
+    path = tmp_path / "config.yaml"
+    people = [
+        NamedProfile(id="jane-doe", first_name="Jane", last_name="Doe",
+                     emails=[FAKE_EMAIL], phones=[FAKE_PHONE]),
+        NamedProfile(id="spouse", first_name="Sam", last_name="Doe"),
+    ]
+    sync_profiles(people, str(path))
+
+    with open(path, "r", encoding="utf-8") as fh:
+        loaded = yaml.safe_load(fh)
+    ids = {p["id"] for p in loaded["profiles"]}
+    assert ids == {"jane-doe", "spouse"}
+    jane = next(p for p in loaded["profiles"] if p["id"] == "jane-doe")
+    assert jane["first_name"] == "Jane"
+    assert jane["email"] == FAKE_EMAIL
+    assert jane["phone"] == FAKE_PHONE
+
+
+def test_sync_profiles_merge_only_non_blank_preserves_other_id_fields(tmp_path):
+    path = tmp_path / "config.yaml"
+    existing = {"profiles": [{"id": "jane-doe", "first_name": "Jane", "last_name": "Doe",
+                               "city": "Somewhere", "date_of_birth": "1990-01-01"}]}
+    with open(path, "w", encoding="utf-8") as fh:
+        yaml.safe_dump(existing, fh)
+
+    sync_profiles([NamedProfile(id="jane-doe", first_name="Jane", last_name="Doe")], str(path))
+
+    with open(path, "r", encoding="utf-8") as fh:
+        loaded = yaml.safe_load(fh)
+    jane = loaded["profiles"][0]
+    assert jane["city"] == "Somewhere"
+    assert jane["date_of_birth"] == "1990-01-01"
+
+
+def test_sync_profiles_drops_a_removed_profile_but_leaves_other_blocks_alone(tmp_path):
+    path = tmp_path / "config.yaml"
+    existing = {
+        "profile": {"first_name": "Legacy", "last_name": "Person"},
+        "profiles": [{"id": "jane-doe", "first_name": "Jane", "last_name": "Doe"},
+                     {"id": "old-one", "first_name": "Old", "last_name": "One"}],
+        "email": {"provider": "smtp", "from": FAKE_EMAIL},
+    }
+    with open(path, "w", encoding="utf-8") as fh:
+        yaml.safe_dump(existing, fh)
+
+    # "old-one" is no longer in broker-guard's own list -- sync must drop it
+    # from eraser's profiles: too, but touch nothing else.
+    sync_profiles([NamedProfile(id="jane-doe", first_name="Jane", last_name="Doe")], str(path))
+
+    with open(path, "r", encoding="utf-8") as fh:
+        loaded = yaml.safe_load(fh)
+    assert [p["id"] for p in loaded["profiles"]] == ["jane-doe"]
+    assert loaded["profile"] == existing["profile"]
+    assert loaded["email"] == existing["email"]
+
+
+def test_sync_profiles_empty_list_clears_profiles_key(tmp_path):
+    path = tmp_path / "config.yaml"
+    sync_profiles([NamedProfile(id="jane-doe", first_name="Jane", last_name="Doe")], str(path))
+    sync_profiles([], str(path))
+    with open(path, "r", encoding="utf-8") as fh:
+        loaded = yaml.safe_load(fh)
+    assert loaded["profiles"] == []

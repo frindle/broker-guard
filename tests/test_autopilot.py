@@ -315,6 +315,67 @@ def test_run_forever_one_bad_cycle_does_not_kill_the_loop(monkeypatch, tmp_path,
 
 # --- has_id_documents_on_file ---------------------------------------------------
 
+def test_run_forever_writes_heartbeat_after_each_scan_cycle(monkeypatch, tmp_path, profile_file, brokers_file):
+    """Regression: run_forever (the loop webapp.run_web_server/BG_SERVE_WEB=true
+    actually runs) never called service.write_heartbeat, unlike
+    service.main()'s headless loop -- so heartbeat.json was never written
+    in the deployed mode and the dashboard's scan-status indicator had
+    nothing real to read. This is the fix."""
+    import json
+
+    from broker_guard.config import Config
+
+    cfg = Config(profile_path=profile_file, brokers_path=brokers_file,
+                 state_path=str(tmp_path / "s.sqlite"), log_dir=str(tmp_path / "logs"))
+    monkeypatch.setattr(autopilot, "run_scan_cycle",
+                         lambda *a, **k: {"current": ["a", "b"], "new_appearances": ["a"]})
+    monkeypatch.setattr(autopilot, "run_confirmation_pass", lambda *a, **k: None)
+
+    stop = threading.Event()
+
+    def fake_sleep(seconds):
+        stop.set()
+
+    deps = autopilot.AutopilotDependencies()
+    autopilot.run_forever(cfg, deps, autopilot.Intervals(scan_seconds=100, confirmation_seconds=100),
+                            stop, sleep=fake_sleep)
+
+    heartbeat_path = tmp_path / "logs" / "heartbeat.json"
+    assert heartbeat_path.exists()
+    payload = json.loads(heartbeat_path.read_text())
+    assert payload["ok"] is True
+    assert payload["present"] == 2
+    assert payload["new"] == 1
+
+
+def test_run_forever_writes_failed_heartbeat_on_scan_exception(monkeypatch, tmp_path, profile_file, brokers_file):
+    import json
+
+    from broker_guard.config import Config
+
+    cfg = Config(profile_path=profile_file, brokers_path=brokers_file,
+                 state_path=str(tmp_path / "s.sqlite"), log_dir=str(tmp_path / "logs"))
+
+    def _boom(*a, **k):
+        raise RuntimeError("scan blew up")
+
+    monkeypatch.setattr(autopilot, "run_scan_cycle", _boom)
+    monkeypatch.setattr(autopilot, "run_confirmation_pass", lambda *a, **k: None)
+
+    stop = threading.Event()
+
+    def fake_sleep(seconds):
+        stop.set()
+
+    deps = autopilot.AutopilotDependencies()
+    autopilot.run_forever(cfg, deps, autopilot.Intervals(scan_seconds=100, confirmation_seconds=100),
+                            stop, sleep=fake_sleep)
+
+    payload = json.loads((tmp_path / "logs" / "heartbeat.json").read_text())
+    assert payload["ok"] is False
+    assert "scan blew up" in payload["error"]
+
+
 def test_has_id_documents_on_file_requires_both_sides(tmp_path):
     from broker_guard.config import Config
 

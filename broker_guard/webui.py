@@ -12,12 +12,18 @@ so tests can override it with a tmp-path Config via
 Nothing here fills or submits a broker's opt-out form directly -- that still
 only ever happens through the vendored ``eraser`` engine via
 ``EraserBridge``, same rule as ``browser.py``.
+
+Presentation (layout/CSS/components) lives in ``webui_style``; the
+chart/stat-tile/stepper DATA it renders is shaped by pure helpers in
+``webui_data`` -- every number on the dashboard traces back to a real
+``brokers.json``/``presence``/``broker_status`` read, never a placeholder.
 """
 import base64
 import html
 import json
 import logging
 import os
+import re
 import tempfile
 import threading
 import uuid
@@ -26,18 +32,25 @@ from datetime import datetime, timezone
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from broker_guard import brokers as brokers_mod
 from broker_guard import eraser as eraser_mod
+from broker_guard import eraser_config as eraser_config_mod
 from broker_guard import exposure as exposure_mod
 from broker_guard import freeze as freeze_mod
 from broker_guard import profile as profile_mod
+from broker_guard import profiles as profiles_mod
 from broker_guard import service as service_mod
 from broker_guard import state as state_mod
 from broker_guard import webui_data
+from broker_guard import webui_style as style
 from broker_guard.config import Config, load_config
 from broker_guard.crypto import encrypt_field
 from broker_guard.eraser_bridge import EraserBridge
 
 log = logging.getLogger("broker_guard.webui")
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_PHONE_DIGITS_RE = re.compile(r"\d+")
 
 app = FastAPI(title="Broker Guard")
 
@@ -84,76 +97,263 @@ def get_eraser_bridge(cfg: Config = Depends(get_config)) -> EraserBridge:
     return EraserBridge(cfg.eraser_bin, cfg.eraser_timeout_s, cfg.eraser_dry_run)
 
 
-def get_exposure_client() -> exposure_mod.XposedOrNotClient:
-    return exposure_mod.XposedOrNotClient()
+def get_exposure_client(cfg: Config = Depends(get_config)) -> exposure_mod.XposedOrNotClient:
+    """Root-cause fix for the live ``/exposure`` 500: this used to construct
+    ``XposedOrNotClient()`` with no arguments, which built an
+    ``ExposureCache`` at its own hardcoded, ``Config``-independent
+    ``exposure.DEFAULT_CACHE_PATH`` -- a relative path that may not be
+    writable (or even exist as a directory) in the deployed container's
+    actual working directory, and ``ExposureCache._save()`` had no
+    try/except around that write. Routing the path through
+    ``cfg.exposure_cache_path`` (now a real, overridable Config field) is
+    the actual fix; ``exposure.py``'s hardened ``_save()`` is additional
+    defense-in-depth on top of it, not a substitute for it.
+    """
+    cache = exposure_mod.ExposureCache(cfg.exposure_cache_path)
+    return exposure_mod.XposedOrNotClient(cache=cache)
 
 
 def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-# --- / : health + escalations -----------------------------------------------
+def _action_needed_count(rows: list[dict]) -> int:
+    """How many ``query_broker_status`` rows are parked in a state that
+    needs a human -- ``needs_document`` or ``needs_review`` -- the same
+    real count the nav's "Action needed" badge and the dashboard's stat
+    chip both show. Never a placeholder: 0 when nothing is actually
+    waiting on a human."""
+    return sum(1 for row in rows if row.get("removal_status") in ("needs_document", "needs_review"))
+
+
+def _read_heartbeat(cfg: Config) -> dict | None:
+    """Best-effort parse of ``logs/heartbeat.json`` (see
+    ``service.write_heartbeat`` / the ``autopilot.run_forever`` fix) --
+    ``None`` for "never written yet" or any read/parse failure, never a
+    raised exception (a dashboard render must not 500 over a missing or
+    momentarily-half-written heartbeat file)."""
+    path = os.path.join(cfg.log_dir, "heartbeat.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else None
+    except (OSError, ValueError):
+        return None
+
+
+# --- / : dashboard -----------------------------------------------------------
 
 @app.get("/", response_class=HTMLResponse)
-def index(cfg: Config = Depends(get_config)):
-    # Escalation countdowns: no persisted escalation-records store yet, so an
-    # empty list is the honest input ("no escalations recorded yet").
+def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
+    """The Removals dashboard. Every number below is wired to a real,
+    already-tracked value -- see webui_data's docstrings for exactly which
+    presence/broker_status/brokers.json field each one reads. Nothing here
+    is a fabricated metric or a fake historical trend.
+    """
     try:
-        countdowns = webui_data.escalation_countdowns([], _utcnow_iso())
-    except Exception:
-        countdowns = []
+        brokers = brokers_mod.load_brokers(cfg.brokers_path)
+    except (OSError, ValueError):
+        brokers = []
 
-    health_log_path = os.path.join(cfg.log_dir, "health.jsonl")
-    lines = []
-    if os.path.exists(health_log_path):
-        with open(health_log_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
+    conn = state_mod.init_db(cfg.state_path)
     try:
-        summary = webui_data.load_health_summary(lines)
-    except Exception:
-        summary = {"total": 0, "ok": 0, "failed": 0, "by_broker": {}}
+        rows = webui_data.query_broker_status(conn)
+    finally:
+        conn.close()
 
-    rows_html = "\n".join(
-        "<tr><td>{broker_id}</td><td>{stage}</td><td>{deadline_iso}</td>"
-        "<td>{seconds_remaining}</td><td>{overdue}</td></tr>".format(**row)
-        for row in countdowns
+    status_counts = webui_data.broker_status_counts(rows)
+    kind_breakdown = webui_data.broker_kind_breakdown(brokers)
+    automation_breakdown = webui_data.broker_automation_breakdown(brokers)
+    submitted_series = webui_data.submitted_over_time(rows)
+    recent = webui_data.recent_status_changes(rows)
+    action_needed = _action_needed_count(rows)
+
+    # Escalated: no persisted escalation-records store exists yet (see
+    # webui_data.escalation_countdowns), so this is honestly always 0 today
+    # -- a real computation over a real (currently empty) input, not a
+    # fabricated number. It will start reporting non-zero the moment an
+    # escalation-record store is added, with no change needed here.
+    try:
+        escalated = sum(1 for c in webui_data.escalation_countdowns([], _utcnow_iso()) if c["overdue"])
+    except Exception:
+        escalated = 0
+
+    heartbeat = _read_heartbeat(cfg)
+    with _JOBS_LOCK:
+        jobs_summary = {jid: j.get("status") for jid, j in jobs.items()}
+    scan = webui_data.scan_status(heartbeat, jobs_summary, cfg.interval_seconds)
+
+    in_progress = status_counts["pending"] + status_counts["submitted"]
+    chips = "".join([
+        style.stat_chip(status_counts["total"], "Tracked", "neutral"),
+        style.stat_chip(status_counts["confirmed"], "Removed", "success"),
+        style.stat_chip(in_progress, "In progress", "progress"),
+        style.stat_chip(action_needed, "Action needed", "action" if action_needed else "neutral"),
+        style.stat_chip(escalated, "Escalated", "escalated" if escalated else "neutral"),
+    ])
+
+    if submitted_series:
+        area = style.area_chart(
+            "submittedChart",
+            [row["bucket"] for row in submitted_series],
+            [row["count"] for row in submitted_series],
+            "Removals submitted (cumulative)",
+        )
+    else:
+        area = '<p class="muted">No removals have been submitted yet -- this fills in once the ' \
+               "first one is sent (real data only, never a placeholder trend).</p>"
+
+    kind_segments = [
+        (style.KIND_COLORS[k], kind_breakdown.get(k, 0), style.KIND_LABELS[k])
+        for k in style.KIND_ORDER
+    ]
+    kind_legend = "".join(
+        style.legend_row(style.KIND_COLORS[k], style.KIND_LABELS[k], kind_breakdown.get(k, 0))
+        for k in style.KIND_ORDER if kind_breakdown.get(k, 0) > 0
     )
 
-    return (
-        "<!DOCTYPE html>\n"
-        "<html><head><title>Broker Guard</title></head><body>\n"
-        "<h1>Broker Guard</h1>\n"
-        '<p><a href="/brokers">brokers</a> | <a href="/identity">identity</a> | '
-        '<a href="/exposure">exposure</a> | <a href="/freeze">credit freeze</a></p>\n'
-        "<table border=\"1\">\n"
-        "<tr><th>broker_id</th><th>stage</th><th>deadline_iso</th>"
-        "<th>seconds_remaining</th><th>overdue</th></tr>\n"
-        + rows_html + "\n"
-        "</table>\n"
-        "<p>health: total={total} ok={ok} failed={failed}</p>\n"
-        "</body></html>"
-    ).format(total=summary.get("total", 0), ok=summary.get("ok", 0), failed=summary.get("failed", 0))
+    donut = style.donut_canvas(
+        "automationDonut",
+        [style.ACTION_LABELS[k] for k in style.ACTION_ORDER],
+        [automation_breakdown[k] for k in style.ACTION_ORDER],
+        [style.ACTION_COLORS[k] for k in style.ACTION_ORDER],
+        "brokers tracked",
+    )
+    action_legend = "".join(
+        style.legend_row(style.ACTION_COLORS[k], style.ACTION_LABELS[k], automation_breakdown[k])
+        for k in style.ACTION_ORDER
+    )
+
+    if recent:
+        notif_html = "".join(
+            '<div class="notif"><span>{bid}: status changed to <strong>{status}</strong></span>'
+            '<span class="when">{when}</span></div>'.format(
+                bid=html.escape(str(r["broker_id"])),
+                status=html.escape(str(r["removal_status"] or "not submitted")),
+                when=html.escape(str(r["status_updated_at"] or "")),
+            )
+            for r in recent
+        )
+    else:
+        notif_html = '<p class="muted">No status changes recorded yet.</p>'
+
+    if scan["running"]:
+        scan_line = "Scan in progress right now."
+    elif scan["last_run_at"]:
+        ok_text = "ok" if scan["last_run_ok"] else "failed"
+        scan_line = "Last scan: {} ({}). Next scan around: {}.".format(
+            html.escape(scan["last_run_at"]), ok_text, html.escape(scan["next_run_at"] or "unknown"),
+        )
+    else:
+        scan_line = "No scan has run yet in this deployment."
+
+    body = """
+<div class="page-head">
+  <div><h1>Removals</h1><div class="muted" id="scanline">{scan_line}</div></div>
+  <button class="btn secondary" id="runScanBtn" onclick="runScanNow()">Run scan now</button>
+</div>
+<div class="chips">{chips}</div>
+<div class="grid-main">
+  <div class="card"><h2>Removals submitted over time</h2>{area}</div>
+  <div class="card">
+    <h2>Notifications</h2>
+    <div>{notif_html}</div>
+  </div>
+</div>
+<div class="grid-main" style="margin-top:18px;">
+  <div class="card">
+    <div class="section-label">Broker overview -- by verification kind</div>
+    {stackbar}
+    {kind_legend}
+  </div>
+  <div class="card">
+    <h2>Automation mix</h2>
+    {donut}
+    {action_legend}
+  </div>
+</div>
+<script>
+function runScanNow() {{
+  var btn = document.getElementById('runScanBtn');
+  btn.disabled = true; btn.textContent = 'Starting...';
+  fetch('/scan', {{method: 'POST'}}).then(function(r) {{ return r.json(); }}).then(function(job) {{
+    function poll() {{
+      fetch('/status?job_id=' + job.job_id).then(function(r) {{ return r.json(); }}).then(function(s) {{
+        if (s.status === 'done' || s.status === 'error') {{ location.reload(); }}
+        else {{ btn.textContent = 'Scanning...'; setTimeout(poll, 1500); }}
+      }});
+    }}
+    poll();
+  }});
+}}
+</script>
+""".format(
+        scan_line=scan_line, chips=chips, area=area, notif_html=notif_html,
+        stackbar=style.stacked_bar(kind_segments), kind_legend=kind_legend,
+        donut=donut, action_legend=action_legend,
+    )
+
+    return style.render_page("Dashboard", "dashboard", body, action_needed_count=action_needed)
 
 
 # --- /brokers + /status : presence and removal status -----------------------
 
-def _broker_rows_html(rows: list[dict]) -> str:
-    out = []
-    for row in rows:
-        out.append(
-            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-            '<td><form method="post" action="/brokers/{bid_attr}/remove">'
-            '<button type="submit">send removal</button></form></td></tr>'.format(
-                html.escape(str(row["identity_key"])),
-                html.escape(str(row["broker_id"])),
-                html.escape(str(row["first_seen"])),
-                html.escape(str(row["last_seen"])),
-                html.escape(str(row["removal_status"] or "not submitted")),
-                html.escape(str(row["status_updated_at"] or "")),
-                bid_attr=html.escape(str(row["broker_id"]), quote=True),
-            )
-        )
-    return "\n".join(out)
+def _broker_row_html(row: dict, broker_meta: dict, scan_interval_seconds: int) -> str:
+    """One expandable ``<details>`` row: summary line (name, kind, status,
+    last update) plus the 4-step lifecycle stepper and remove action on
+    expand. ``data-*`` attributes carry the values the brokers-page's
+    client-side search/status/action-needed filters key off of -- filtering
+    never re-fetches or re-renders, it only shows/hides these same rows.
+    """
+    broker_id = str(row["broker_id"])
+    meta = broker_meta.get(broker_id, {})
+    name = meta.get("name") or broker_id
+    kind = brokers_mod.verification_kind(meta) if meta else "manual_review"
+    status = row.get("removal_status")
+    step = webui_data.broker_stepper(row, scan_interval_seconds)
+    action_needed = status in ("needs_document", "needs_review")
+
+    stepper_note = ""
+    for s in step["steps"]:
+        if s.get("note"):
+            stepper_note = s["note"]
+
+    return """
+<details class="brokerrow" data-name="{name_lower}" data-status="{status}" data-action-needed="{action_needed}">
+  <summary class="row-summary">
+    <span><span class="name">{name}</span><br><span class="sub">{url}</span></span>
+    <span>{kind_label}</span>
+    <span>{status_badge}</span>
+    <span class="sub">{last_seen}</span>
+    <span class="chevron">&#9656;</span>
+  </summary>
+  <div class="row-detail">
+    {stepper}
+    <dl class="pii-grid">
+      <dt>Broker</dt><dd>{name} &middot; {url}</dd>
+      <dt>First seen</dt><dd>{first_seen}</dd>
+      <dt>Last checked</dt><dd>{last_seen}</dd>
+      <dt>Removal status</dt><dd>{status_text}</dd>
+    </dl>
+    <form method="post" action="/brokers/{broker_id_attr}/remove">
+      <button type="submit" class="btn secondary">Send removal now</button>
+    </form>
+  </div>
+</details>
+""".format(
+        name_lower=style.escape_attr(name.lower()),
+        status=style.escape_attr(status or ""),
+        action_needed="true" if action_needed else "false",
+        name=html.escape(name),
+        url=html.escape(str(meta.get("url") or "")),
+        kind_label=html.escape(style.KIND_LABELS.get(kind, kind)),
+        status_badge=style.status_badge(status),
+        last_seen=html.escape(str(row.get("last_seen") or "")),
+        stepper=style.stepper(step["steps"]),
+        first_seen=html.escape(str(row.get("first_seen") or "")),
+        status_text=html.escape(status or "not submitted"),
+        broker_id_attr=style.escape_attr(broker_id),
+    )
 
 
 @app.get("/brokers", response_class=HTMLResponse)
@@ -164,18 +364,57 @@ def brokers_page(cfg: Config = Depends(get_config)):
     finally:
         conn.close()
 
-    lines = [
-        "<!DOCTYPE html>",
-        "<html><head><title>Broker Guard -- Brokers</title></head><body>",
-        "<h1>Brokers</h1>",
-        '<table border="1">',
-        "<tr><th>identity_key</th><th>broker_id</th><th>first_seen</th><th>last_seen</th>"
-        "<th>removal_status</th><th>status_updated_at</th><th>action</th></tr>",
-        _broker_rows_html(rows),
-        "</table>",
-        "</body></html>",
-    ]
-    return "\n".join(lines)
+    try:
+        broker_meta = {b["id"]: b for b in brokers_mod.load_brokers(cfg.brokers_path)}
+    except (OSError, ValueError):
+        broker_meta = {}
+
+    action_needed = _action_needed_count(rows)
+    rows_html = "".join(_broker_row_html(row, broker_meta, cfg.interval_seconds) for row in rows)
+    if not rows:
+        rows_html = '<p class="muted" style="padding:16px;">No brokers tracked yet -- run a scan.</p>'
+
+    body = """
+<div class="page-head"><h1>Brokers</h1><div class="muted">{count} tracked</div></div>
+<div class="card">
+  <div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Search brokers..." oninput="filterRows()">
+    <select id="statusFilter" onchange="filterRows()">
+      <option value="">All statuses</option>
+      <option value="">Not sent</option>
+      <option value="pending">Pending</option>
+      <option value="needs_document">Needs document</option>
+      <option value="needs_review">Needs review</option>
+      <option value="submitted">Submitted</option>
+      <option value="confirmed">Confirmed</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;">
+      <input type="checkbox" id="actionOnly" onchange="filterRows()"> Action needed only
+    </label>
+  </div>
+  <div id="rowsContainer">{rows_html}</div>
+</div>
+<script>
+function filterRows() {{
+  var q = document.getElementById('searchBox').value.toLowerCase();
+  var statusVal = document.getElementById('statusFilter').value;
+  var actionOnly = document.getElementById('actionOnly').checked;
+  document.querySelectorAll('.brokerrow').forEach(function(row) {{
+    var matches = true;
+    if (q && row.dataset.name.indexOf(q) === -1) matches = false;
+    if (statusVal && row.dataset.status !== statusVal) matches = false;
+    if (actionOnly && row.dataset.actionNeeded !== 'true') matches = false;
+    row.style.display = matches ? '' : 'none';
+  }});
+}}
+if (location.hash === '#action-needed') {{
+  document.getElementById('actionOnly').checked = true;
+  filterRows();
+}}
+</script>
+""".format(count=len(rows), rows_html=rows_html)
+
+    return style.render_page("Brokers", "brokers", body, action_needed_count=action_needed)
 
 
 def _run_scan_job(job_id: str, cfg: Config, jobs: dict, deps_factory) -> None:
@@ -289,6 +528,41 @@ def _split_list(text: str) -> list[str]:
     return [part.strip() for part in text.split("\n") if part.strip()]
 
 
+def _dedupe_case_insensitive(values: list[str]) -> list[str]:
+    seen = set()
+    out = []
+    for v in values:
+        key = v.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(v)
+    return out
+
+
+def normalize_phone(raw: str) -> str:
+    """Normalize *raw* toward the ``+1-XXX-XXX-XXXX`` shape
+    ``profile.example.json`` uses for its own (fictitious) phone field and
+    ``eraser_config._profile_block`` writes verbatim into eraser's
+    ``profile.phone``/``additional_phones`` -- so what's stored is
+    consistent regardless of how a person typed it in (with parens,
+    dots, spaces, a leading 1, etc), not just cosmetically reformatted
+    for display.
+
+    A 10-digit US number (optionally with a leading country-code 1, 11
+    digits total) becomes ``+1-AAA-EEE-LLLL``. Anything else (a shorter
+    number, an already-international number, garbage) is returned with
+    only whitespace collapsed -- this never invents digits or guesses a
+    country code it wasn't given.
+    """
+    digits = "".join(_PHONE_DIGITS_RE.findall(raw))
+    if len(digits) == 11 and digits.startswith("1"):
+        digits = digits[1:]
+    if len(digits) == 10:
+        return "+1-{}-{}-{}".format(digits[0:3], digits[3:6], digits[6:10])
+    return " ".join(raw.split())
+
+
 @app.get("/identity", response_class=HTMLResponse)
 def identity_get(cfg: Config = Depends(get_config)):
     try:
@@ -304,30 +578,46 @@ def identity_get(cfg: Config = Depends(get_config)):
     addresses = "\n".join(loaded.addresses) if loaded is not None else ""
     eraser_profile = (loaded.eraser_profile or "") if loaded is not None else ""
 
-    lines = [
-        "<!DOCTYPE html>",
-        "<html><head><title>Broker Guard -- Identity</title></head><body>",
-        "<h1>Identity</h1>",
-        '<form method="post" action="/identity">',
-        '<label>First name <input type="text" name="first_name" value="%s"></label>' % html.escape(first_name),
-        '<label>Middle name <input type="text" name="middle_name" value="%s"></label>' % html.escape(middle_name),
-        '<label>Last name <input type="text" name="last_name" value="%s"></label>' % html.escape(last_name),
-        '<label>Emails <textarea name="emails">%s</textarea></label>' % html.escape(emails),
-        '<label>Phones <textarea name="phones">%s</textarea></label>' % html.escape(phones),
-        '<label>Addresses <textarea name="addresses">%s</textarea></label>' % html.escape(addresses),
-        '<label>Eraser profile id <input type="text" name="eraser_profile" value="%s"></label>' % html.escape(eraser_profile),
-        '<button type="submit">Save</button>',
-        "</form>",
-        '<h2>Government ID (encrypted at rest)</h2>',
-        '<form method="post" action="/identity/id-document" enctype="multipart/form-data">',
-        '<label>Side <select name="side"><option value="front">front</option>'
-        '<option value="back">back</option></select></label>',
-        '<input type="file" name="file">',
-        '<button type="submit">Upload</button>',
-        "</form>",
-        "</body></html>",
-    ]
-    return "\n".join(lines)
+    body = """
+<div class="page-head"><h1>Profile</h1></div>
+<div class="grid-main">
+  <div class="card">
+    <form method="post" action="/identity">
+      <div class="field"><label>First name</label>
+        <input class="inp" type="text" name="first_name" value="{first_name}"></div>
+      <div class="field"><label>Middle name</label>
+        <input class="inp" type="text" name="middle_name" value="{middle_name}"></div>
+      <div class="field"><label>Last name</label>
+        <input class="inp" type="text" name="last_name" value="{last_name}"></div>
+      <div class="field"><label>Emails (one per line)</label>
+        <textarea class="inp" name="emails" rows="3">{emails}</textarea></div>
+      <div class="field"><label>Phones (one per line)</label>
+        <textarea class="inp" name="phones" rows="3">{phones}</textarea></div>
+      <div class="field"><label>Addresses (one per line)</label>
+        <textarea class="inp" name="addresses" rows="3">{addresses}</textarea></div>
+      <div class="field"><label>Eraser profile id (optional)</label>
+        <input class="inp" type="text" name="eraser_profile" value="{eraser_profile}"></div>
+      <button type="submit" class="btn">Save</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Government ID</h2>
+    <div class="encnote">Encrypted at rest with BG_CRYPTO_KEY -- never stored or transmitted in plaintext.</div>
+    <form method="post" action="/identity/id-document" enctype="multipart/form-data">
+      <div class="field"><label>Side</label>
+        <select class="inp" name="side"><option value="front">front</option><option value="back">back</option></select></div>
+      <div class="field"><input type="file" name="file"></div>
+      <button type="submit" class="btn secondary">Upload</button>
+    </form>
+    <p class="muted" style="margin-top:18px;">Managing more than one identity? See <a href="/profiles" style="color:var(--teal-ink);font-weight:600;">Profiles</a>.</p>
+  </div>
+</div>
+""".format(
+        first_name=html.escape(first_name), middle_name=html.escape(middle_name),
+        last_name=html.escape(last_name), emails=html.escape(emails), phones=html.escape(phones),
+        addresses=html.escape(addresses), eraser_profile=html.escape(eraser_profile),
+    )
+    return style.render_page("Profile", "identity", body)
 
 
 @app.post("/identity")
@@ -346,13 +636,29 @@ def identity_post(
     (2) validate through profile.load_profile before ever touching the real
     file (an invalid submission never overwrites a good profile), and
     (3) round-trip eraser_profile instead of dropping it.
+
+    Emails/phones are one-per-line textareas (not per-row add/remove
+    buttons): split on newline, trim, drop blanks, case-insensitive dedupe.
+    Emails are additionally format-validated (a malformed line rejects the
+    whole submission with a 400, same "never touch a good profile with a
+    bad submission" rule as first_name/last_name below); phones are
+    additionally normalized -- see ``normalize_phone``.
     """
+    email_list = _dedupe_case_insensitive(_split_list(emails))
+    invalid_emails = [e for e in email_list if not _EMAIL_RE.match(e)]
+    if invalid_emails:
+        raise HTTPException(
+            status_code=400,
+            detail="invalid email address(es): " + ", ".join(invalid_emails),
+        )
+    phone_list = _dedupe_case_insensitive([normalize_phone(p) for p in _split_list(phones)])
+
     data = {
         "first_name": first_name,
         "middle_name": middle_name,
         "last_name": last_name,
-        "emails": _split_list(emails),
-        "phones": _split_list(phones),
+        "emails": email_list,
+        "phones": phone_list,
         "addresses": _split_list(addresses),
         "eraser_profile": eraser_profile.strip() or None,
     }
@@ -449,22 +755,34 @@ def exposure_page(cfg: Config = Depends(get_config),
 
     results = exposure_mod.profile_exposure(identity.emails, client=client)
 
-    lines = [
-        "<!DOCTYPE html>",
-        "<html><head><title>Broker Guard -- Exposure</title></head><body>",
-        "<h1>Breach Exposure</h1>",
-    ]
+    cards = []
     for email, breaches in results.items():
-        lines.append(f"<h2>{html.escape(email)}</h2>")
         if breaches:
-            lines.append("<ul>" + "".join(f"<li>{html.escape(name)}</li>" for name in breaches) + "</ul>")
+            list_html = "".join('<li>{}</li>'.format(html.escape(name)) for name in breaches)
+            body_html = '<ul style="margin:8px 0 0;padding-left:18px;">{}</ul>'.format(list_html)
+            tone = "action"
         else:
-            lines.append("<p>no known breaches</p>")
-    if not results:
-        lines.append("<p>no emails on the profile to check</p>")
-    lines.append(f"<p><em>{html.escape(exposure_mod.XPOSEDORNOT_ATTRIBUTION)}</em></p>")
-    lines.append("</body></html>")
-    return "\n".join(lines)
+            body_html = '<p class="muted" style="margin:8px 0 0;">No known breaches.</p>'
+            tone = "success"
+        cards.append(
+            '<div class="card" style="margin-bottom:14px;">'
+            '<div style="display:flex;align-items:center;justify-content:space-between;">'
+            '<strong>{email}</strong>{badge}</div>{body}</div>'.format(
+                email=html.escape(email),
+                badge=style.badge("{} breach(es)".format(len(breaches)), tone),
+                body=body_html,
+            )
+        )
+    if not cards:
+        cards.append('<p class="muted">No emails on the profile to check -- add one on the '
+                      '<a href="/identity" style="color:var(--teal-ink);font-weight:600;">Profile</a> page.</p>')
+
+    body = """
+<div class="page-head"><h1>Breach Exposure</h1></div>
+{cards}
+<p class="faint" style="font-size:12px;"><em>{attribution}</em></p>
+""".format(cards="".join(cards), attribution=html.escape(exposure_mod.XPOSEDORNOT_ATTRIBUTION))
+    return style.render_page("Exposure", "exposure", body)
 
 
 # --- /freeze : credit-freeze bureau tracker ---------------------------------
@@ -487,26 +805,27 @@ def freeze_page(cfg: Config = Depends(get_config)):
         )
         rows.append(
             "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td>"
-            '<td><a href="{url}" rel="noopener noreferrer">{url}</a></td></tr>'.format(
+            '<td><a href="{url}" rel="noopener noreferrer" style="color:var(--teal-ink);font-weight:600;">{url}</a></td></tr>'.format(
                 html.escape(bureau["display_name"]),
-                html.escape(state.status),
+                style.badge(html.escape(state.status), "success" if state.status == "frozen" else "neutral"),
                 "yes" if state.has_pin() else "no",
                 html.escape(confidence),
                 url=html.escape(bureau["freeze_url"], quote=True),
             )
         )
 
-    lines = [
-        "<!DOCTYPE html>",
-        "<html><head><title>Broker Guard -- Credit Freeze</title></head><body>",
-        "<h1>Credit Freeze Tracker</h1>",
-        '<table border="1">',
-        "<tr><th>bureau</th><th>status</th><th>has_pin</th><th>confidence</th><th>freeze_url</th></tr>",
-        "\n".join(rows),
-        "</table>",
-        "</body></html>",
-    ]
-    return "\n".join(lines)
+    body = """
+<div class="page-head"><h1>Credit Freeze Tracker</h1></div>
+<div class="card">
+  <table class="dtable">
+    <tr style="text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--faint);">
+      <th style="padding-bottom:10px;">Bureau</th><th>Status</th><th>Has PIN</th><th>Confidence</th><th>Freeze URL</th>
+    </tr>
+    {rows}
+  </table>
+</div>
+""".format(rows="\n".join(rows))
+    return style.render_page("Credit Freeze", "freeze", body)
 
 
 @app.post("/freeze/{bureau_key}/status")
@@ -527,6 +846,197 @@ def freeze_status_update(bureau_key: str, new_status: str = Form(...),
         raise HTTPException(status_code=400, detail=str(exc))
     freeze_mod.save_freeze_state(cfg.freeze_state_path, identity.identity_key, state)
     return {"bureau_key": bureau_key, "status": state.status}
+
+
+# --- /profiles : multi-profile CRUD, synced into eraser's config.yaml ------
+#
+# v1 SCOPE (stated explicitly, not silently half-wired): this is profile
+# CRUD + eraser-sync ONLY. Adding, editing or removing a profile here keeps
+# eraser's ~/.eraser/config.yaml `profiles:` list in sync (so `eraser send
+# --profile <id>` etc. work for any of them from the CLI), but broker-
+# guard's OWN scan/removal-detection/autopilot loop still reads exactly one
+# identity, from the separate, pre-existing profile.local.json
+# (Config.profile_path) -- unchanged by anything below. Wiring N profiles
+# through that loop concurrently (a profile switcher on the dashboard,
+# per-profile presence/broker_status rows) is real additional work, and is
+# a stated follow-up, not part of this change.
+
+def _sync_eraser_profiles(cfg: Config) -> None:
+    """Best-effort: mirror every broker-guard profile into eraser's
+    profiles: list. Never lets a filesystem/YAML problem on the eraser
+    side turn a successful CRUD write into a 500 -- the broker-guard-side
+    write (the source of truth for this UI) already succeeded by the time
+    this runs."""
+    try:
+        current = profiles_mod.load_profiles(cfg.profiles_path)
+        eraser_config_mod.sync_profiles(current, path=cfg.eraser_config_path)
+    except (OSError, ValueError) as exc:
+        log.warning("eraser profiles sync failed", extra={"error": str(exc)})
+
+
+def _profile_row_html(p: "profiles_mod.NamedProfile") -> str:
+    return """
+<tr>
+  <td><strong>{name}</strong><br><span class="sub faint" style="font-size:12px;">{pid}</span></td>
+  <td>{emails}</td>
+  <td>{phones}</td>
+  <td style="display:flex;gap:8px;">
+    <a class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;" href="/profiles/{pid_attr}/edit">Edit</a>
+    <form method="post" action="/profiles/{pid_attr}/remove" onsubmit="return confirm('Remove this profile? Its eraser send history is kept and reappears if re-added with the same id.');">
+      <button type="submit" class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;">Remove</button>
+    </form>
+  </td>
+</tr>
+""".format(
+        name=html.escape(p.full_name), pid=html.escape(p.id),
+        emails=html.escape(", ".join(p.emails) or "--"),
+        phones=html.escape(", ".join(p.phones) or "--"),
+        pid_attr=style.escape_attr(p.id),
+    )
+
+
+@app.get("/profiles", response_class=HTMLResponse)
+def profiles_page(cfg: Config = Depends(get_config)):
+    profiles = profiles_mod.load_profiles(cfg.profiles_path)
+    rows_html = "".join(_profile_row_html(p) for p in profiles)
+    if not profiles:
+        rows_html = '<tr><td colspan="4" class="muted" style="padding:16px;">No profiles yet.</td></tr>'
+
+    body = """
+<div class="page-head"><h1>Profiles</h1></div>
+<p class="muted" style="max-width:640px;">Manage every identity eraser can send removals for. This
+list is synced into eraser's own <code>profiles:</code> config so <code>--profile &lt;id&gt;</code>
+keeps working from the CLI. The dashboard/scan/autopilot loop still runs against the single active
+profile on the <a href="/identity" style="color:var(--teal-ink);font-weight:600;">Profile</a> page --
+multi-profile scanning is a planned follow-up, not wired here yet.</p>
+<div class="grid-main">
+  <div class="card">
+    <h2>Add a profile</h2>
+    <form method="post" action="/profiles">
+      <div class="field"><label>First name</label><input class="inp" type="text" name="first_name" required></div>
+      <div class="field"><label>Middle name</label><input class="inp" type="text" name="middle_name"></div>
+      <div class="field"><label>Last name</label><input class="inp" type="text" name="last_name" required></div>
+      <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="2"></textarea></div>
+      <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="2"></textarea></div>
+      <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="2"></textarea></div>
+      <button type="submit" class="btn">Add profile</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>All profiles</h2>
+    <table class="dtable">
+      <tr style="text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--faint);">
+        <th style="padding-bottom:8px;">Name / id</th><th>Emails</th><th>Phones</th><th></th>
+      </tr>
+      {rows}
+    </table>
+  </div>
+</div>
+""".format(rows=rows_html)
+    return style.render_page("Profiles", "profiles", body)
+
+
+@app.post("/profiles")
+def profiles_add(
+    first_name: str = Form(...),
+    middle_name: str = Form(""),
+    last_name: str = Form(...),
+    emails: str = Form(""),
+    phones: str = Form(""),
+    addresses: str = Form(""),
+    cfg: Config = Depends(get_config),
+):
+    email_list = _dedupe_case_insensitive(_split_list(emails))
+    invalid_emails = [e for e in email_list if not _EMAIL_RE.match(e)]
+    if invalid_emails:
+        raise HTTPException(status_code=400, detail="invalid email address(es): " + ", ".join(invalid_emails))
+    phone_list = _dedupe_case_insensitive([normalize_phone(p) for p in _split_list(phones)])
+
+    try:
+        profiles_mod.add_profile(cfg.profiles_path, {
+            "first_name": first_name, "middle_name": middle_name, "last_name": last_name,
+            "emails": email_list, "phones": phone_list, "addresses": _split_list(addresses),
+        })
+    except profiles_mod.ProfileValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    _sync_eraser_profiles(cfg)
+    return RedirectResponse(url="/profiles", status_code=303)
+
+
+@app.get("/profiles/{profile_id}/edit", response_class=HTMLResponse)
+def profiles_edit_get(profile_id: str, cfg: Config = Depends(get_config)):
+    try:
+        p = profiles_mod.get_profile(cfg.profiles_path, profile_id)
+    except profiles_mod.ProfileNotFound:
+        raise HTTPException(status_code=404, detail="unknown profile")
+
+    body = """
+<div class="page-head"><h1>Edit profile</h1></div>
+<div class="card" style="max-width:520px;">
+  <form method="post" action="/profiles/{pid_attr}">
+    <div class="field"><label>First name</label><input class="inp" type="text" name="first_name" value="{first_name}" required></div>
+    <div class="field"><label>Middle name</label><input class="inp" type="text" name="middle_name" value="{middle_name}"></div>
+    <div class="field"><label>Last name</label><input class="inp" type="text" name="last_name" value="{last_name}" required></div>
+    <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="3">{emails}</textarea></div>
+    <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="3">{phones}</textarea></div>
+    <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="3">{addresses}</textarea></div>
+    <button type="submit" class="btn">Save</button>
+  </form>
+</div>
+""".format(
+        pid_attr=style.escape_attr(p.id), first_name=html.escape(p.first_name),
+        middle_name=html.escape(p.middle_name), last_name=html.escape(p.last_name),
+        emails=html.escape("\n".join(p.emails)), phones=html.escape("\n".join(p.phones)),
+        addresses=html.escape("\n".join(p.addresses)),
+    )
+    return style.render_page("Edit profile", "profiles", body)
+
+
+@app.post("/profiles/{profile_id}")
+def profiles_edit_post(
+    profile_id: str,
+    first_name: str = Form(...),
+    middle_name: str = Form(""),
+    last_name: str = Form(...),
+    emails: str = Form(""),
+    phones: str = Form(""),
+    addresses: str = Form(""),
+    cfg: Config = Depends(get_config),
+):
+    email_list = _dedupe_case_insensitive(_split_list(emails))
+    invalid_emails = [e for e in email_list if not _EMAIL_RE.match(e)]
+    if invalid_emails:
+        raise HTTPException(status_code=400, detail="invalid email address(es): " + ", ".join(invalid_emails))
+    phone_list = _dedupe_case_insensitive([normalize_phone(p) for p in _split_list(phones)])
+
+    try:
+        profiles_mod.update_profile(cfg.profiles_path, profile_id, {
+            "first_name": first_name, "middle_name": middle_name, "last_name": last_name,
+            "emails": email_list, "phones": phone_list, "addresses": _split_list(addresses),
+        })
+    except profiles_mod.ProfileNotFound:
+        raise HTTPException(status_code=404, detail="unknown profile")
+    except profiles_mod.ProfileValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    _sync_eraser_profiles(cfg)
+    return RedirectResponse(url="/profiles", status_code=303)
+
+
+@app.post("/profiles/{profile_id}/remove")
+def profiles_remove(profile_id: str, cfg: Config = Depends(get_config)):
+    """Delete from broker-guard's own store (and re-sync eraser's list to
+    match) -- never touches eraser's history.db, so this profile's send
+    history is preserved and reappears if a profile with this same id is
+    ever re-added (see profiles.py's module docstring)."""
+    try:
+        profiles_mod.remove_profile(cfg.profiles_path, profile_id)
+    except profiles_mod.ProfileNotFound:
+        raise HTTPException(status_code=404, detail="unknown profile")
+
+    _sync_eraser_profiles(cfg)
+    return RedirectResponse(url="/profiles", status_code=303)
 
 
 @app.post("/freeze/{bureau_key}/pin")

@@ -122,15 +122,25 @@ class ExposureCache:
             return {}
 
     def _save(self, data: dict) -> None:
-        parent = os.path.dirname(os.path.abspath(self.path))
-        if parent:
-            os.makedirs(parent, exist_ok=True)
-        with open(self.path, "w", encoding="utf-8") as fh:
-            json.dump(data, fh)
+        """Best-effort write -- never raises.
+
+        ``_load`` above has always degraded gracefully (``except (OSError,
+        ValueError): return {}``); this didn't, so a filesystem/permissions
+        problem on ``self.path`` (e.g. an unwritable working directory in a
+        container) surfaced as an unhandled OSError all the way up through
+        ``set()`` -> ``check_email``/``breach_analytics`` -> the ``/exposure``
+        route as a 500. A cache write that fails just means the next lookup
+        re-fetches instead of hitting the cache -- degraded, not broken.
+        """
         try:
+            parent = os.path.dirname(os.path.abspath(self.path))
+            if parent:
+                os.makedirs(parent, exist_ok=True)
+            with open(self.path, "w", encoding="utf-8") as fh:
+                json.dump(data, fh)
             os.chmod(self.path, 0o600)
-        except OSError:
-            pass
+        except OSError as exc:
+            log.warning("exposure cache write failed", extra={"error": str(exc)})
 
     def get(self, kind: str, email: str):
         entry = self._load().get(self._key(kind, email))

@@ -14,6 +14,24 @@ DEFAULT_STATE_PATH = "data/state.sqlite"
 DEFAULT_LOG_DIR = "logs"
 DEFAULT_ID_DOCUMENTS_DIR = "data/id_documents"
 DEFAULT_FREEZE_STATE_PATH = "data/freeze_state.json"
+# exposure.ExposureCache previously hardcoded this same literal instead of
+# reading it from Config -- on a deployment whose working directory doesn't
+# have a writable ./data (or doesn't have one at all), ExposureCache._save()
+# raised an unguarded OSError straight through to the /exposure route as an
+# unhandled 500. Routing it through Config (like every other runtime path)
+# means BG_EXPOSURE_CACHE_PATH can point it somewhere writable without a
+# code change.
+DEFAULT_EXPOSURE_CACHE_PATH = "data/exposure_cache.json"
+# The multi-profile store (see broker_guard/profiles.py) -- a JSON list of
+# named identities, separate from the single legacy profile.local.json,
+# which stays the ONE "active" profile the dashboard/scan/autopilot loop
+# actually reads (see profiles.py's module docstring for the v1 scope this
+# implies).
+DEFAULT_PROFILES_PATH = "data/profiles.json"
+# Mirrors eraser_config.DEFAULT_ERASER_CONFIG_PATH -- duplicated as a literal
+# rather than imported so config.py (which eraser_config.py itself imports
+# from) never has to import eraser_config back.
+DEFAULT_ERASER_CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".eraser", "config.yaml")
 
 # Keys whose values must never be logged, echoed or written to an alert body.
 SECRET_ENV_KEYS = (
@@ -72,6 +90,13 @@ class Config:
     log_dir: str = DEFAULT_LOG_DIR
     id_documents_dir: str = DEFAULT_ID_DOCUMENTS_DIR
     freeze_state_path: str = DEFAULT_FREEZE_STATE_PATH
+    exposure_cache_path: str = DEFAULT_EXPOSURE_CACHE_PATH
+    profiles_path: str = DEFAULT_PROFILES_PATH
+    # Where the Profiles UI syncs eraser's profiles: list (see
+    # eraser_config.sync_profiles) -- a Config field, not the module's own
+    # DEFAULT_ERASER_CONFIG_PATH constant used directly, so tests can point
+    # it at a tmp_path file instead of a real ~/.eraser/config.yaml.
+    eraser_config_path: str = DEFAULT_ERASER_CONFIG_PATH
 
     # Fernet key (url-safe base64, as produced by cryptography.fernet.Fernet.
     # generate_key()) used to encrypt ID-document uploads and freeze PINs at
@@ -136,6 +161,9 @@ def load_config(env=None) -> Config:
         log_dir=_env_str(env, "BG_LOG_DIR", DEFAULT_LOG_DIR),
         id_documents_dir=_env_str(env, "BG_ID_DOCUMENTS_DIR", DEFAULT_ID_DOCUMENTS_DIR),
         freeze_state_path=_env_str(env, "BG_FREEZE_STATE_PATH", DEFAULT_FREEZE_STATE_PATH),
+        exposure_cache_path=_env_str(env, "BG_EXPOSURE_CACHE_PATH", DEFAULT_EXPOSURE_CACHE_PATH),
+        profiles_path=_env_str(env, "BG_PROFILES_PATH", DEFAULT_PROFILES_PATH),
+        eraser_config_path=_env_str(env, "BG_ERASER_CONFIG_PATH", DEFAULT_ERASER_CONFIG_PATH),
         crypto_key=_env_str(env, "BG_CRYPTO_KEY"),
         searxng_url=_env_str(env, "BG_SEARXNG_URL"),
         searxng_auth=_env_str(env, "BG_SEARXNG_AUTH"),

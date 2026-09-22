@@ -57,6 +57,12 @@ from broker_guard.profile import Identity, load_profile
 
 log = logging.getLogger("broker_guard.eraser_config")
 
+# NamedProfile fields (see vendor/eraser/internal/config/config.go) mapped
+# the same way _profile_block maps the single legacy profile: block -- kept
+# as its own function so sync_profiles below can build one dict per
+# broker-guard-managed profiles.py entry with identical merge-only-
+# non-blank-values behavior, not a subtly different one.
+
 DEFAULT_ERASER_CONFIG_PATH = os.path.join(
     os.path.expanduser("~"), ".eraser", "config.yaml"
 )
@@ -96,6 +102,20 @@ def _profile_block(identity: Identity, existing_profile: dict) -> dict:
         if len(addresses) > 1:
             block["previous_addresses"] = addresses[1:]
 
+    return block
+
+
+def _named_profile_block(profile, existing_entry: dict) -> dict:
+    """One entry of eraser's ``profiles:`` list for one broker-guard
+    ``profiles.NamedProfile`` -- ``_profile_block``'s exact merge-only-
+    non-blank-values behavior (``profiles.NamedProfile`` carries the same
+    first_name/last_name/middle_name/emails/phones/addresses/eraser_profile
+    attribute names ``_profile_block`` reads, so it needs no adaptation),
+    plus the ``id`` key eraser's ``NamedProfile`` struct requires (inlined
+    alongside the profile fields, not nested -- see
+    ``vendor/eraser/internal/config/config.go``'s ``NamedProfile``)."""
+    block = _profile_block(profile, {k: v for k, v in existing_entry.items() if k != "id"})
+    block["id"] = profile.id
     return block
 
 
@@ -160,6 +180,43 @@ def provision_eraser_config(identity: Identity, path: str = DEFAULT_ERASER_CONFI
         "updated" if existing else "provisioned",
         extra={"path": path},
     )
+    return path
+
+
+def sync_profiles(profiles: list, path: str = DEFAULT_ERASER_CONFIG_PATH) -> str:
+    """Mirror EVERY broker-guard-managed named profile (``profiles.
+    NamedProfile`` instances, e.g. from ``profiles.load_profiles``) into
+    eraser's ``profiles:`` list at *path*, merge-only-non-blank-values per
+    entry (see ``_named_profile_block``) -- the same non-destructive rule
+    ``provision_eraser_config`` already applies to the single legacy
+    ``profile:`` block.
+
+    A broker-guard profile removed since the last sync is dropped from the
+    ``profiles:`` list here too (this only ever reflects the CURRENT
+    broker-guard list) -- but this never touches eraser's ``history.db``,
+    so that profile's send history is untouched and reappears if a profile
+    with the same id is re-added later (see the module-level "Removal
+    keeps history" note in ``broker_guard/profiles.py``).
+
+    The legacy top-level ``profile:`` block, and every other top-level key
+    (``email:``/``options:``/``inbox:``/``pipeline:``), are left exactly as
+    ``_load_yaml`` found them -- this function only ever touches
+    ``profiles:``.
+    """
+    existing = _load_yaml(path)
+    existing_by_id = {
+        (entry.get("id") or "").lower(): entry
+        for entry in (existing.get("profiles") or [])
+        if isinstance(entry, dict)
+    }
+
+    merged = dict(existing)
+    merged["profiles"] = [
+        _named_profile_block(profile, existing_by_id.get(profile.id.lower(), {}))
+        for profile in profiles
+    ]
+    _write_yaml(path, merged)
+    log.info("eraser profiles: list synced", extra={"path": path, "count": len(profiles)})
     return path
 
 

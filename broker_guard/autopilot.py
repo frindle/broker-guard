@@ -290,13 +290,33 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     elapsed_since_scan = intervals.scan_seconds
     elapsed_since_confirmation = intervals.confirmation_seconds
 
+    # service.main()'s headless loop calls service.write_heartbeat every
+    # cycle, so health.heartbeat_stale has real data to read -- this loop
+    # (the one actually running in the deployed BG_SERVE_WEB=true container)
+    # never did, so heartbeat.json was never written in production and the
+    # dashboard had no real "is a scan running / when did it last run" signal
+    # to show. Lazy import: service imports nothing from autopilot, but
+    # importing it at module scope here would be a needless coupling for a
+    # single helper call.
+    from broker_guard import service as service_mod
+
     while not stop.is_set():
         if elapsed_since_scan >= intervals.scan_seconds:
+            started = deps.now()
             try:
-                run_scan_cycle(identity, broker_list, deps, has_id_documents=has_id_documents)
+                result = run_scan_cycle(identity, broker_list, deps, has_id_documents=has_id_documents)
+                payload = {"last_run": started, "ok": True}
+                if isinstance(result, dict):
+                    payload["present"] = len(result.get("current", []))
+                    payload["new"] = len(result.get("new_appearances", []))
+                service_mod.write_heartbeat(cfg, payload)
             except Exception as exc:
                 log.exception("autopilot scan cycle failed",
                                extra={"error": "{}: {}".format(type(exc).__name__, exc)})
+                service_mod.write_heartbeat(cfg, {
+                    "last_run": started, "ok": False,
+                    "error": "{}: {}".format(type(exc).__name__, exc),
+                })
             elapsed_since_scan = 0
 
         if elapsed_since_confirmation >= intervals.confirmation_seconds:

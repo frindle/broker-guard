@@ -4,11 +4,22 @@ This module only reads: it never writes, commits or mutates the connection.
 The ``presence`` table's schema is owned by ``state.init_db`` -- columns
 ``identity_key``, ``broker_id``, ``first_seen``, ``last_seen`` (the check-time
 column is ``last_seen``).
+
+The bucketing/shaping helpers below (``broker_automation_breakdown``,
+``broker_kind_breakdown``, ``broker_status_counts``, ``recent_status_changes``,
+``submitted_over_time``, ``estimate_next_scan``, ``broker_stepper``) back the
+dashboard's charts, stat tiles, notifications feed and per-broker stepper.
+Every one of them is a pure function over data this codebase already tracks
+(``brokers.json``'s ``verification`` kind, the ``presence``/``broker_status``
+rows above) -- none of them invents a metric (e.g. a "compliance score")
+this repo has no real data source for.
 """
 import hmac
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
+
+from broker_guard import brokers as brokers_mod
 
 
 def query_presence_history(conn: sqlite3.Connection, broker_id: str | None = None, limit: int = 200) -> list[dict]:
@@ -157,3 +168,220 @@ def load_recent_alerts(lines: list[str], limit: int = 50) -> list[dict]:
     if limit <= 0:
         return []
     return list(reversed(valid[-limit:]))
+
+
+# --- dashboard-shaping helpers -----------------------------------------------
+
+def broker_kind_breakdown(brokers: list[dict]) -> dict:
+    """Count *brokers* (as loaded by ``brokers.load_brokers``) by their
+    ``brokers.verification_kind()`` -- the SAME kind the autopilot's decision
+    table (see ``autopilot`` module docstring) actually keys off. Every key in
+    ``brokers.VALID_KINDS`` plus the ``manual_review`` fallback is always
+    present in the result (zeroed if unused), so a caller never needs a
+    ``.get(..., 0)`` guard. An empty ``brokers`` list returns all-zero
+    counts with ``total`` 0.
+    """
+    counts = {kind: 0 for kind in brokers_mod.VALID_KINDS}
+    counts["manual_review"] = 0
+    for broker in brokers:
+        kind = brokers_mod.verification_kind(broker)
+        if kind not in counts:
+            kind = "manual_review"
+        counts[kind] += 1
+    counts["total"] = len(brokers)
+    return counts
+
+
+def broker_automation_breakdown(brokers: list[dict]) -> dict:
+    """Bucket *brokers* by the SAME routing decision
+    ``autopilot.decide_action`` makes for each one, purely from its
+    verification kind: ``auto_send`` (sent with no human in the loop),
+    ``needs_document`` (queued, a photo id is required) or ``needs_review``
+    (queued, kba or an unrecognized kind). Calls the real
+    ``autopilot.decide_action`` rather than re-deriving the policy here, so
+    this can never silently drift from what the autopilot actually does. An
+    empty ``brokers`` list returns all-zero counts with ``total`` 0.
+    """
+    from broker_guard import autopilot as autopilot_mod
+
+    counts = {key: 0 for key in ("auto_send", "needs_document", "needs_review")}
+    for broker in brokers:
+        kind = brokers_mod.verification_kind(broker)
+        decision = autopilot_mod.decide_action(kind)
+        if decision["action"] == "auto_send":
+            counts["auto_send"] += 1
+        elif decision["queue_status"] == autopilot_mod.STATUS_NEEDS_DOCUMENT:
+            counts["needs_document"] += 1
+        else:
+            counts["needs_review"] += 1
+    counts["total"] = len(brokers)
+    return counts
+
+
+def broker_status_counts(rows: list[dict]) -> dict:
+    """Bucket ``query_broker_status`` rows by ``removal_status`` into the
+    real vocabulary this codebase ever writes to ``broker_status.status``:
+    ``not_sent`` (no status row -- ``removal_status`` is ``None``),
+    ``pending``, ``needs_document``, ``needs_review``, ``submitted`` and
+    ``confirmed`` (see ``eraser.status_after_removal``/``eraser.needs_reverify``
+    and ``autopilot.decide_action`` for where each is written). Any row
+    carrying a status this module doesn't recognize also falls back to
+    ``not_sent`` rather than raising -- a stat tile must never crash the
+    dashboard over an unexpected value. ``total`` is always ``len(rows)``.
+    """
+    counts = {
+        "not_sent": 0, "pending": 0, "needs_document": 0,
+        "needs_review": 0, "submitted": 0, "confirmed": 0,
+    }
+    for row in rows:
+        status = row.get("removal_status")
+        key = status if status in counts else "not_sent"
+        counts[key] += 1
+    counts["total"] = len(rows)
+    return counts
+
+
+def recent_status_changes(rows: list[dict], limit: int = 8) -> list[dict]:
+    """``query_broker_status`` rows that actually have a ``status_updated_at``,
+    newest first, capped at *limit* -- the notifications feed's input.
+
+    A pure re-sort/filter of ``query_broker_status``'s own output: never
+    invents a timestamp for a broker that has none (those are simply left
+    out), and never re-queries anything itself. ``limit <= 0`` returns ``[]``.
+    """
+    dated = [row for row in rows if row.get("status_updated_at")]
+    dated.sort(key=lambda row: row["status_updated_at"], reverse=True)
+    if limit <= 0:
+        return []
+    return dated[:limit]
+
+
+def submitted_over_time(rows: list[dict], bucket_chars: int = 10) -> list[dict]:
+    """Cumulative count of brokers whose removal reached ``submitted`` or
+    ``confirmed``, bucketed by the ISO timestamp's leading *bucket_chars*
+    characters (10 == calendar day, ``YYYY-MM-DD``) of ``status_updated_at``.
+
+    Real derived history, not a fabricated series: every point comes from an
+    actual ``status_updated_at`` this codebase wrote. Rows with no
+    ``status_updated_at`` or a status other than submitted/confirmed are
+    excluded. Returns ``[]`` for no qualifying rows; otherwise a list of
+    ``{'bucket': str, 'count': int}`` sorted ascending by bucket, ``count``
+    cumulative across buckets (a running total, matching a "removal
+    requests over time" area chart's shape).
+    """
+    per_bucket: dict[str, int] = {}
+    for row in rows:
+        if row.get("removal_status") not in ("submitted", "confirmed"):
+            continue
+        at = row.get("status_updated_at")
+        if not at:
+            continue
+        per_bucket[at[:bucket_chars]] = per_bucket.get(at[:bucket_chars], 0) + 1
+    running = 0
+    out = []
+    for bucket in sorted(per_bucket):
+        running += per_bucket[bucket]
+        out.append({"bucket": bucket, "count": running})
+    return out
+
+
+def estimate_next_scan(last_seen_iso: str | None, scan_interval_seconds: int) -> str | None:
+    """``last_seen`` plus the configured scan interval -- an ESTIMATE of when
+    this broker is next due to be re-checked, not a stored deadline (nothing
+    in this codebase persists a per-broker "next scan" timestamp; the
+    autopilot loop just re-scans every broker on ``scan_interval_seconds``).
+    Returns ``None`` for a missing/unparseable ``last_seen`` rather than
+    raising -- the stepper must still render without this one field.
+    """
+    if not last_seen_iso:
+        return None
+    try:
+        last_seen = datetime.fromisoformat(last_seen_iso)
+    except ValueError:
+        return None
+    return (last_seen + timedelta(seconds=scan_interval_seconds)).isoformat()
+
+
+_STEPPER_NOTES = {
+    "needs_document": "Needs a government ID on file before this can be sent.",
+    "needs_review": "Needs manual review before this can be sent.",
+    "pending": "An opt-out was attempted but is not yet confirmed sent.",
+}
+
+
+def broker_stepper(row: dict, scan_interval_seconds: int) -> dict:
+    """The 4-step lifecycle stepper (Scanned -> Removal submitted -> Data
+    removed -> Next scan) for one ``query_broker_status`` row, built entirely
+    from fields that row already carries:
+
+    * Scanned: always done -- the row exists, so ``first_seen`` is real.
+    * Removal submitted: done when ``removal_status`` is ``submitted`` or
+      ``confirmed`` (the only two statuses ``eraser.status_after_removal``
+      ever advances a broker to after a real send).
+    * Data removed: done only when ``removal_status`` is ``confirmed`` --
+      today nothing in this codebase auto-sets that (see
+      ``autopilot``'s "Confirmation, honestly" docstring section), so this
+      step honestly stays un-done for every broker until a future
+      confirmation-parsing pass exists to set it.
+    * Next scan: never "done" (it is always in the future); its timestamp is
+      ``estimate_next_scan``'s estimate, not a stored deadline.
+
+    A broker parked in ``needs_document``/``needs_review``/``pending`` gets a
+    note under step 2 explaining why it hasn't moved, instead of silently
+    looking stalled.
+    """
+    status = row.get("removal_status")
+    submitted_done = status in ("submitted", "confirmed")
+    removed_done = status == "confirmed"
+
+    steps = [
+        {"label": "Scanned", "done": True, "at": row.get("first_seen")},
+        {
+            "label": "Removal submitted", "done": submitted_done,
+            "at": row.get("status_updated_at") if submitted_done else None,
+            "note": _STEPPER_NOTES.get(status) if not submitted_done else None,
+        },
+        {
+            "label": "Data removed", "done": removed_done,
+            "at": row.get("status_updated_at") if removed_done else None,
+        },
+        {
+            "label": "Next scan", "done": False,
+            "at": estimate_next_scan(row.get("last_seen"), scan_interval_seconds),
+        },
+    ]
+    current_index = 2 if removed_done else (1 if submitted_done else 0)
+    return {"steps": steps, "current_index": current_index}
+
+
+def scan_status(heartbeat: dict | None, jobs_summary: dict, scan_interval_seconds: int) -> dict:
+    """The dashboard's scan-status indicator, from two REAL sources:
+
+    * ``heartbeat`` -- the parsed contents of ``logs/heartbeat.json`` (see
+      ``service.write_heartbeat``), written after every autopilot scan
+      cycle (headless loop and, since the ``autopilot.run_forever`` fix
+      alongside this function, the ``BG_SERVE_WEB=true`` deployed mode too).
+      ``None`` when the file doesn't exist yet -- an honest "never run"
+      state, not an error.
+    * ``jobs_summary`` -- ``{job_id: status}`` for THIS process's in-memory
+      ``/scan`` jobs (see ``webui.get_jobs``/``start_scan``): a manual
+      "Run scan now" click shows as ``running`` here immediately, even
+      before it has written a heartbeat.
+
+    Returns ``{'running': bool, 'last_run_at': str|None, 'last_run_ok':
+    bool|None, 'next_run_at': str|None}``. Never fabricates a trend or a
+    fake "6 hours ago" string -- ``last_run_at`` is exactly the heartbeat's
+    own ``last_run`` timestamp (or ``None``), and ``next_run_at`` is that
+    same estimate-from-interval logic ``estimate_next_scan`` already uses,
+    not a stored deadline.
+    """
+    running = any(status == "running" for status in jobs_summary.values())
+    if not heartbeat:
+        return {"running": running, "last_run_at": None, "last_run_ok": None, "next_run_at": None}
+    last_run_at = heartbeat.get("last_run")
+    return {
+        "running": running,
+        "last_run_at": last_run_at,
+        "last_run_ok": heartbeat.get("ok"),
+        "next_run_at": estimate_next_scan(last_run_at, scan_interval_seconds),
+    }
