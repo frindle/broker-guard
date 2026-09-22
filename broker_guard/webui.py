@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.responses import HTMLResponse
 
 import broker_guard.profile
+import broker_guard.state
 import broker_guard.webui_data as webui_data
 
 app = FastAPI(title="Broker Guard")
@@ -52,6 +53,38 @@ def index():
         "<p>health: total={total} ok={ok} failed={failed}</p>\n"
         "</body></html>"
     ).format(total=summary.get("total", 0), ok=summary.get("ok", 0), failed=summary.get("failed", 0))
+
+
+PRESENCE_DB_PATH = "data/presence.sqlite3"
+
+
+@app.get("/brokers", response_class=HTMLResponse)
+def brokers():
+    conn = broker_guard.state.init_db(PRESENCE_DB_PATH)
+    try:
+        rows = webui_data.query_presence_history(conn)
+    finally:
+        conn.close()
+
+    lines = []
+    lines.append("<!DOCTYPE html>")
+    lines.append("<html><head><title>Broker Guard -- Brokers</title></head><body>")
+    lines.append("<h1>Brokers</h1>")
+    lines.append('<table border="1">')
+    lines.append("<tr><th>identity_key</th><th>broker_id</th>"
+                 "<th>first_seen</th><th>last_seen</th></tr>")
+    for row in rows:
+        lines.append(
+            "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>".format(
+                html.escape(str(row["identity_key"])),
+                html.escape(str(row["broker_id"])),
+                html.escape(str(row["first_seen"])),
+                html.escape(str(row["last_seen"])),
+            )
+        )
+    lines.append("</table>")
+    lines.append("</body></html>")
+    return "\n".join(lines)
 
 
 PROFILE_PATH = "profile.json"
