@@ -42,15 +42,26 @@ def run_web_server(cfg: Config) -> int:
     from broker_guard import autopilot
     from broker_guard.webui import app
 
-    deps = autopilot.build_dependencies(cfg)
     stop = threading.Event()
-    loop_thread = threading.Thread(
-        target=autopilot.run_forever,
-        args=(cfg, deps, autopilot.Intervals(scan_seconds=cfg.interval_seconds), stop),
-        kwargs={"has_id_documents": autopilot.has_id_documents_on_file(cfg)},
-        name="autopilot-loop",
-        daemon=True,
-    )
+
+    def _run_autopilot():
+        # build_dependencies() launches Playwright/Chromium when
+        # BG_PLAYWRIGHT_ENABLED is set, which can take a while. It must run
+        # INSIDE this thread, not the main thread, so a slow/stalled browser
+        # launch can never delay uvicorn.run() below from binding the web
+        # port -- the dashboard's own /scan route builds its own independent
+        # deps via get_deps_factory() and never touches this one, so nothing
+        # else depends on it being built before the server starts.
+        deps = autopilot.build_dependencies(cfg)
+        try:
+            autopilot.run_forever(
+                cfg, deps, autopilot.Intervals(scan_seconds=cfg.interval_seconds), stop,
+                has_id_documents=autopilot.has_id_documents_on_file(cfg),
+            )
+        finally:
+            deps.close()
+
+    loop_thread = threading.Thread(target=_run_autopilot, name="autopilot-loop", daemon=True)
     loop_thread.start()
     log.info("autopilot loop started as a background thread",
               extra={"scan_interval_seconds": cfg.interval_seconds})
@@ -60,6 +71,5 @@ def run_web_server(cfg: Config) -> int:
     finally:
         stop.set()
         loop_thread.join(timeout=10)
-        deps.close()
         log.info("web server + autopilot loop stopped")
     return 0
