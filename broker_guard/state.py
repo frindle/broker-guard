@@ -24,7 +24,18 @@ def init_db(path: str):
     parent = os.path.dirname(os.path.abspath(path))
     if parent:
         os.makedirs(parent, exist_ok=True)
-    conn = sqlite3.connect(path, timeout=30.0)
+    # check_same_thread=False: this connection IS shared across threads by
+    # design (see webapp.py's module docstring -- one process, one writer,
+    # so the web routes and the autopilot background thread share the same
+    # store rather than each getting an independent connection). Without
+    # this, the autopilot thread's first cycle crashed with
+    # "SQLite objects created in a thread can only be used in that same
+    # thread" the moment it touched a connection opened on the main/request
+    # thread. WAL mode + busy_timeout below are what actually make
+    # cross-thread access safe; this flag only lifts Python's default
+    # same-thread guard, which was blocking the architecture this module
+    # already documents as intentional.
+    conn = sqlite3.connect(path, timeout=30.0, check_same_thread=False)
     # The state db holds PII (which brokers list this person): keep it
     # owner-only on disk, not whatever the process umask happened to be.
     try:

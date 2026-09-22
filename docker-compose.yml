@@ -57,6 +57,14 @@ services:
       BG_LOG_DIR: /logs
       BG_ID_DOCUMENTS_DIR: /data/id_documents
       BG_FREEZE_STATE_PATH: /data/freeze_state.json
+      # exposure.py/profiles.py were added after this block and never got the
+      # same treatment -- their config.py defaults are bare relative paths
+      # (correct for local/non-Docker use), which resolve under /app here and
+      # hit this container's read_only:true root fs ("[Errno 30] Read-only
+      # file system" on every write). Same fix as every path above: pin it
+      # onto the writable /data volume explicitly.
+      BG_EXPOSURE_CACHE_PATH: /data/exposure_cache.json
+      BG_PROFILES_PATH: /data/profiles.json
 
       # --- web dashboard (off by default -- headless loop only) ---
       # Set true to serve broker_guard/webui.py + run the autopilot loop as
