@@ -117,6 +117,25 @@ def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def format_scan_timestamp(iso_str: str | None) -> str | None:
+    """Human-readable rendering of a heartbeat/estimate ISO timestamp for the
+    dashboard's scan_line -- e.g. '2026-09-22 14:32 UTC' instead of the raw
+    '2026-09-22T14:32:07.481932+00:00' _utcnow_iso()/estimate_next_scan()
+    produce internally. Returns the input unchanged if it doesn't parse --
+    this is presentation only, never allowed to blank out or raise on a
+    valid-but-unexpected value."""
+    if not iso_str:
+        return iso_str
+    try:
+        dt = datetime.fromisoformat(iso_str)
+    except ValueError:
+        return iso_str
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(timezone.utc)
+        return dt.strftime("%Y-%m-%d %H:%M UTC")
+    return dt.strftime("%Y-%m-%d %H:%M")
+
+
 def _action_needed_count(rows: list[dict]) -> int:
     """How many ``query_broker_status`` rows are parked in a state that
     needs a human -- ``needs_document`` or ``needs_review`` -- the same
@@ -242,7 +261,9 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
     elif scan["last_run_at"]:
         ok_text = "ok" if scan["last_run_ok"] else "failed"
         scan_line = "Last scan: {} ({}). Next scan around: {}.".format(
-            html.escape(scan["last_run_at"]), ok_text, html.escape(scan["next_run_at"] or "unknown"),
+            html.escape(format_scan_timestamp(scan["last_run_at"]) or scan["last_run_at"]),
+            ok_text,
+            html.escape(format_scan_timestamp(scan["next_run_at"]) or "unknown"),
         )
     else:
         scan_line = "No scan has run yet in this deployment."

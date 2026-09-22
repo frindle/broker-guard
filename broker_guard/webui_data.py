@@ -374,8 +374,19 @@ def scan_status(heartbeat: dict | None, jobs_summary: dict, scan_interval_second
     own ``last_run`` timestamp (or ``None``), and ``next_run_at`` is that
     same estimate-from-interval logic ``estimate_next_scan`` already uses,
     not a stored deadline.
+
+    ``running`` is true for a manual "Run scan now" job OR for the
+    autopilot background thread's own in-progress cycle (heartbeat's
+    ``status`` field, written at cycle start -- see
+    ``autopilot.run_forever``). Without the second check, a scan that has
+    been running for minutes looked identical to "never run yet" the whole
+    time it was in progress, since jobs_summary only ever tracks THIS
+    process's manual /scan jobs.
     """
-    running = any(status == "running" for status in jobs_summary.values())
+    running = (
+        any(status == "running" for status in jobs_summary.values())
+        or bool(heartbeat) and heartbeat.get("status") == "running"
+    )
     if not heartbeat:
         return {"running": running, "last_run_at": None, "last_run_ok": None, "next_run_at": None}
     last_run_at = heartbeat.get("last_run")

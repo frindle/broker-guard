@@ -170,3 +170,19 @@ def test_scan_status_reports_last_run_and_next_run_from_heartbeat():
 def test_scan_status_failed_heartbeat_reports_ok_false():
     result = webui_data.scan_status({"last_run": "2026-01-01T00:00:00+00:00", "ok": False}, {}, 86400)
     assert result["last_run_ok"] is False
+
+
+def test_scan_status_running_from_heartbeat_status():
+    """A mid-cycle heartbeat (status=running, written by autopilot.run_forever
+    at scan start) must report running=True even with no manual job in
+    jobs_summary -- this is the ONLY signal the dashboard has that the
+    background autopilot loop, not a manual /scan click, is in progress."""
+    result = webui_data.scan_status({"last_run": "2026-01-01T00:00:00+00:00", "status": "running"}, {}, 86400)
+    assert result["running"] is True
+
+
+def test_scan_status_done_heartbeat_is_not_running():
+    result = webui_data.scan_status(
+        {"last_run": "2026-01-01T00:00:00+00:00", "ok": True, "status": "done"}, {}, 86400,
+    )
+    assert result["running"] is False

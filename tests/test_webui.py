@@ -361,8 +361,37 @@ def test_index_dashboard_reflects_heartbeat_scan_status(client, cfg):
 
     resp = client.get("/")
     assert resp.status_code == 200
-    assert "2026-01-01T00:00:00" in resp.text
+    assert "2026-01-01 00:00 UTC" in resp.text
+    assert "2026-01-01T00:00:00" not in resp.text
     assert "ok" in resp.text
+
+
+def test_format_scan_timestamp_renders_human_readable_utc():
+    assert webui.format_scan_timestamp("2026-09-22T14:32:07.481932+00:00") == "2026-09-22 14:32 UTC"
+
+
+def test_format_scan_timestamp_passes_through_unparseable_and_none():
+    assert webui.format_scan_timestamp("not-a-timestamp") == "not-a-timestamp"
+    assert webui.format_scan_timestamp(None) is None
+    assert webui.format_scan_timestamp("") == ""
+
+
+def test_index_dashboard_shows_running_during_autopilot_cycle(client, cfg):
+    """A heartbeat written mid-cycle (status=running, from
+    autopilot.run_forever) must show "in progress", not "No scan has run
+    yet" -- the dashboard's only signal that the background loop, not just
+    a manual /scan job, is actually working."""
+    import json as _json
+    import os as _os
+
+    _os.makedirs(cfg.log_dir, exist_ok=True)
+    with open(_os.path.join(cfg.log_dir, "heartbeat.json"), "w", encoding="utf-8") as fh:
+        _json.dump({"last_run": "2026-01-01T00:00:00+00:00", "status": "running"}, fh)
+
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "Scan in progress right now" in resp.text
+    assert "No scan has run yet" not in resp.text
 
 
 def test_brokers_page_shows_stepper_labels(client, cfg):

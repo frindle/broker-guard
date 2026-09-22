@@ -303,9 +303,15 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     while not stop.is_set():
         if elapsed_since_scan >= intervals.scan_seconds:
             started = deps.now()
+            # Written BEFORE the cycle runs too, with status=running: without
+            # this, the dashboard's scan_status() has no signal at all during
+            # a cycle in progress (a scan can take minutes -- SERP + browser
+            # checks over the whole broker list) and shows "No scan has run
+            # yet", indistinguishable from the loop actually being stuck.
+            service_mod.write_heartbeat(cfg, {"last_run": started, "status": "running"})
             try:
                 result = run_scan_cycle(identity, broker_list, deps, has_id_documents=has_id_documents)
-                payload = {"last_run": started, "ok": True}
+                payload = {"last_run": started, "ok": True, "status": "done"}
                 if isinstance(result, dict):
                     payload["present"] = len(result.get("current", []))
                     payload["new"] = len(result.get("new_appearances", []))
@@ -314,7 +320,7 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
                 log.exception("autopilot scan cycle failed",
                                extra={"error": "{}: {}".format(type(exc).__name__, exc)})
                 service_mod.write_heartbeat(cfg, {
-                    "last_run": started, "ok": False,
+                    "last_run": started, "ok": False, "status": "done",
                     "error": "{}: {}".format(type(exc).__name__, exc),
                 })
             elapsed_since_scan = 0
