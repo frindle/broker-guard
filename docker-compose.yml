@@ -93,7 +93,12 @@ services:
       BG_SEARXNG_AUTH: "${BG_SEARXNG_AUTH:-}"
 
       # --- browser checks ---
-      BG_PLAYWRIGHT_ENABLED: "false"  # set true only if you built with browsers
+      # Env-substituted, same reason as BG_SERVE_WEB above: a hardcoded
+      # literal here gets silently wiped back to "false" by every
+      # `git reset --hard` redeploy. Put `BG_PLAYWRIGHT_ENABLED=true` in
+      # `.env` (requires INSTALL_BROWSERS=true at build time above, which is
+      # already the default in this file).
+      BG_PLAYWRIGHT_ENABLED: "${BG_PLAYWRIGHT_ENABLED:-false}"
       BG_PLAYWRIGHT_HEADLESS: "true"
       BG_PLAYWRIGHT_TIMEOUT_MS: "30000"
 
