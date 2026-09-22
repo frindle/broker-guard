@@ -800,3 +800,150 @@ def test_autopilot_only_scan_attaches_the_poll_and_status_agrees_it_is_running(c
     scan = client.get("/status").json()["scan"]
     assert scan["running"] is True
     assert scan["line"] == "Scan in progress right now."
+
+
+# --- /brokers: per-broker scan results, per identity -------------------------
+#
+# The gap these cover: /brokers listed ONLY brokers with a presence row --
+# brokers the person was found on -- so watching a live scan tick from 0/827
+# to 7/827 with no hits showed literally nothing new on this page. "Checked,
+# nothing found" was never recorded per broker anywhere.
+
+from broker_guard import profiles as profiles_mod  # noqa: E402
+from broker_guard import progress as progress_mod  # noqa: E402
+
+
+@pytest.fixture
+def clean_progress():
+    progress_mod.current().clear()
+    yield progress_mod.current()
+    progress_mod.current().clear()
+
+
+def _badge(label, tone):
+    """The rendered BADGE, not just the word: every outcome name also
+    appears in the filter dropdown, so asserting on the bare string would
+    pass even if no row rendered it."""
+    return '<span class="badge tone-{}">{}</span>'.format(tone, label)
+
+
+def _record_scan(progress, identity_key, outcomes):
+    progress.begin_cycle(identity_key=identity_key, total=3)
+    progress.start(progress_mod.PHASE_SERP, 3)
+    for broker_id, outcome in outcomes.items():
+        progress.record_outcome(broker_id, outcome,
+                                1 if outcome == "hit" else 0,
+                                1 if outcome == "error" else 0)
+    progress.finish()
+
+
+def test_brokers_page_lists_every_broker_not_only_the_found_ones(client, clean_progress):
+    resp = client.get("/brokers")
+    assert resp.status_code == 200
+    # All three roster brokers appear even though none has a presence row.
+    for name in ("Alpha People", "Beta Search", "Gamma Records"):
+        assert name in resp.text
+    assert resp.text.count(_badge("Not yet checked", "neutral")) == 3
+
+
+def test_brokers_page_renders_each_outcome_distinctly(client, clean_progress):
+    _record_scan(clean_progress, "idkey1", {"alpha": "checked", "beta": "hit"})
+    resp = client.get("/brokers")
+    assert _badge("Checked -- clean", "success") in resp.text
+    assert _badge("Listing found", "escalated") in resp.text
+    # gamma was never reached -- and must not read like a clean check.
+    assert resp.text.count(_badge("Not yet checked", "neutral")) == 1
+
+
+def test_a_failed_check_never_renders_as_clean(client, clean_progress):
+    _record_scan(clean_progress, "idkey1", {"alpha": "error"})
+    resp = client.get("/brokers")
+    assert _badge("Check failed", "action") in resp.text
+    assert _badge("Checked -- clean", "success") not in resp.text
+
+
+def test_brokers_page_keeps_the_removal_tracking_view(client, cfg, clean_progress):
+    """Additive, not a replacement: the presence-history rows, the status
+    filter, the search box and the action-needed filter all stay."""
+    conn = state_mod.init_db(cfg.state_path)
+    try:
+        store = state_mod.StateStore(conn)
+        store.record_appearance("idkey1", "alpha", "2026-01-01T00:00:00+00:00")
+        store.set_status("idkey1", "alpha", "needs_review", "2026-01-02T00:00:00+00:00")
+    finally:
+        conn.close()
+
+    resp = client.get("/brokers")
+    assert ">needs_review</span>" in resp.text
+    assert 'id="statusFilter"' in resp.text
+    assert 'id="searchBox"' in resp.text
+    assert 'id="actionOnly"' in resp.text
+    assert "Scanned" in resp.text          # the lifecycle stepper
+    assert 'id="scanRowsContainer"' in resp.text   # ...alongside the new card
+
+
+def _two_profiles(cfg):
+    a = profiles_mod.add_profile(cfg.profiles_path, {
+        "first_name": FAKE_FIRST, "last_name": FAKE_LAST, "emails": [FAKE_EMAIL]})
+    b = profiles_mod.add_profile(cfg.profiles_path, {
+        "first_name": "Otherfirst", "last_name": "Otherlast", "emails": []})
+    return a, b
+
+
+def test_brokers_page_scopes_scan_results_to_the_selected_profile(client, cfg, clean_progress):
+    a, b = _two_profiles(cfg)
+    _record_scan(clean_progress, profiles_mod.identity_key(a), {"alpha": "hit"})
+
+    mine = client.get("/brokers?identity=" + a.id)
+    assert _badge("Listing found", "escalated") in mine.text
+
+    theirs = client.get("/brokers?identity=" + b.id)
+    # Profile B was never scanned -- its rows must not inherit A's results.
+    assert _badge("Listing found", "escalated") not in theirs.text
+    assert theirs.text.count(_badge("Not yet checked", "neutral")) == 3
+
+
+def test_brokers_page_scopes_tracked_listings_to_the_selected_profile(client, cfg, clean_progress):
+    a, b = _two_profiles(cfg)
+    conn = state_mod.init_db(cfg.state_path)
+    try:
+        store = state_mod.StateStore(conn)
+        store.record_appearance(profiles_mod.identity_key(a), "alpha", "2026-01-01T00:00:00+00:00")
+        store.set_status(profiles_mod.identity_key(a), "alpha", "submitted",
+                         "2026-01-02T00:00:00+00:00")
+        store.record_appearance(profiles_mod.identity_key(b), "beta", "2026-01-03T00:00:00+00:00")
+        store.set_status(profiles_mod.identity_key(b), "beta", "confirmed",
+                         "2026-01-04T00:00:00+00:00")
+    finally:
+        conn.close()
+
+    mine = client.get("/brokers?identity=" + a.id)
+    assert ">submitted</span>" in mine.text
+    assert ">confirmed</span>" not in mine.text
+
+    # A profile that is NOT the active one still shows its own history --
+    # that is persisted per identity_key and never merged away.
+    theirs = client.get("/brokers?identity=" + b.id)
+    assert ">confirmed</span>" in theirs.text
+    assert ">submitted</span>" not in theirs.text
+
+
+def test_brokers_page_offers_a_profile_picker_defaulting_to_the_active_one(client, cfg,
+                                                                           clean_progress):
+    a, b = _two_profiles(cfg)
+    resp = client.get("/brokers")
+    assert 'id="identityPicker"' in resp.text
+    assert "All profiles (combined)" in resp.text
+    # add_profile makes the FIRST profile active; it is the default selection.
+    assert '<option value="{}" selected>'.format(a.id) in resp.text
+
+
+def test_status_includes_the_per_broker_map_only_when_asked(client, clean_progress):
+    _record_scan(clean_progress, "idkey1", {"alpha": "checked"})
+
+    lean = client.get("/status").json()
+    assert "brokers" not in lean["scan"]["progress"]
+
+    full = client.get("/status?brokers=1").json()
+    assert full["scan"]["progress"]["brokers"]["alpha"]["outcome"] == "checked"
+    assert "not yet checked" in full["scan"]["outcome_line"]

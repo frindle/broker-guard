@@ -888,3 +888,327 @@ def test_full_cycle_paces_every_request_through_the_real_client(full_cfg,
     # Sanity: that is a scan measured in hours, not seconds -- which is the
     # entire point of pacing against an instance that CAPTCHA-blocks.
     assert clock.t >= 2.0 * (requests - 1)
+
+
+# --------------------------------------------------------------------------
+# Per-broker scan results
+#
+# The aggregate counters above answer "how far along is this scan". They
+# cannot answer "which brokers am I clean on" -- the observer used to throw
+# broker_id away -- which is why a clean 827-broker scan left /brokers
+# completely empty. These cover the per-broker map that fixes that, and the
+# one distinction the whole feature rests on: "checked, nothing found" must
+# never be indistinguishable from "we have not looked yet".
+# --------------------------------------------------------------------------
+
+def test_record_outcome_keeps_the_broker_id_not_just_the_tally():
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=2)
+    p.start(progress_mod.PHASE_SERP, 2)
+    p.record_outcome("alpha", "checked")
+    p.record_outcome("beta", "hit", hits=3)
+
+    snap = p.snapshot(include_brokers=True)
+    assert snap["brokers"]["alpha"]["outcome"] == "checked"
+    assert snap["brokers"]["beta"]["outcome"] == "hit"
+    assert snap["brokers"]["beta"]["hits"] == 3
+    # ...and the aggregate counters still behave exactly as before.
+    assert snap["processed"] == 2 and snap["checked"] == 1 and snap["hits"] == 1
+
+
+def test_record_outcome_tags_each_broker_with_the_scanned_identity():
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkeyA", total=1)
+    p.record_outcome("alpha", "checked")
+    assert p.snapshot(include_brokers=True)["brokers"]["alpha"]["identity_key"] == "idkeyA"
+    assert p.snapshot()["identity_key"] == "idkeyA"
+
+
+def test_observer_closure_records_the_broker_id():
+    """Regression: progress.observer()'s closure used to discard broker_id
+    entirely, so nothing in the process knew WHICH brokers were clean."""
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=1)
+    p.observer()("alpha", "checked", 0, 0)
+    assert "alpha" in p.snapshot(include_brokers=True)["brokers"]
+
+
+def test_a_second_phase_keeps_the_first_phases_per_broker_results():
+    """SERP and browser are two legs of ONE cycle. Resetting the map per
+    phase would throw away every SERP result the moment the (much smaller)
+    browser leg started -- the finished cycle would report on a handful of
+    brokers instead of all 827."""
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=3)
+    p.start(progress_mod.PHASE_SERP, 3)
+    for bid in ("alpha", "beta", "gamma"):
+        p.record_outcome(bid, "checked")
+    p.finish()
+
+    p.start(progress_mod.PHASE_BROWSER, 1)
+    p.record_outcome("alpha", "hit", hits=1)
+    p.finish()
+
+    brokers = p.snapshot(include_brokers=True)["brokers"]
+    assert set(brokers) == {"alpha", "beta", "gamma"}
+    assert brokers["alpha"]["outcome"] == "hit"
+    assert brokers["beta"]["outcome"] == "checked"
+    # The aggregate counters DO still reset per phase (different
+    # denominators), which is the behaviour the dashboard line depends on.
+    assert p.snapshot()["total"] == 1
+
+
+def test_a_browser_error_outranks_a_clean_serp_result_for_the_same_broker():
+    """Same precedence presence_checker already applies: an errored check
+    is 'unknown', and unknown must not be displayed as 'nothing there'."""
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=1)
+    p.record_outcome("alpha", "checked")
+    p.record_outcome("alpha", "error", errors=1)
+    assert p.snapshot(include_brokers=True)["brokers"]["alpha"]["outcome"] == "error"
+
+
+def test_a_hit_from_either_leg_survives_a_later_clean_check():
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=1)
+    p.record_outcome("alpha", "hit", hits=1)
+    p.record_outcome("alpha", "checked")
+    assert p.snapshot(include_brokers=True)["brokers"]["alpha"]["outcome"] == "hit"
+
+
+def test_begin_cycle_clears_the_previous_scans_per_broker_results():
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=1)
+    p.record_outcome("alpha", "hit", hits=1)
+    p.begin_cycle(identity_key="idkey1", total=1)
+    snap = p.snapshot(include_brokers=True)
+    assert snap["brokers"] == {}
+    assert snap["hits"] == 0
+
+
+def test_start_without_a_cycle_does_not_accumulate_across_sweeps():
+    """A caller driving a phase directly still gets a clean map, so the
+    per-broker results can never pile up across unrelated sweeps."""
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.start(progress_mod.PHASE_SERP, 1)
+    p.record_outcome("alpha", "checked")
+    p.start(progress_mod.PHASE_SERP, 1)
+    assert p.snapshot(include_brokers=True)["brokers"] == {}
+
+
+def test_not_reached_counts_the_brokers_this_cycle_has_not_got_to_yet():
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=827)
+    p.start(progress_mod.PHASE_SERP, 827)
+    p.record_outcome("alpha", "checked")
+    snap = p.snapshot()
+    assert snap["recorded"] == 1
+    assert snap["not_reached"] == 826
+
+
+def test_snapshot_omits_the_per_broker_map_unless_asked():
+    """The dashboard polls /status every 1.5s and wants five integers, not
+    827 objects."""
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=1)
+    p.record_outcome("alpha", "checked")
+    assert "brokers" not in p.snapshot()
+    assert "brokers" in p.snapshot(include_brokers=True)
+
+
+def test_snapshot_hands_out_copies_not_live_entries():
+    p = progress_mod.ScanProgress(now=lambda: "T0")
+    p.begin_cycle(identity_key="idkey1", total=1)
+    p.record_outcome("alpha", "checked")
+    snap = p.snapshot(include_brokers=True)
+    snap["brokers"]["alpha"]["outcome"] = "hit"
+    assert p.snapshot(include_brokers=True)["brokers"]["alpha"]["outcome"] == "checked"
+
+
+def test_per_broker_results_are_written_by_a_real_cycle(cfg, deps_factory):
+    """End to end through service.build_presence_checker: every broker in
+    the roster ends up in the map, tagged with the scanned identity."""
+    from broker_guard import brokers as brokers_mod, profile as profile_mod
+
+    isolated = progress_mod.ScanProgress(now=lambda: "T0")
+    identity = profile_mod.load_profile(cfg.profile_path)
+    broker_list = brokers_mod.load_brokers(cfg.brokers_path)
+    deps = deps_factory(searx_search=lambda q: [])
+
+    service.build_presence_checker(identity, broker_list, deps, cfg, progress=isolated)
+
+    snap = isolated.snapshot(include_brokers=True)
+    assert set(snap["brokers"]) == {"alpha", "beta", "gamma"}
+    assert all(e["outcome"] == "checked" for e in snap["brokers"].values())
+    assert snap["identity_key"] == identity.identity_key
+    assert all(e["identity_key"] == identity.identity_key for e in snap["brokers"].values())
+
+
+# --------------------------------------------------------------------------
+# scan order: unknown brokers first, then freshly shuffled, never repeating
+# --------------------------------------------------------------------------
+
+def _ids(brokers):
+    return [b["id"] for b in brokers]
+
+
+def _roster(n):
+    return [{"id": "b{}".format(i), "name": "B{}".format(i),
+             "url": "https://b{}.invalid".format(i)} for i in range(n)]
+
+
+def test_scan_order_puts_brokers_with_no_info_first():
+    roster = _roster(6)
+    known = {"b0", "b3", "b5"}
+    ordered = _ids(service.order_brokers_for_scan(roster, known))
+    assert set(ordered[:3]) == {"b1", "b2", "b4"}
+    assert set(ordered[3:]) == known
+
+
+def test_scan_order_is_a_permutation_never_dropping_or_duplicating():
+    roster = _roster(50)
+    ordered = service.order_brokers_for_scan(roster, {"b7"})
+    assert sorted(_ids(ordered)) == sorted(_ids(roster))
+    assert len(ordered) == len(roster)
+
+
+def test_scan_order_is_not_the_same_twice():
+    """A stable order means a scan that dies (or gets rate-limited) two
+    thirds of the way through starves the SAME tail every single cycle --
+    those brokers would never be checked at all."""
+    roster = _roster(60)
+    orders = {tuple(_ids(service.order_brokers_for_scan(roster, set()))) for _ in range(5)}
+    assert len(orders) > 1
+
+
+def test_scan_order_accepts_an_injected_rng_for_deterministic_tests():
+    import random as _random
+
+    roster = _roster(10)
+    a = _ids(service.order_brokers_for_scan(roster, set(), rng=_random.Random(1234)))
+    b = _ids(service.order_brokers_for_scan(roster, set(), rng=_random.Random(1234)))
+    assert a == b
+
+
+def test_a_real_cycle_scans_unknown_brokers_before_known_ones(cfg, deps_factory):
+    """The ordering is applied ONCE in build_presence_checker, so both legs
+    agree; here the SERP leg's query order is the observable."""
+    from broker_guard import brokers as brokers_mod, profile as profile_mod
+
+    identity = profile_mod.load_profile(cfg.profile_path)
+    broker_list = brokers_mod.load_brokers(cfg.brokers_path)
+    deps = deps_factory(searx_search=None)
+    # 'alpha' and 'beta' already have presence rows for this identity;
+    # 'gamma' is the one we know nothing about.
+    deps.store.record_appearance(identity.identity_key, "alpha", "2026-01-01T00:00:00+00:00")
+    deps.store.record_appearance(identity.identity_key, "beta", "2026-01-01T00:00:00+00:00")
+
+    queried = []
+
+    def search(query):
+        queried.append(query)
+        return []
+
+    deps.searx_search = search
+    service.build_presence_checker(identity, broker_list, deps, cfg,
+                                   progress=progress_mod.ScanProgress(now=lambda: "T0"))
+
+    first_domains = [q for q in queried if "gamma.invalid" in q]
+    assert first_domains, "gamma should have been searched"
+    assert "gamma.invalid" in queried[0], "the unknown broker must be scanned first"
+
+
+# --------------------------------------------------------------------------
+# webui_data: rendering per-broker outcomes honestly
+# --------------------------------------------------------------------------
+
+def _snapshot_with(entries, cycle_total=3, active=False, identity_key="idkey1"):
+    return {"brokers": entries, "cycle_total": cycle_total, "active": active,
+            "identity_key": identity_key,
+            "not_reached": max(0, cycle_total - len(entries))}
+
+
+def test_scan_outcome_rows_cover_every_broker_not_just_the_found_ones():
+    """The defect this feature exists for: /brokers only ever listed
+    brokers with a presence row, so a clean scan displayed nothing."""
+    roster = _roster(3)
+    rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
+        "b0": {"outcome": "checked", "identity_key": "idkey1"},
+    }))
+    assert len(rows) == 3
+    assert {r["broker_id"] for r in rows} == {"b0", "b1", "b2"}
+
+
+def test_a_broker_not_reached_yet_is_pending_never_clean():
+    roster = _roster(2)
+    rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
+        "b0": {"outcome": "checked", "identity_key": "idkey1"},
+    }))
+    by_id = {r["broker_id"]: r for r in rows}
+    assert by_id["b0"]["outcome"] == "checked"
+    assert by_id["b1"]["outcome"] == "pending"
+    # ...and they are never worded the same way.
+    assert webui_data.SCAN_OUTCOME_LABELS["pending"] != webui_data.SCAN_OUTCOME_LABELS["checked"]
+    assert "not yet" in webui_data.SCAN_OUTCOME_LABELS["pending"].lower()
+
+
+def test_every_outcome_has_a_distinct_label():
+    labels = [webui_data.SCAN_OUTCOME_LABELS[o] for o in webui_data.SCAN_OUTCOME_ORDER]
+    assert len(set(labels)) == len(labels)
+
+
+def test_scan_outcome_rows_never_show_another_identitys_results():
+    roster = _roster(2)
+    rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
+        "b0": {"outcome": "hit", "identity_key": "idkeyOTHER"},
+    }), identity_key="idkeyMINE")
+    assert {r["outcome"] for r in rows} == {"pending"}
+
+
+def test_scan_outcome_rows_sort_the_interesting_ones_first():
+    roster = _roster(4)
+    rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
+        "b0": {"outcome": "checked", "identity_key": "idkey1"},
+        "b1": {"outcome": "hit", "identity_key": "idkey1"},
+        "b2": {"outcome": "error", "identity_key": "idkey1"},
+    }, cycle_total=4))
+    assert [r["outcome"] for r in rows] == ["hit", "error", "checked", "pending"]
+
+
+def test_scan_outcome_counts_keep_pending_out_of_checked():
+    roster = _roster(3)
+    rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
+        "b0": {"outcome": "checked", "identity_key": "idkey1"},
+    }))
+    counts = webui_data.scan_outcome_counts(rows)
+    assert counts["checked"] == 1
+    assert counts["pending"] == 2
+    assert counts["total"] == 3
+
+
+def test_scan_outcome_line_says_how_many_are_not_yet_checked():
+    counts = {"hit": 1, "error": 2, "checked": 400, "skipped": 0,
+              "pending": 424, "total": 827}
+    line = webui_data.scan_outcome_line(counts, active=True)
+    assert "403 of 827" in line
+    assert "424 not yet checked" in line
+    assert line.startswith("Scan running")
+
+
+def test_scan_outcome_line_is_honest_when_nothing_has_been_scanned():
+    counts = {"hit": 0, "error": 0, "checked": 0, "skipped": 0,
+              "pending": 827, "total": 827}
+    line = webui_data.scan_outcome_line(counts)
+    assert "not yet checked" in line
+    assert "0 of 827 checked" not in line
+
+
+def test_scan_outcome_counts_from_progress_matches_the_roster_path():
+    roster = _roster(3)
+    snap = _snapshot_with({
+        "b0": {"outcome": "checked", "identity_key": "idkey1"},
+        "b1": {"outcome": "error", "identity_key": "idkey1"},
+    })
+    from_rows = webui_data.scan_outcome_counts(webui_data.scan_outcome_rows(roster, snap))
+    from_progress = webui_data.scan_outcome_counts_from_progress(snap)
+    assert from_rows == from_progress

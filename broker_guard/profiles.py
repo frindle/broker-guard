@@ -352,6 +352,25 @@ def get_active_profile(path: str) -> "NamedProfile | None":
     return None
 
 
+def identity_key(profile: NamedProfile) -> str:
+    """The ``identity_key`` the state db scopes *profile*'s rows by.
+
+    Delegates to ``profile.Identity.identity_key`` -- the ONE derivation
+    (a digest of first|middle|last) that ``service.run_once``,
+    ``state.py``'s ``presence``/``broker_status`` tables and
+    ``progress.ScanProgress``'s per-broker map all already use. Never
+    re-implemented here: a second copy of this formula would silently
+    split one person's history across two keys the day either changed.
+
+    Imported inside the function on purpose, to keep this module free of
+    an import-time dependency on ``profile.py`` (see the NamedProfile
+    docstring).
+    """
+    from broker_guard import profile as profile_mod
+
+    return profile_mod.Identity(**to_legacy_profile_dict(profile)).identity_key
+
+
 def upsert_active_profile(path: str, data: dict) -> NamedProfile:
     """Write the identity form's *data* onto the ACTIVE profile, creating
     that profile if the list has none yet.

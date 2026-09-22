@@ -11,6 +11,7 @@ import argparse
 import json
 import logging
 import os
+import random
 import signal
 import sys
 import threading
@@ -76,14 +77,71 @@ def _empty_stats() -> dict:
 
 
 def _counting_observer(stats: dict, progress):
-    """Fan one per-broker outcome out to *stats* and to the live *progress*."""
+    """Fan one per-broker outcome out to *stats* and to the live *progress*.
+
+    ``record_outcome`` (not ``record``) is what keeps the broker_id: the
+    aggregate tally alone could say "827 checked, 0 found" but could not
+    name a single clean broker, which is why ``/brokers`` showed nothing
+    at all during a clean scan.
+    """
 
     def _observe(broker_id, outcome, hits=0, errors=0):
         if outcome in stats:
             stats[outcome] += 1
-        progress.record(outcome)
+        progress.record_outcome(broker_id, outcome, hits, errors)
 
     return _observe
+
+
+def order_brokers_for_scan(brokers: list[dict], known_ids, rng=None) -> list[dict]:
+    """The order ONE cycle walks the broker list: unknown brokers first,
+    then everything else shuffled.
+
+    Two properties, both deliberate:
+
+    * **Unknown first.** A broker this identity has no information about
+      (no ``presence`` row ever -- ``StateStore.seen_brokers``) is where a
+      new, undiscovered listing can actually turn up; a broker already
+      known to list the person is re-confirmation. A cycle that is slow,
+      rate-limited or killed half way therefore spends its budget on the
+      brokers most likely to produce something new.
+    * **Never the same order twice.** The remainder is shuffled with a
+      fresh ``random.Random()`` per call (seeded from OS entropy at
+      construction), NOT from a fixed seed or from the broker id. With a
+      stable order, a scan that dies or gets rate-limited two thirds of
+      the way through starves the SAME tail of the list every single
+      cycle -- those brokers would never be checked at all. The unknown
+      group is shuffled too, for exactly the same reason.
+
+    Pure and total: never drops, duplicates or mutates a broker (the
+    result is a permutation of *brokers*), and *rng* is injectable so a
+    test can assert the ordering without flaking on real randomness.
+    """
+    known = {str(bid) for bid in (known_ids or ())}
+    rng = rng if rng is not None else random.Random()
+    unknown = [b for b in brokers if str(b.get("id") or "") not in known]
+    rest = [b for b in brokers if str(b.get("id") or "") in known]
+    rng.shuffle(unknown)
+    rng.shuffle(rest)
+    return unknown + rest
+
+
+def _known_broker_ids(deps, identity_key: str) -> set:
+    """Brokers this identity already has a presence record for.
+
+    Best-effort: a store that is missing, closed or raising must not cost
+    the cycle -- the scan just falls back to treating every broker as
+    unknown, which is a worse ORDER, never a wrong result.
+    """
+    store = getattr(deps, "store", None)
+    if store is None or not hasattr(store, "seen_brokers"):
+        return set()
+    try:
+        return {str(bid) for bid in (store.seen_brokers(identity_key) or ())}
+    except Exception as exc:  # pragma: no cover - defensive
+        log.warning("could not read seen brokers for scan ordering",
+                    extra={"error": "{}: {}".format(type(exc).__name__, exc)})
+        return set()
 
 
 def build_presence_checker(identity, brokers, deps, cfg, progress=None):
@@ -104,16 +162,32 @@ def build_presence_checker(identity, brokers, deps, cfg, progress=None):
     The returned checker also carries ``serp_stats``/``browser_stats``
     attributes -- the per-leg outcome tallies -- so ``run_once`` can put
     real error counts in the cycle result rather than only in a log line.
+
+    Both legs walk ``order_brokers_for_scan``'s order -- brokers with no
+    presence record for this identity first, the rest freshly shuffled --
+    computed ONCE here rather than separately per leg, so the two legs
+    agree and the policy has a single home. ``scan_order`` is the scan's
+    order only; ``run_cycle``'s bookkeeping still sees the caller's list.
     """
     name_variants = profile_mod.name_variants(identity)
     progress = progress if progress is not None else progress_mod.current()
+    scan_order = order_brokers_for_scan(
+        brokers, _known_broker_ids(deps, identity.identity_key)
+    )
+    # One cycle, two legs. This is the per-broker map's reset point (see
+    # progress.begin_cycle); progress.start() below still resets the
+    # aggregate counters per leg, because their denominators differ.
+    # ``identity.identity_key`` is the SAME key state.py scopes
+    # presence/broker_status by -- the results are tagged with it so a
+    # /brokers page filtered to one profile can never show another's.
+    progress.begin_cycle(identity_key=identity.identity_key, total=len(brokers))
 
     serp_ids = set()
     serp_stats = _empty_stats()
     if deps.searx_search is not None:
         progress.start(progress_mod.PHASE_SERP, len(brokers))
         hits = serpwatch.run_serpwatch(
-            brokers, identity.phones, identity.emails, name_variants,
+            scan_order, identity.phones, identity.emails, name_variants,
             identity.addresses, deps.searx_search,
             observer=_counting_observer(serp_stats, progress),
         )
@@ -134,7 +208,7 @@ def build_presence_checker(identity, brokers, deps, cfg, progress=None):
     browser_stats = _empty_stats()
     if deps.page_action is not None:
         terms = name_variants + identity.phones + identity.emails
-        checks = playwright_checks.build_site_checks(brokers, terms)
+        checks = playwright_checks.build_site_checks(scan_order, terms)
         progress.start(progress_mod.PHASE_BROWSER, len(checks))
         browser_results = playwright_checks.run_playwright_checks(
             checks, deps.page_action,

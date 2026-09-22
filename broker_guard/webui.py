@@ -462,27 +462,141 @@ def _broker_row_html(row: dict, broker_meta: dict, scan_interval_seconds: int) -
     )
 
 
+def _identity_options(cfg: Config) -> list[dict]:
+    """The profile picker's options: every saved profile, with the
+    ``identity_key`` its ``presence``/``broker_status`` rows are scoped by
+    (``profiles.identity_key``, which delegates to the one canonical
+    derivation in ``profile.Identity``). An unreadable/empty profiles list
+    yields ``[]``, which the page renders as "no profiles saved yet"
+    rather than 500ing."""
+    try:
+        saved = profiles_mod.load_profiles(cfg.profiles_path)
+    except (OSError, ValueError):
+        return []
+    options = []
+    for p in saved:
+        try:
+            key = profiles_mod.identity_key(p)
+        except Exception:  # pragma: no cover - defensive
+            continue
+        options.append({"id": p.id, "name": p.full_name or p.id,
+                        "identity_key": key, "active": p.active})
+    return options
+
+
+def _scan_result_row_html(row: dict) -> str:
+    """One row of the "Scan results" card: every broker in the roster,
+    with THIS scan's outcome for it. ``data-outcome`` is what the
+    client-side filter and the live poll update key off."""
+    label = webui_data.SCAN_OUTCOME_LABELS[row["outcome"]]
+    tone = webui_data.SCAN_OUTCOME_TONES[row["outcome"]]
+    return """
+<div class="scanrow" data-broker-id="{bid_attr}" data-name="{name_lower}" data-outcome="{outcome}">
+  <span><span class="name">{name}</span><br><span class="sub">{url}</span></span>
+  <span class="outcome">{badge}</span>
+  <span class="sub when">{checked_at}</span>
+</div>
+""".format(
+        bid_attr=style.escape_attr(row["broker_id"]),
+        name_lower=style.escape_attr(str(row["name"]).lower()),
+        outcome=style.escape_attr(row["outcome"]),
+        name=html.escape(str(row["name"])),
+        url=html.escape(str(row["url"] or "")),
+        badge=style.badge(html.escape(label), tone),
+        checked_at=html.escape(str(row.get("checked_at") or "")),
+    )
+
+
 @app.get("/brokers", response_class=HTMLResponse)
-def brokers_page(cfg: Config = Depends(get_config)):
+def brokers_page(identity: str = "", cfg: Config = Depends(get_config),
+                  jobs: dict = Depends(get_jobs)):
+    """Two cards, two different questions -- deliberately not merged:
+
+    * **Tracked listings** (unchanged): the ``presence``/``broker_status``
+      history, i.e. "where am I listed and what has been sent". It can
+      only ever contain brokers the person was FOUND on, which is why it
+      stayed empty through a clean 827-broker scan.
+    * **Scan results** (new): every broker in ``brokers.json`` with the
+      outcome the most recent scan in THIS process recorded for it --
+      found / clean / failed / not checkable / not yet checked.
+
+    ``identity`` is a profile id; results are scoped to that profile's
+    ``identity_key``, defaulting to the active profile. ``identity=all``
+    shows every identity's tracked listings combined (the pre-selector
+    behaviour). A profile OTHER than the one the last scan ran under
+    still shows its own tracked-listing history from the db -- that is
+    persisted per identity_key and is not affected by which profile is
+    active now -- while the in-memory scan results honestly report that
+    the last scan did not cover it.
+    """
+    options = _identity_options(cfg)
+    show_all = identity == "all"
+    selected = None
+    if not show_all:
+        selected = next((o for o in options if o["id"] == identity), None)
+        if selected is None:
+            selected = next((o for o in options if o["active"]), None)
+    selected_key = selected["identity_key"] if selected else None
+
     conn = state_mod.init_db(cfg.state_path)
     try:
-        rows = webui_data.query_broker_status(conn)
+        rows = webui_data.query_broker_status(conn, identity_key=None if show_all else selected_key)
     finally:
         conn.close()
 
     try:
-        broker_meta = {b["id"]: b for b in brokers_mod.load_brokers(cfg.brokers_path)}
+        broker_list = brokers_mod.load_brokers(cfg.brokers_path)
     except (OSError, ValueError):
-        broker_meta = {}
+        broker_list = []
+    broker_meta = {b["id"]: b for b in broker_list}
+
+    progress_snapshot = progress_mod.snapshot(include_brokers=True)
+    scan_rows = webui_data.scan_outcome_rows(
+        broker_list, progress_snapshot, identity_key=None if show_all else selected_key,
+    )
+    scan_counts = webui_data.scan_outcome_counts(scan_rows)
+    with _JOBS_LOCK:
+        jobs_summary = {jid: j.get("status") for jid, j in jobs.items()}
+    scan = webui_data.scan_status(_read_heartbeat(cfg), jobs_summary, cfg.interval_seconds,
+                                   progress=progress_snapshot)
+    scan_line = webui_data.scan_outcome_line(scan_counts, active=bool(progress_snapshot.get("active")))
 
     action_needed = _action_needed_count(rows)
     rows_html = "".join(_broker_row_html(row, broker_meta, cfg.interval_seconds) for row in rows)
     if not rows:
-        rows_html = '<p class="muted" style="padding:16px;">No brokers tracked yet -- run a scan.</p>'
+        rows_html = ('<p class="muted" style="padding:16px;">No listings tracked for this profile yet'
+                     ' -- this card only fills in when a scan actually FINDS the person somewhere.'
+                     ' Every broker that has been checked is in "Scan results" below.</p>')
+
+    if options:
+        picker = '<select id="identityPicker" onchange="switchIdentity()">{}</select>'.format(
+            "".join(
+                '<option value="{v}"{sel}>{label}</option>'.format(
+                    v=style.escape_attr(o["id"]),
+                    sel=" selected" if (selected and o["id"] == selected["id"]) else "",
+                    label=html.escape(o["name"] + (" (active)" if o["active"] else "")),
+                )
+                for o in options
+            ) + '<option value="all"{}>All profiles (combined)</option>'.format(
+                " selected" if show_all else "")
+        )
+    else:
+        picker = '<span class="muted">No profiles saved yet.</span>'
+
+    scan_rows_html = "".join(_scan_result_row_html(row) for row in scan_rows)
+    if not scan_rows:
+        scan_rows_html = ('<p class="muted" style="padding:16px;">No broker list loaded'
+                          ' -- check BG_BROKERS_PATH.</p>')
 
     body = """
-<div class="page-head"><h1>Brokers</h1><div class="muted">{count} tracked</div></div>
+<div class="page-head">
+  <div><h1>Brokers</h1><div class="muted">{count} listing(s) tracked for this profile</div></div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span class="muted" style="font-size:13px;">Profile</span>{picker}
+  </div>
+</div>
 <div class="card">
+  <div class="section-label">Tracked listings -- where this profile was found, and removal status</div>
   <div class="toolbar">
     <input type="text" id="searchBox" placeholder="Search brokers..." oninput="filterRows()">
     <select id="statusFilter" onchange="filterRows()">
@@ -499,6 +613,19 @@ def brokers_page(cfg: Config = Depends(get_config)):
     </label>
   </div>
   <div id="rowsContainer">{rows_html}</div>
+</div>
+<div class="card" style="margin-top:18px;" data-scan-running="{scan_running}" id="scanCard"
+     data-identity-key="{identity_key_attr}">
+  <div class="section-label">Scan results -- every broker, this scan</div>
+  <div class="muted" id="scanOutcomeLine">{scan_line}</div>
+  <div class="toolbar" style="margin-top:14px;">
+    <input type="text" id="scanSearchBox" placeholder="Search brokers..." oninput="filterScanRows()">
+    <select id="outcomeFilter" onchange="filterScanRows()">
+      <option value="">All outcomes</option>
+      {outcome_options}
+    </select>
+  </div>
+  <div id="scanRowsContainer">{scan_rows_html}</div>
 </div>
 <script>
 function filterRows() {{
@@ -517,8 +644,84 @@ if (location.hash === '#action-needed') {{
   document.getElementById('actionOnly').checked = true;
   filterRows();
 }}
+
+function switchIdentity() {{
+  var v = document.getElementById('identityPicker').value;
+  location.search = '?identity=' + encodeURIComponent(v);
+}}
+
+function filterScanRows() {{
+  var q = document.getElementById('scanSearchBox').value.toLowerCase();
+  var outcome = document.getElementById('outcomeFilter').value;
+  document.querySelectorAll('.scanrow').forEach(function(row) {{
+    var matches = true;
+    if (q && row.dataset.name.indexOf(q) === -1) matches = false;
+    if (outcome && row.dataset.outcome !== outcome) matches = false;
+    row.style.display = matches ? '' : 'none';
+  }});
+}}
+
+// Live updates for a scan that is running RIGHT NOW. Same shape as the
+// dashboard's pollScan: one fetch of /status on a timer, repaint, and
+// reload once the server says the scan is over (so the page ends up on
+// the server-rendered truth rather than a JS-patched approximation).
+// ?brokers=1 is what adds the per-broker map to the payload -- the
+// dashboard's poll deliberately does not ask for it.
+var OUTCOME_LABELS = {outcome_labels_json};
+var OUTCOME_TONES = {outcome_tones_json};
+
+function applyScanUpdate(entries) {{
+  var card = document.getElementById('scanCard');
+  var wantKey = card ? card.dataset.identityKey : '';
+  document.querySelectorAll('.scanrow').forEach(function(row) {{
+    var entry = entries[row.dataset.brokerId];
+    if (!entry) return;
+    // Never paint another profile's result onto this profile's row.
+    if (wantKey && entry.identity_key && entry.identity_key !== wantKey) return;
+    var outcome = entry.outcome;
+    if (!OUTCOME_LABELS[outcome]) return;
+    row.dataset.outcome = outcome;
+    var badge = row.querySelector('.outcome .badge');
+    if (badge) {{
+      badge.textContent = OUTCOME_LABELS[outcome];
+      badge.className = 'badge tone-' + OUTCOME_TONES[outcome];
+    }}
+    var when = row.querySelector('.when');
+    if (when && entry.checked_at) {{ when.textContent = entry.checked_at; }}
+  }});
+  filterScanRows();
+}}
+
+function pollScanResults() {{
+  fetch('/status?brokers=1').then(function (r) {{ return r.json(); }}).then(function (s) {{
+    var scan = (s && s.scan) || {{}};
+    var progress = scan.progress || {{}};
+    if (progress.brokers) {{ applyScanUpdate(progress.brokers); }}
+    var line = document.getElementById('scanOutcomeLine');
+    if (line && scan.outcome_line) {{ line.textContent = scan.outcome_line; }}
+    if (!scan.running) {{ location.reload(); return; }}
+    setTimeout(pollScanResults, 2000);
+  }}).catch(function () {{ setTimeout(pollScanResults, 2000); }});
+}}
+
+(function () {{
+  var card = document.getElementById('scanCard');
+  if (card && card.dataset.scanRunning === '1') {{ pollScanResults(); }}
+}})();
 </script>
-""".format(count=len(rows), rows_html=rows_html)
+""".format(
+        count=len(rows), rows_html=rows_html, picker=picker,
+        scan_line=html.escape(scan_line), scan_rows_html=scan_rows_html,
+        scan_running="1" if scan.get("running") else "0",
+        identity_key_attr=style.escape_attr(selected_key or ""),
+        outcome_options="".join(
+            '<option value="{}">{}</option>'.format(
+                style.escape_attr(name), html.escape(webui_data.SCAN_OUTCOME_LABELS[name]))
+            for name in webui_data.SCAN_OUTCOME_ORDER
+        ),
+        outcome_labels_json=json.dumps(webui_data.SCAN_OUTCOME_LABELS),
+        outcome_tones_json=json.dumps(webui_data.SCAN_OUTCOME_TONES),
+    )
 
     return style.render_page("Brokers", "brokers", body, action_needed_count=action_needed)
 
@@ -570,12 +773,17 @@ def start_scan(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)
 
 
 @app.get("/status")
-def get_status(job_id: str | None = None, cfg: Config = Depends(get_config),
-                jobs: dict = Depends(get_jobs)):
+def get_status(job_id: str | None = None, brokers: bool = False,
+                cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
     """Poll a /scan job by id, or (with no job_id) get the current
     broker_status snapshot -- the table state.StateStore.set_status/
     get_status writes every cycle but that, before this route, no UI ever
     read.
+
+    ``brokers=1`` additionally includes the live per-broker outcome map
+    (``scan.progress.brokers``) that the /brokers page's poll repaints its
+    rows from. It is opt-in because the dashboard polls this route every
+    1.5s and wants five integers, not 827 objects.
     """
     if job_id is not None:
         job = jobs.get(job_id)
@@ -596,9 +804,14 @@ def get_status(job_id: str | None = None, cfg: Config = Depends(get_config),
     # with. `jobs` stays for backward compatibility with anything already
     # polling it, but it is no longer the signal the UI decides on -- it is
     # blind to the autopilot background thread's own cycle.
+    snapshot = progress_mod.snapshot(include_brokers=brokers)
     scan = webui_data.scan_status(_read_heartbeat(cfg), jobs_summary, cfg.interval_seconds,
-                                   progress=progress_mod.snapshot())
+                                   progress=snapshot)
     scan["line"] = _scan_line(scan)
+    scan["outcome_line"] = webui_data.scan_outcome_line(
+        webui_data.scan_outcome_counts_from_progress(snapshot),
+        active=bool(snapshot.get("active")),
+    )
     return {"brokers": rows, "pending_removals": pending, "jobs": jobs_summary,
             "scan": scan}
 

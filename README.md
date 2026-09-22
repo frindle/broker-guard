@@ -178,6 +178,45 @@ confident `hit_brokers: 0` and looked like good news. A cycle now reports
 states. One broker's failure still never aborts the cycle — it is just no
 longer invisible.
 
+### Per-broker scan results on /brokers
+
+`/brokers` has two cards, answering two different questions:
+
+- **Tracked listings** — the `presence`/`broker_status` history: where this
+  profile was actually found, and what has been sent. It can only ever
+  contain brokers the person was FOUND on.
+- **Scan results** — every broker in `brokers.json` with the outcome the
+  most recent scan in this process recorded for it: *Listing found*,
+  *Checked — clean*, *Check failed*, *Not checkable*, or **Not yet
+  checked** for one the current scan has not reached. "Not yet checked" is
+  deliberately its own state; a broker nobody has looked at yet must never
+  render like one that was checked and came back clean.
+
+The per-broker map lives in `broker_guard/progress.py` alongside the
+aggregate counters and is **in-memory for the life of the process** (same
+scope as the aggregate counters — see that module's "Scope: ONE process").
+It survives the end of a cycle, so results stay readable after a scan
+finishes; it does not survive a restart, and nothing persistent is written
+for it. Both cards can be scoped to a saved profile with the picker at the
+top right (`?identity=<profile id>`, or `all`); the tracked-listings card
+is per `identity_key` in the db, so a profile that is not the active one
+still shows its own history.
+
+While a scan is running the card live-updates from `GET /status?brokers=1`
+(the same poll shape the dashboard uses; the per-broker map is opt-in so
+the dashboard's 1.5s poll stays small) and reloads once the scan ends.
+
+### Scan order
+
+One cycle walks the broker list in `service.order_brokers_for_scan`'s
+order: brokers this identity has no presence record for first, then
+everything else, both groups freshly shuffled with a new `random.Random()`
+per cycle. Unknown-first spends a slow or rate-limited cycle's budget where
+a new listing can actually turn up; the shuffle means a cycle that dies two
+thirds of the way through does not starve the same tail of the list every
+single time. The order is computed ONCE and both legs (SERP and browser)
+follow it.
+
 Networking is plain bridge; see the commented `macvlan` block at the bottom of
 `docker-compose.yml` for where a static homelab IP would go.
 

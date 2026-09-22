@@ -385,6 +385,144 @@ def scan_progress_line(progress: dict | None) -> str | None:
     )
 
 
+# --- per-broker scan results (the /brokers "Scan results" card) --------------
+
+#: Display order: the outcomes a human needs to act on first, then the
+#: quiet ones. ``pending`` is LAST and is its own bucket -- a broker the
+#: current cycle has not reached yet must never sort or read as "clean".
+SCAN_OUTCOME_ORDER = ("hit", "error", "checked", "skipped", "pending")
+
+SCAN_OUTCOME_LABELS = {
+    "hit": "Listing found",
+    "error": "Check failed",
+    "checked": "Checked -- clean",
+    "skipped": "Not checkable",
+    "pending": "Not yet checked",
+}
+
+#: Badge tone per outcome (see webui_style.badge). ``pending`` and
+#: ``skipped`` share the neutral tone but NEVER share a label: neutral
+#: means "no claim is being made", which is exactly true of both.
+SCAN_OUTCOME_TONES = {
+    "hit": "escalated",
+    "error": "action",
+    "checked": "success",
+    "skipped": "neutral",
+    "pending": "neutral",
+}
+
+_SCAN_OUTCOME_RANK = {name: i for i, name in enumerate(SCAN_OUTCOME_ORDER)}
+
+
+def scan_outcome_rows(brokers: list[dict], progress: dict | None,
+                      identity_key: str | None = None) -> list[dict]:
+    """One row per broker in the ROSTER, carrying this cycle's outcome.
+
+    The roster -- ``brokers.json`` as loaded by ``brokers.load_brokers`` --
+    is the source of rows, not the ``presence`` table. That is the whole
+    point: ``query_broker_status`` can only ever show brokers the person
+    was FOUND on, so a scan that checked 827 brokers and found nothing had
+    nothing to display. Here every broker gets a row, and the ones the
+    scan has not reached yet get the explicit ``pending`` outcome rather
+    than being quietly rendered as clean.
+
+    *progress* is a ``ScanProgress.snapshot(include_brokers=True)`` dict
+    (or None). An entry is only applied to a row when it was recorded for
+    *identity_key* -- so filtering the page to profile B can never show
+    profile A's results. ``identity_key=None`` means "any identity".
+
+    Sorted by ``SCAN_OUTCOME_ORDER`` then by name, so hits and failures
+    are at the top of the list instead of buried under 800 clean rows.
+    """
+    entries = (progress or {}).get("brokers") or {}
+    rows = []
+    for broker in brokers:
+        broker_id = str(broker.get("id") or "")
+        entry = entries.get(broker_id)
+        if entry is not None and identity_key is not None \
+                and entry.get("identity_key") != identity_key:
+            entry = None
+        outcome = (entry or {}).get("outcome") or "pending"
+        if outcome not in _SCAN_OUTCOME_RANK:
+            outcome = "pending"
+        name = broker.get("name") or broker_id
+        rows.append({
+            "broker_id": broker_id,
+            "name": name,
+            "url": broker.get("url") or "",
+            "outcome": outcome,
+            "hits": (entry or {}).get("hits") or 0,
+            "errors": (entry or {}).get("errors") or 0,
+            "checked_at": (entry or {}).get("checked_at"),
+            "identity_key": (entry or {}).get("identity_key"),
+        })
+    rows.sort(key=lambda row: (_SCAN_OUTCOME_RANK[row["outcome"]], row["name"].lower()))
+    return rows
+
+
+def scan_outcome_counts(rows: list[dict]) -> dict:
+    """Bucket ``scan_outcome_rows`` output by outcome. Every key in
+    ``SCAN_OUTCOME_ORDER`` is always present (zeroed if unused) plus
+    ``total``, so a caller never needs a ``.get(..., 0)`` guard."""
+    counts = {name: 0 for name in SCAN_OUTCOME_ORDER}
+    for row in rows:
+        key = row.get("outcome")
+        counts[key if key in counts else "pending"] += 1
+    counts["total"] = len(rows)
+    return counts
+
+
+def scan_outcome_counts_from_progress(progress: dict | None) -> dict:
+    """``scan_outcome_counts``'s shape straight from a ``ScanProgress``
+    snapshot, without needing the broker roster.
+
+    Same numbers, different input: the roster-based path backs the page
+    render, this one backs the 2s poll, which must not re-read and re-walk
+    brokers.json on every tick. ``pending`` comes from the snapshot's own
+    ``not_reached`` (cycle_total minus the brokers recorded so far), so
+    "not yet checked" is still a first-class count and never folded into
+    ``checked``. A snapshot with no per-broker map yields all zeroes.
+    """
+    counts = {name: 0 for name in SCAN_OUTCOME_ORDER}
+    entries = (progress or {}).get("brokers") or {}
+    for entry in entries.values():
+        outcome = entry.get("outcome")
+        counts[outcome if outcome in counts else "pending"] += 1
+    counts["pending"] = (progress or {}).get("not_reached") or 0
+    counts["total"] = len(entries) + counts["pending"]
+    return counts
+
+
+def scan_outcome_line(counts: dict, active: bool = False) -> str:
+    """One honest sentence over ``scan_outcome_counts``.
+
+    Examples::
+
+        "Scan running: 412 of 827 checked -- 3 listings found, 2 checks failed, 415 not yet checked."
+        "Most recent scan: 827 of 827 checked -- 0 listings found, 0 checks failed."
+
+    ``not yet checked`` is only mentioned when it is non-zero, and is
+    never rolled into the checked count -- the distinction between "we
+    looked and found nothing" and "we have not looked yet" is the reason
+    this card exists.
+    """
+    total = counts.get("total", 0)
+    pending = counts.get("pending", 0)
+    reached = total - pending
+    if reached <= 0:
+        return ("No per-broker results yet in this process -- every broker below reads "
+                "\"not yet checked\" until the next scan runs.")
+    line = "{}: {} of {} checked -- {} listing(s) found, {} check(s) failed".format(
+        "Scan running" if active else "Most recent scan", reached, total,
+        counts.get("hit", 0), counts.get("error", 0),
+    )
+    if counts.get("skipped", 0):
+        line += ", {} not checkable".format(counts["skipped"])
+    if pending:
+        line += ", {} not yet checked".format(pending)
+    return line + "."
+
+
 def last_scan_detection_line(heartbeat: dict | None) -> str | None:
     """"Checked 827 brokers, 340 errors." for the FINISHED scan, from the
     heartbeat's persisted ``detection`` block (see autopilot.run_forever).

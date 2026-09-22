@@ -165,6 +165,16 @@ table.dtable { width: 100%; border-collapse: collapse; }
 .chevron { transition: transform 0.15s ease; color: var(--faint); }
 .brokerrow[open] .chevron { transform: rotate(90deg); }
 .row-detail { padding: 4px 16px 22px 16px; border-bottom: 1px solid var(--border); background: #FBFBF9; }
+/* /brokers "Scan results": one flat row per broker in the whole roster --
+   not expandable, because there is no per-broker detail to expand into;
+   the outcome badge IS the content. */
+.scanrow {
+  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; align-items: center;
+  padding: 11px 16px; border-bottom: 1px solid #F1EFE9;
+}
+.scanrow .name { font-weight: 600; font-size: 14px; }
+.scanrow .sub { font-size: 12px; color: var(--faint); }
+#scanRowsContainer { max-height: 620px; overflow-y: auto; }
 .stepper { display: flex; align-items: flex-start; margin: 14px 0 18px; }
 .step { flex: 1; text-align: left; position: relative; }
 .step .circle {
