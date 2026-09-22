@@ -63,11 +63,22 @@ mailboxes, etc). Every other record keeps at least one actionable channel.
 """
 import argparse
 import json
+import logging
+import os
 import re
 import sys
 from urllib.parse import urlsplit
 
+log = logging.getLogger("broker_guard.broker_normalize")
+
 VALID_KINDS = ("automatable", "captcha", "photo_id", "kba")
+
+# Bundled COPY of the public data-broker-optout-list dataset (853 records at
+# the time it was vendored), committed to this repo and baked into the
+# Docker image specifically so ensure_brokers_file below never needs a
+# runtime network fetch or a sibling repo on the deploy host.
+DEFAULT_SOURCE_PATH = "data/source-brokers.json"
+DEFAULT_ERASER_BROKERS_PATH = "vendor/eraser/data/brokers.yaml"
 
 # Text fragments in `verification_step`, checked lowercase, that signal a
 # government-ID / notarization / SSN requirement.
@@ -325,6 +336,64 @@ def _load_eraser_brokers(path: str) -> list:
     return data.get("brokers") or []
 
 
+def ensure_brokers_file(
+    brokers_path: str,
+    source_path: str = DEFAULT_SOURCE_PATH,
+    eraser_brokers_path: str = DEFAULT_ERASER_BROKERS_PATH,
+) -> bool:
+    """First-boot convenience: generate ``brokers_path`` from the bundled
+    source dataset if (and only if) nothing is there yet.
+
+    Returns ``True`` if generation happened, ``False`` if ``brokers_path``
+    already existed -- in which case NOTHING is read or written here. A
+    previous run's output, or a broker's own hand-curated list, is never
+    touched: this only ever fills in a missing file, never overwrites one.
+
+    If the bundled source dataset itself is missing (an unusual deployment
+    that stripped ``data/source-brokers.json``), this logs and returns
+    ``False`` rather than raising -- a missing dataset should surface as
+    the ordinary "brokers not found" config problem
+    (``config.validate_runtime_paths``), not a crash during startup.
+    """
+    if os.path.exists(brokers_path):
+        return False
+
+    if not os.path.exists(source_path):
+        log.warning(
+            "no broker dataset at %s and no bundled source at %s to generate "
+            "one from; leaving it missing",
+            brokers_path, source_path,
+        )
+        return False
+
+    source_records = _load_json(source_path)
+    eraser_brokers = []
+    if os.path.exists(eraser_brokers_path):
+        eraser_brokers = _load_eraser_brokers(eraser_brokers_path)
+    else:
+        log.info("no eraser broker list at %s; generating without eraser_id cross-references",
+                 eraser_brokers_path)
+
+    out, stats = normalize_dataset(source_records, eraser_brokers)
+
+    parent = os.path.dirname(os.path.abspath(brokers_path))
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    tmp = brokers_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump({"brokers": out}, fh, indent=2)
+        fh.write("\n")
+    os.replace(tmp, brokers_path)
+
+    total = stats["total_output_records"]
+    automatable_pct = (100.0 * stats["kind_counts"].get("automatable", 0) / total) if total else 0.0
+    log.info(
+        "no broker dataset found, generating from bundled source (%d brokers, %.0f%% automatable)...",
+        total, automatable_pct,
+    )
+    return True
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m broker_guard.broker_normalize",
@@ -335,9 +404,9 @@ def main(argv=None) -> int:
     parser.add_argument("output", help="Path to write the normalized {'brokers': [...]} JSON.")
     parser.add_argument(
         "--eraser-brokers",
-        default="vendor/eraser/data/brokers.yaml",
+        default=DEFAULT_ERASER_BROKERS_PATH,
         help="Path to eraser's own broker list, for eraser_id matching "
-             "(default: vendor/eraser/data/brokers.yaml).",
+             f"(default: {DEFAULT_ERASER_BROKERS_PATH}).",
     )
     args = parser.parse_args(argv)
 

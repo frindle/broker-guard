@@ -1,4 +1,7 @@
-# broker-guard -- a scheduled/looping job, not a webserver. Nothing is published.
+# broker-guard -- a scheduled/looping job by default. Nothing is published
+# unless BG_SERVE_WEB is turned on below, in which case the SAME container
+# also serves a web dashboard (see broker_guard/webapp.py for why this is
+# one process/one container rather than two).
 #
 # Deployment note: IP / MAC / network placement is deliberately NOT decided here.
 # Plain bridge networking is used below; see the commented `macvlan` block at the
@@ -16,24 +19,35 @@ services:
     restart: unless-stopped
     network_mode: bridge
 
-    # No ports. This service only makes outbound calls. network_mode: bridge
-    # puts it straight on the host's default docker0 bridge instead of a
-    # dedicated per-project network -- one less network cluttering `docker
-    # network ls` per compose stack.
+    # network_mode: bridge puts it straight on the host's default docker0
+    # bridge instead of a dedicated per-project network -- one less network
+    # cluttering `docker network ls` per compose stack.
+
+    # Only meaningful when BG_SERVE_WEB=true below. If nothing binds
+    # BG_WEB_PORT inside the container (the default), publishing it exposes
+    # nothing -- but comment this block out entirely if you want zero
+    # published ports on principle, full stop.
+    ports:
+      - "${BG_WEB_PORT:-8000}:${BG_WEB_PORT:-8000}"
 
     volumes:
       # PERSISTENT STATE + PII. None of this is baked into the image; all of it
       # is gitignored and dockerignored. Back it up like you would a password DB.
       #   ./state/profile.local.json  <- your identity (copy profile.example.json)
-      #   ./state/brokers.json        <- broker dataset, pulled from the PUBLIC repo
+      #   ./state/brokers.json        <- broker dataset; auto-generated from the
+      #                                  bundled public dataset on first boot if
+      #                                  absent -- see broker_normalize.ensure_brokers_file.
+      #                                  Supply your own here first if you don't want that.
       #   ./state/state.sqlite        <- presence history
+      #   ./state/id_documents/       <- encrypted ID-document uploads (web UI only)
+      #   ./state/freeze_state.json   <- credit-freeze tracker state (web UI only)
       - ./state:/data
       # Structured JSON logs, alert digests and the heartbeat file.
       - ./logs:/logs
-      # The vendored eraser binary + its config. Read-only: the container has no
-      # business rewriting the removal engine.
-      # Build it first:  cd vendor/eraser && go build -o ../../state/bin/eraser ./cmd/eraser
-      - ./state/bin:/opt/eraser/bin:ro
+      # eraser's own identity/config only -- the eraser BINARY itself is now
+      # built into the image (see Dockerfile's eraser-builder stage), so
+      # there is no host-side `go build` step and no binary volume mount
+      # anymore.
       - ./state/eraser-config:/home/guard/.eraser:ro
 
     environment:
@@ -42,6 +56,19 @@ services:
       BG_BROKERS_PATH: /data/brokers.json
       BG_STATE_PATH: /data/state.sqlite
       BG_LOG_DIR: /logs
+      BG_ID_DOCUMENTS_DIR: /data/id_documents
+      BG_FREEZE_STATE_PATH: /data/freeze_state.json
+
+      # --- web dashboard (off by default -- headless loop only) ---
+      # Set true to serve broker_guard/webui.py + run the autopilot loop as
+      # a background thread in this same container (see broker_guard/webapp.py).
+      BG_SERVE_WEB: "false"
+      BG_WEB_PORT: "8000"
+      # Required for the ID-document-upload and credit-freeze-PIN routes
+      # ONLY (encrypts them at rest) -- everything else works with this
+      # unset. Generate one with:
+      #   python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      BG_CRYPTO_KEY: "${BG_CRYPTO_KEY:-}"
 
       # --- scheduling ---
       BG_INTERVAL_SECONDS: "86400"   # one sweep per day; minimum accepted is 60

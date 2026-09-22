@@ -97,6 +97,13 @@ class Config:
 
     captcha_api_key: str | None = field(default=None, repr=False)
 
+    # Serve the FastAPI dashboard (webui.py) + run the autopilot loop as a
+    # background thread in this SAME process, instead of the plain headless
+    # service.main() loop. Off by default -- the container stays a
+    # port-less scheduled monitor unless an operator opts in.
+    serve_web: bool = False
+    web_port: int = 8000
+
     interval_seconds: int = 86400
     run_once: bool = False
     max_retries: int = 3
@@ -143,6 +150,8 @@ def load_config(env=None) -> Config:
         playwright_timeout_ms=_env_int(env, "BG_PLAYWRIGHT_TIMEOUT_MS", 30000),
         playwright_headless=_env_bool(env, "BG_PLAYWRIGHT_HEADLESS", True),
         captcha_api_key=_env_str(env, "BG_CAPTCHA_API_KEY"),
+        serve_web=_env_bool(env, "BG_SERVE_WEB", False),
+        web_port=_env_int(env, "BG_WEB_PORT", 8000),
         interval_seconds=_env_int(env, "BG_INTERVAL_SECONDS", 86400),
         run_once=_env_bool(env, "BG_RUN_ONCE", False),
         max_retries=_env_int(env, "BG_MAX_RETRIES", 3),
@@ -161,6 +170,8 @@ def load_config(env=None) -> Config:
         raise ConfigError("timeouts must be positive")
     if cfg.eraser_enabled and not cfg.eraser_bin:
         raise ConfigError("BG_ERASER_ENABLED is set but BG_ERASER_BIN is empty")
+    if not (0 < cfg.web_port < 65536):
+        raise ConfigError("BG_WEB_PORT must be between 1 and 65535")
     return cfg
 
 

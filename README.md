@@ -40,6 +40,14 @@ profile -> brokers -> serpwatch -> playwright_checks -> state -> alert -> eraser
   list, strict broker-id allowlist, always timeout-bounded, dry-run by default)
 - **sinks**: alert sinks -- append-only JSONL file and an optional webhook
 - **service**: the actual entrypoint and interval loop (`python -m broker_guard`)
+- **webapp**: optional (`BG_SERVE_WEB=true`) -- serves `webui.py`'s FastAPI
+  dashboard and runs `autopilot`'s scan/confirmation loop as a background
+  thread in the same process, instead of the headless loop
+- **webui**: the dashboard routes -- identity, brokers/status, on-demand
+  scan/removal, breach-exposure panel, credit-freeze tracker
+- **autopilot**: the kind-aware decision loop (`automatable`/`captcha` ->
+  auto-send, `photo_id`/`kba` -> queued for a human) plus periodic
+  confirmation and reappearance re-scanning
 
 ## Running
 
@@ -48,22 +56,37 @@ cp profile.example.json profile.local.json   # then fill in YOUR identity
 python -m broker_guard --check-config        # validate env + inputs, exit
 python -m broker_guard --once                # one cycle, then exit
 python -m broker_guard                       # loop on BG_INTERVAL_SECONDS
+python -m broker_guard --serve-web           # web dashboard + autopilot loop, one process
 pytest tests/ -q                             # run the test suite
 ```
 
+If `BG_BROKERS_PATH` doesn't exist yet, every mode above generates it
+automatically from the bundled public dataset (`data/source-brokers.json`)
+on startup — no manual `broker_normalize` run needed for a fresh identity.
+An existing file (yours, or a previous run's) is never touched.
+
 ## Running with Docker
 
-This is a **looping/scheduled job, not a webserver** — no port is exposed.
+By default this is still a **looping/scheduled job, not a webserver** — no
+port is exposed. Set `BG_SERVE_WEB=true` to also serve the web dashboard
+(`webui.py`) from the SAME container, on `BG_WEB_PORT` (default `8000`); see
+`broker_guard/webapp.py` for why this is one process rather than two.
 
 ```bash
 docker compose build          # add --build-arg INSTALL_BROWSERS=false to skip Chromium
 mkdir -p state logs
 cp profile.example.json state/profile.local.json   # then fill it in
-cp data/brokers.example.json state/brokers.json    # or pull the real public dataset
 docker compose run --rm broker-guard --check-config
 docker compose up -d
 docker compose logs -f
 ```
+
+The broker dataset (`state/brokers.json`) is generated automatically on
+first boot from the bundled public dataset baked into the image — supply
+your own file there first if you don't want that. The `eraser` binary is
+also built into the image (multi-stage Dockerfile, from `vendor/eraser/`) —
+no Go toolchain and no manual build step on the host anymore; only
+`./state/eraser-config` (eraser's own identity/config) is still a volume.
 
 **Playwright:** `broker_guard/browser.py` launches a real headless Chromium, so
 the Dockerfile runs `playwright install --with-deps chromium`. It only ever
@@ -77,13 +100,12 @@ Both are gitignored and dockerignored. Back them up like a password database.
 
 | Mount | Holds |
 | --- | --- |
-| `./state:/data` | `profile.local.json` (your identity), `brokers.json` (dataset), `state.sqlite` (presence history) |
+| `./state:/data` | `profile.local.json` (your identity), `brokers.json` (dataset, auto-generated if absent), `state.sqlite` (presence history), `id_documents/` + `freeze_state.json` (web UI only) |
 | `./logs:/logs` | JSON logs, `alerts.jsonl` digests, `heartbeat.json` |
-| `./state/bin:/opt/eraser/bin:ro` | the compiled `eraser` binary |
 | `./state/eraser-config:/home/guard/.eraser:ro` | eraser's own config/profile |
 
-Build the eraser binary first:
-`cd vendor/eraser && go build -o ../../state/bin/eraser ./cmd/eraser`
+The `eraser` binary itself is built into the image (see the Dockerfile's
+`eraser-builder` stage) — no separate volume, no host-side Go toolchain.
 
 ### Environment variables
 All config is read from the environment; nothing is hardcoded and no secret is
@@ -95,6 +117,11 @@ ever written to a log.
 | `BG_BROKERS_PATH` | `/data/brokers.json` | broker dataset (no PII) |
 | `BG_STATE_PATH` | `/data/state.sqlite` | presence history db |
 | `BG_LOG_DIR` | `/logs` | log + heartbeat directory |
+| `BG_ID_DOCUMENTS_DIR` | `data/id_documents` | encrypted ID-document uploads (web UI only) |
+| `BG_FREEZE_STATE_PATH` | `data/freeze_state.json` | credit-freeze tracker state (web UI only) |
+| `BG_SERVE_WEB` | `false` | serve the web dashboard + autopilot loop instead of the headless loop |
+| `BG_WEB_PORT` | `8000` | port for the web dashboard (only meaningful with `BG_SERVE_WEB=true`) |
+| `BG_CRYPTO_KEY` | *(unset)* | Fernet key encrypting ID documents + freeze PINs at rest; required only for those two features |
 | `BG_INTERVAL_SECONDS` | `86400` | sweep interval; minimum 60 |
 | `BG_RUN_ONCE` | `false` | run a single cycle and exit |
 | `BG_SEARXNG_URL` | *(unset)* | your self-hosted SearXNG; unset disables SERP detection |

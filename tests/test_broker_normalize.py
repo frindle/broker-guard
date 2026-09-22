@@ -10,6 +10,7 @@ from broker_guard import brokers as brokers_mod
 from broker_guard.broker_normalize import (
     VALID_KINDS,
     classify_kind,
+    ensure_brokers_file,
     match_eraser_id,
     normalize_dataset,
     normalize_record,
@@ -209,3 +210,44 @@ def test_real_dataset_normalizes_and_loads_cleanly_via_load_brokers(tmp_path):
     assert len(loaded) == 827
     for broker in loaded:
         assert brokers_mod.verification_kind(broker) in VALID_KINDS
+
+
+# --- ensure_brokers_file -----------------------------------------------------
+
+BUNDLED_SOURCE_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "data", "source-brokers.json",
+)
+
+
+def test_ensure_brokers_file_generates_from_bundled_source_when_missing(tmp_path):
+    if not os.path.exists(BUNDLED_SOURCE_PATH):
+        import pytest
+        pytest.skip(f"bundled source dataset not present at {BUNDLED_SOURCE_PATH}")
+
+    target = tmp_path / "brokers.json"
+    generated = ensure_brokers_file(str(target), source_path=BUNDLED_SOURCE_PATH,
+                                     eraser_brokers_path=str(tmp_path / "no-such-eraser-list.yaml"))
+    assert generated is True
+    assert target.exists()
+
+    loaded = brokers_mod.load_brokers(str(target))
+    assert len(loaded) == 827  # same 853-in/26-dropped count as normalize_dataset's own test
+
+
+def test_ensure_brokers_file_never_touches_an_existing_file(tmp_path):
+    target = tmp_path / "brokers.json"
+    target.write_text(json.dumps({"brokers": [{"id": "custom", "name": "Custom", "url": "https://custom.invalid"}]}))
+    before = target.read_text(encoding="utf-8")
+
+    generated = ensure_brokers_file(str(target), source_path=BUNDLED_SOURCE_PATH)
+
+    assert generated is False
+    assert target.read_text(encoding="utf-8") == before  # byte-for-byte untouched
+
+
+def test_ensure_brokers_file_missing_source_does_not_raise(tmp_path):
+    target = tmp_path / "brokers.json"
+    generated = ensure_brokers_file(str(target), source_path=str(tmp_path / "no-such-source.json"))
+    assert generated is False
+    assert not target.exists()

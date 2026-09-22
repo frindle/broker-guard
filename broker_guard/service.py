@@ -17,7 +17,7 @@ import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from broker_guard import brokers as brokers_mod
+from broker_guard import broker_normalize, brokers as brokers_mod
 from broker_guard import health, profile as profile_mod, scheduler, serpwatch
 from broker_guard import playwright_checks
 from broker_guard.config import Config, ConfigError, load_config, validate_runtime_paths
@@ -240,6 +240,11 @@ def main(argv=None) -> int:
     parser.add_argument("--once", action="store_true", help="run a single cycle and exit")
     parser.add_argument("--check-config", action="store_true",
                         help="validate config and inputs, then exit")
+    parser.add_argument("--serve-web", action="store_true",
+                        help="serve the web dashboard (FastAPI/uvicorn) instead of the "
+                             "headless loop; the autopilot scan/confirmation loop still "
+                             "runs, as a background thread in the same process "
+                             "(same effect as BG_SERVE_WEB=true)")
     args = parser.parse_args(argv)
 
     try:
@@ -251,6 +256,19 @@ def main(argv=None) -> int:
     logger = setup_logging(cfg.log_level, cfg.log_dir, cfg.log_pii)
     logger.info("broker-guard starting", extra={"config": cfg.redacted()})
 
+    # First-boot convenience: fill in a missing broker dataset from the
+    # bundled source BEFORE path validation runs, so a fresh deploy with no
+    # brokers.json yet doesn't fail validate_runtime_paths below. Never
+    # touches an existing file -- see broker_normalize.ensure_brokers_file.
+    try:
+        broker_normalize.ensure_brokers_file(cfg.brokers_path)
+    except (OSError, ValueError, KeyError) as exc:
+        logger.error("broker dataset auto-generation failed", extra={
+            "error": "{}: {}".format(type(exc).__name__, exc),
+        })
+        # Not fatal here -- validate_runtime_paths below will report the
+        # still-missing brokers.json as the ordinary config problem it is.
+
     problems = validate_runtime_paths(cfg)
     if problems:
         for problem in problems:
@@ -259,6 +277,12 @@ def main(argv=None) -> int:
     if args.check_config:
         logger.info("config ok")
         return 0
+
+    if args.serve_web or cfg.serve_web:
+        from broker_guard.webapp import run_web_server
+
+        logger.info("serving web dashboard", extra={"port": cfg.web_port})
+        return run_web_server(cfg)
 
     stop = threading.Event()
 

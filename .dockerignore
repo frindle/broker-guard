@@ -28,10 +28,12 @@ audit-log.jsonl
 escalation-rules.json
 data/brokers.json
 
-# --- vendored Go source: not needed at runtime ---
-# The eraser BINARY is mounted in at runtime (BG_ERASER_BIN); its ~40MB of Go
-# source has no business in a Python image.
-vendor/
+# --- vendored Go source: needed by the eraser-builder stage only ---
+# The FINAL image never contains this source, only the compiled binary
+# (multi-stage build in Dockerfile) -- but the docker build CONTEXT does
+# need it now, so unlike before this is no longer excluded wholesale.
+# vendor/eraser/ (~1.7MB) is small enough that no further trimming here is
+# worth the complexity of a nested negation pattern.
 
 # --- dev / VCS / build noise ---
 .git/
