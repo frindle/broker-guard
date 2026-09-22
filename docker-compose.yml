@@ -61,7 +61,11 @@ services:
       # --- web dashboard (off by default -- headless loop only) ---
       # Set true to serve broker_guard/webui.py + run the autopilot loop as
       # a background thread in this same container (see broker_guard/webapp.py).
-      BG_SERVE_WEB: "false"
+      # Env-substituted (not a bare literal) so a persistent, gitignored `.env`
+      # can override it -- otherwise every `git reset --hard` on redeploy wipes
+      # a manual edit made directly to this tracked file back to "false" (the
+      # recurring "no webui" report). Put `BG_SERVE_WEB=true` in `.env` instead.
+      BG_SERVE_WEB: "${BG_SERVE_WEB:-false}"
       BG_WEB_PORT: "8000"
       # Required for the ID-document-upload and credit-freeze-PIN routes
       # ONLY (encrypts them at rest) -- everything else works with this

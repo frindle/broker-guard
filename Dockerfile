@@ -9,16 +9,26 @@
 # If you run SERP-only (BG_PLAYWRIGHT_ENABLED=false, the default), you can build
 # the much smaller image with `--build-arg INSTALL_BROWSERS=false`.
 #
-# eraser is built HERE, from the vendored Go source (vendor/eraser/), in its
-# own stage -- no manual `go build` step on the host and no Go toolchain
-# needed there at all. vendor/eraser/go.mod declares `go 1.26`; the builder
-# image below pins 1.27 (Go's forward-compatibility guarantee: a toolchain
-# newer than a module's `go` directive always builds it) to match the
-# toolchain this repo's own CI/local dev already uses.
+# eraser is built HERE, cloned fresh from its upstream fork -- no manual
+# `go build` step on the host, no Go toolchain needed there, and (as of this
+# change) no host-side `vendor/eraser/` checkout needed either: it's
+# gitignored ("cloned, not committed"), so a fresh `git clone`+build of THIS
+# repo used to fail with "COPY vendor/eraser/ ./: not found" until someone
+# manually cloned it in first. Pin ERASER_REF to a real release tag so a
+# rebuild doesn't silently pick up unreviewed upstream changes; bump it
+# deliberately when you want to take a new eraser release.
+# go.mod declares `go 1.26`; the builder image below pins 1.27 (Go's
+# forward-compatibility guarantee: a toolchain newer than a module's `go`
+# directive always builds it) to match the toolchain this repo's own
+# CI/local dev already uses.
 FROM golang:1.27-bookworm AS eraser-builder
 
+ARG ERASER_REF=v0.7.4
+
 WORKDIR /build/eraser
-COPY vendor/eraser/ ./
+RUN git clone --depth 1 --branch ${ERASER_REF} \
+        https://github.com/drumandbytes/eraser.git . \
+ && rm -rf .git
 RUN go build -o /build/eraser-bin ./cmd/eraser
 
 FROM python:3.12-slim AS base
