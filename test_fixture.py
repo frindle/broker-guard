@@ -14,6 +14,10 @@ Cases:
   * page skeleton intact -- doctype, title, h1, table open/close, body close
     all present (each is its own line in the reference impl; dropping any one
     must be caught)
+  * row structure: each record renders as ONE ``<tr><td>…</td>×4</tr>`` line
+    with identity_key/broker_id/first_seen/last_seen in that order -- so a
+    dropped data-row append (values vanish from the output entirely) or a
+    dropped ``</table>`` close is caught, not just "the values appear somewhere"
 """
 import sys
 import importlib.util
@@ -103,6 +107,20 @@ CASES = CASES + [
     (
         "page skeleton intact: doctype/title/h1/table open+close/body close all present",
         lambda: (lambda out, seen: all(s in out for s in SKELETON))(*_render([])),
+        True,
+    ),
+    (
+        "row structure: each record is one <tr><td>..</td>x4</tr> line in column order; "
+        "dropping the data-row append or the </table> close must be caught",
+        lambda: (lambda out, seen: (
+            "<tr><td>ik-x</td><td>broker-z</td><td>2025-01-02T03:04:05Z</td>"
+            "<td>2025-06-07T08:09:10Z</td></tr>" in out
+            and out.count("<tr>") == 2          # header row + exactly one data row
+            and "</table>" in out               # table must be closed after the rows
+        ))(*_render([
+            {"identity_key": "ik-x", "broker_id": "broker-z",
+             "first_seen": "2025-01-02T03:04:05Z", "last_seen": "2025-06-07T08:09:10Z"},
+        ])),
         True,
     ),
 ]
