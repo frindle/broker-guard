@@ -1,10 +1,14 @@
 """Broker Guard web dashboard -- first page: escalation countdowns + health summary."""
+import html
+import json
 import os
 from datetime import datetime, timezone
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.responses import HTMLResponse
 
+import broker_guard.profile
 import broker_guard.webui_data as webui_data
 
 app = FastAPI(title="Broker Guard")
@@ -48,3 +52,56 @@ def index():
         "<p>health: total={total} ok={ok} failed={failed}</p>\n"
         "</body></html>"
     ).format(total=summary.get("total", 0), ok=summary.get("ok", 0), failed=summary.get("failed", 0))
+
+
+PROFILE_PATH = "profile.json"
+
+
+def _split_list(text):
+    return [part.strip() for part in text.split("\n") if part.strip()]
+
+
+@app.get("/identity", response_class=HTMLResponse)
+def identity_get():
+    try:
+        profile = broker_guard.profile.load_profile(PROFILE_PATH)
+    except Exception:
+        profile = None
+
+    first_name = profile.first_name if profile is not None else ""
+    middle_name = profile.middle_name if profile is not None else ""
+    last_name = profile.last_name if profile is not None else ""
+    emails = "\n".join(profile.emails) if profile is not None else ""
+    phones = "\n".join(profile.phones) if profile is not None else ""
+    addresses = "\n".join(profile.addresses) if profile is not None else ""
+
+    lines = []
+    lines.append("<!DOCTYPE html>")
+    lines.append("<html><head><title>Broker Guard -- Identity</title></head><body>")
+    lines.append("<h1>Identity</h1>")
+    lines.append('<form method="post" action="/identity">')
+    lines.append('<label>First name <input type="text" name="first_name" value="%s"></label>' % html.escape(first_name))
+    lines.append('<label>Middle name <input type="text" name="middle_name" value="%s"></label>' % html.escape(middle_name))
+    lines.append('<label>Last name <input type="text" name="last_name" value="%s"></label>' % html.escape(last_name))
+    lines.append('<label>Emails <textarea name="emails">%s</textarea></label>' % html.escape(emails))
+    lines.append('<label>Phones <textarea name="phones">%s</textarea></label>' % html.escape(phones))
+    lines.append('<label>Addresses <textarea name="addresses">%s</textarea></label>' % html.escape(addresses))
+    lines.append('<button type="submit">Save</button>')
+    lines.append("</form>")
+    lines.append("</body></html>")
+    return "\n".join(lines)
+
+
+@app.post("/identity")
+def identity_post(first_name: str = Form(...), middle_name: str = Form(""), last_name: str = Form(...), emails: str = Form(""), phones: str = Form(""), addresses: str = Form("")):
+    data = {
+        "first_name": first_name,
+        "middle_name": middle_name,
+        "last_name": last_name,
+        "emails": _split_list(emails),
+        "phones": _split_list(phones),
+        "addresses": _split_list(addresses),
+    }
+    with open(PROFILE_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+    return RedirectResponse(url='/identity', status_code=303)
