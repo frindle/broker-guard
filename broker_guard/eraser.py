@@ -63,6 +63,43 @@ def build_eraser_status_cmd(eraser_bin: str = "eraser", limit: int = 50) -> list
     return [eraser_bin, "status", "--limit", str(limit)]
 
 
+def _optional_profile_args(profile_id: str | None) -> list[str]:
+    if profile_id is None:
+        return []
+    return ["--profile", _validated_id(profile_id, "profile_id")]
+
+
+def build_eraser_monitor_cmd(eraser_bin: str = "eraser", profile_id: str | None = None) -> list[str]:
+    """argv for ``eraser monitor`` -- IMAP inbox scan for broker replies.
+
+    Per ``vendor/eraser/docs/commands.md`` this command takes NO per-broker
+    or per-send arguments; it scans the whole configured inbox in one pass
+    and requires the ``inbox:`` (IMAP) section of ``~/.eraser/config.yaml``
+    to be set. It is therefore a periodic, whole-account maintenance step,
+    not something that can be scoped to a single broker's removal request.
+    """
+    if not isinstance(eraser_bin, str) or not eraser_bin.strip():
+        raise ValueError("eraser_bin must be a non-empty string")
+    return [eraser_bin, "monitor"] + _optional_profile_args(profile_id)
+
+
+def build_eraser_fill_cmd(eraser_bin: str = "eraser", profile_id: str | None = None) -> list[str]:
+    """argv for ``eraser fill`` -- browser-automates opt-out forms.
+
+    Per ``vendor/eraser/docs/commands.md`` this command also takes NO
+    per-broker argument and no documented ``--dry-run`` flag; it walks
+    whatever the ``pipeline:`` config section (browser-automation settings)
+    tells it to, in one pass. There is no documented way to target a single
+    broker or attach a specific ID-document file through this CLI today, so
+    callers cannot use this to fill exactly one photo-id-gated broker on
+    demand -- see ``broker_guard.autopilot`` for how that limitation is
+    handled (queued as ``needs_document`` instead of auto-filled).
+    """
+    if not isinstance(eraser_bin, str) or not eraser_bin.strip():
+        raise ValueError("eraser_bin must be a non-empty string")
+    return [eraser_bin, "fill"] + _optional_profile_args(profile_id)
+
+
 def parse_eraser_result(stdout: str, returncode: int) -> dict:
     """Interpret an eraser invocation into ``{'success', 'detail'}``.
 
