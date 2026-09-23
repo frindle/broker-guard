@@ -952,6 +952,32 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    "instantcheckmate-com": (
+        "Verified as far as this tool may go, 2026-09-23. The search form "
+        "itself is ordinary and readable -- <form id='form-search' "
+        "action='/search/' method='get'> with firstName, lastName, an "
+        "optional city and an optional state <select> -- and filling first "
+        "and last and pressing Search does fire. What comes back is not a "
+        "results page but a blocking 'Notice' modal (div.modal-overlay."
+        "open) whose only way forward is a button labelled I AGREE "
+        "(button#yes), carrying the FCRA disclaimer and an agreement to "
+        "the site's Terms of Use and Privacy Policy.\n"
+        "\n"
+        "That button was deliberately NOT clicked, so this leg has no "
+        "verdict. Pressing it is accepting a third party's terms on Penn's "
+        "behalf, which is a different act from typing a name into a public "
+        "index and is not something the read-only search leg has a licence "
+        "for. And even if it were clicked, SearchRecipe still has no way "
+        "to EXPRESS a consent step -- the same structural gap already "
+        "recorded against privaterecords-net, peoplesearcher-com and "
+        "courtrecords-us -- so a recipe could not be written from what is "
+        "behind it either. Finishing this leg needs two things that do not "
+        "exist today: a consent step in the recipe format, and a decision "
+        "by a human about whether this tool may agree to broker terms at "
+        "all. Recorded as undecided rather than blocked because nothing "
+        "here is an anti-bot wall: the page is served normally and the "
+        "form works."
+    ),
     "privaterecords-net": (
         "Verified 2026-09-22. The site is a single-page app that first "
         "shows an FCRA consent interstitial; the search form underneath "
