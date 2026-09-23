@@ -857,6 +857,21 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    "lexisnexis-com": (
+        "LexisNexis Risk Solutions sells risk/identity data to licensed "
+        "businesses; it has no public people lookup. Verified 2026-09-23 "
+        "across both of its domains, because the dataset's url "
+        "(lexisnexis.com) is not even the right site: lexisnexis.com "
+        "redirects to /en-us/gateway.page, a 'Choose Your Path' splash "
+        "whose only two inputs are a 'remember my choice' checkbox and its "
+        "hidden partner -- no search of any kind. The actual broker's site, "
+        "risk.lexisnexis.com, carries one search box and it is a site "
+        "search ('Search for Products, Resources, and More'), the rest "
+        "being OneTrust cookie-consent controls. Same shape as "
+        "equifax-com and chexsystems-com: what this company holds about a "
+        "person is reached through an identity-verified consumer "
+        "disclosure request, not a name box."
+    ),
     "equifax-com": (
         "Equifax is a nationwide consumer reporting agency under the FCRA, "
         "and the dataset carries it as 'Equifax Marketing Services'. "
