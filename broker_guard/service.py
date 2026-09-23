@@ -215,7 +215,7 @@ def build_presence_checker(identity, brokers, deps, cfg, progress=None):
     browser_stats = _empty_stats()
     if deps.page_action is not None:
         terms = name_variants + identity.phones + identity.emails
-        checks = playwright_checks.build_site_checks(scan_order, terms)
+        checks = playwright_checks.build_site_checks(scan_order, terms, identity)
         progress.start(progress_mod.PHASE_BROWSER, len(checks))
         browser_results = playwright_checks.run_playwright_checks(
             checks, deps.page_action,
@@ -457,7 +457,10 @@ def build_detection(cfg: Config) -> tuple:
     ``closers`` is this layer's own teardown (today: the Playwright browser),
     and is the caller's to run -- exactly once, when it drops the layer.
     """
-    from broker_guard.browser import make_page_action
+    # The search-form-aware page action: identical to browser.make_page_action
+    # for every broker without a hand-verified search recipe, and the site's
+    # own people-search form for the few that have one.
+    from broker_guard.search_probe import make_page_action
     from broker_guard.searx_client import PermanentSearxError, SearxClient
 
     closers = []

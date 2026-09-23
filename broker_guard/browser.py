@@ -166,6 +166,32 @@ class PlaywrightChecker:
     def __exit__(self, *exc):
         self.close()
 
+    def new_page(self):
+        """A fresh context + page with the read-only routing already applied.
+
+        Factored out of ``__call__`` (which still uses it) so the
+        search-form driver in ``search_probe`` can reuse this exact browser
+        setup -- same user agent, same ``accept_downloads=False``, same
+        blocked resource types -- instead of growing a second, divergent
+        copy of it.
+        """
+        context = self._browser.new_context(
+            user_agent=self.user_agent,
+            accept_downloads=False,
+            java_script_enabled=True,
+        )
+        context.set_default_timeout(self.timeout_ms)
+        page = context.new_page()
+        page.route(
+            "**/*",
+            lambda route: (
+                route.abort()
+                if route.request.resource_type in _BLOCKED_RESOURCE_TYPES
+                else route.continue_()
+            ),
+        )
+        return context, page
+
     def __call__(self, check: dict) -> dict:
         url = check.get("url")
         # Re-validated here as well as in build_site_checks: this is the last
@@ -178,21 +204,7 @@ class PlaywrightChecker:
 
         context = page = None
         try:
-            context = self._browser.new_context(
-                user_agent=self.user_agent,
-                accept_downloads=False,
-                java_script_enabled=True,
-            )
-            context.set_default_timeout(self.timeout_ms)
-            page = context.new_page()
-            page.route(
-                "**/*",
-                lambda route: (
-                    route.abort()
-                    if route.request.resource_type in _BLOCKED_RESOURCE_TYPES
-                    else route.continue_()
-                ),
-            )
+            context, page = self.new_page()
             response = page.goto(url, wait_until="domcontentloaded", timeout=self.timeout_ms)
             text = page.inner_text("body")
             # `goto` returns the main-document Response, so the status is
@@ -236,13 +248,20 @@ class PlaywrightChecker:
         return {"found": is_people_search_hit(candidate, check.get("terms") or [])}
 
 
-def make_page_action(timeout_ms: int = 30000, headless: bool = True):
+def make_page_action(timeout_ms: int = 30000, headless: bool = True,
+                     checker_factory=None):
     """Return (page_action, closer). Degrades to an error-reporting stub.
 
     The returned page_action never raises: an unavailable browser becomes an
     errored check per broker, which ``run_playwright_checks`` records and the
     orchestrator treats as "unknown" rather than "absent".
+
+    ``checker_factory`` defaults to ``PlaywrightChecker``;
+    ``search_probe.make_page_action`` passes its ``SearchChecker`` subclass
+    so the "is Playwright even here?" degradation logic lives in one place
+    rather than being copied per checker.
     """
+    factory = checker_factory or PlaywrightChecker
     if not playwright_available():
         log.warning("playwright not installed; skipping browser checks")
 
@@ -251,7 +270,7 @@ def make_page_action(timeout_ms: int = 30000, headless: bool = True):
 
         return unavailable, lambda: None
 
-    checker = PlaywrightChecker(timeout_ms=timeout_ms, headless=headless)
+    checker = factory(timeout_ms=timeout_ms, headless=headless)
     try:
         checker.start()
     except Exception as exc:

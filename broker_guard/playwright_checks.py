@@ -20,11 +20,27 @@ def is_safe_url(url) -> bool:
     return parts.scheme.lower() in ALLOWED_SCHEMES and bool(parts.hostname)
 
 
-def build_site_checks(brokers: list[dict], base_terms: list[str]) -> list[dict]:
+def build_site_checks(brokers: list[dict], base_terms: list[str],
+                      identity=None) -> list[dict]:
     """One check per automatable broker with a usable http(s) URL.
 
     Brokers whose URL is missing or uses a non-http(s) scheme are skipped
     rather than handed to the browser.
+
+    When *identity* is given AND the broker has a hand-verified recipe in
+    ``search_forms.RECIPES``, the check additionally carries a ``search``
+    block -- the recipe's broker id plus the already-resolved
+    ``{selector: value}`` map -- and ``search_probe.SearchChecker`` uses it
+    to drive that broker's own people-search form instead of scanning its
+    homepage. The homepage ``url`` stays on the check either way, so a
+    checker that does not understand the block (today's
+    ``browser.PlaywrightChecker``) behaves exactly as before.
+
+    The block is added only when the profile can fill every REQUIRED field
+    of the recipe; a profile that cannot keeps the homepage check rather
+    than submitting a half-filled search. Which set of brokers gets checked
+    at all is deliberately unchanged -- this adds detail to existing checks,
+    it never adds or removes a broker.
     """
     checks = []
     for broker in brokers:
@@ -33,10 +49,38 @@ def build_site_checks(brokers: list[dict], base_terms: list[str]) -> list[dict]:
         url = broker.get("url")
         if not is_safe_url(url):
             continue
-        checks.append(
-            {"broker_id": broker["id"], "url": url.strip(), "terms": list(base_terms)}
-        )
+        check = {"broker_id": broker["id"], "url": url.strip(),
+                 "terms": list(base_terms)}
+        search = _search_block(broker["id"], identity)
+        if search is not None:
+            check["search"] = search
+        checks.append(check)
     return checks
+
+
+def _search_block(broker_id: str, identity) -> "dict | None":
+    """The ``search`` block for *broker_id*, or None to keep homepage behaviour.
+
+    Deliberately total: any failure to build the block (no recipe, an
+    unfillable profile, an unsafe-looking recipe) returns None, i.e. falls
+    back to the status quo. Losing the better check is acceptable; losing
+    the broker is not.
+    """
+    if identity is None:
+        return None
+    from broker_guard import search_forms
+
+    if not search_forms.is_supported(broker_id):
+        return None
+    recipe = search_forms.recipe_for(broker_id)
+    try:
+        search_forms.assert_read_only(recipe)
+    except search_forms.UnsafeRecipeError:
+        return None
+    resolved = search_forms.resolve_search_fields(recipe, identity)
+    if resolved["missing"]:
+        return None
+    return {"broker_id": recipe.broker_id, "values": resolved["values"]}
 
 
 def interpret_check_result(raw: dict) -> dict:

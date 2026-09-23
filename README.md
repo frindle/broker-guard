@@ -12,6 +12,9 @@ profile -> brokers -> serpwatch -> playwright_checks -> state -> alert -> eraser
 - **brokers**: load + normalize `data/brokers.json`
 - **serpwatch**: build + run SearXNG queries per broker+identity, detect hits
 - **playwright_checks**: per-site presence checks on top people-search sites
+- **search_forms / search_probe**: hand-verified recipes for a broker's OWN
+  people-search form, and the read-only driver that fills it and reads the
+  result (falls back to the homepage check for brokers with no recipe)
 - **state**: SQLite presence history + new-appearance diff
 - **alert**: notify on newly-detected appearance (batched per-run digest)
 - **eraser_bridge**: invoke vendored `eraser` (github.com/drumandbytes/eraser, MIT) removal engine + re-verify
@@ -340,6 +343,47 @@ alone. Two failure modes used to slip through, because neither raised:
   a near-empty page, since a real opt-out page may legitimately embed one. A
   404, and a broker's own "no results found" copy, are genuine absences and are
   left alone.
+
+### Direct-site presence search (the broker's own search form)
+
+The browser leg used to do one thing: load `https://<broker-domain>` and scan
+the homepage for identity terms. A broker does not list a person on its
+homepage — the listing lives behind the site's own people-search form — so
+that check was a near-guaranteed, confident-looking "not listed" for every
+broker in the dataset. `search_forms.py` + `search_probe.py` add the missing
+half: fill the broker's own search box, press Search, and read the answer.
+
+- **`search_forms.py`** is pure data + pure functions (the SEARCH sibling of
+  `optout_forms.py`): a hand-verified `SearchRecipe` per broker, keyed by the
+  same broker id the dataset produces. A broker without a recipe keeps exactly
+  today's homepage behaviour — no broker is added, dropped or changed by this.
+- **`search_probe.SearchChecker`** subclasses `browser.PlaywrightChecker`, so
+  the Chromium launch, resource blocking and `bot_wall_reason` are the existing
+  ones. It is a drop-in `page_action`.
+- **Read-only, and narrower than it sounds.** Typing into a search box is
+  reading. Opt-out/removal/signup/login surfaces are out of scope permanently
+  and `assert_read_only` refuses a recipe whose selectors or URL drift towards
+  one — checked before a browser opens and again before anything is typed.
+- **Absence must be stated by the broker.** The only two routes to
+  `{"found": false}` are a result count the broker printed as zero and
+  no-results wording read off that broker's real miss page. A stuck
+  interstitial, a form that would not fill, a submit that went nowhere, a page
+  served by a different host, an unrecognized page shape — all `{"error": …}`,
+  i.e. unknown, so the broker is excluded from `resolved` and never forgotten.
+  Two live findings drove that design: broker miss pages *echo the name you
+  searched for* (so term-matching alone reports a hit on a page meaning the
+  opposite), and ThatsThem's submit opens results in a new tab while
+  redirecting the original one to `spokeo.com`.
+- **Optional "City, State" boxes are left empty on purpose.** Narrowing a
+  query from a profile address line is how a real listing becomes a truthful
+  -looking "0 results".
+
+Recipes today: `searchpeoplefree-com` and `usphonebook-com` (both verified
+live end-to-end, hit and miss), and `thatsthem-com` (correct, but its results
+endpoint currently serves headless clients an "Access Denied" page, which is
+reported as an error — not as an absence, and not worked around).
+`search_forms.NO_SEARCH_SURFACE` records brokers investigated and found to
+have no public lookup at all, with the reason.
 
 ### Per-broker scan results on /brokers
 

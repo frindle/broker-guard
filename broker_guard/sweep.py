@@ -204,7 +204,7 @@ def _check_browser(broker: dict, identity, deps) -> "dict | None":
         return None
     terms = (profile_mod.name_variants(identity) + list(identity.phones)
              + list(identity.emails))
-    checks = playwright_checks.build_site_checks([broker], terms)
+    checks = playwright_checks.build_site_checks([broker], terms, identity)
     if not checks:
         return None
     results = playwright_checks.run_playwright_checks(checks, deps.page_action)
