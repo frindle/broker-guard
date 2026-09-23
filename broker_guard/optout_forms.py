@@ -1608,6 +1608,22 @@ OPTOUT_UNDECIDED = {
         "this' into a decision is how a note becomes a fact. Its SEARCH "
         "leg is a shipped, working recipe."
     ),
+    "acxiom-com": (
+        "No verdict as of 2026-09-23, for the same outage recorded in "
+        "search_forms.SEARCH_UNDECIDED, observed from the opt-out side. "
+        "The dataset's opt-out URL, https://isapps.acxiom.com/optout/"
+        "optout.aspx, does still exist in the sense that it 302s -- to "
+        "https://www.acxiom.com/optout/ -- but that destination answers "
+        "HTTP 500 with 'Something went wrong / Try again' and no form of "
+        "any kind, as does every other path on the domain. Requesting "
+        "isapps.acxiom.com directly gets an Imperva/Incapsula block page "
+        "instead. Neither observation supports a finding: a 500 is not "
+        "'no surface', an Incapsula block on a DIFFERENT host is not a "
+        "wall in front of THIS form, and Acxiom's opt-out has historically "
+        "been a real self-service webform, so recording it as absent or "
+        "blocked would both be unsupported and would teach the next "
+        "reader something false. Retry cold on another day."
+    ),
     "infotracer-com": (
         "No verdict as of 2026-09-23, and deliberately not guessed. "
         "infotracer.com/optout/ answers HTTP 200 with the body 'Sorry this "
