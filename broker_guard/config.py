@@ -42,6 +42,12 @@ DEFAULT_PROFILES_PATH = "data/profiles.json"
 # silently reverts every manual edit to a tracked docker-compose.yml. This path
 # itself is env-only and never UI-editable: a store cannot relocate itself.
 DEFAULT_SETTINGS_PATH = "data/settings.json"
+# The opt-out SUBMISSION audit trail (see broker_guard/review.py). A folder,
+# not a file: one .json + one .png per attempt. On /data for the same reason
+# as everything above it -- the container root is read_only and /tmp is
+# noexec, so /data is the only writable location, and an audit trail that
+# does not survive a redeploy is not an audit trail.
+DEFAULT_REVIEW_DIR = "data/review"
 # Mirrors eraser_config.DEFAULT_ERASER_CONFIG_PATH -- duplicated as a literal
 # rather than imported so config.py (which eraser_config.py itself imports
 # from) never has to import eraser_config back.
@@ -128,6 +134,11 @@ class Config:
     # redirect the store globally, so a developer's real ./data/settings.json
     # can never leak into a test's effective config.
     settings_path: str | None = None
+    # Where the opt-out submission audit trail lives (broker_guard/review.py).
+    # ``None`` on a hand-constructed Config means "the module default,
+    # resolved at use time by review.review_dir" -- same indirection, and for
+    # the same test-isolation reason, as settings_path above.
+    review_dir: str | None = None
     # Where the Profiles UI syncs eraser's profiles: list (see
     # eraser_config.sync_profiles) -- a Config field, not the module's own
     # DEFAULT_ERASER_CONFIG_PATH constant used directly, so tests can point
@@ -164,6 +175,24 @@ class Config:
     playwright_headless: bool = True
 
     captcha_api_key: str | None = field(default=None, repr=False)
+
+    # --- Automated opt-out form submission (broker_guard/optout_submit.py) ---
+    #
+    # These two are the safety interlock on the ONE code path in this
+    # codebase that types Penn's real PII into a third party's form and can
+    # press Submit unattended. Both defaults are the safe end:
+    #
+    #   optout_submit_enabled=False -> the feature does not run at all, from
+    #       anywhere. This is NOT folded into the autopilot scan loop's
+    #       default behavior; nothing turns it on but an explicit opt-in.
+    #   optout_submit_dry_run=True  -> even once enabled, the form is filled
+    #       and screenshotted but Submit is never pressed, so the mapping can
+    #       be verified before anything real is sent.
+    #
+    # Turning the first ON and the second OFF are two separate, deliberate
+    # acts. That is the point: neither one alone can cause a real submission.
+    optout_submit_enabled: bool = False
+    optout_submit_dry_run: bool = True
 
     # Serve the FastAPI dashboard (webui.py) + run the autopilot loop as a
     # background thread in this SAME process, instead of the plain headless
@@ -207,6 +236,7 @@ def load_config(env=None) -> Config:
         exposure_cache_path=_env_str(env, "BG_EXPOSURE_CACHE_PATH", DEFAULT_EXPOSURE_CACHE_PATH),
         profiles_path=_env_str(env, "BG_PROFILES_PATH", DEFAULT_PROFILES_PATH),
         settings_path=_env_str(env, "BG_SETTINGS_PATH", DEFAULT_SETTINGS_PATH),
+        review_dir=_env_str(env, "BG_REVIEW_DIR", DEFAULT_REVIEW_DIR),
         eraser_config_path=_env_str(env, "BG_ERASER_CONFIG_PATH", DEFAULT_ERASER_CONFIG_PATH),
         crypto_key=_env_str(env, "BG_CRYPTO_KEY"),
         searxng_url=_env_str(env, "BG_SEARXNG_URL"),
@@ -224,6 +254,8 @@ def load_config(env=None) -> Config:
         playwright_timeout_ms=_env_int(env, "BG_PLAYWRIGHT_TIMEOUT_MS", 30000),
         playwright_headless=_env_bool(env, "BG_PLAYWRIGHT_HEADLESS", True),
         captcha_api_key=_env_str(env, "BG_CAPTCHA_API_KEY"),
+        optout_submit_enabled=_env_bool(env, "BG_OPTOUT_SUBMIT_ENABLED", False),
+        optout_submit_dry_run=_env_bool(env, "BG_OPTOUT_SUBMIT_DRY_RUN", True),
         serve_web=_env_bool(env, "BG_SERVE_WEB", False),
         web_port=_env_int(env, "BG_WEB_PORT", 8000),
         interval_seconds=_env_int(env, "BG_INTERVAL_SECONDS", 86400),
