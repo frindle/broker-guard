@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **193** / 969
-- Search leg mapped: 195 / 969
-- Opt-out leg mapped: 197 / 969
+- Fully mapped (both legs): **208** / 969
+- Search leg mapped: 210 / 969
+- Opt-out leg mapped: 212 / 969
 
 ## How to resume
 
@@ -194,27 +194,27 @@ of those dicts against source-brokers.json).
 - [ ] **Car Market Solutions LLC** (`carmarketsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **CARCO Group, Inc.** (`cisive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **CARDLYTICS Inc** (`cardlytics-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Careerbuilder, LLC** (`careerbuilder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Carry Technologies, Inc** (`hightouch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Catalina Marketing Corporation** (`catalina-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Catalist LLC** (`catalist-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Careerbuilder, LLC** (`careerbuilder-com`) -- search: no-surface, opt-out: staged
+- [x] **Carry Technologies, Inc** (`hightouch-com`) -- search: no-surface, opt-out: undecided
+- [x] **Catalina Marketing Corporation** (`catalina-com`) -- search: no-surface, opt-out: blocked
+- [x] **Catalist LLC** (`catalist-us`) -- search: no-surface, opt-out: blocked
 - [ ] **Catalog Choice** (`catalogchoice-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Catalyze Ai, Inc** (`catalyzeai-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CDK Global, LLC** (`cdkglobal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Catalyze Ai, Inc** (`catalyzeai-com`) -- search: no-surface, opt-out: undecided
+- [x] **CDK Global, LLC** (`cdkglobal-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Cengage Learning, Inc.** (`cengagegroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Censia, Inc.** (`censia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Censia, Inc.** (`censia-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Centeda** (`centeda-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Centrix Group Limited** (`centrix-co-nz`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Checkpeople, LLC** (`checkpeople-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Checkpeople, LLC** (`checkpeople-com`) -- search: undecided, opt-out: undecided
 - [ ] **Checkr** (`checkr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **ChexSystems** (`chexsystems-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **CHOREOGRAPH LLC** (`choreograph-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **CHOREOGRAPH LLC** (`choreograph-com`) -- search: no-surface, opt-out: undecided
 - [ ] **CIAL Dun & Bradstreet** (`cialdnb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CIC Mortgage Credit, Inc** (`optoutprescreen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **CIC Mortgage Credit, Inc** (`optoutprescreen-com`) -- search: no-surface, opt-out: blocked
 - [ ] **CITYDATA Inc.** (`citydata-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Civil Data Research, LLC** (`searchpublicrecords-com`) -- search: recipe, opt-out: recipe
-- [ ] **Civis Analytics, Inc** (`civisanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Civitech** (`civitech-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Civis Analytics, Inc** (`civisanalytics-com`) -- search: no-surface, opt-out: undecided
+- [x] **Civitech** (`civitech-io`) -- search: no-surface, opt-out: no-surface
 - [ ] **Claritas LLC.** (`claritas-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Classmates.com** (`classmates-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Clay Labs, Inc.** (`clay-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -366,7 +366,7 @@ of those dicts against source-brokers.json).
 - [ ] **EXACT OPCO LLC** (`exactcustomer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Exact Opco, LLC** (`remodelyourhome-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Experian Data Corp** (`clarityservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Experian Marketing Services** (`experian-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Experian Marketing Services** (`experian-com`) -- search: no-surface, opt-out: undecided
 - [ ] **EXPLORIUM Inc** (`explorium-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Exponential Interactive, Inc.** (`vdx-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Eyeota Pte Ltd** (`eyeota-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -819,7 +819,7 @@ of those dicts against source-brokers.json).
 - [ ] **RP On-Site LLC** (`realpage-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **RPM Data Solutions LLC** (`exlservice-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **RTB House S.A.** (`rtbhouse-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Runtime Collective LLC** (`cision-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Runtime Collective LLC** (`cision-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Sabio, Inc.** (`sabio-inc`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Sabio, Inc.** (`sabioctv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Safegraph Inc.** (`safegraph-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -926,7 +926,7 @@ of those dicts against source-brokers.json).
 - [ ] **Towerdata** (`towerdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Traackr, Inc.** (`traackr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Tracers Information Specialists, Inc.** (`tracersinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **TransUnion Marketing** (`transunion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **TransUnion Marketing** (`transunion-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Trestle Solutions Inc.** (`trestleiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Triplelift, Inc.** (`triplelift-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **True Blue Analytics** (`trueblueanalytics-org`) -- search: UNMAPPED, opt-out: UNMAPPED

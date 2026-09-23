@@ -2055,6 +2055,124 @@ NO_SEARCH_SURFACE = {
         "company plainly profiles named individuals. See "
         "optout_forms.OPTOUT_UNDECIDED; its recorded privacy URL 404s."
     ),
+    "experian-com": (
+        "Verified by browser render 2026-09-23: Experian is a nationwide "
+        "consumer reporting agency, not a people-search site. The dataset "
+        "URL www.experian.com/privacy/opting_out renders a prose rights "
+        "page whose ONLY form is the site-wide business search box "
+        "(input[name=q] -> /search/business). There is no place for a "
+        "member of the public to look themselves or anyone else up; a "
+        "consumer's own file is reachable only through an authenticated, "
+        "identity-verified account. Nothing to read on this leg."
+    ),
+    "transunion-com": (
+        "Verified by browser render 2026-09-23: Same shape as experian- "
+        "com and for the same reason. www.transunion.com/consumer-privacy "
+        "renders an FAQ accordion about consumer rights; the only forms "
+        "on it are two copies of the site header search "
+        "(input[name=searchQuery] -> /consumer-search-results.html), both "
+        "off-layout behind the magnifier toggle. TransUnion is a credit "
+        "bureau; there is no public lookup of a named person, and a "
+        "consumer's own file sits behind an identity-verified login."
+    ),
+    "careerbuilder-com": (
+        "Verified by browser render 2026-09-23: CareerBuilder is a job "
+        "board, not a people-search. Candidate profiles are visible only "
+        "to paying employers behind a recruiter login, and no public page "
+        "accepts a name and returns a person. The privacy page itself "
+        "carries no search control of any kind. Its opt-out leg, by "
+        "contrast, is a complete and readable form -- see "
+        "optout_forms.STAGED_RECIPES."
+    ),
+    "hightouch-com": (
+        "Verified by browser render 2026-09-23: Hightouch sells a B2B "
+        "Composable CDP / reverse-ETL product; it moves a CUSTOMER's own "
+        "warehouse data to that customer's SaaS tools and publishes no "
+        "consumer-facing directory. preferences.hightouch.com renders a "
+        "DataGrail Privacy Request Center with a country picker and "
+        "nothing resembling a person lookup. No search surface exists to "
+        "read."
+    ),
+    "catalist-us": (
+        "Verified by browser render 2026-09-23: Catalist is a closed B2B "
+        "political-data cooperative: its voter file is licensed to "
+        "progressive campaigns and nonprofits under contract, and every "
+        "product page sits behind a sales conversation. catalist.us "
+        "offers only a WordPress site search (input[name=s]). There is no "
+        "public place to look a voter up."
+    ),
+    "catalyzeai-com": (
+        "Verified by browser render 2026-09-23: CatalyzeAI sells "
+        "predictive seller-lead scores to real-estate agents through a "
+        "subscription product; its consumer-facing footprint is a "
+        "marketing site. No public person lookup exists. Recorded "
+        "alongside a DATASET DEFECT on the opt-out leg: the row's "
+        "opt_out_url returns 404."
+    ),
+    "cdkglobal-com": (
+        "Verified by browser render 2026-09-23: CDK Global sells "
+        "dealership management software to auto retailers. Its data about "
+        "a consumer arrives through that consumer's own dealership and is "
+        "exposed only inside the dealer's authenticated DMS. "
+        "www.cdkglobal.com is a corporate marketing site with no lookup "
+        "of any kind."
+    ),
+    "censia-com": (
+        "Verified by browser render 2026-09-23: Censia sells Talent "
+        "Intelligence -- candidate profiles delivered inside an "
+        "employer's ATS under a B2B contract. The public site is "
+        "marketing plus a privacy policy; there is no public candidate "
+        "search, and the only controls on the policy page are the "
+        "Complianz cookie-consent toggles."
+    ),
+    "choreograph-com": (
+        "Verified by browser render 2026-09-23: Choreograph is WPP's data "
+        "and technology arm; its audience segments are sold to agencies "
+        "and brands, never queried by the public. The consumer-facing "
+        "property amer-cpp.choreograph.com is a privacy portal, not a "
+        "directory: its landing page asks only for a country of "
+        "residence. No search surface."
+    ),
+    "optoutprescreen-com": (
+        "Verified by browser render 2026-09-23: OptOutPrescreen.com is "
+        "the joint FCRA prescreen opt-out service run by the nationwide "
+        "consumer reporting agencies, not a broker that publishes data. "
+        "It only ACCEPTS opt-outs; it has no lookup of any person, and by "
+        "design could not have one. Flagging as a probable non-broker row "
+        "in the source dataset: it is the industry's opt-out mechanism "
+        "rather than a data seller."
+    ),
+    "cision-com": (
+        "Verified by browser render 2026-09-23: Cision sells a media- "
+        "contact database to PR teams by subscription. Journalist records "
+        "are queried inside the paid CisionOne platform behind a login; "
+        "www.cision.com exposes no public lookup. The public-facing "
+        "consumer artifact is a cookie/Cision-ID opt-out page, which "
+        "carries no search of any kind."
+    ),
+    "civisanalytics-com": (
+        "Verified by browser render 2026-09-23: Civis Analytics sells "
+        "data science software and consulting to campaigns, nonprofits "
+        "and enterprises. No public person lookup exists on the marketing "
+        "site. Recorded alongside a DATASET DEFECT on the opt-out leg: "
+        "the row's opt_out_url returns 404."
+    ),
+    "civitech-io": (
+        "Verified by browser render 2026-09-23: Civitech is a public- "
+        "benefit corporation selling campaign tooling (TextOut, "
+        "Districter, RunningStart) to Democratic campaigns and "
+        "organizations. Its voter data is reached only inside those "
+        "licensed products; civitech.io publishes no lookup. The privacy "
+        "policy page carries a single control, the mobile menu toggle."
+    ),
+    "catalina-com": (
+        "Verified by browser render 2026-09-23: Catalina Marketing sells "
+        "shopper-purchase-based targeting to CPG brands and retailers; "
+        "its data comes from retailer loyalty programs and is never "
+        "publicly queryable. www.catalina.com is a Svelte marketing site "
+        "whose only privacy affordance is a OneTrust cookie widget. No "
+        "search surface."
+    ),
 }
 
 
@@ -2867,6 +2985,39 @@ SEARCH_UNDECIDED = {
         "is a large property-data holder, so whether Cotality exposes any "
         "consumer-facing lookup is worth establishing properly rather "
         "than assuming. Next pass: examine cotality.com directly."
+    ),
+    "checkpeople-com": (
+        "Verified live both ways 2026-09-23, and the verdict is that this "
+        "site cannot be probed honestly. The form itself is clean and "
+        "fully transcribed: form#heroTabPeople (class checkhero__tab), "
+        "POST to https://checkpeople.com/landing, carrying #heroFirstName "
+        "(name=firstName, required), #heroLastName (name=lastName, "
+        "required), #heroCity (name=city, optional), #heroState "
+        "(name=state, a select the site pre-fills from the visitor's "
+        "geolocation -- it came back as nv unbidden), plus per-load "
+        "hidden _token (Laravel) and aid inputs, so browser-driven only. "
+        "Its submit is a bare <button> with NO type attribute, so "
+        "button[type='submit'] does not match it and the selector has to "
+        "be #heroTabPeople button. A duplicate of the same form "
+        "(navTabPeople/ navFirstName...) lives in the header, plus a "
+        "phone variant (navTabPhone -> /landing/phone/rp1e/searching). No "
+        "captcha script and no captcha widget on the rendered homepage. "
+        "WHY NO RECIPE: submitting does not produce a results page at "
+        "all. Both John Smith and the nonsense name Zylphrenna Quixbottom "
+        "land on the SAME url shape "
+        "/landing/people/<code>/searching?...&firstName=...&lastName= "
+        "..., both titled 'Searching for <name> - CheckPeople.com', and "
+        "both render an identical theatrical progress funnel -- a ticking "
+        "percentage, 'We are Checking Federal/State/County Data Sources', "
+        "rows for Criminal Records / Relatives / Arrest Records / "
+        "Mugshots each reading 'Loading...', and interstitial questions "
+        "('Do you think <first> has ever had a DUI?'). Nothing "
+        "distinguishes a hit from a miss, because the funnel is a paywall "
+        "lead-in rather than a report. For a recipe to become possible "
+        "somebody would have to establish what the funnel terminates in "
+        "for a real versus an absent person, and whether that terminus is "
+        "reachable without paying -- which is a purchase decision, not a "
+        "research one."
     ),
 }
 

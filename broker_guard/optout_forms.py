@@ -160,6 +160,14 @@ FLAVOR_AGR_WP_OPTOUT = "agr_wordpress_admin_post_optout"
 # as the InfoPay sites but does NOT serve the shared InfoPay form.
 FLAVOR_PROPERTYCHECKER_YII = "propertychecker_yii_optout_form"
 
+# CareerBuilder/Monster's shared privacy-request page. Unusual enough to
+# deserve its own name: there is no ``<form>`` element at all. Five controls
+# addressed only by id are read by an inline ``submitRequest()`` which POSTs
+# JSON to a per-brand API base (``/privacy/api/requests`` on careerbuilder.com,
+# ``/resume/privacy/api/requests`` on monster.com) and reports success by
+# opening a modal rather than by navigating.
+FLAVOR_CAREERBUILDER_JSON_DSR = "careerbuilder_formless_json_privacy_request"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -1426,6 +1434,86 @@ PROPERTYCHECKER = FormRecipe(
 )
 
 
+CAREERBUILDER = FormRecipe(
+    broker_id="careerbuilder-com",
+    broker_name="CareerBuilder",
+    url="https://www.careerbuilder.com/privacy/",
+    flavor=FLAVOR_CAREERBUILDER_JSON_DSR,
+    fields=(
+        Field(selector="#name", source="full_name", label="Full Name"),
+        Field(selector="#email", source="email", label="Email Address"),
+        # Optional on the page, and the only control the site's own
+        # validation does not insist on.
+        Field(selector="#address", source="address", label="Address",
+              required=False),
+        # Both selects are driven by LABEL, not value (optout_submit's
+        # kind="select" calls select_option(label=...)), so the literals
+        # below are the option texts exactly as rendered -- including the
+        # em dash and the emoji. Underlying values, for reference, are
+        # "other" and "dns".
+        Field(selector="#relation", source="literal", value="Other",
+              label="Relation to Organisation", kind="select"),
+        Field(selector="#type", source="literal",
+              value="\N{NO ENTRY SIGN} Do Not Sell or Share My Data (CCPA)",
+              label="Request Type", kind="select"),
+    ),
+    submit_selector="#submitBtn",
+    success_markers=(
+        "request submitted",
+        "please check your inbox and verify your email address",
+    ),
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23. THERE IS NO "
+        "<form> ELEMENT on this page and not one control carries a name "
+        "attribute -- an inline submitRequest() reads five ids (#name, "
+        "#email, #type, #address, #relation) and POSTs them as JSON to "
+        "getApiBase() + '/requests', which resolves to /privacy/api on "
+        "careerbuilder.com and /resume/privacy/api on monster.com. That "
+        "makes the ids load-bearing in a way they usually are not, and it "
+        "is why every selector here is an id rather than a name.\n"
+        "\n"
+        "WHY THE URL MUST STAY careerbuilder.com. The same page is served "
+        "under both brands (its own footer reads 'Monster'), and an IIFE "
+        "on it hides the do-not-sell option outright when the hostname "
+        "contains 'monster': 'if (source === monster) { dnsOption.style."
+        "display = none }'. Checked live on careerbuilder.com, "
+        "#dns-option computes display:block, so the option we need is "
+        "present here and absent on the sibling. A recipe pointed at the "
+        "Monster host would silently be unable to file this request type.\n"
+        "\n"
+        "Request type is 'Do Not Sell or Share My Data (CCPA)' rather "
+        "than Deletion, and relation is 'Other' rather than 'Job Seeker / "
+        "Candidate', because a suppression request from someone who never "
+        "held a CareerBuilder account would be misdescribed by the "
+        "latter. The remaining options, for a future reader: access / "
+        "deletion / dns, and customer / employee / ex-employee / "
+        "job-applicant / vendor / other.\n"
+        "\n"
+        "Success is a MODAL, not a navigation: on HTTP 201 the script "
+        "adds .active to #popup-overlay, which reads 'Request Submitted! "
+        "Your request has been received. Please check your inbox and "
+        "verify your email address to activate your request. Without "
+        "verification, your request will not be processed.' The "
+        "success_markers above are taken from that text. The script also "
+        "handles 409 (a duplicate active request of the same type, with a "
+        "due date), 429 (rate limited, retry after an hour) and 400 -- "
+        "worth knowing because none of those navigate either, so a "
+        "submitter must read the page rather than the URL.\n"
+        "\n"
+        "No captcha script and no captcha widget on the rendered page; "
+        "no_captcha_verified stays False because no human has swept it "
+        "and no dry run was performed. No honeypot: every control "
+        "computes visible. DATASET NOTE, consistent with what is on the "
+        "page: the row records that privacy@careerbuilder.com bounced and "
+        "that requests now route through Monster -- they route through "
+        "this shared page, and this is the brand's end of it. The request "
+        "is NOT complete on submission; it is activated by clicking a "
+        "link in a verification email, which is a human step this "
+        "codebase does not perform."
+    ),
+)
+
+
 # Brokers whose form has been WRITTEN DOWN but which are not yet turned on.
 # It exists so that "we transcribed the form" and "we are willing to submit
 # to it" stay two separate decisions. Nothing reads this at runtime: a broker
@@ -1434,6 +1522,7 @@ STAGED_RECIPES: dict = {
     AGR_MARKETING.broker_id: AGR_MARKETING,
     COURTCASEFINDER.broker_id: COURTCASEFINDER,
     PROPERTYCHECKER.broker_id: PROPERTYCHECKER,
+    CAREERBUILDER.broker_id: CAREERBUILDER,
 }
 
 
@@ -1861,6 +1950,72 @@ NO_OPTOUT_SURFACE = {
         "NY 10965 -- mail-only, so no webform even setting the DOB aside. "
         "Third, the five online forms are per-LIST, so a complete request "
         "means choosing which of LiftEngine's products to name."
+    ),
+    "cdkglobal-com": (
+        "Verified by browser render 2026-09-23: CDK's 'Do Not Sell or "
+        "Share My Personal Information' footer link has an EMPTY href -- "
+        "it is a JavaScript consent-widget trigger, not a page -- and the "
+        "privacy statement scopes it explicitly to tracking technologies: "
+        "'You may manage your preferences on the tracking technologies "
+        "deployed on the Site by clicking on the Do Not Sell or Share My "
+        "Personal Information link at the footer'. Its own text says 'We "
+        "do not sell your Personal Information' for other purposes, and "
+        "every actual rights request (deletion, access) is directed to a "
+        "contact address rather than a form. So there is no web surface "
+        "that suppresses a person's records here, only a cookie "
+        "preference for this website's visitors. The remaining channel is "
+        "mailbox-only, which this codebase cannot represent. Dataset "
+        "contact for a human: james.kinzer@cdk.com."
+    ),
+    "censia-com": (
+        "Verified by browser render 2026-09-23: censia.com/privacy- "
+        "policy/ carries an 'Opt-Out of the Sale or Sharing of Personal "
+        "Information' heading whose body is explicitly cookie-scoped -- "
+        "'Our use of certain cookies or other tracking technologies is "
+        "deemed a sale or sharing under California law' -- followed by "
+        "browser Do Not Track advice. There is no request form anywhere "
+        "on the domain: the only controls the rendered page contains are "
+        "the Complianz consent-banner checkboxes (cmplz-functional-optin, "
+        "cmplz-preferences-optin, cmplz-statistics-optin). Every "
+        "substantive right ('If you choose to assert any of these rights "
+        "... please contact us at the appropriate address below') routes "
+        "to a mailbox: support@censia.com, or 1-888-510-2253. Mailbox- "
+        "only, so no surface for a form-filling recipe. Dataset contact "
+        "for a human: tgotowka@censia.com."
+    ),
+    "civitech-io": (
+        "Verified by browser render 2026-09-23: the section the dataset "
+        "points at (civitech.io/privacy-policy/#section5) is 'Message "
+        "Recipient Opt-Out of Customer Messages through TextOut' -- an "
+        "SMS unsubscribe handled by replying STOP to a text, and the "
+        "policy is explicit that 'Opt-outs are tracked separately for "
+        "each TextOut Customer, so unsubscribing from one TextOut "
+        "Customer will not unsubscribe you from messages from another'. "
+        "That is a per-campaign message opt-out, not a data-broker "
+        "suppression, and it cannot be exercised from a web page at all. "
+        "The policy's other opt-out references are all third-party ad- "
+        "tech links (Google Ads Settings, Google Marketing Platform, the "
+        "NAI portal). The policy states Civitech does not sell personal "
+        "information for marketing, and directs rights requests to a "
+        "contact address. No form exists on the domain -- the only "
+        "control on the whole page is the mobile menu toggle. Dataset "
+        "contact for a human: jake.london@civitech.io."
+    ),
+    "cision-com": (
+        "Verified by browser render 2026-09-23: the dataset's opt_out_url "
+        "IS the right page and it deliberately has no form on it. "
+        "www.cision.com/contact-us/opt-out/ ('Cision ID Opt Out') renders "
+        "no <form> and no input beyond the site chrome; its entire offer "
+        "is two lines of text -- 'Submit via Privacy@cision.com' and "
+        "'Call our toll-free number'. The one automated thing on the page "
+        "is an invisible tracking-opt-out beacon, an iframe to "
+        "c212.net/c/tracking-opt-out/?t=1, which drops a Cision cookie "
+        "opt-out in the visitor's own browser and does nothing to the "
+        "contact database Cision sells. So the personal-data channel here "
+        "is mailbox-only by the broker's own design, which this codebase "
+        "has no way to exercise. Dataset contact for a human: "
+        "legaldept@cision.com; the page itself names Privacy@cision.com, "
+        "which is the one to use."
     ),
 }
 
@@ -3150,34 +3305,6 @@ OPTOUT_UNDECIDED = {
         "transcription gap, which is why this is undecided rather than "
         "staged. Everything else is ready."
     ),
-    "buxtonco-com": (
-        "A REAL, unwalled, fully transcribed form -- the best candidate "
-        "in this batch -- held back over one unknown and one mechanism. "
-        "Verified by browser render 2026-09-23: the dataset's opt_out_url "
-        "(buxtonco.com/privacy/opt-out) redirects to "
-        "www.audiense.com/legal/privacy-opt-out/, which is itself a "
-        "finding worth flagging, and THAT page carries #consumer-request- "
-        "form, method POST, action https://privacy.buxtonco.com/privacy. "
-        "Fields, all by name (most carry no id): FirstName, "
-        "AlternativeFirstName, MiddleInitial, LastName, Suffix, "
-        "PrimaryEmail, PrimaryPhone (placeholder XXX-XXX-XXXX), Address, "
-        "Address2, City, PersonalState (a 51-option select), Zip, "
-        "MobileAdvertisingId, and a REQUIRED select-MULTIPLE named "
-        "Company / #Company with two options; submit is #btnsubmit "
-        "'Submit Request'. FirstName, LastName, PrimaryEmail, "
-        "PrimaryPhone, Address, City and Zip are required. No captcha "
-        "sits on this form -- the reCAPTCHA Enterprise on the page "
-        "belongs to a separate HubSpot newsletter form (its onload is "
-        "hsRecaptcha). Two things stop it being staged. (1) The required "
-        "Company multi-select's two options were not read, and a recipe "
-        "cannot fill a required field whose values it does not know. (2) "
-        "Posting to privacy.buxtonco.com/privacy directly returns HTTP "
-        "400 with {'errors':{'v':['The verificationGUID field is "
-        "required.']}} -- so the hosting page mints a per-load "
-        "verificationGUID, and this can only ever be driven in a browser "
-        "from the Audiense page, never as a canned POST. Next pass: read "
-        "the two Company options and stage it."
-    ),
     "big-village-com": (
         "A page that PROMISES a form and does not render one, verified "
         "2026-09-23. big-village.com/do-not-sell-or-share-my-personal- "
@@ -3274,6 +3401,164 @@ OPTOUT_UNDECIDED = {
         "facing opt-out was found. Next pass: look for a privacy policy "
         "under the live site's own paths and decide between no-surface "
         "and a mailbox."
+    ),
+    "buxtonco-com": (
+        "A REAL, unwalled, COMPLETELY transcribed form, held back by a "
+        "gap in this codebase rather than a gap in the research. Verified "
+        "by browser render 2026-09-23: the dataset's opt_out_url "
+        "(buxtonco.com/privacy/opt-out) redirects to "
+        "www.audiense.com/legal/privacy-opt-out/, itself worth flagging, "
+        "and that page carries #consumer-request-form, POST to "
+        "https://privacy.buxtonco.com/privacy. Fields, all addressable by "
+        "NAME (most carry no id): FirstName, AlternativeFirstName, "
+        "MiddleInitial, LastName, Suffix, PrimaryEmail, PrimaryPhone "
+        "(placeholder XXX-XXX-XXXX), Address, Address2, City, "
+        "PersonalState (a 51-option select of two-letter CODES -- AL, AK, "
+        "AR, AZ, CA... -- so state_code, not state), Zip, "
+        "MobileAdvertisingId, and a required select-MULTIPLE named "
+        "Company / #Company offering exactly two options, 'Buxton' and "
+        "'Elevar'. Submit is #btnsubmit. Required: FirstName, LastName, "
+        "PrimaryEmail, PrimaryPhone, Address, City, Zip, Company. NO "
+        "captcha sits on this form -- the reCAPTCHA Enterprise on the "
+        "page belongs to a separate HubSpot newsletter form, whose onload "
+        "is hsRecaptcha. THE BLOCKER IS THE MULTI-SELECT. An honest opt- "
+        "out here has to name BOTH companies, because choosing only "
+        "Buxton leaves Elevar holding the data -- and FormRecipe has no "
+        "step type that selects more than one option: Field kind='select' "
+        "picks a single option by label, and Select/Choice pick a fixed "
+        "single literal. So this cannot be staged without either adding a "
+        "multi-select step type or shipping a knowingly partial request, "
+        "and the second is not acceptable. SECOND mechanism note, for "
+        "whoever implements it: posting to privacy.buxtonco.com/privacy "
+        "directly returns HTTP 400 with {'errors':{'v':['The "
+        "verificationGUID field is required.']}}, so the hosting page "
+        "mints a per-load verificationGUID and this is browser-only, "
+        "never a canned POST."
+    ),
+    "experian-com": (
+        "Verified by browser render 2026-09-23: the dataset opt_out_url "
+        "www.experian.com/privacy/opting_out is a rights EXPLAINER, not a "
+        "request surface -- the only form on the rendered page is the "
+        "site-wide business search (input[name=q]). An invisible "
+        "reCAPTCHA is live on it anyway (recaptcha__en.js plus a "
+        ".grecaptcha-badge and a g-recaptcha-response textarea outside "
+        "any form), which is the second time this sweep that a static "
+        "fetch would have reported a captcha-free page. Experian also "
+        "runs several DIFFERENT consumer channels that are easy to "
+        "confuse and were not resolved here: the FCRA prescreen opt-out "
+        "(optoutprescreen.com, itself blocked -- see its own entry), a "
+        "marketing-mail opt-out, and a CCPA/state-rights portal. A future "
+        "researcher needs to establish WHICH surface actually suppresses "
+        "Experian Marketing Services data (including the acquired Tapad "
+        "identity graph, which the dataset notes were merged into this "
+        "row) and whether it can be reached without an identity-verified "
+        "login, since the credit-file side certainly cannot. Second "
+        "channel for a human: privacy@experian.com."
+    ),
+    "transunion-com": (
+        "Verified by browser render 2026-09-23: same finding as experian- "
+        "com. www.transunion.com/consumer-privacy renders an FAQ "
+        "accordion ('How do I make a data privacy request?', 'Where can I "
+        "learn about my consumer rights?') and no request form -- the "
+        "only two forms are copies of the header site search. reCAPTCHA "
+        "v3 is loaded on the page "
+        "(api.js?render=6LfUswssAAAAAEy6MG6LCW72Avmkx2Yohnv2oQfY plus a "
+        "recaptcha-cloudservice element), so whatever the accordion links "
+        "out to is captcha-backed. Not resolved: which TransUnion "
+        "property accepts a marketing-data suppression as opposed to a "
+        "credit-file request, and whether the acquired Neustar identity- "
+        "graph data the dataset notes mention is covered by the same "
+        "request or needs a separate one. Second channel for a human: "
+        "privacy@transunion.com."
+    ),
+    "hightouch-com": (
+        "Verified by browser render 2026-09-23: preferences.hightouch.com "
+        "is a DataGrail Privacy Request Center that GATES its form behind "
+        "two pickers before any request fields exist. The rendered page "
+        "contains exactly four controls and no <form> at all: #privacy- "
+        "request-center-country-picker and #privacy-request-center- "
+        "region-picker (MUI Autocomplete text inputs, each with a "
+        "keyboard_arrow_down toggle button), pre-filled from geolocation "
+        "as United States / Nevada. No captcha script and no captcha "
+        "widget at this stage -- which says nothing about the stage after "
+        "it, per the standing rule that a bot check absent before the "
+        "form renders is not a bot check absent. What a future recipe- "
+        "writer needs: drive both Autocompletes (they are listbox_button- "
+        "style, not <select>), record the request-type choices and field "
+        "set that appear afterwards, and re-check for a captcha THEN. The "
+        "dataset notes are consistent with this being the real surface: "
+        "legal@hightouch.com auto-replies requiring identity verification "
+        "through this portal."
+    ),
+    "choreograph-com": (
+        "Verified by browser render 2026-09-23: same gated shape as "
+        "hightouch-com, differently built. amer- "
+        "cpp.choreograph.com/manage-your-data/do-not-sell renders WPP's "
+        "own consumer privacy portal, whose entire body is 'Please select "
+        "your country of residence to continue.' and three react-select "
+        "widgets (#react-select-2-input, -3-, -5-, all css-1hac4vs- "
+        "dummyInput and all computed-invisible, which is normal for "
+        "react-select rather than a honeypot signal). No <form> exists "
+        "until a country is chosen. Page footer reads 'region: amer "
+        "version: main-9.3.5', so there are sibling regional portals. No "
+        "captcha at this stage. A future recipe-writer must drive the "
+        "react-select by clicking the control and choosing from the "
+        "rendered listbox -- typing into the dummy input will not do it "
+        "-- then transcribe the form that follows and re-check for a "
+        "captcha there. Second channel for a human: "
+        "adam.little@choreograph.com."
+    ),
+    "catalyzeai-com": (
+        "DATASET DEFECT, verified 2026-09-23: the row's opt_out_url "
+        "https://www.catalyzeai.com/opt-out returns HTTP 404 ('Page not "
+        "found. The page you are looking for doesn't exist or has been "
+        "moved.'), and the dataset's own notes already record that the "
+        "broker's email bounced on 2026-08-20. That leaves this row with "
+        "NO working contact of any kind. Not fixed in data/source- "
+        "brokers.json, only recorded here. What is left to try: find a "
+        "current privacy policy on catalyzeai.com and read the rights "
+        "section off it, or establish that the company has folded or been "
+        "absorbed -- either answer resolves the row, and neither was "
+        "established today."
+    ),
+    "civisanalytics-com": (
+        "DATASET DEFECT, verified 2026-09-23: the row's opt_out_url "
+        "https://www.civisanalytics.com/privacy-policy/supplemental- "
+        "privacy-notice/ returns HTTP 404 ('The page you are looking for "
+        "doesn't exist'), serving only a cookie banner. This is a "
+        "circular dead end, because the dataset notes record that "
+        "dataprotection@civisanalytics.com replied that they cannot "
+        "process requests until THIS form is completed -- the form they "
+        "point at no longer exists. Not fixed in data/source- "
+        "brokers.json, only recorded here. Next step for a researcher: "
+        "locate the supplemental notice at its current path under "
+        "civisanalytics.com/privacy-policy and quote the real request "
+        "surface back to that mailbox."
+    ),
+    "checkpeople-com": (
+        "Verified by browser render 2026-09-23: the opt-out is real and "
+        "reachable but only its FIRST step is knowable without "
+        "submitting. checkpeople.com/opt-out renders a 'Suppression "
+        "Center' whose form.cp-auto-optout__form POSTs to /opt-out and "
+        "contains exactly one visible field, input#requestorEmail "
+        "(name=requestorEmail, type=email, required), a consent checkbox "
+        "#acknowledge that computes invisible (it has no name attribute "
+        "and is styled behind a custom control, so it is a styled "
+        "checkbox rather than a honeypot -- its label is the Terms of "
+        "Service / transactional-email consent), and a submit button "
+        "reading Continue. The page states the gate in its own words: "
+        "'Upon submission of your email address you will receive a "
+        "verification email with a link to proceed.' So the actual "
+        "removal form lives behind a one-time emailed link, the same "
+        "shape already recorded for fastpeoplesearch-com. No captcha "
+        "script or widget on the first step. UNDECIDED rather than out- "
+        "of-scope because, unlike fastpeoplesearch, nothing here has "
+        "established what is behind that link -- it may be an ordinary "
+        "form a recipe could complete once a human has clicked through. A "
+        "human with a real mailbox could settle it in one pass. Note also "
+        "the footer carries a separate 'Do Not Sell or Share my Personal "
+        "Information' link, which was not followed. Second channel: "
+        "operations@checkpeople.com."
     ),
 }
 
@@ -3694,6 +3979,70 @@ OPTOUT_BLOCKED = {
         "submission is a request STARTED. BrooksIM describes itself as a "
         "registered data broker in California and reports opt-out volume "
         "rising from 145 requests in 2023 to 68,593 in 2024."
+    ),
+    "catalist-us": (
+        "Verified by browser render 2026-09-23: the surface is genuine, "
+        "complete and DOUBLE-captcha'd. catalist.us/your-privacy-choices/ "
+        "renders Gravity Forms #gform_8 posting to itself, with a "
+        "conditional request-type select per state of residence "
+        "(input_111/105/124/122/132, each offering some subset of 'delete "
+        "and opt out of the sale', 'correct', 'access', 'limit the sale', "
+        "'appeal the denial by Catalist'), a required state select "
+        "(input_46: California, Colorado, Delaware, Indiana, Kentucky "
+        "...), self-versus-authorized-agent radios (input_44, input_128), "
+        "penalty-of-perjury declaration checkboxes (input_145.1, "
+        "input_146.1), a Company text field (input_148) and name fields "
+        "(input_62 First Name ...). It is walled twice over: an invisible "
+        "reCAPTCHA v3 (script api.js?render=..., element "
+        ".gf_invisible.ginput_recaptchav3 and the "
+        "#gfield_recaptcha_response input) AND a Cloudflare Turnstile "
+        "element (.cf-turnstile) on the same page. Neither appears in the "
+        "served HTML. Note the Gravity Forms input_NN names are per-form- "
+        "build identifiers, so even solving the challenge would leave a "
+        "recipe pinned to this exact form revision. Second channel for a "
+        "human: ggruver@catalist.us."
+    ),
+    "optoutprescreen-com": (
+        "Verified 2026-09-23: https://www.optoutprescreen.com/ returns "
+        "HTTP 403 from Akamai -- an 'Access Denied' page reading 'You "
+        "don't have permission to access http://www.optoutprescreen.com/ "
+        "on this server', with an errors.edgesuite.net reference id. "
+        "Nothing renders, so there is no form to read. Worth flagging "
+        "loudly because this is not an ordinary broker row: "
+        "OptOutPrescreen is the official FCRA prescreen opt-out service "
+        "operated jointly by the nationwide consumer reporting agencies, "
+        "and it is the ONE surface a consumer is statutorily pointed at "
+        "for firm-offer suppression. An edge wall in front of it means "
+        "this codebase cannot automate the single most standard opt-out "
+        "in the United States, and it also means a human using this tool "
+        "must be told to visit it by hand (or call 1-888-5-OPTOUT). The "
+        "wall is on the edge, not a solvable challenge -- there is no "
+        "widget offered. The dataset's opt_out_email for this row, "
+        "compliance@ciccredit.com, belongs to a different organization "
+        "than the site and should not be treated as its channel."
+    ),
+    "catalina-com": (
+        "Verified by browser render 2026-09-23: and this one is a "
+        "correction to what the marketing site suggests. www.catalina.com "
+        "itself offers only a OneTrust cookie widget ('Your Privacy "
+        "Choices' -> javascript:Optanon.ToggleInfoDisplay()), and the "
+        "dataset's opt_out_url (catalina.com/#privacy) plus the obvious "
+        "guess /privacy-policy/ both lead nowhere -- the latter 404s. The "
+        "real notice is at www.catalina.com/legal#privacy-notice, and "
+        "buried in it is a genuine do-not-sell surface: a OneTrust "
+        "webform at privacyportal.onetrust.com/webform/7665c53e-aae8- "
+        "4a03-9dd3-66fb6bce8f55/991571a9-afd5-406e-b0ac-6fbcb4980df2, "
+        "titled for Catalina Marketing and saying in its own words 'If "
+        "you wish to opt out of the sale or sharing of your personal "
+        "information, please complete the form below.' -- so for once a "
+        "consent portal IS the right request type. It is short "
+        "(#formField32DSARElement 'State you live in', #emailDSARElement, "
+        "an optional file upload, #dsar-webform-submit-button) and it is "
+        "captcha-walled: reCAPTCHA loaded explicitly "
+        "(api.js?onload=ngx_captcha_onload_callback&render=explicit) with "
+        "a live g-recaptcha-response element. Blocked, not absent. Second "
+        "channel for a human: privacyteam@catalina.com or "
+        "dpo@catalina.com."
     ),
 }
 
