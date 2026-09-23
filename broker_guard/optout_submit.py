@@ -194,6 +194,24 @@ def _select_option(page, select) -> None:
     page.select_option(select.container, label=select.option_label)
 
 
+def _pick_listbox_button(page, selector: str, value: str) -> None:
+    """Open a collapsed ``role=combobox`` BUTTON and click its matching option.
+
+    Different from ``_click_listbox_option`` (OneTrust's listbox, already
+    expanded/present in the DOM, no open click needed): this is a Wix
+    dropdown (ACHCOOP's State field) that starts collapsed
+    (``aria-expanded="false"``) and only renders its options -- into the
+    element named by the button's own ``aria-controls`` -- after being
+    clicked. Matched by exact accessible name (the option's visible text;
+    these carry no ``aria-label``), scoped to that popup so a same-named
+    option on some other widget on the page could not be clicked instead.
+    """
+    page.click(selector)
+    controls = page.get_attribute(selector, "aria-controls")
+    scope = page.locator("#{}".format(controls)) if controls else page
+    scope.get_by_role("option", name=value, exact=True).click()
+
+
 def _select_field(page, selector: str, value: str) -> None:
     """Pick an option in a real ``<select>`` by a PROFILE-derived value.
 
@@ -233,7 +251,15 @@ def apply_recipe(page, recipe, resolved: dict) -> dict:
             _click_listbox_option(page, step)
             chosen.append({"label": step.label, "value": step.option_label})
         elif isinstance(step, optout_forms.Check):
-            page.check(step.selector)
+            # force=True: several real checkboxes (ACHCOOP's Wix "Select
+            # your request" group, confirmed live 2026-09-22) are a
+            # visually-tiny native <input> with the clickable look drawn by
+            # a sibling span/label -- functionally a real checkbox, but too
+            # small/overlapped for Playwright's own actionability wait
+            # (visible + receives-pointer-events) to ever pass. force=True
+            # skips that wait and clicks it directly; for an ordinary,
+            # unobstructed checkbox (L.S Mobile's) this changes nothing.
+            page.check(step.selector, force=True)
             chosen.append({"label": step.label, "value": "checked"})
         elif isinstance(step, optout_forms.Field):
             value = resolved["values"].get(step.selector)
@@ -243,6 +269,8 @@ def apply_recipe(page, recipe, resolved: dict) -> dict:
                 _fill_combo(page, step.selector, value)
             elif step.kind == "select":
                 _select_field(page, step.selector, value)
+            elif step.kind == "listbox_button":
+                _pick_listbox_button(page, step.selector, value)
             else:
                 _fill_text(page, step.selector, value)
             filled[step.label] = value
@@ -397,6 +425,19 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
     try:
         context, page = submitter.new_page()
         page.goto(recipe.url, wait_until="domcontentloaded")
+        # Same reasoning as search_probe's _FORM_SETTLE_MS (measured there
+        # against usphonebook.com, which rewrites a raw form post before its
+        # JS binds): "domcontentloaded" is not "this page's JS has finished
+        # wiring itself up". Confirmed live against ACHCOOP's opt-out page
+        # (a Wix SPA) on 2026-09-22 -- opening its custom State dropdown
+        # immediately after domcontentloaded intermittently clicked a
+        # not-yet-hydrated version of the widget and the whole attempt came
+        # back "failed" with an empty, unfilled form in the screenshot; a
+        # short settle here fixed it every time after.
+        try:
+            page.wait_for_timeout(1500)
+        except Exception:
+            pass
 
         # Same question browser.py asks first: did we actually reach the
         # form, or an interstitial? An interstitial is a bot check too.

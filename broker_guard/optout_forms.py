@@ -91,6 +91,22 @@ FLAVOR_LSM_BESPOKE = "lsmapps_bespoke_form"
 # a ``company`` honeypot, and invisible reCAPTCHA.
 FLAVOR_ABGC_BESPOKE = "advancedbackgroundchecks_bespoke_form"
 
+# A Wix-built "DNSMPI" page (achcoop.com): Wix's own generated field ids
+# (``form-field-input-<uuid>-comp-...``), a group of request-type checkboxes,
+# and a visible captcha checkbox with no id/name at all (only a
+# ``Captcha<digits>__checkbox`` class).
+FLAVOR_WIX_DNSMPI = "wix_dnsmpi_form"
+
+# BigDBM's dedicated opt-out subdomain (optout.bigdbm.com): a plain
+# server-rendered Bootstrap form, an "All / Address only / Phone only /
+# Email only" checkbox group, a required attestation checkbox, and reCAPTCHA
+# bound directly to the submit button.
+FLAVOR_BIGDBM_BESPOKE = "bigdbm_bespoke_form"
+
+# People Data Labs' "Do Not Sell or Share" marketing-site page: just Name +
+# Email + a "State of origin" <select>, reCAPTCHA.
+FLAVOR_PDL_BESPOKE = "peopledatalabs_bespoke_form"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -125,7 +141,9 @@ class Field:
     require; ``select`` is a real ``<select>`` element chosen by the
     resolved value as the option's visible LABEL -- for a plain HTML state
     dropdown that (unlike L.S Mobile's ``Select``/``Choice`` steps, which
-    always pick a FIXED literal) has to vary with the profile.
+    always pick a FIXED literal) has to vary with the profile; ``listbox_button``
+    is a collapsed ``role=combobox`` button (ACHCOOP's State field) that must
+    be clicked open before its matching ``role=option`` exists to click.
     """
 
     selector: str
@@ -602,6 +620,187 @@ SEARCHPUBLICRECORDS = FormRecipe(
 )
 
 
+ACHCOOP = FormRecipe(
+    broker_id="achcoop-com",
+    broker_name="ACH, Address Clearing House",
+    url="https://www.achcoop.com/do-not-sell-my-personal-info",
+    flavor=FLAVOR_WIX_DNSMPI,
+    steps=(
+        Field(selector="#form-field-input-5858d39a-427c-455d-56b0-fc7bec83fd9d-comp-mhuo5c7k-",
+              source="first_name", label="First name"),
+        Field(selector="#form-field-input-201e217e-9a38-4058-d1bd-6e4d601bfc60-comp-mhuo5c7k-",
+              source="last_name", label="Last name"),
+        Field(selector="#form-field-input-3bf1bced-9e0f-4f9f-0a88-6d3a2a043ef1-comp-mhuo5c7k-",
+              source="street", label="Address 1"),
+        Field(selector="#form-field-input-57b8968e-f5e4-4f12-09e3-db9f625a7a15-comp-mhuo5c7k-",
+              source="city", label="City"),
+        # Required (marked with *) and NOT a native <select> -- a collapsed
+        # Wix combobox BUTTON whose options only render into its
+        # aria-controls target once opened. Under this codebase's actual
+        # production browser context (OptOutSubmitter's own configured
+        # Chrome/124 user agent) that target element never appears in the
+        # DOM at all after the open click, confirmed by direct DOM
+        # inspection (not a timing issue -- waited up to several seconds);
+        # it DOES appear under Playwright's own default (much newer) UA.
+        # Rather than ship a recipe that reliably times out in the exact
+        # configuration that will actually run it, this is a literal empty
+        # required value, same refuse-before-opening-a-browser reasoning as
+        # SEARCHPUBLICRECORDS's Age field -- an honest, fast "missing
+        # required field" beats a 30-second timeout into a "failed" record.
+        # Revisit if OptOutSubmitter's default UA is ever modernized.
+        Field(selector="[role='combobox'][aria-label='State']", source="literal",
+              label="State", value="", required=True),
+        Field(selector="#form-field-input-641bda48-c9a3-4499-9f8e-eea0047b582c-comp-mhuo5c7k-",
+              source="zip", label="Zip Code"),
+        # "Select your request" is a group of 7 independent checkboxes, not
+        # a listbox -- these two are the ones that add up to a full removal
+        # ("stop selling my data" + "delete me"). The other five (access,
+        # correction, ad-personalization opt-out, profiling opt-out) are
+        # different CCPA rights this tool is not asked to exercise.
+        Check(selector="#checkbox-18", label="Do Not Sell My Personal Information"),
+        Check(selector="#checkbox-21", label="Remove Me From Your Database"),
+    ),
+    # Address 2 (Apt/Unit) is explicitly optional on the page ("ONLY enter
+    # if applicable") and this tool has no unit-number field to source it
+    # from; left unfilled rather than guessed.
+    submit_selector="button:has-text('Submit')",
+    captcha_selectors=(
+        # No id/name at all -- only this class -- so the generic sweep's
+        # id/name-based captcha patterns would miss it.
+        "[class*='Captcha' i]",
+    ),
+    success_markers=("thank you", "request has been received", "we'll be in touch"),
+    notes=(
+        "Investigated live on 2026-09-22. A Wix site -- text-input "
+        "selectors are Wix's own generated ids, confirmed IDENTICAL across "
+        "separate page loads minutes apart, so treated as stable rather "
+        "than per-request-random. SURPRISE #1, caught only by reading the "
+        "dry-run screenshot rather than trusting the JSON record: the "
+        "first pass missed the required State field entirely, because it "
+        "is not an <input>/<select>/<textarea> at all -- a collapsed Wix "
+        "combobox BUTTON (role=combobox) whose options only render into "
+        "its aria-controls target once opened -- so a page-wide "
+        "input/select/textarea sweep finds nothing there. SURPRISE #2: "
+        "under Playwright's own default browser UA that target renders "
+        "fine (51 two-letter-code options), but under THIS codebase's "
+        "actual production UA (OptOutSubmitter's configured Chrome/124 "
+        "string) it never appears in the DOM at all after the open click, "
+        "confirmed by direct inspection, not merely a slow render -- so "
+        "State is deliberately a literal empty required value (self-"
+        "refuses before opening a browser), same reasoning as "
+        "SEARCHPUBLICRECORDS's Age field, rather than shipping something "
+        "that reliably times out in the one configuration that will "
+        "actually run it. The rest of the form (name/street/city/zip, the "
+        "checkbox pair, the captcha) IS dry-run-verified end to end -- see "
+        "the driver's own new listbox_button/_pick_listbox_button code, "
+        "added for this field and left in place for any future broker "
+        "whose UA-sensitivity turns out to be more forgiving. Also carries "
+        "a visible captcha widget with neither id nor name (only a "
+        "'Captcha<digits>__checkbox' class), which the generic captcha "
+        "sweep's id/name patterns would NOT have caught -- added as an "
+        "explicit captcha_selectors entry for that reason. The 'Select "
+        "your request' checkbox group visually LOOKED like only one box "
+        "took on an early screenshot despite both being recorded checked; "
+        "confirmed by reading .checked directly on both inputs after the "
+        "same two check() calls this recipe uses -- both are true, the "
+        "second box's checkmark icon simply had not repainted yet at the "
+        "instant that screenshot was captured. success_markers are a "
+        "plausible guess at a Wix form's default confirmation wording, NOT "
+        "read off a real submitted page (this recipe never reaches "
+        "Submit, now permanently, on the missing State field) -- do not "
+        "treat a run that reports 'confirmed' via this marker as gospel."
+    ),
+)
+
+BIGDBM = FormRecipe(
+    broker_id="bigdbm-com",
+    broker_name="BIGDBM",
+    url="https://optout.bigdbm.com/",
+    flavor=FLAVOR_BIGDBM_BESPOKE,
+    steps=(
+        Field(selector="#horizontal-firstname-input", source="first_name", label="First Name"),
+        Field(selector="#horizontal-lastname-input", source="last_name", label="Last Name"),
+        Field(selector="#horizontal-email-input", source="email", label="Email"),
+        Field(selector="#horizontal-phone-input", source="phone", label="Phone"),
+        Field(selector="#horizontal-address1-input", source="street", label="Address1"),
+        Field(selector="#horizontal-city-input", source="city", label="City"),
+        # This <select>'s options are bare two-letter codes ("IL", not
+        # "Illinois") -- source="state_code", not "state".
+        Field(selector="#horizontal-state-input", source="state_code", label="State", kind="select"),
+        Field(selector="#horizontal-zip-input", source="zip", label="ZipCode"),
+        # "All" (vs. Address/Phone/Email Only) -- a full opt-out, not one
+        # narrowed to a single data category.
+        Check(selector="#formCheckAll", label="All"),
+        Check(selector="#inlineFormCheck", label="I confirm this information is accurate"),
+    ),
+    # Address2 and the optional supporting-document file upload are left
+    # blank -- no source for either, and a document upload is not something
+    # this tool volunteers.
+    submit_selector="#main-submit-button",
+    captcha_selectors=(
+        # The submit button itself carries the g-recaptcha class (invisible
+        # v3/v2-invisible bound to the button), on top of the page's own
+        # #g-recaptcha-response textarea that the generic sweep already
+        # matches via .g-recaptcha.
+        "#main-submit-button.g-recaptcha",
+    ),
+    success_markers=("thank you", "request has been received", "successfully submitted"),
+    notes=(
+        "Verified against the live page on 2026-09-22 (dry run, real "
+        "browser, synthetic identity): fills correctly and stops before "
+        "Submit, screenshot confirms it. Reached this optout.bigdbm.com "
+        "subdomain only after a 429 rate-limit wall on the FIRST attempt "
+        "with a Linux Chrome UA -- retrying (this codebase's default UA) "
+        "succeeded, suggesting a velocity/UA heuristic rather than a "
+        "persistent block; worth remembering if this recipe ever starts "
+        "erroring in production. success_markers are a plausible guess, "
+        "NOT read off a real submitted page -- see the same caveat on "
+        "ACHCOOP's recipe."
+    ),
+)
+
+PEOPLEDATALABS = FormRecipe(
+    broker_id="peopledatalabs-com",
+    broker_name="People Data Labs",
+    url="https://www.peopledatalabs.com/do-not-sell-or-share",
+    flavor=FLAVOR_PDL_BESPOKE,
+    steps=(
+        Field(selector="#name", source="full_name", label="Full Name"),
+        Field(selector="#email", source="email", label="Email"),
+        # The <select> only enumerates NY/California/Oregon/Montana by name;
+        # every other US state is meant to be filed under "Other US State".
+        # This tool has no per-state mapping table, so it always answers
+        # "Other US State" rather than fabricating a match to one of the
+        # four named ones -- true for anyone not in those four states, and
+        # merely LESS PRECISE (never false) for anyone who is. See notes.
+        Select(container="#origin-location", option_label="Other US State",
+               label="State of origin"),
+    ),
+    submit_selector="#submit",
+    captcha_selectors=(
+        # Redundant with the generic sweep's own #g-recaptcha-response
+        # pattern (this page carries that textarea already) -- named
+        # explicitly anyway so this recipe is never read as "nobody
+        # checked for a bot wall here".
+        "#g-recaptcha-response",
+    ),
+    success_markers=("thank you", "request has been received", "we've received your request"),
+    notes=(
+        "Verified against the live page on 2026-09-22 (dry run, real "
+        "browser, synthetic identity): fills correctly and stops before "
+        "Submit, screenshot confirms it. The simplest form seen in this "
+        "pilot: only Full Name + Email are real Identity-sourced fields. "
+        "'State of origin' is a fixed literal ('Other US State'), not "
+        "identity-derived, for the reason in the field comment above -- "
+        "flag for a human if People Data Labs is ever the priority broker "
+        "for someone who IS in NY/California/Oregon/Montana, since a more "
+        "specific answer would be available but is not sent. "
+        "success_markers are a plausible guess, NOT read off a real "
+        "submitted page -- see the same caveat on ACHCOOP's recipe."
+    ),
+)
+
+
 RECIPES = {
     CONSUMER_CANVAS.broker_id: CONSUMER_CANVAS,
     NIELSEN.broker_id: NIELSEN,
@@ -610,6 +809,9 @@ RECIPES = {
     LS_MOBILE_APPS.broker_id: LS_MOBILE_APPS,
     ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
     SEARCHPUBLICRECORDS.broker_id: SEARCHPUBLICRECORDS,
+    ACHCOOP.broker_id: ACHCOOP,
+    BIGDBM.broker_id: BIGDBM,
+    PEOPLEDATALABS.broker_id: PEOPLEDATALABS,
 }
 
 
@@ -794,6 +996,49 @@ def state_from_addresses(addresses) -> str:
     return ""
 
 
+def state_code_from_addresses(addresses) -> str:
+    """The two-letter US state CODE implied by a profile's address, or "".
+
+    ``state_from_addresses`` returns the full name because that is what
+    most brokers' state widgets show; BigDBM's plain ``<select>`` instead
+    lists bare codes (``<option value="IL">IL</option>``, not "Illinois"),
+    so a recipe needs the code as the value handed to ``kind="select"``'s
+    label match. Reuses ``state_from_addresses``'s parsing rather than
+    duplicating it, then looks the code back up from the name.
+    """
+    name = state_from_addresses(addresses)
+    if not name:
+        return ""
+    for code, full in US_STATES.items():
+        if full == name:
+            return code
+    return ""
+
+
+def _state_token_index(tokens: list) -> int:
+    """Index in *tokens* of the one that names a US state, or -1.
+
+    Shared anchor logic for ``city_from_addresses`` and
+    ``street_only_from_addresses``: both need to know WHICH comma-separated
+    token is the state (accepting a trailing zip glued onto it, e.g.
+    ``"IL 62704"``) so the tokens on either side of it can be read off as
+    city / street.
+    """
+    by_name = {name.lower(): name for name in US_STATES.values()}
+    for idx in range(len(tokens) - 1, -1, -1):
+        token = tokens[idx]
+        code = token.upper()
+        is_state = code in US_STATES or token.lower() in by_name
+        if not is_state:
+            with_zip = re.match(r"^(.*?)\s+\d{5}(?:-\d{4})?$", token)
+            if with_zip:
+                head = with_zip.group(1).strip()
+                is_state = head.upper() in US_STATES or head.lower() in by_name
+        if is_state:
+            return idx
+    return -1
+
+
 def city_from_addresses(addresses) -> str:
     """The city named in a profile's address lines, or "".
 
@@ -806,22 +1051,37 @@ def city_from_addresses(addresses) -> str:
     under the person's name, and a missing-field refusal is the safe
     direction.
     """
-    by_name = {name.lower(): name for name in US_STATES.values()}
     for line in reversed(list(addresses or [])):
         if not isinstance(line, str):
             continue
         tokens = [t.strip() for t in line.split(",") if t.strip()]
-        for idx in range(len(tokens) - 1, -1, -1):
-            token = tokens[idx]
-            code = token.upper()
-            is_state = code in US_STATES or token.lower() in by_name
-            if not is_state:
-                with_zip = re.match(r"^(.*?)\s+\d{5}(?:-\d{4})?$", token)
-                if with_zip:
-                    head = with_zip.group(1).strip()
-                    is_state = head.upper() in US_STATES or head.lower() in by_name
-            if is_state and idx > 0:
-                return tokens[idx - 1]
+        idx = _state_token_index(tokens)
+        if idx > 0:
+            return tokens[idx - 1]
+    return ""
+
+
+def street_only_from_addresses(addresses) -> str:
+    """Just the street-address token(s) of a profile's address, or "".
+
+    Unlike ``street_from_addresses`` (deliberately the WHOLE line, for a
+    single free-text Address box such as Credit.com's), this is for a form
+    that gives the street its OWN input separate from City/State/Zip ones
+    (BigDBM's Address1, ACHCOOP's Address 1) -- handing that box the whole
+    ``"123 Main St, Springfield, IL 62704"`` line would duplicate the city
+    and state into a field meant to hold neither. Returns everything before
+    the recognized city+state pair, joined back with ", " (so a street that
+    itself contains a comma, e.g. a suite line, survives); "" when no state
+    token anchors the split, same refuse-rather-than-guess reasoning as
+    ``city_from_addresses``.
+    """
+    for line in reversed(list(addresses or [])):
+        if not isinstance(line, str):
+            continue
+        tokens = [t.strip() for t in line.split(",") if t.strip()]
+        idx = _state_token_index(tokens)
+        if idx > 1:
+            return ", ".join(tokens[:idx - 1])
     return ""
 
 
@@ -911,6 +1171,8 @@ def resolve_fields(recipe: FormRecipe, identity) -> dict:
             text = zip_from_addresses(getattr(identity, "addresses", None))
         elif f.source == "address":
             text = street_from_addresses(getattr(identity, "addresses", None))
+        elif f.source == "street":
+            text = street_only_from_addresses(getattr(identity, "addresses", None))
         elif f.source == "city":
             text = city_from_addresses(getattr(identity, "addresses", None))
         elif f.source == "phone":
@@ -924,6 +1186,8 @@ def resolve_fields(recipe: FormRecipe, identity) -> dict:
             text = emails[0].strip() if emails else ""
         elif f.source == "state":
             text = state_from_addresses(getattr(identity, "addresses", None))
+        elif f.source == "state_code":
+            text = state_code_from_addresses(getattr(identity, "addresses", None))
         elif f.source == "country":
             text = DEFAULT_COUNTRY
         else:
