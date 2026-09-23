@@ -374,6 +374,23 @@ def test_a_walled_opt_out_form_is_not_filed_as_a_missing_one():
     assert "cyberbackgroundchecks-com" in optout_forms.OPTOUT_BLOCKED
 
 
+def test_an_undecided_opt_out_is_not_rounded_down_to_a_decided_one():
+    """"We don't know yet" must stay sayable.
+
+    Without somewhere to put it, the pressure at the end of a batch is to
+    round every unfinished question down to the nearest decided-looking
+    bucket -- and a broker filed as blocked or surfaceless stops being
+    revisited. So an entry here must be in NONE of the three decided maps,
+    and must still be unsubmittable, which absence from RECIPES enforces.
+    """
+    for broker_id, reason in optout_forms.OPTOUT_UNDECIDED.items():
+        assert not optout_forms.is_supported(broker_id)
+        assert broker_id not in optout_forms.NO_OPTOUT_SURFACE
+        assert broker_id not in optout_forms.OPTOUT_BLOCKED
+        assert broker_id not in optout_forms.OPTOUT_OUT_OF_SCOPE
+        assert len(reason) > 80
+
+
 def test_out_of_scope_opt_outs_are_kept_apart_from_the_other_two_nos():
     """A third kind of no, and the one most likely to be mistaken for laziness.
 

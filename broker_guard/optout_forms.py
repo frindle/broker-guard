@@ -1199,6 +1199,38 @@ NO_OPTOUT_SURFACE = {
 }
 
 
+# Opt-out legs with NO verdict yet, and the reason there is none.
+#
+# The opt-out twin of ``search_forms.SEARCH_UNDECIDED``, and it exists for
+# the same reason: an honest "we do not know" has to be writable, or the
+# pressure at the end of a batch is to round every open question down to the
+# nearest decided-looking bucket. Nothing here is a finding about the broker;
+# each entry is a finding about the ATTEMPT, and says what would have to be
+# true to finish it.
+#
+# Notes, not behaviour: nothing reads this at runtime.
+OPTOUT_UNDECIDED = {
+    "infotracer-com": (
+        "No verdict as of 2026-09-23, and deliberately not guessed. "
+        "infotracer.com/optout/ answers HTTP 200 with the body 'Sorry this "
+        "page was requested too many times. If you feel this is an error, "
+        "please go back and reach out to support.' -- while the same "
+        "domain's homepage and its whole search flow serve normally in the "
+        "same session, so this is a per-path throttle rather than a wall "
+        "or an outage. It is most likely self-inflicted (this batch drove "
+        "the search leg hard), and it did not clear over several hours or "
+        "for any User-Agent, so it is an IP-scoped cooldown. The right "
+        "next step is a single cold visit on another day, NOT more "
+        "attempts today: the page is almost certainly a normal opt-out "
+        "form, and recording it as blocked would both be a claim I cannot "
+        "support and quietly teach the next reader that InfoPay walls its "
+        "removal pages, which the three sibling sites with shipped "
+        "recipes (courtrecords.us, staterecords.org, recordsfinder.com) "
+        "show it does not."
+    ),
+}
+
+
 # A DIFFERENT finding from NO_OPTOUT_SURFACE, kept separate on purpose.
 #
 # These brokers DO host a real, self-service opt-out form. We simply cannot
