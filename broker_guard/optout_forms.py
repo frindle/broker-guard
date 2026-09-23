@@ -1335,6 +1335,26 @@ OPTOUT_BLOCKED = {
 #
 # Notes, not behaviour: nothing reads this at runtime.
 OPTOUT_OUT_OF_SCOPE = {
+    "spokeo-com": (
+        "Verified 2026-09-23. spokeo.com/optout is a real, reachable, "
+        "unwalled page with a two-field form (POST to /optout; an "
+        "<input type=url name=url placeholder='Enter URL here'> and an "
+        "<input type=email name=email>) and no captcha of any kind -- and "
+        "it still cannot be a FormRecipe, because the URL it wants is the "
+        "URL of ONE listing. The page states the constraint itself: 'you "
+        "may have multiple listings on Spokeo. Each one is identified by a "
+        "unique URL and must be opted out individually', and its worked "
+        "example is 'https://www.spokeo.com/Smith-Sample/Houston/TX/"
+        "p12345678'. So a submission has to be preceded by a search and by "
+        "picking which of the 16,204 people named Michael Thompson is the "
+        "right one -- the per-RESULT shape this bucket exists for, and "
+        "exactly the judgement call that risks asking a broker to delete a "
+        "stranger. Nothing was submitted. Its SEARCH leg is a shipped, "
+        "working recipe; see search_forms.SPOKEO. Second channel for a "
+        "human: the page also offers privacy@spokeo.com and a link to "
+        "spokeo.com/privacy/control/all-categories, and it warns that a "
+        "confirmation email must be clicked before a request takes effect."
+    ),
     "peoplewhiz-com": (
         "Verified 2026-09-23. /remove-my-info is a search box, not a form: "
         "its own instructions say to search your name, select your record, "

@@ -579,8 +579,62 @@ REVEALPHONEOWNER = SearchRecipe(
     ),
 )
 
+SPOKEO = SearchRecipe(
+    broker_id="spokeo-com",
+    broker_name="Spokeo",
+    search_url="https://www.spokeo.com/",
+    fields=(
+        # One box, whole name. The homepage offers Name/Email/Phone/Address
+        # tabs; the default (Name) tab's form is the one addressed here, by
+        # its id, because the page carries a SECOND, visually identical name
+        # form further down whose input is named "name-search".
+        SearchField(selector="#homepage_hero_form input[name='q']",
+                    source="full_name", label="Name"),
+    ),
+    submit_selector="#homepage_hero_form button[type='submit']",
+    results_host="spokeo.com",
+    no_results_markers=(
+        "did not match any results",
+        "results not found for",
+    ),
+    hit_markers=("people named",),
+    # "16,204 people named Michael Thompson found in California, Texas and
+    # 49 other states." A one-hit page says "person named", hence the
+    # alternation.
+    count_pattern=r"([\d,]+)\s+(?:people|person)\s+named",
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. Submitting the hero form "
+        "navigates the SAME tab to https://www.spokeo.com/<First>-<Last> on "
+        "the broker's own host -- no interstitial, no new tab. The miss page "
+        "is titled 'Results Not Found for Zylphrenna Quixbottom - Spokeo' "
+        "and reads 'Your search - Zylphrenna Quixbottom - did not match any "
+        "results.'; the hit page is titled 'Michael Thompson (16,204 "
+        "matches): ...' and prints '16,204 people named Michael Thompson "
+        "found in California, Texas and 49 other states.' over real listing "
+        "rows (name, age, city of residence, relatives, aliases), so the "
+        "identity terms are genuinely on the page rather than only echoed. "
+        "Rule (1) applies here too -- the MISS page also repeats the "
+        "searched name, in its heading and its title -- so the no-results "
+        "markers must be, and are, consulted first.\n"
+        "\n"
+        "Two live observations about driving it, neither of which changes "
+        "the recipe but both of which cost time: an Osano consent banner "
+        "renders over the hero area and steals focus from a raw coordinate "
+        "click (a page.fill is unaffected), and a few seconds AFTER the "
+        "miss page renders the site opens an affiliate pop-up tab at "
+        "beenverified.com/lp/...?fn=Zylphrenna&ln=Quixbottom. That pop-up "
+        "is why results_host is load-bearing on this broker as well as on "
+        "ThatsThem: a driver reading 'whichever page is in hand' could end "
+        "up reading BeenVerified's landing page as Spokeo's answer. The "
+        "optional narrowing controls on the results page (First/Middle/"
+        "Last/Age/State filters) are not touched."
+    ),
+)
+
 RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
+    SPOKEO.broker_id: SPOKEO,
     SEARCHPEOPLEFREE.broker_id: SEARCHPEOPLEFREE,
     USPHONEBOOK.broker_id: USPHONEBOOK,
     ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
