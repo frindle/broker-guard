@@ -1,0 +1,1009 @@
+# Broker Mapping Checklist
+
+Resume state for the broker-by-broker search/opt-out mapping workstream --
+cross-references `data/source-brokers.json` (the canonical 969-broker dataset)
+against `broker_guard/search_forms.py`'s `RECIPES`/`NO_SEARCH_SURFACE`/`SEARCH_UNDECIDED`
+and `broker_guard/optout_forms.py`'s `RECIPES`/`NO_OPTOUT_SURFACE`/`OPTOUT_UNDECIDED`.
+
+**A broker is "mapped" once BOTH legs (search, opt-out) are categorized into one of
+the three terminal states below -- not just recipe.** `no-surface` and `undecided` are
+legitimate resolutions, not TODOs.
+
+- `recipe` -- concrete automatable recipe exists in `RECIPES`
+- `no-surface` -- confirmed no honest search/opt-out surface exists (dead end, documented)
+- `undecided` -- surface exists but not yet resolved to a recipe or a no-surface call
+- `UNMAPPED` -- not yet looked at for this leg at all
+
+**Regenerate this file** after mapping more brokers: `python3 gen_broker_checklist.py`
+(script lives in this repo's tooling; ask if missing -- it's a ~70-line cross-reference
+of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
+
+## Progress
+
+- Total brokers: **969**
+- Fully mapped (both legs): **35** / 969
+- Search leg mapped: 57 / 969
+- Opt-out leg mapped: 39 / 969
+
+## How to resume
+
+1. Pick any `[ ]` row below (not yet fully mapped).
+2. Research that broker's domain: does it have a people-search surface? An opt-out form/email?
+3. Add a `RECIPES` entry (if automatable), or add it to the matching `NO_*_SURFACE` dict
+   (if genuinely no surface exists, with a one-line reason), in `search_forms.py` /
+   `optout_forms.py` -- keyed by the broker's id shown in parens below.
+4. If you can't fully resolve a leg this session, add it to `*_UNDECIDED` with what you
+   found so far, so the next agent doesn't repeat the research.
+5. Re-run the generator to flip this checklist's row to `[x]`.
+
+## Brokers
+
+- [ ] **01Advertising Inc.** (`termly-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **01Advertising Inc.** (`01advertising-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **180 By Two, LLC** (`180bytwo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **192.com** (`192-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **33 MILE RADIUS LLC** (`remodeling-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **33 Mile Radius LLC** (`33mileradius-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **33ACROSS Inc** (`33across-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **411.com** (`411-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **4C Insights Inc.** (`mediaocean-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **4Eyes.Ai, Inc.** (`4-eyes-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **4Legalleads** (`4legalleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **5X5 US, LLC** (`5x5data-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **6SENSE INSIGHTS Inc** (`6sense-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **A DIRECT MARKETING Inc** (`bookyourdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Above Data, Inc.** (`abovedata-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ACCUDATA INTEGRATED Marketing, Inc.** (`accudata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Accurate Append Inc.** (`accurateappend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ACE Agents Inc.** (`degree-me`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ACRONYMIX LLC** (`acronymix-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Activimpact, LLC** (`activimpact-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Acuant, Inc.** (`idology-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ACUTRAQ Background Screening, Inc.** (`acutraq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Acxiom** (`acxiom-com`) -- search: undecided, opt-out: undecided
+- [ ] **Adadapted Inc.** (`adadapted-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AdDefend GmbH** (`addefend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Additional Options (Paid and Free)** (`easyoptouts-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Additional Resources** (`epic-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Address Clearing House** (`achcoop-com`) -- search: no-surface, opt-out: recipe
+- [x] **Addresses.com** (`addresses-com`) -- search: no-surface, opt-out: no-surface
+- [ ] **AdElement Vast, LLC** (`adelement-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Adept Id, Inc.** (`adept-id-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Adform A/S** (`adform-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Adikteev** (`adikteev-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Adrea Rubin Marketing, Inc.** (`adrearubin-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Adsquare GmbH** (`adsquare-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Adstra** (`adstradata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **AdvancedBackgroundChecks** (`advancedbackgroundchecks-com`) -- search: recipe, opt-out: recipe
+- [ ] **Advantage Credit, Inc.** (`advcredit-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Advantage Sales & Marketing LLC** (`take5mg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Advisortarget, LLC** (`smartsheet-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AdvisorTarget, LLC** (`finsum-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AFFINITY ANSWERS CORPORATION** (`affinityanswers-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Affinity Solutions** (`affinity-solutions`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AGR Marketing Solutions LLC** (`agrmarketingsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Aidentified, Inc.** (`aidentified-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Airlines Reporting Corporation** (`arccorp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AIS Portfolio Services LLC** (`aisinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Alabama Court Records (CourtRecords.us network)** (`alabamacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Alaska Court Records (CourtRecords.us network)** (`alaskacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Alesco Data** (`mydataprivacy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Alikeaudience, Inc.** (`alikeaudience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **All Global Resources, LLC** (`agrgroupinc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **All Good Media LLC** (`attribits-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **All Web Leads, Inc** (`allwebleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Allant Group, LLC** (`allantgroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Alliant Cooperative Data Solutions LLC** (`alliantinsight-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AllPeople** (`allpeople-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Alphonso Inc.** (`alphonso-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Altair Data Resources, Inc.** (`altairdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Altisource Holdings, LLC** (`altisource-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Altrata, Inc.** (`altrata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **American City Business Journals, Inc.** (`acbj-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AMERICAN SPIRIT DATA SOLUTIONS LLC** (`aspire-north-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Amerilist Inc** (`amerilist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Amplemarket** (`amplemarket-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AnalyticsIQ** (`analytics-iq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ancestry.com** (`ancestry-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Anchor Computer** (`anchorcomputer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Andrews Wharton, Inc.** (`stirista-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Andrews Wharton, Inc.** (`andrewswharton-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Anexinet Corp.** (`verinext-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Anne Lewis Strategies, LLC** (`networkadvertising-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Anne Lewis Strategies, LLC** (`missionwired-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Anteriad, LLC** (`anteriad-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Apihub, Inc.** (`hubspot-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **APOLLO INTERACTIVE LLC** (`apollointeractive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Apollo.io (Zenleads Inc.)** (`apollo-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Appscience** (`appsci-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AppScience** (`appscience-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Archives.com** (`archives-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ARISTOTLE INTERNATIONAL Inc** (`aristotle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Arity 875, LLC** (`arity-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Arizona Court Records (CourtRecords.us network)** (`arizonacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Arkansas Court Records (CourtRecords.us network)** (`arkansascourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Arkeero (Rock Internet, S.L.)** (`arkeero-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Arrakis Technologies Corp.** (`arrakis-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **ArrestFacts** (`arrestfacts-com`) -- search: no-surface, opt-out: no-surface
+- [x] **ArrestWarrant.org** (`arrestwarrant-org`) -- search: undecided, opt-out: no-surface
+- [ ] **ASL Marketing (Deep Sync)** (`aslmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Asset International, Inc.** (`issgovernance-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Assurance Iq, Inc.** (`assurance-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Astoria Company Marketing LLC** (`astoriacompany-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AtData, LLC** (`atdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Atlantic Fox Technologies, Inc.** (`atlanticfox-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ATTOM Data Solutions LLC** (`attomdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Audience Acuity LLC** (`audienceacuity-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AudiencePoint Inc.** (`audiencepoint-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Audiencerate Ltd** (`audiencerate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Automotive Mastermind** (`automotivemastermind-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AutoWeb, Inc.** (`autoweb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AWL Holdings, LLC** (`awl-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AZ Direct GmbH** (`az-direct-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Azerion US Inc.** (`hybridtheory-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Azira** (`azira-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **AZIRA LLC** (`trustarc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **B.I Science (2009) Ltd** (`biscience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Background Information Services, Inc.** (`bisi-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **BackgroundCheckers** (`backgroundcheckers-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **BB Direct, Inc** (`bbdirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Bdex, LLC** (`bdex-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **BDO USA, LLP** (`bdo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **BeenVerified** (`beenverified-com`) -- search: undecided, opt-out: UNMAPPED
+- [ ] **Beeswax** (`bidr-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Beeswax** (`beeswax-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Belardi Ostroy** (`belardiwong-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Best Pick Reports, LLC** (`bestpickreports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Big Brook Media, LLC (d/b/a Little Brook Media)** (`littlebrookmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Biointelli Corporation** (`biointelli-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Birchwood Credit Services Inc** (`birchwoodcreditservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Biscred** (`biscred-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Black Pearl Group Limited** (`blackpearl-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Blackbaud, Inc** (`blackbaud-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Blis USA, Inc.** (`blis-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Bliss Point Media, Inc.** (`blisspointmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **BlockShopper** (`blockshopper-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Blue Action** (`datasubject-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Blue Hill Marketing Solutions, Inc.** (`liftbasedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **bolttech (Boltech)** (`bolttech-io`) -- search: UNMAPPED, opt-out: recipe
+- [ ] **Bombora, Inc** (`bombora-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Bridg, a division of Cardlytics, Inc.** (`bridg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Bridge** (`thebridgecorp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Bridgevine Inc.** (`bridgevine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Brigthswipe Inc** (`brightswipe-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Brooks Integrated Marketing, LLC** (`brooksim-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Buildertrend Solutions, Inc.** (`buildertrend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Buró de Crédito (Trans Union de México S.A. S.I.C.)** (`burodecredito-com-mx`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Business.Com** (`business-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Buxton Company, LLC** (`buxtonco-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Buyerlink Inc.** (`buyerlink-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Buyerlink Inc.** (`buyerlink-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **BV Insights LLC** (`big-village-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ca** (`ca-gov`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cadent, LLC** (`cadent-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cadent, LLC** (`cadent-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **California Court Records (CourtRecords.us network)** (`californiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Captify Technologies** (`verve-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Captify Technologies** (`captifytechnologies-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Car Market Solutions LLC** (`carmarketsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CARCO Group, Inc.** (`cisive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CARDLYTICS Inc** (`cardlytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Careerbuilder, LLC** (`careerbuilder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Carry Technologies, Inc** (`hightouch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Catalina Marketing Corporation** (`catalina-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Catalist LLC** (`catalist-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Catalog Choice** (`catalogchoice-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Catalyze Ai, Inc** (`catalyzeai-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CDK Global, LLC** (`cdkglobal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cengage Learning, Inc.** (`cengagegroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Censia, Inc.** (`censia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Centeda** (`centeda-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Centrix Group Limited** (`centrix-co-nz`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Checkpeople, LLC** (`checkpeople-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Checkr** (`checkr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **ChexSystems** (`chexsystems-com`) -- search: no-surface, opt-out: no-surface
+- [ ] **CHOREOGRAPH LLC** (`choreograph-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CIAL Dun & Bradstreet** (`cialdnb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CIC Mortgage Credit, Inc** (`optoutprescreen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CITYDATA Inc.** (`citydata-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Civil Data Research, LLC** (`searchpublicrecords-com`) -- search: recipe, opt-out: recipe
+- [ ] **Civis Analytics, Inc** (`civisanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Civitech** (`civitech-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Claritas LLC.** (`claritas-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Classmates.com** (`classmates-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Clay Labs, Inc.** (`clay-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ClearCompany, LLC** (`clearcompany-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Clearview Ai, Inc.** (`clearview-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Clickagy LLC** (`clickagy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Clustal** (`clustal-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Clustrmaps** (`clustrmaps-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CO2 Ventures, LLC** (`oncoreleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **CocoFinder** (`cocofinder-com`) -- search: no-surface, opt-out: no-surface
+- [ ] **Cognism** (`cognism-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cognism Inc.** (`saymine-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Collateral Analytics, LLC** (`ice-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Collective Data Solutions, LLC** (`collectivedata-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Colorado Court Records (CourtRecords.us network)** (`coloradocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Command Precision Inc.** (`intentwave-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Command Precision, Inc.** (`persistent-id`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **COMMERCIAL REAL ESTATE EXCHANGE Inc** (`bigidprivacy-cloud`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Commercial Real Estate Exchange, Inc.** (`crexi-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Compact Information Systems, LLC** (`deepsync-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Complementics** (`complementics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Complete Mailing Lists** (`completemailinglists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **COMPLETE MEDICAL LISTS Inc** (`completemedicallists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Comscore, Inc.** (`comscore-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Connect Computer LLC** (`calltruth-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Connected Investors LLC** (`service-now-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Connected Investors, LLC** (`connectedinvestors-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Connecticut Court Records (CourtRecords.us network)** (`connecticutcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Connext Digital, LLC** (`connextdigital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Consider, Inc.** (`consider-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Consolidated Information Services Solutions LLC** (`universalcis-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CONSUMER CANVAS LLC** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Contactout** (`contactout-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CONTEMPORARY INFORMATION CORP.** (`cicreports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Contentgine Inc.** (`contentgine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Converge Direct, LLC.** (`convergemarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CONVEX LABS LLC** (`convex-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CoreLogic** (`corelogic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cortera, Inc.** (`cortera-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Costar Group** (`costar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CourtCaseFinder.com** (`courtcasefinder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CourtRec.com** (`courtrec-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **CourtRecords.us** (`courtrecords-us`) -- search: undecided, opt-out: recipe
+- [ ] **Crawlbee Corp** (`crawlbee-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Credit Bureau Of Council Bluffs, Inc** (`creditinfosystems-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Credit.com** (`credit-com`) -- search: UNMAPPED, opt-out: recipe
+- [ ] **Creditreform** (`creditreform-de`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Creditsafe** (`creditsafe-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CRIF S.p.A.** (`crif-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Crimson Hexagon** (`brandwatch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CRISIL Irevna US LLC** (`crisil-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Criteo SA** (`criteo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cross Pixel Media, Inc.** (`crsspxl-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Crunchbase Inc** (`crunchbase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CTAM Leadshare Corp.** (`smartmove-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cuebiq Group, LLC** (`cuebiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cybba Inc.** (`cybba-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Cyber Background Checks** (`cyberbackgroundchecks-com`) -- search: recipe, opt-out: UNMAPPED
+- [ ] **Cyndx Networks LLC** (`cyndx-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Círculo de Crédito S.A. de C.V. S.I.C.** (`circulodecredito-com-mx`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Data Axle, Inc.** (`data-axle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Data Axle, Inc.** (`dataaxle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Data Decisions Group, LLC** (`datadecisionsgroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Data Facts, Inc.** (`datafacts-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Data Marketing Solutions, Inc.** (`businesswatchnetwork-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DATA PARTNERS Inc** (`datapartners-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DataCrédito Experian Colombia** (`com-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Datadelivers LLC** (`datadelivers-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Datadojo CDP Inc.** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Datafy LLC** (`datafy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DATALINE Inc** (`datalinedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DATAMENTORS LLC** (`porchgroupmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DATANYZE LLC** (`datanyze-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dataskip** (`dataskip-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DATASYS GROUP Inc** (`datasys-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Date Detective Inc** (`date-detective-app`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Datonics, LLC** (`datonics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **David Rickenbacher** (`datamasters-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DealerDirect LLC** (`forddirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DealerSocket, LLC** (`dealersocket-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dealerx Partners LLC** (`dealerx-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Decide Technologies Inc.** (`decide-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DECISIONLINKS LLC** (`decisionlinks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Deep Root Analytics, LLC** (`deeprootanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Deeptrace Inc.** (`coresignal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dehashed** (`dehashed-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Delaware Court Records (CourtRecords.us network)** (`delawarecourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Delivr.Ai Inc** (`delivr-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Delivr.ai Inc** (`pii-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Deloitte Consulting LLP** (`deloitte-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Deluxe Corporation** (`deluxe-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Demand Science Group, LLC** (`demandscience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Demandbase** (`demandbase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Demyst Data, Ltd** (`demystdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Demyst Data, Ltd** (`demyst-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Deutsche Post Direkt GmbH** (`deutschepost-de`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Diablo Media** (`diablomedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dice Career Solutions, Inc.** (`dice-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Digital Advertising Alliance WebChoices (AboutAds)** (`optout-aboutads-info`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Digital Media Solutions, LLC** (`dmsunsub-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Digital Safety Products, LLC** (`spyfly-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DIGITAL SEGMENT LLC** (`digitalsegment-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DIGITAL VIKING MEDIA Inc** (`digitalvikingmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DIRECT MARKETING SOLUTIONS Inc** (`teamdms-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Disco Technology Inc.** (`disconetwork-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Disqus, Inc.** (`disqus-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Distribution Processing Center LLC** (`dpcoptout-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DMAchoice (Data & Marketing Association)** (`dmachoice-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Do Not Call Registry** (`donotcall-gov`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DomainTools** (`domaintools-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dresdendirect** (`dresdendirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Driveniq Corporation** (`driveniq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Drobu Media LLC** (`drobu-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dspolitical, LLC** (`winwithoptimal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dstillery, Inc** (`dstillery-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DT Client Services, LLC** (`thedatatrust-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DTN LLC** (`dtn-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dun & Bradstreet (EU, incl. former Bisnode entities)** (`dnb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **DUN & BRADSTREET Inc** (`netwisedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dun & Bradstreet, Inc.** (`trustarc-eu`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Dynata, LLC** (`dynata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **e.Republic, LLC** (`erepublic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **EAB Global, Inc.** (`box-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Early Warning Services, LLC** (`earlywarning-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ECONOMIC MODELING LLC** (`lightcast-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Edvisors Network, Inc.** (`edvisors-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Effyis, Inc.** (`socialgist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Effyis, Inc.** (`socialgist-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Efunds Corporation** (`worldpay-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ekata, Inc. (Mastercard)** (`mastercard-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **EL Toro.Com, LLC** (`eltoro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Electronic Commerce A To Z** (`electroniccommerceatoz-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ELECTRONIC VOICE SERVICES Inc** (`evs7-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Electronic Voice Services, Inc. (TelephoneLists.biz)** (`telephonelists-biz`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Email Marketing Services, Inc** (`listmatch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Emailmovers Ltd** (`emailmovers-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **EMERGES.COM INCORPORATED** (`emerges-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Endgame Labs, Inc** (`endgame-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Enformion LLC** (`enformion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ENIGMA TECHNOLOGIES Inc** (`enigma-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Eprodirect** (`eprodirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Epsilon Data Management** (`epsilon-com`) -- search: no-surface, opt-out: undecided
+- [ ] **Equativ (formerly Smart AdServer)** (`equativ-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Equifax Marketing Services** (`equifax-com`) -- search: no-surface, opt-out: UNMAPPED
+- [ ] **Equimine** (`propstream-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Erepublic LLC** (`force-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **eTarget s.r.o.** (`etarget-sk`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Evorra Ltd** (`evorra-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **EXACT OPCO LLC** (`exactcustomer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Exact Opco, LLC** (`remodelyourhome-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Experian Data Corp** (`clarityservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Experian Marketing Services** (`experian-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **EXPLORIUM Inc** (`explorium-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Exponential Interactive, Inc.** (`vdx-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Eyeota Pte Ltd** (`eyeota-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **FaceCheck.ID** (`facecheck-id`) -- search: no-surface, opt-out: no-surface
+- [ ] **Factori Technologies LLC** (`factori-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Fair Screen, Inc.** (`fairscreen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **FamilySearch** (`familysearch-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **FamilyTreeNow** (`familytreenow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Famous Birthdays, LLC** (`famousbirthdays-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Faraday, Inc.** (`faraday-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Faraday, Inc.** (`faraday-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **FastBackgroundCheck** (`fastbackgroundcheck-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **FastPeopleSearch** (`fastpeoplesearch-com`) -- search: recipe, opt-out: UNMAPPED
+- [ ] **Fideo Intelligence, Inc.** (`fideo-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Fifty Technology Ltd** (`fifty-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Findem, Inc.** (`findem-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **FinThrive Healthcare, Inc.** (`finthrive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **First Advantage** (`fadv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **First American Data Tree LLC** (`firstam-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **First Direct, Inc** (`firstdirectmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **First Movers Advantage, LLC** (`fmadata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **First Orion, Inc.** (`firstorion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Florida Court Records (CourtRecords.us network)** (`floridacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Focus USA, Inc.** (`focus-usa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **FOO MONK LLC** (`instantly-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Forager.Ai, LLC** (`forager-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **FOREWARN LLC** (`forewarn-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Fourleaf LLC** (`fourleafdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Foursquare Labs, Inc.** (`foursquare-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Fourthwall Media, Inc.** (`fourthwall-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Fraiser, LLC** (`fraiser-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **FreeBackgroundCheck.org** (`freebackgroundcheck-org`) -- search: undecided, opt-out: no-surface
+- [ ] **Freemium Data Services, LLC** (`reachdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **FreePeopleDirectory** (`freepeopledirectory-com`) -- search: UNMAPPED, opt-out: no-surface
+- [ ] **Freepeoplesearch.Com, LLC** (`freepeoplesearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Freewheel Media Inc** (`freewheel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Fullcontact, Inc.** (`fullcontact-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Fused Leads, LLC** (`fusedleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Fushia Media, LLC.** (`fushiamedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **G2 Bankruptcy Risk Solutions, Inc.** (`g2risksolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **General Information Solutions LLC** (`backgroundchecks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **General Motors LLC** (`gm-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Genius Sports Group** (`geniussports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Georgia Court Records (CourtRecords.us network)** (`georgiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **GETEMAILS LLC** (`retention-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **GetVector, Inc.** (`vector-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Giant Partners** (`giantpartners-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Glad I Know, Inc.** (`gladiknow-com`) -- search: no-surface, opt-out: UNMAPPED
+- [x] **Golookup** (`golookup-com`) -- search: no-surface, opt-out: no-surface
+- [ ] **Good Boy Studios, Inc** (`parade-pet`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **GoodHire** (`goodhire-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **GovernmentRegistry** (`governmentregistry-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Granite Lists, LLC** (`granitelists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Grassroots Analytics** (`grassrootsanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Grata Inc** (`grata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Gravy Analytics** (`gravyanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Grayhair Software LLC** (`grayhairsoftware-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Graze Social PBC** (`graze-social`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **GREAT LAKES LIST Inc** (`greatlakeslists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Grin Technologies Inc.** (`grin-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Growbots Inc** (`forms-gle`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Growbots Inc.** (`growbots-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Growing Libraries, LLC** (`growinglibraries-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **GUIDESTAR DIRECT CORP** (`carneydirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Gumgum, Inc.** (`gumgum-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Gunderson Direct** (`gundir-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **H1 Insights Inc.** (`h1-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Haines & Company** (`haines-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Harmon Research Group, LLC** (`harmonresearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Harte Hanks** (`hartehanks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Hawaii Court Records (CourtRecords.us network)** (`hawaiicourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Health Is Wealth Marketing LLC** (`pickmedicare-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Healthcare, Inc.** (`healthcare-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Healthlink Dimensions, LLC** (`healthlinkdimensions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Healthwise Data, LLC** (`healthwisedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **HEARTBEAT.AI Inc** (`heartbeat-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Helix Campaigns LLC** (`helixcampaigns-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **HERE North America LLC** (`here-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Hexasoft Development Sdn. Bhd.** (`ip2location-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **HireRight** (`hireright-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **HIRETEAMMATE Inc** (`hireez-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Hivestack Inc.** (`perion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Hivestack, Inc.** (`hivestack-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Home Contractors Review, LLC** (`fivestarrated-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **HomeData (a DeepSync brand)** (`homedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Homeowners Marketing Services Inc** (`homeownersmarketingservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Hunt Club Inc** (`exploreatlas-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Hunter Web Services Inc** (`hunter-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **i360, LLC** (`i-360-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ID5 Technology** (`id5-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Idaho Court Records (CourtRecords.us network)** (`idahocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **IDCrawl** (`idcrawl-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Idengine LLC** (`idengine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **IDG Communications Inc.** (`foundryco-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **IDStrong** (`idstrong-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **IHS Markit** (`spglobal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ileads.Com, LLC** (`ileads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Illinois Court Records (CourtRecords.us network)** (`illinoiscourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Illumin Inc.** (`acuityads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Imprint Analytics LLC** (`imprintanalytics-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Inbound Insight, LLC** (`inboundinsight-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Incheck Inc** (`inchecksolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Indiana Court Records (CourtRecords.us network)** (`indianacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Indiemark LLC** (`emailindustries-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Indiemark LLC** (`blackbox-email`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Infinite Knot Inc.** (`contacts411-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Infinite Media Concepts Inc** (`mlxp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Infinite Media Concepts Inc** (`mailinglists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Inflection Risk Solutions, LLC** (`inflection-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Info** (`info`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Infocore Inc.** (`infocore-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Infofree.Com LLC** (`privacycompliance-biz`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **INFOMATICS LLC** (`privatereports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **INFOPAY Inc** (`infopay-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Informa USA Inc.** (`informa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Information Data Resources, LLC** (`publicinfoservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Information.Com, LLC** (`information-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Infotracer** (`infotracer-com`) -- search: undecided, opt-out: undecided
+- [ ] **Infutor Data Solutions LLC** (`infutor-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Inmar-OIQ, LLC** (`inmar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **InMarket Media, LLC** (`inmarket-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **InmatesSearcher** (`inmatessearcher-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Inmobi** (`trufactor-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Innovative Database Solutions, Inc.** (`idatabasesolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Innovis Data Solutions, Inc.** (`innovis-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **InsideView, Inc.** (`zoominfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Instant Checkmate** (`instantcheckmate-com`) -- search: undecided, opt-out: undecided
+- [ ] **Insurance Marketing Hub LLC** (`insurancemarketinghub-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Intalytics, Inc.** (`esiteanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Intalytics, Inc.** (`kalibrate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Integrated Direct Marketing, LLC (IDM)** (`idm-us-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Integrated Medical Data, LLC.** (`integratedmedicaldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Intelius** (`intelius-com`) -- search: undecided, opt-out: UNMAPPED
+- [ ] **Intellicorp Records, Inc.** (`intellicorp-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Intent IQ LLC** (`intentiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Intentgine Inc.** (`intentgine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Intentmacro Inc.** (`intentmacro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **INTENTSIFY LLC** (`intentsify-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **INTERACTIVE DATA LLC** (`ididata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Iowa Court Records (CourtRecords.us network)** (`iowacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **IQ Data Systems, Inc.** (`backgroundsonline-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **IQVIA Digital Inc.** (`iqvia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Irys** (`irys-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ispot.Tv** (`ispot-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ivy Tech Re, LLC** (`getivydata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Iwave Information Systems** (`kindsight-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **JD Power, a Corporation of Delaware** (`jdpower-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **JDM List Services, LLC** (`jdmlistservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Jigyasa Analytics LLC** (`jigyasaanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **JMR Media Consulting, Inc.** (`jmr-media-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Judyrecords** (`judyrecords-com`) -- search: recipe, opt-out: no-surface
+- [ ] **Jun Group Productions, LLC** (`jungroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Jverify, Inc.** (`jverify-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Kansas Court Records (CourtRecords.us network)** (`kansascourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Kargo Global LLC** (`kargo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Kaspr** (`kaspr-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **KB Synergy Inc** (`kbsynergy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **KBM GROUP LLC** (`kbmg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Kentucky Court Records (CourtRecords.us network)** (`kentuckycourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Key Marketing Advantage, LLC** (`keymarketingadvantage-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Key Marketing Advantage, LLC** (`keymarketingcorp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Keyword Connects LLC** (`keywordconnects-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Klarifi** (`klarifi-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **KLOUDEND Inc** (`ipapi-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Knower Tech Usa, LLC** (`knowertech-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Knower Tech USA, LLC** (`rbarrel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Knowwho** (`knowwho-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **KOCHAVA Inc.** (`kochava-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Koddi Inc.** (`koddi-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Kols (Key Opinion Leaders)** (`keyopinionleaders-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Komodo Health, Inc.** (`komodohealth-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Kontext Data** (`kontextdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Kyber Health Data LLC** (`forian-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **L.S Mobile Apps Holdings Ltd** (`lsmapps-com`) -- search: UNMAPPED, opt-out: recipe
+- [ ] **LABELS & LISTS Inc** (`l2political-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Labels & Lists, Inc** (`l2-data-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **LB Digital Data (LBDigital)** (`lbdigitaldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **LEAD ME MEDIA LLC** (`leadmemedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lead411 Corporation** (`lead411-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Leadcrunch** (`getrev-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Leadership Connect** (`leadershipconnect-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **LEADIQ Inc** (`leadiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Leadloft Inc.** (`leadloft-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Leadpost, LLC** (`leadpost-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Leadsmarket.Com LLC** (`leadsmarket-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Leadspace, Inc.** (`leadspace-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Leidos Digital Solutions, Inc.** (`leidosiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lender Feed LLC** (`monitorbase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **LET IT RIDE SPORTS LLC** (`outlastdfs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **LexisNexis Risk Solutions** (`lexisnexis-com`) -- search: no-surface, opt-out: UNMAPPED
+- [ ] **Lifesight LLC** (`lifesight-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lightbox Parent, L.P.** (`lightboxre-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lighthouse List Company** (`lighthouselist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Limeleads** (`limeleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lionshare Marketing, Inc.** (`lionsharemarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **List Service Direct Inc.** (`listservicedirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Listings, Information, Systems And Tabulation Services, Inc** (`lists-inc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ListKit LLC** (`listkit-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Listsonline** (`listsonline-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Live Data Technologies Inc.** (`livedatatechnologies-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **LiveIntent** (`liveintent-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **LiveRamp** (`liveramp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lizdev, Inc** (`lizdev-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lob.com, Inc.** (`lob-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Localblox** (`localblox-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Locatesmarter, LLC** (`locatesmarter-com`) -- search: no-surface, opt-out: UNMAPPED
+- [ ] **Logiq, Inc** (`logiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lookify** (`lookify-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **LOOPME LTD** (`loopme-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lotadata, Inc.** (`lotadata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lotame Solutions, Inc.** (`lotame-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Louisiana Court Records (CourtRecords.us network)** (`louisianacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lucid Holdings, LLC** (`luc-id`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Lusha Systems, Inc.** (`lusha-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **M&R Strategic Services** (`mrss-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **M1 Data & Analytics, LLC** (`m1-data-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Machintel Inc.** (`machintel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Madhive, Inc.** (`madhive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Madison Logic, Inc.** (`madisonlogic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MAGNITE Inc** (`magnite-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Maine Court Records (CourtRecords.us network)** (`mainecourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Malvern Media Inc.** (`privacypillar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Marinus Analytics** (`marinusanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Market Force Corporation** (`marketforcecorp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Marketops LLC** (`marketops-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Marriott International, Inc.** (`marriott-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Martin Data LLC** (`usinfosearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Maryland Court Records (CourtRecords.us network)** (`marylandcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Massachusetts Court Records (CourtRecords.us network)** (`massachusettscourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Matchandappend.Com LLC** (`matchandappend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MATCHBOOK DATA LLC** (`matchbookdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MAXMIND Inc** (`maxmind-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MCH Inc** (`mchdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Media Direct, Inc.** (`digdevdirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Media Resource Group LLC** (`mrginc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Media Source Solutions** (`mediasourcesolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Media.Net Advertising Fz, LLC** (`media-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mediamath, Inc.** (`mediamath-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mediasoft, LLC** (`mediasoftstudio-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MEDIAWALLAH Inc** (`mediawallah-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mediazod LLC** (`leadzod-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Medpro Systems** (`medprosystems-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MELISSA DATA CORPORATION** (`melissa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Meltwater News US Inc** (`meltwater-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Men Stopping Violence** (`menstoppingviolence-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Merkle Inc.** (`merkleinc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Merkle Inc.** (`merkle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MESSAGE DIGITAL LLC** (`messagedigital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Metropol Credit Reference Bureau Limited** (`co-ke`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MH Sub I, LLC** (`internetbrands-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Michigan Court Records (CourtRecords.us network)** (`michigancourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MicroBilt** (`microbilt-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mightyrep** (`mightyrep-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Milestone Marketing Solutions** (`milestonemarketingsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MINERVA BI Inc** (`minerva-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Minnesota Court Records (CourtRecords.us network)** (`minnesotacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mississippi Court Records (CourtRecords.us network)** (`mississippicourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Missouri Court Records (CourtRecords.us network)** (`missouricourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mobile Technology Corporation** (`onspotdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mobilewalla, Inc.** (`mobilewalla-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Modernize, Inc.** (`securiti-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Modfx Labs Private Limited** (`modfxlabs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mogean, Inc.** (`mogean-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Monevo, Inc.** (`monevo-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Monocl** (`definitivehc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Montana Court Records (CourtRecords.us network)** (`montanacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Moody's Corporation** (`moodys-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MovingLeads (First Movers Advantage, LLC)** (`movingleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MugshotLook** (`mugshotlook-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Mugshots.com** (`mugshots-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MULTIMEDIA LISTS, INC.** (`multimedialists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MyHeritage** (`myheritage-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **MyLife** (`mylife-com`) -- search: recipe, opt-out: UNMAPPED
+- [ ] **Names and Facts** (`namesandfacts-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Narvar, Inc.** (`narvar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **National Consumer Telecom & Utilities Exchange, Inc.** (`nctue-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **National Data Analytics, LLC** (`publicdatacheck-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **National Opinion Institute, LLC** (`nationalopinioninstitute-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **National Public Data** (`nationalpublicdata-com`) -- search: recipe, opt-out: UNMAPPED
+- [ ] **NATIONAL STUDENT CLEARINGHOUSE** (`studentclearinghouse-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nativo, Inc.** (`nativo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **NC VENTURES LLC** (`ncsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **NCR Corporation** (`ncr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nebraska Court Records (CourtRecords.us network)** (`nebraskacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Neighbor Report** (`neighbor-report`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **NeighborWho** (`neighborwho-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **NeuStar, Inc.** (`home-neustar`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nevada Court Records (CourtRecords.us network)** (`nevadacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **New England List Services** (`nelists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **New Gold Ventures LLC** (`thinkdatagroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **New Hampshire Court Records (CourtRecords.us network)** (`newhampshirecourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **New Jersey Court Records (CourtRecords.us network)** (`newjerseycourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **New Mexico Court Records (CourtRecords.us network)** (`newmexicocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **New York Court Records (CourtRecords.us network)** (`newyorkcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nexsales Solutions Inc.** (`nexsales-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Next Wave Marketing Strategies, Inc** (`agedleadstore-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **NextRoll, Inc** (`nextroll-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nextroll, Inc.** (`relyance-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nexxen Inc.** (`nexxen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nfocus Consulting Inc** (`n-focus-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Nielsen** (`onetrust-com`) -- search: no-surface, opt-out: recipe
+- [ ] **North American Media LLC** (`namericanmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **North Carolina Court Records (CourtRecords.us network)** (`northcarolinacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **North Dakota Court Records (CourtRecords.us network)** (`northdakotacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nosis Laboratorio de Investigación y Desarrollo S.A.** (`nosis-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **NOVA List Company, LLC** (`novalist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Numberville** (`numberville-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nuwber** (`nuwber-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Nymblr, Inc.** (`nymblr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **OfficialUSA** (`officialusa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ohio Court Records (CourtRecords.us network)** (`ohiocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **OKCaller** (`okcaller-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Oklahoma Court Records (CourtRecords.us network)** (`oklahomacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **On Hold-America, Inc.** (`kycdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Onaudience Ltd** (`onaudience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Online Advertising Network Sp. z o.o.** (`oan-pl`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ONLINE MEDIA GROUP Inc.** (`omginc-xyz`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **OnPoint Data Strategy** (`onpointdatastrategy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Open Dealer Exchange, LLC** (`700credit-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **OpenDataUSA** (`opendatausa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Opensend Inc** (`opensend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Openx Technologies, Inc.** (`openx-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Optimal Fusion** (`optimalfusion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Oracle Data Cloud (BlueKai)** (`oracle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Oregon Court Records (CourtRecords.us network)** (`oregoncourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Orgio, Inc.** (`theorg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ORIGIN8 Inc** (`pushint-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Outbrain Inc.** (`outbrain-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **OUTLOGIC LLC** (`outlogic-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Outward Media, Inc.** (`outwardmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Owneriq, Inc.** (`owneriq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ownerly** (`ownerly-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Pacific East Research Inc** (`pacificeast-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PaeDae, Inc.** (`infillion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PARAMOUNT LISTS Inc** (`paramountdirectmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Parasol Media Inc.** (`parasolleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Partners Credit And Verification Solutions** (`partnerscredit-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PATHWAY VENTURES LLC** (`protectdataprivacy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Peekyou LLC** (`peekyou-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Pennsylvania Court Records (CourtRecords.us network)** (`pennsylvaniacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Pension Benefit Information, LLC** (`pbinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **People Data Labs, Inc.** (`peopledatalabs-com`) -- search: no-surface, opt-out: recipe
+- [ ] **PeopleByName** (`peoplebyname-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Peopleconnect, Inc.** (`peopleconnect-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PeopleFinder.com** (`peoplefinder-com`) -- search: no-surface, opt-out: no-surface
+- [ ] **PeopleFinders** (`peoplefinders-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Peoplefindersdaas** (`peoplefindersdaas-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PeopleLooker** (`peoplelooker-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PeopleSearch123** (`peoplesearch123-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PeopleSearchNow** (`peoplesearchnow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PeopleSearchUSA** (`peoplesearchusa-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PeopleSmart** (`peoplesmart-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Peoplewhiz** (`peoplewhiz-com`) -- search: undecided, opt-out: UNMAPPED
+- [ ] **PeopleWin** (`peoplewin-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Perf Labs, Inc.** (`interseller-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Permutive, Inc** (`permutive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PersonSearchers** (`personsearchers-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PhoneNumbers.org** (`phonenumbers-org`) -- search: undecided, opt-out: no-surface
+- [ ] **PimEyes** (`pimeyes-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Pipl** (`pipl-com`) -- search: no-surface, opt-out: recipe
+- [ ] **Pitchbook Data, Inc.** (`pitchbook-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Place Exchange, Inc.** (`placeexchange-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PLACEIQ Inc** (`precisely-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Placer.ai** (`placer-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Plexuss, Inc.** (`plexuss-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Pludo Inc.** (`cashmereai-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Plunge, LLC** (`hsforms-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Plunge, LLC** (`plungedigital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Plural Marketing Solutions Inc.** (`plmrkg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PMG Worldwide, LLC** (`pmg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Pop Acta Media, LLC** (`popacta-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Possiblenow Data Services** (`possiblenow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Postie** (`postie-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **POSTPILOT Inc** (`postpilot-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Predactiv** (`predactiv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PREDICTIVE POP Inc** (`audigent-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Preferred Communications** (`preferredcommunications-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Preqin Ltd** (`preqin-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PRIVATE RECORDS LLC** (`privaterecords-net`) -- search: undecided, opt-out: UNMAPPED
+- [ ] **PrivateEye** (`privateeye-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PrivateNumberChecker** (`privatenumberchecker-com`) -- search: recipe, opt-out: UNMAPPED
+- [ ] **Privco Media LLC** (`privco-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ProdPro Inc** (`prodpro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Project Affinity, Inc** (`affinity-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Project Applecart LLC** (`applecart-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Property Reach LP** (`propertyreach-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PropertyChecker** (`propertychecker-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PropertyRadar, Inc.** (`propertyradar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PropertyRecord.com** (`propertyrecord-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PropertyRecs** (`propertyrecs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PropertyShark** (`propertyshark-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Prospector Database, LLC** (`prospectordatabase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Proxima Platform** (`proximaplatform-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PublicDataUSA** (`publicdatausa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PUBLICNSA LLC** (`bigdbm-com`) -- search: no-surface, opt-out: recipe
+- [ ] **PublicRecords.info** (`publicrecords-info`) -- search: undecided, opt-out: UNMAPPED
+- [ ] **PublicRecords.us** (`publicrecords-us`) -- search: undecided, opt-out: UNMAPPED
+- [x] **PublicRecords360** (`publicrecords360-com`) -- search: no-surface, opt-out: no-surface
+- [x] **PublicRecordsNow** (`publicrecordsnow-com`) -- search: no-surface, opt-out: no-surface
+- [ ] **PublicSearcher** (`publicsearcher-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PUBMATIC Inc** (`pubmatic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Pulsepoint, Inc.** (`pulsepoint-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PureCars** (`purecars-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **PwC Product Sales LLC** (`pwc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Quad/Graphics, Inc.** (`quad-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Quadrant Global Pte. Ltd.** (`quadrant-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Qualfon** (`qualfon-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Quantcast** (`quantcast-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Qurium Solutions, Inc.** (`supplier-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Radaris** (`radaris-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rampedup, LLC.** (`rampedup-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rategain Adara, Inc.** (`adara-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Ray Cdp, Inc.** (`rayinsights-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Reach Marketing LLC** (`reachmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **REAL INTENT Inc.** (`realintent-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Realeflow LLC** (`realeflow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Reality Media, Inc.** (`realitydebtsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Realsource, Inc** (`realsourcedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **RecordsFinder** (`recordsfinder-com`) -- search: undecided, opt-out: recipe
+- [ ] **Recruitbot, Inc.** (`recruitbot-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Recsolu Inc.** (`yello-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Redbird Direct LLC** (`redbirddirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Redi-Data Inc.** (`redidata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Redmob Limited Liability Company** (`redmob-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Refinitiv US LLC** (`refinitiv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Regis24** (`regis24-de`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Regulatory Datacorp, Inc.** (`alchemer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rehold** (`rehold-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **REKLAIM LTD** (`reklaimyours-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Relpro, Inc.** (`relpro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rent Risk LLC** (`rentrisk-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Resonate** (`resonate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **RESONATE Networks, Inc.** (`reson8-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Results Only Consulting And Advertising** (`rocadvertising-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Reunion.com** (`reunion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Revcontent** (`revcontent-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Reveal Mobile Inc** (`revealmobile-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Reveal Phone Owner** (`revealphoneowner-com`) -- search: recipe, opt-out: recipe
+- [ ] **Revelio Labs, Inc.** (`reveliolabs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Revoptimal, LLC** (`revoptimal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rhetorik Limited** (`rhetorik-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rhode Island Court Records (CourtRecords.us network)** (`rhodeislandcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rich Media LLC** (`richmediallc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Riv Data Corp.** (`carpe-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rocketreach, LLC** (`rocketreach-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ROOFTOP DIGITAL LLC** (`consumerdataprotect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Rooftop Digital, LLC** (`rooftopdigital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Roq.Ad Inc.** (`roq-ad`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Round Sky, Inc.** (`roundsky-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **RP On-Site LLC** (`realpage-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **RPM Data Solutions LLC** (`exlservice-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **RTB House S.A.** (`rtbhouse-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Runtime Collective LLC** (`cision-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sabio, Inc.** (`sabio-inc`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sabio, Inc.** (`sabioctv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Safegraph Inc.** (`safegraph-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Saferent Solutions, LLC** (`saferentsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Saha Ventures LLC** (`findtrueowner-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Saleseer, Inc.** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Salesintel Research Inc.** (`salesintel-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SALUTARY DATA LLC** (`salutarydata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Samba TV, Inc.** (`samba-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sawyer Lists, LLC** (`sawyerlists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sbfe, LLC** (`sbfe-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Scalable Commerce, LLC** (`kidslivesafe-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Scanbuy, Inc** (`scanbuy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SCHUFA Holding AG** (`schufa-de`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Scileads Ltd** (`scileads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Scraping Robot, LLC** (`scrapingrobot-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Scryer, Inc.** (`reonomy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SealedRecords** (`sealedrecords-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Seamless Contacts, Inc.** (`seamless-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Search America LLC** (`locateplus-com`) -- search: no-surface, opt-out: no-surface
+- [ ] **Searchbug** (`searchbug-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **SearchPeopleFree** (`searchpeoplefree-com`) -- search: recipe, opt-out: undecided
+- [ ] **SearchQuarry** (`searchquarry-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **SearchUSAPeople** (`searchusapeople-com`) -- search: no-surface, opt-out: no-surface
+- [ ] **SecretInfo** (`secretinfo-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Semasio, Inc.** (`semasio-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Semcasting.com** (`semcasting-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SentiLink Corp** (`sentilink-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Service 1St Information Solutions LLC** (`srv1st-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SG360** (`sg360-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Share Local Media, Inc** (`sharelocalmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sharethrough Inc.** (`sharethrough-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SHEERID Inc** (`sheerid-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Shopalyst Technologies** (`shopalyst-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SignalHire** (`signalhire-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Similarweb Ltd.** (`similarweb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SIMIO CLOUD LLC** (`simiocloud-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Site Impact** (`siteimpact-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Skipmasher, Inc.** (`skipsmasher-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Skyhook Holding, Inc.** (`skyhook-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Slashdot Media, LLC** (`slashdotmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SMA Communications, LLC.** (`smacomm-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SmartBackgroundChecks** (`smartbackgroundchecks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Smartclip** (`smartclip-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SNOVIO Inc** (`snov-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SOCIAL CATFISH LLC** (`socialcatfish-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Source Path Digital** (`sourcepathdigital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sourceit Technologies, Inc** (`sourceitmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sourcescrub LLC** (`sourcescrub-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **South Carolina Court Records (CourtRecords.us network)** (`southcarolinacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **South Dakota Court Records (CourtRecords.us network)** (`southdakotacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sovrn, Inc.** (`sovrn-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Specialists Marketing Services, Inc.** (`sms-inc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Spectrum Mailing Lists** (`spectrummailinglists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **SPEEDEON DATA LLC** (`speedeondata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Spokeo** (`spokeo-com`) -- search: recipe, opt-out: UNMAPPED
+- [ ] **Spy Dialer, Inc.** (`spydialer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Spycloud, Inc.** (`spycloud-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **STACKADAPT Inc** (`stackadapt-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Staircase, Inc.** (`staircase-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Start.Io Inc.** (`start-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Statara Solutions LLC** (`statara-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **StateRecords.org** (`staterecords-org`) -- search: undecided, opt-out: recipe
+- [ ] **Statsocial, Inc.** (`statsocial-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Stefan Certic** (`flashintel-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **STEP2SUCCESS Marketing** (`step2successmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **STEPPINGBLOCKS Inc** (`steppingblocks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sterling** (`sterlingcheck-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **STERLING DATA COMPANY LLC** (`sterling-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Strata Company** (`gostrata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Strategic Data Intelligence** (`strategicdataintelligence-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Strategic Information Resources** (`strategicinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Structure** (`structure-ac`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Summit Resources, LLC** (`clientcommand-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Swarm Holdings, Inc.** (`theswarm-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Swoop.Com, Inc.** (`swoop-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Swordfish AI Inc.** (`swordfish-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Sync.me** (`sync-me`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **T-MOBILE USA Inc** (`t-mobile-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TABOOLA Inc** (`taboola-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Tandem Marketing, LLC** (`fhamortgagefinder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Tapad** (`tapad-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TARGETSMART COMMUNICATIONS LLC** (`targetsmart-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TASK GENIE Inc** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Teads** (`teads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TECHTARGET Inc** (`zendesk-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TechTarget, Inc.** (`informatechtarget-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Telefi LLC** (`telefi-app`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Telesign Corporation** (`telesign-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Tennessee Court Records (CourtRecords.us network)** (`tennesseecourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Terminus Software, Inc.** (`terminusplatform-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Texas Court Records (CourtRecords.us network)** (`texascourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **ThatsThem** (`thatsthem-com`) -- search: recipe, opt-out: recipe
+- [ ] **THE ALESCO GROUP LLC** (`alescodata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **The Data Group** (`thedatagroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **The Nielsen Company** (`nielsen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **The Open Data People, Inc.** (`openpeoplesearch-com`) -- search: no-surface, opt-out: UNMAPPED
+- [ ] **The People Searchers LLC** (`peoplesearcher-com`) -- search: undecided, opt-out: UNMAPPED
+- [ ] **The Work Number (Equifax)** (`theworknumber-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **THROTLE Inc** (`throtle-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Tinuiti, Inc.** (`tinuiti-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Tiplinks Inc** (`fetcher-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TL1MKT SL SL** (`tl1mkt-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Towerdata** (`towerdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Traackr, Inc.** (`traackr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Tracers Information Specialists, Inc.** (`tracersinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TransUnion Marketing** (`transunion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Trestle Solutions Inc.** (`trestleiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Triplelift, Inc.** (`triplelift-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **True Blue Analytics** (`trueblueanalytics-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **True Opulence Corporation** (`trueopulence-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Truedata Solutions, Inc.** (`truedata-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **TruePeopleSearch** (`truepeoplesearch-com`) -- search: recipe, opt-out: undecided
+- [ ] **TruePeopleSearch.net** (`truepeoplesearch-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TRUTH NOW LLC** (`checksecrets-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TruthFinder** (`truthfinder-com`) -- search: undecided, opt-out: UNMAPPED
+- [ ] **TruthRecord** (`truthrecord-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Tunnl, LLC** (`tunnldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Twine Data, Inc** (`twinedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Tymax Media** (`tymaxmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **uFind.Name** (`ufind-name`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Unacast, Inc.** (`unacast-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Unearth Campaigns LLC** (`unearthcampaigns-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Unite 4Heritage** (`unite4heritage-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **United One Resources, Inc.** (`unitedone-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **United States Phone Book** (`unitedstatesphonebook-com`) -- search: recipe, opt-out: undecided
+- [ ] **Unity Technologies SF** (`unity-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Unmask, LLC** (`unmask-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Upcell, LLC** (`upcell-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Uplead** (`uplead-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **UPS Capital Corporation** (`upscapital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **US DATA CORPORATION** (`usdatacorporation-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **US Marketing Group** (`usmarketinggrp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **US Records** (`usrecords-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **US Search** (`ussearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Usa Official** (`usa-official-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **USA People Search** (`usa-people-search-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Usadata, Inc.** (`usadata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Uspeoplesearch.Com, LLC** (`uspeoplesearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **USPhonebook** (`usphonebook-com`) -- search: recipe, opt-out: undecided
+- [ ] **USWarrants** (`uswarrants-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Utah Court Records (CourtRecords.us network)** (`utahcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Valassis Communications, Inc. (an RRD company)** (`rrd-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Valpak** (`valpak-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Veeva Systems Inc.** (`veeva-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Vendelux** (`vendelux-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Venntel, Inc.** (`venntel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **VENPATH Inc** (`venpath-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **VentiveIQ LLC** (`ventiveiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Veraset LLC** (`veraset-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Verecor** (`verecor-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **VerifyRecords.com** (`verifyrecords-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Veripages** (`veripages-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Verisk Marketing Solutions** (`verisk-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Vermont Court Records (CourtRecords.us network)** (`vermontcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Versium Analytics, Inc** (`versium-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Vertify, Inc** (`vertify-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Viant Technology LLC** (`viantinc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Videoamp, Inc.** (`videoamp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Virginia Court Records (CourtRecords.us network)** (`virginiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Virtual Marketing LLC** (`fusion92-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Visitiq.Io** (`visitiq-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Vistar Media, Inc.** (`vistarmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **VISUAL VISITOR LLC** (`visualvisitor-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **VoterRecords** (`voterrecords-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **VRTCAL Markets Inc** (`vrtcal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Warmly, Inc** (`warmly-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Washington Court Records (CourtRecords.us network)** (`washingtoncourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **WE INFORM LLC** (`weinform-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **WealthEngine, Inc.** (`wealthengine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Wealthfeed, Inc.** (`wealthfeed-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Webbula, LLC** (`webbula-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **West Publishing Corporation** (`thomsonreuters-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **West Virginia Court Records (CourtRecords.us network)** (`westvirginiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Whitepages** (`whitepages-com`) -- search: recipe, opt-out: UNMAPPED
+- [ ] **Wholesale Mail** (`domymail-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Whoodle, LLC** (`whoodle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Wiland Inc** (`wiland-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Windfall Data, Inc.** (`windfall-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **WINR Data B.V.** (`winrdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Wisconsin Court Records (CourtRecords.us network)** (`wisconsincourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Wisdom Media Group LLC** (`wisdommediagroupllc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Wiza, Inc.** (`wiza-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Wunderkind Corporation** (`wunderkind-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Wyoming Court Records (CourtRecords.us network)** (`wyomingcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Xactus, LLC** (`xactus-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Xad, Inc.** (`groundtruth-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Xcelerated Data LLC** (`xcelerated-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Xome Leads LLC** (`xome-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Yobi Ventures, LLC** (`yobi-ventures`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Zeta Global Corp.** (`zetaglobal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Zipstorm LLC** (`seekout-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **ZS ASSOCIATES Inc** (`zs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
