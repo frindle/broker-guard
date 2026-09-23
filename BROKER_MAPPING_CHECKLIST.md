@@ -25,9 +25,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **136** / 969
-- Search leg mapped: 138 / 969
-- Opt-out leg mapped: 140 / 969
+- Fully mapped (both legs): **148** / 969
+- Search leg mapped: 150 / 969
+- Opt-out leg mapped: 152 / 969
 
 ## How to resume
 
@@ -124,20 +124,20 @@ of those dicts against source-brokers.json).
 - [x] **Archives.com** (`archives-com`) -- search: undecided, opt-out: undecided
 - [x] **ARISTOTLE INTERNATIONAL Inc** (`aristotle-com`) -- search: undecided, opt-out: undecided
 - [x] **Arity 875, LLC** (`arity-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Arizona Court Records (CourtRecords.us network)** (`arizonacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Arkansas Court Records (CourtRecords.us network)** (`arkansascourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Arkeero (Rock Internet, S.L.)** (`arkeero-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Arrakis Technologies Corp.** (`arrakis-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Arizona Court Records (CourtRecords.us network)** (`arizonacourtrecords-us`) -- search: undecided, opt-out: undecided
+- [x] **Arkansas Court Records (CourtRecords.us network)** (`arkansascourtrecords-us`) -- search: undecided, opt-out: undecided
+- [x] **Arkeero (Rock Internet, S.L.)** (`arkeero-com`) -- search: no-surface, opt-out: undecided
+- [x] **Arrakis Technologies Corp.** (`arrakis-ai`) -- search: undecided, opt-out: undecided
 - [x] **ArrestFacts** (`arrestfacts-com`) -- search: no-surface, opt-out: no-surface
 - [x] **ArrestWarrant.org** (`arrestwarrant-org`) -- search: undecided, opt-out: no-surface
-- [ ] **ASL Marketing (Deep Sync)** (`aslmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Asset International, Inc.** (`issgovernance-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Assurance Iq, Inc.** (`assurance-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Astoria Company Marketing LLC** (`astoriacompany-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AtData, LLC** (`atdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Atlantic Fox Technologies, Inc.** (`atlanticfox-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ATTOM Data Solutions LLC** (`attomdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Audience Acuity LLC** (`audienceacuity-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **ASL Marketing (Deep Sync)** (`aslmarketing-com`) -- search: no-surface, opt-out: undecided
+- [x] **Asset International, Inc.** (`issgovernance-com`) -- search: undecided, opt-out: undecided
+- [x] **Assurance Iq, Inc.** (`assurance-com`) -- search: undecided, opt-out: undecided
+- [x] **Astoria Company Marketing LLC** (`astoriacompany-com`) -- search: no-surface, opt-out: undecided
+- [x] **AtData, LLC** (`atdata-com`) -- search: no-surface, opt-out: undecided
+- [x] **Atlantic Fox Technologies, Inc.** (`atlanticfox-com`) -- search: no-surface, opt-out: no-surface
+- [x] **ATTOM Data Solutions LLC** (`attomdata-com`) -- search: no-surface, opt-out: undecided
+- [x] **Audience Acuity LLC** (`audienceacuity-com`) -- search: no-surface, opt-out: undecided
 - [ ] **AudiencePoint Inc.** (`audiencepoint-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Audiencerate Ltd** (`audiencerate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Automotive Mastermind** (`automotivemastermind-com`) -- search: UNMAPPED, opt-out: UNMAPPED

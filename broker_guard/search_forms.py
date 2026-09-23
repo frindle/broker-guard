@@ -1620,6 +1620,79 @@ NO_SEARCH_SURFACE = {
         "or lookup form of any kind. What it holds is keyed to driving "
         "and devices, not to a name box."
     ),
+    "aslmarketing-com": (
+        "Verified 2026-09-23, and the domain has moved: "
+        "www.aslmarketing.com 301-redirects to deepsync.com/asl-marketing "
+        "-- ASL Marketing having been absorbed into Deep Sync, the same "
+        "parent as the accudata-com row. Worth recording that the "
+        "redirect TARGET itself now answers 404, so the old brand has no "
+        "live page at all. Deep Sync's own site sells identity resolution "
+        "to brands, agencies and platforms with no public person lookup "
+        "(verified on the accudata-com row), so there is no search "
+        "surface on either end of this redirect."
+    ),
+    "atlanticfox-com": (
+        "Atlantic Fox Technologies builds enterprise identity-resolution "
+        "and data infrastructure -- its own product names are Quanta "
+        "Pattern (identity resolution) and Qbits Pattern (a self-service "
+        "query interface for its CUSTOMERS), sold with the pitch "
+        "'infrastructure you actually control'. Verified 2026-09-23: "
+        "www.atlanticfox.com carries no public-facing lookup; the only "
+        "form on it is a business contact form, and the query interface "
+        "it sells is something a customer runs on their own data, not a "
+        "public box."
+    ),
+    "attomdata-com": (
+        "ATTOM sells property data and intelligence -- 160M+ US "
+        "properties, with characteristics, foreclosure records, mortgage "
+        "data, ownership and neighbourhood detail -- delivered by API, "
+        "bulk licensing and cloud to real-estate, mortgage, insurance and "
+        "financial buyers. Verified 2026-09-23: www.attomdata.com carries "
+        "no search bar or name input of any kind. Note that PROPERTY data "
+        "keyed to an address is still personal data about its owner, "
+        "which is why the opt-out leg matters here even though the search "
+        "leg is empty."
+    ),
+    "audienceacuity-com": (
+        "Audience Acuity sells deterministic identity infrastructure -- "
+        "identity resolution, data enrichment, customer profiling, "
+        "audience activation and measurement, through products it names "
+        "Realink (an API), Identity Authority (a Snowflake application), "
+        "Onsight (on-premise) and syndicated segments. Verified "
+        "2026-09-23: www.audienceacuity.com carries no person-lookup "
+        "input; its whole pitch is that customers resolve identity "
+        "without moving their data, which is the opposite of a public "
+        "box."
+    ),
+    "astoriacompany-com": (
+        "Astoria Company runs lead generation, pay-per-call, marketplace "
+        "and SaaS businesses -- it matches and routes consumer inquiries "
+        "to lenders, insurers, attorneys and contractors, buys and sells "
+        "inquiry and call data between commercial partners, and sells "
+        "PingPost.Exchange for managing that flow. Verified 2026-09-23: "
+        "astoriacompany.com's homepage carries no search or lookup field "
+        "of any kind; its calls to action are 'Buy Leads' and 'Sell "
+        "Leads', which is the whole business."
+    ),
+    "atdata-com": (
+        "AtData sells email-address intelligence: validation "
+        "(SafeToSend), email/postal identity matching and append, "
+        "consumer enrichment, fraud scoring, and data licensing including "
+        "what it calls its Email Identity File. Verified 2026-09-23: "
+        "www.atdata.com carries no public person-lookup input -- "
+        "everything it offers runs against a customer's own list through "
+        "an API. Its key is an email address rather than a name, which "
+        "also shapes its opt-out form."
+    ),
+    "arkeero-com": (
+        "Arkeero (Rock Internet, S.L., a Spanish company) sells an "
+        "omnichannel advertising platform -- it builds audiences from "
+        "what it calls 100% declarative data and activates them in "
+        "campaigns for advertisers and publishers. Verified 2026-09-23: "
+        "arkeero.com carries no person-lookup input; the only interactive "
+        "element on the page is a first-party cookie notice with an "
+        "Accept button."
+    ),
 }
 
 
@@ -2268,6 +2341,66 @@ SEARCH_UNDECIDED = {
         "surface, but a voter-file company is exactly the kind that "
         "sometimes exposes a registration lookup, so the guess is not "
         "safe. Next pass needs a fetcher Aristotle will serve."
+    ),
+    "arizonacourtrecords-us": (
+        "Third site of the CourtRecords.us network in this dataset, same "
+        "template and same open question as alabamacourtrecords-us and "
+        "alaskacourtrecords-us. Verified 2026-09-23: "
+        "arizonacourtrecords.us serves a person-search form with fields "
+        "labelled First Name, Last Name and City, states that "
+        "'CourtRecords.us is not a consumer reporting agency' and "
+        "operates 'as a private entity independent of any state "
+        "government agency', and -- the decisive sentence -- says 'a "
+        "search of any records will only be conducted and made available "
+        "after you register for an account or purchase a report', with "
+        "only 'a preliminary people search' performed before that. So the "
+        "surface is real, and whether a free response can answer presence "
+        "at all is exactly what has not been established. Resolve the "
+        "network template once; four rows here fall together."
+    ),
+    "arkansascourtrecords-us": (
+        "Fourth CourtRecords.us row; see arizonacourtrecords-us for the "
+        "transcribed template, which this site shares. It is recorded as "
+        "undecided on the same grounds -- a real First Name / Last Name / "
+        "City lookup whose results are gated behind registration or "
+        "purchase, with no element names captured. Honest caveat for the "
+        "next pass: this specific domain's HOMEPAGE was not individually "
+        "rendered this session (its /optout page was), so the template is "
+        "inferred from three verified siblings rather than observed here. "
+        "Whoever cracks the network should spot-check it."
+    ),
+    "arrakis-ai": (
+        "NO VERDICT as of 2026-09-23, and the reason is transport. Both "
+        "www.arrakis.ai and www.arrakis.ai/optout fail with a TLS "
+        "internal error (TLSV1_ALERT_INTERNAL_ERROR) -- the handshake is "
+        "refused before any HTTP happens, so no page of this broker was "
+        "rendered on either leg and nothing can be said about a search "
+        "surface. Same class as the adrearubin-com entry. Next pass: a "
+        "client that negotiates this host's TLS."
+    ),
+    "issgovernance-com": (
+        "NO VERDICT as of 2026-09-23. The domain has moved -- "
+        "www.issgovernance.com/privacy-legal/ccpa/ 301-redirects to "
+        "www.iss-stoxx.com/privacy-legal/ccpa/ following the ISS STOXX "
+        "rebrand, which matches the dataset's own contact, "
+        "dataprotectionofficer@iss-stoxx.com -- and the redirect target "
+        "returned HTTP 403 to this fetcher, so nothing was rendered. ISS "
+        "is a governance-research and proxy-advisory firm and the "
+        "dataset's row name, Asset International, is its former "
+        "publishing arm; that shape would ordinarily point at no-surface, "
+        "but nothing was seen. Next pass: a fetcher iss-stoxx.com will "
+        "serve."
+    ),
+    "assurance-com": (
+        "NO VERDICT as of 2026-09-23: assurance.com serves an EXPIRED TLS "
+        "CERTIFICATE on both the homepage and the dataset's privacy- "
+        "practices URL, so no page was rendered on either leg. Assurance "
+        "IQ is a Prudential-owned insurance-quoting marketplace, which "
+        "would ordinarily point at no-surface, but nothing was observed. "
+        "Note this is the second row in this batch behind an expired "
+        "certificate (see take5mg-com, which turned out to be a parked "
+        "domain) -- so check first whether assurance.com is still a live "
+        "business or a lapsed one."
     ),
 }
 
