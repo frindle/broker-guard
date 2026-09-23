@@ -2173,6 +2173,152 @@ NO_SEARCH_SURFACE = {
         "whose only privacy affordance is a OneTrust cookie widget. No "
         "search surface."
     ),
+    "checkr-com": (
+        "Verified by browser render 2026-09-23: Checkr is a consumer "
+        "reporting agency selling background screening to employers. "
+        "Reports are ordered by an employer against a named candidate "
+        "WITH that candidate's FCRA authorization and delivered inside "
+        "the employer's account; nothing on the public site accepts a "
+        "name and returns a person. A consumer's own file is reachable "
+        "only through an identity-verified applicant portal, which this "
+        "tool must not automate. checkr.com is a marketing site (its only "
+        "consumer-facing links are 'My background check' and 'Contact "
+        "support', both authenticated). Note the site now advertises the "
+        "acquisition of Truv, and the privacy policy covers 'Checkr and "
+        "Zethos, Inc. d/b/a Truv' -- worth knowing if Truv appears as its "
+        "own row."
+    ),
+    "goodhire-com": (
+        "Verified by browser render 2026-09-23: GoodHire is a consumer "
+        "reporting agency selling background screening to employers. "
+        "Reports are ordered by an employer against a named candidate "
+        "WITH that candidate's FCRA authorization and delivered inside "
+        "the employer's account; nothing on the public site accepts a "
+        "name and returns a person. A consumer's own file is reachable "
+        "only through an identity-verified applicant portal, which this "
+        "tool must not automate. www.goodhire.com offers PERSONAL CHECKS, "
+        "but that is a product a visitor buys to screen themselves or a "
+        "nanny/tenant, gated behind purchase and consent -- not a free "
+        "directory lookup. No public search surface."
+    ),
+    "sterlingcheck-com": (
+        "Verified by browser render 2026-09-23: Sterling is a consumer "
+        "reporting agency selling background screening to employers. "
+        "Reports are ordered by an employer against a named candidate "
+        "WITH that candidate's FCRA authorization and delivered inside "
+        "the employer's account; nothing on the public site accepts a "
+        "name and returns a person. A consumer's own file is reachable "
+        "only through an identity-verified applicant portal, which this "
+        "tool must not automate. The domain now announces 'Sterling "
+        "Background Check Solutions is now First Advantage', so this row "
+        "is a brand that has been merged into another company -- worth "
+        "flagging as a probable duplicate of a First Advantage row. The "
+        "only form on the page is the site-wide content search "
+        "(input[name=swpquery] -> /search/)."
+    ),
+    "hireright-com": (
+        "Verified by browser render 2026-09-23: HireRight is a consumer "
+        "reporting agency selling background screening to employers. "
+        "Reports are ordered by an employer against a named candidate "
+        "WITH that candidate's FCRA authorization and delivered inside "
+        "the employer's account; nothing on the public site accepts a "
+        "name and returns a person. A consumer's own file is reachable "
+        "only through an identity-verified applicant portal, which this "
+        "tool must not automate. The homepage carries only a content "
+        "search; the consumer entrances are 'My Background Check' and a "
+        "support portal, both authenticated."
+    ),
+    "cisive-com": (
+        "Verified by browser render 2026-09-23: Cisive is a consumer "
+        "reporting agency selling background screening to employers. "
+        "Reports are ordered by an employer against a named candidate "
+        "WITH that candidate's FCRA authorization and delivered inside "
+        "the employer's account; nothing on the public site accepts a "
+        "name and returns a person. A consumer's own file is reachable "
+        "only through an identity-verified applicant portal, which this "
+        "tool must not automate. The only form on www.cisive.com is a "
+        "HubSpot marketing signup (hsForm_e3534c86-..., a single 'Your "
+        "work email' field posting to forms.hsforms.com) -- a newsletter, "
+        "not a lookup."
+    ),
+    "bisi-com": (
+        "Verified by browser render 2026-09-23: BISI (Background "
+        "Information Services, Inc.) is a consumer reporting agency "
+        "selling background screening to employers. Reports are ordered "
+        "by an employer against a named candidate WITH that candidate's "
+        "FCRA authorization and delivered inside the employer's account; "
+        "nothing on the public site accepts a name and returns a person. "
+        "A consumer's own file is reachable only through an identity- "
+        "verified applicant portal, which this tool must not automate. "
+        "bisi.com is a small corporate site whose only consumer-facing "
+        "control is the cookie banner; every other entrance is 'CARE "
+        "Login' or 'Client Access'. Note it fronts several sibling brands "
+        "(BIS, ChemScreen and others listed under 'Our Companies') which "
+        "may appear as separate rows."
+    ),
+    "birchwoodcreditservices-com": (
+        "Verified by browser render 2026-09-23: Birchwood Credit Services "
+        "resells mortgage credit reports and verification products to "
+        "LENDERS; the consumer never interacts with it directly and it "
+        "publishes no directory. The only forms on the site are two "
+        "copies of the HubSpot content search (input[name=term] -> /hs- "
+        "search-result)."
+    ),
+    "clearview-ai": (
+        "Verified by browser render 2026-09-23: Clearview AI is "
+        "searchable ONLY by image and only by its vetted law-enforcement "
+        "customers -- its own privacy page states plainly that 'Clearview "
+        "AI does not maintain any sort of information other than publicly "
+        "available photos' and that 'we cannot search by name or any "
+        "method other than image'. There is no public lookup of any kind, "
+        "by name or otherwise, so there is nothing for a name-driven "
+        "search recipe to read."
+    ),
+    "datanyze-com": (
+        "Verified by browser render 2026-09-23: Datanyze sells B2B "
+        "contact and technographic data to sales teams by subscription; "
+        "records are queried inside the paid product and in a Chrome "
+        "extension, never from a public page. The domain is additionally "
+        "walled (see the opt-out leg), so nothing renders to read either "
+        "way."
+    ),
+    "saymine-io": (
+        "Verified 2026-09-23: this row's domain is not a broker at all. "
+        "saymine.io is Mine, a privacy-request SERVICE; the dataset URL "
+        "cognism.privacy.saymine.io/cognism is Mine's hosted privacy "
+        "centre for a DIFFERENT company, Cognism. Flagging as a probable "
+        "dataset defect: the row should almost certainly be keyed on "
+        "cognism.com, with saymine.io as the opt-out host. Either way "
+        "Mine publishes no people-search surface, and the Cognism "
+        "database is a paid B2B product queried behind a login."
+    ),
+    "ice-com": (
+        "Verified by browser render 2026-09-23: Intercontinental Exchange "
+        "runs exchanges (NYSE) and, through ICE Mortgage Technology, "
+        "lender software. Neither publishes a consumer lookup: "
+        "www.ice.com is a corporate/investor site whose only forms are "
+        "the site search (input[name=q] -> /site-search) and an email "
+        "subscription centre. The dataset's contact for this row, "
+        "compliancemortgagetech@ice.com, points at the mortgage- "
+        "technology arm, which is where any consumer data sits -- behind "
+        "a lender's account."
+    ),
+    "clay-com": (
+        "Verified by browser render 2026-09-23: Clay sells a GTM data- "
+        "enrichment product that queries third-party providers on a "
+        "CUSTOMER's instruction; its own do-not-sell page says so "
+        "explicitly ('Clay acts as a data processor working on the "
+        "instruction of its customers'). Nothing on clay.com accepts a "
+        "name from the public and returns a person -- enrichment happens "
+        "inside a paid workspace."
+    ),
+    "collectivedata-io": (
+        "Verified by browser render 2026-09-23: The Collective deals in "
+        "MOBILE ADVERTISING IDs, not named people: its own opt-out page "
+        "asks for a MAID and warns 'DO NOT enter your telephone number'. "
+        "There is no name-keyed record to look up and no public search "
+        "surface of any kind."
+    ),
 }
 
 
@@ -3018,6 +3164,33 @@ SEARCH_UNDECIDED = {
         "for a real versus an absent person, and whether that terminus is "
         "reachable without paying -- which is a purchase decision, not a "
         "research one."
+    ),
+    "bridgevine-com": (
+        "Reachability failure, 2026-09-23: https://bridgevine.com/ does "
+        "not resolve (net::ERR_NAME_NOT_RESOLVED from a real browser). "
+        "Recorded as UNDECIDED rather than no-surface because a DNS "
+        "failure from one network is not proof the company is gone -- it "
+        "should be rechecked from a different network before anyone "
+        "concludes the domain is dead. The dataset carries an "
+        "opt_out_email for it (dwayne.landry@bridgevine.com), which is a "
+        "personal address rather than a privacy alias and is itself worth "
+        "doubting."
+    ),
+    "brightswipe-com": (
+        "Reachability failure, 2026-09-23: https://brightswipe.com/ does "
+        "not resolve (net::ERR_NAME_NOT_RESOLVED). Same caveat as "
+        "bridgevine-com -- recheck from another network before calling "
+        "the domain dead. Dataset contact: admin@brightswipe.com."
+    ),
+    "carmarketsolutions-com": (
+        "Reachability failure, 2026-09-23: "
+        "https://carmarketsolutions.com/ resolves but never completes a "
+        "connection -- the browser timed out after 30s without reaching "
+        "DOMContentLoaded. Distinct from the two ERR_NAME_NOT_RESOLVED "
+        "rows in this batch: something answers DNS here, so this is more "
+        "likely a hung or firewalled host than a retired domain. Recheck "
+        "later and from another network. The dataset holds no email for "
+        "this row, so it currently has no working channel at all."
     ),
 }
 
