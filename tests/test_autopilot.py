@@ -392,3 +392,136 @@ def test_has_id_documents_on_file_requires_both_sides(tmp_path):
     with open(os.path.join(cfg.id_documents_dir, "back.enc"), "w") as fh:
         fh.write("x")
     assert autopilot.has_id_documents_on_file(cfg) is True
+
+
+# --- run_scan_cycles: every profile, every pass --------------------------------
+
+@pytest.fixture
+def household():
+    return [Identity(first_name="Ann", last_name="Example"),
+            Identity(first_name="Bob", last_name="Example")]
+
+
+def _isolated_progress():
+    from broker_guard import progress as progress_mod
+    return progress_mod.ScanProgress(now=lambda: "T0")
+
+
+def test_every_profile_is_scanned_in_one_pass(household, brokers):
+    """The feature: no profile has to be made 'active' to be watched."""
+    store = FakeStore()
+    deps = autopilot.AutopilotDependencies(store=store, presence_checker=none_present,
+                                           submit_removal=RecordingRemoval())
+
+    result = autopilot.run_scan_cycles(household, brokers, deps,
+                                       progress=_isolated_progress())
+
+    assert result["profiles_scanned"] == 2
+    assert set(result["results"]) == {i.identity_key for i in household}
+    assert result["identity_keys"] == [i.identity_key for i in household]
+    assert result["failed_profiles"] == []
+
+
+def test_results_stay_per_person_rather_than_being_flattened(household, brokers):
+    """"Who was found where" is the question the page asks; summing the
+    profiles together would destroy the answer."""
+    store = FakeStore()
+    ann, bob = household
+
+    def only_ann(broker, identity_key):
+        return identity_key == ann.identity_key
+
+    deps = autopilot.AutopilotDependencies(store=store, presence_checker=only_ann,
+                                           submit_removal=RecordingRemoval())
+    result = autopilot.run_scan_cycles(household, brokers, deps,
+                                       progress=_isolated_progress())
+
+    assert result["results"][ann.identity_key]["current"]
+    assert not result["results"][bob.identity_key]["current"]
+
+
+def test_one_profiles_failure_does_not_cost_the_others_their_scan(household, brokers,
+                                                                  monkeypatch):
+    ann, bob = household
+    real = autopilot.run_scan_cycle
+
+    def flaky(identity, *args, **kwargs):
+        if identity.identity_key == ann.identity_key:
+            raise RuntimeError("scan blew up for Ann")
+        return real(identity, *args, **kwargs)
+
+    monkeypatch.setattr(autopilot, "run_scan_cycle", flaky)
+    deps = autopilot.AutopilotDependencies(store=FakeStore(),
+                                           presence_checker=none_present,
+                                           submit_removal=RecordingRemoval())
+
+    result = autopilot.run_scan_cycles(household, brokers, deps,
+                                       progress=_isolated_progress())
+
+    assert result["failed_profiles"] == [ann.identity_key]
+    assert "scan blew up for Ann" in result["errors"][ann.identity_key]
+    assert "current" in result["results"][bob.identity_key], "Bob was still scanned"
+
+
+def test_the_sweep_factory_runs_detection_once_for_the_whole_household(household,
+                                                                       brokers):
+    """Detection is the expensive part and it is shared: the sweep is
+    called ONCE and each profile's cycle reads its own slice of it, rather
+    than every profile re-walking the broker list."""
+    from broker_guard.sweep import SweepResult
+
+    calls = []
+
+    def sweep_factory(identities):
+        calls.append(list(identities))
+        return SweepResult(stopped=False)
+
+    deps = autopilot.AutopilotDependencies(store=FakeStore(),
+                                           submit_removal=RecordingRemoval(),
+                                           sweep_factory=sweep_factory)
+    autopilot.run_scan_cycles(household, brokers, deps,
+                              progress=_isolated_progress())
+
+    assert len(calls) == 1
+    assert calls[0] == household
+
+
+def test_a_stopped_sweep_is_reported_as_stopped_by_the_cycle(household, brokers):
+    from broker_guard.sweep import SweepResult
+
+    deps = autopilot.AutopilotDependencies(
+        store=FakeStore(), submit_removal=RecordingRemoval(),
+        sweep_factory=lambda identities: SweepResult(stopped=True, retried_pairs=3,
+                                                     unresolved_pairs=2),
+    )
+    result = autopilot.run_scan_cycles(household, brokers, deps,
+                                       progress=_isolated_progress())
+
+    assert result["stopped"] is True
+    assert result["retried_pairs"] == 3
+    assert result["unresolved_pairs"] == 2
+
+
+def test_a_sweep_that_reached_nothing_never_forgets_a_known_listing(household, brokers):
+    """The safety net, end to end through the layer that calls forget():
+    an unknown presence must be excluded from `resolved`, so a stopped or
+    blocked sweep can never delete a listing we still know about."""
+    from broker_guard.sweep import SweepResult
+
+    store = FakeStore()
+    ann, bob = household
+    for identity in household:
+        store.record_appearance(identity.identity_key, "alpha", "2026-01-01T00:00:00+00:00")
+
+    # An EMPTY sweep: no pair was reached, so checker_for raises for every
+    # broker it is asked about.
+    deps = autopilot.AutopilotDependencies(
+        store=store, submit_removal=RecordingRemoval(),
+        sweep_factory=lambda identities: SweepResult(),
+    )
+    result = autopilot.run_scan_cycles(household, brokers, deps,
+                                       progress=_isolated_progress())
+
+    assert result["resolved"] == 0 and result["forgotten"] == 0
+    for identity in household:
+        assert store.is_seen(identity.identity_key, "alpha"), "a listing was forgotten"

@@ -98,5 +98,12 @@ def base_env(tmp_path, profile_file, brokers_file):
         "BG_BROKERS_PATH": brokers_file,
         "BG_STATE_PATH": str(tmp_path / "state.sqlite"),
         "BG_LOG_DIR": str(tmp_path / "logs"),
+        # Pinned, NOT left on Config's ./data/profiles.json default. Any
+        # page load can now migrate the legacy profile into this list and
+        # WRITE it (see webui._identity_options), so an unpinned path has
+        # the suite dropping a real PII-shaped file into the repo's data/
+        # directory -- and every later test inheriting whatever a previous
+        # run left there.
+        "BG_PROFILES_PATH": str(tmp_path / "profiles.json"),
         "BG_RUN_ONCE": "1",
     }

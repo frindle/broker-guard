@@ -27,6 +27,12 @@ removals/
 data/settings.json
 settings.json
 
+# --- the saved profiles list: every person Broker Guard scans for, i.e.
+# names, emails, phones and addresses. Same "never commit" rule as
+# profile.local.json above, which this file supersedes. ---
+data/profiles.json
+profiles.json
+
 # --- broker dataset: maintained in the SEPARATE PUBLIC repo, pulled at runtime ---
 data/brokers.json
 

@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 
 from broker_guard import freeze as freeze_mod
 from broker_guard import profile as profile_mod
+from broker_guard import profiles as profiles_mod
 from broker_guard import state as state_mod
 from broker_guard import webui
 from broker_guard.config import Config
@@ -144,7 +145,12 @@ def test_identity_post_preserves_eraser_profile_round_trip(client, cfg):
         data={"first_name": FAKE_FIRST, "last_name": FAKE_LAST, "eraser_profile": "abc123"},
         follow_redirects=False,
     )
-    html_page = client.get("/identity").text
+    # The primary profile's eraser id is on its EDIT card now, not in a
+    # standalone "active profile" form at the top of the page -- that form
+    # went away with the active-profile concept.
+    saved = profiles_mod.load_profiles(cfg.profiles_path)
+    assert [p.eraser_profile for p in saved] == ["abc123"]
+    html_page = client.get("/identity?edit=" + saved[0].id).text
     assert 'value="abc123"' in html_page
 
 
@@ -212,7 +218,13 @@ def test_scan_returns_job_id_and_status_reaches_done(client):
             break
         time.sleep(0.05)
     assert status["status"] == "done", status
-    assert "current" in status["result"]
+    # A manual scan is a whole-household sweep now (service.run_all), so
+    # the job result is per-identity rather than one flat cycle result.
+    result = status["result"]
+    assert result["identities"], "the sweep must report who it scanned"
+    assert result["stopped"] is False
+    for key in result["identities"]:
+        assert "current" in result["results"][key["identity_key"]]
 
 
 def test_status_unknown_job_id_is_404(client):
@@ -577,8 +589,6 @@ def test_identity_page_migrates_an_existing_legacy_profile_into_the_list(client,
     """A deployment that already had a populated profile.local.json before
     this merge shipped must see that identity in the list automatically --
     without re-entering it."""
-    from broker_guard import profiles as profiles_mod
-
     assert profiles_mod.load_profiles(cfg.profiles_path) == []
 
     resp = client.get("/identity")
@@ -588,25 +598,23 @@ def test_identity_page_migrates_an_existing_legacy_profile_into_the_list(client,
     assert len(migrated) == 1
     assert migrated[0].first_name == FAKE_FIRST
     assert migrated[0].last_name == FAKE_LAST
-    assert migrated[0].active is True
-    # ...and it is pinned into the editable form at the top of the page.
+    # ...and it is listed as an ordinary profile. There is no "Active
+    # profile" form pinned above the list any more: no profile is
+    # privileged, so nothing gets pinned.
     assert FAKE_FIRST in resp.text
-    assert "Active profile" in resp.text
+    assert "Active profile" not in resp.text
+    assert "Make active" not in resp.text
 
 
 def test_identity_migration_runs_once_and_does_not_duplicate(client, cfg):
-    from broker_guard import profiles as profiles_mod
-
     client.get("/identity")
     client.get("/identity")
     assert len(profiles_mod.load_profiles(cfg.profiles_path)) == 1
 
 
-def test_identity_post_upserts_the_active_profile_in_the_list(client, cfg):
+def test_identity_post_upserts_the_primary_profile_in_the_list(client, cfg):
     """The bug this merge fixes: a save on the Profile page used to touch
     only profile.local.json, so it never showed up in the profiles list."""
-    from broker_guard import profiles as profiles_mod
-
     client.get("/identity")  # migrate the legacy profile in
     original = profiles_mod.load_profiles(cfg.profiles_path)[0]
 
@@ -618,17 +626,14 @@ def test_identity_post_upserts_the_active_profile_in_the_list(client, cfg):
     assert resp.status_code == 303
 
     saved = profiles_mod.load_profiles(cfg.profiles_path)
-    assert len(saved) == 1, "a save must UPDATE the active profile, not append a new one"
+    assert len(saved) == 1, "a save must UPDATE the first profile, not append a new one"
     assert saved[0].id == original.id, "the profile id is immutable"
     assert saved[0].emails == ["updated@example.invalid"]
-    assert saved[0].active is True, "saving must not de-activate the active profile"
-    # and the legacy file the scan loop reads got it too
+    # and the legacy compatibility mirror the single-identity path reads got it too
     assert profile_mod.load_profile(cfg.profile_path).emails == ["updated@example.invalid"]
 
 
-def test_identity_post_with_no_profiles_yet_creates_the_active_one(client, cfg, tmp_path):
-    from broker_guard import profiles as profiles_mod
-
+def test_identity_post_with_no_profiles_yet_creates_one(client, cfg, tmp_path):
     cfg.profile_path = str(tmp_path / "fresh_profile.local.json")
     resp = client.post("/identity", data={
         "first_name": "Jane", "middle_name": "", "last_name": "Doe",
@@ -638,15 +643,12 @@ def test_identity_post_with_no_profiles_yet_creates_the_active_one(client, cfg, 
 
     saved = profiles_mod.load_profiles(cfg.profiles_path)
     assert [p.id for p in saved] == ["jane-doe"]
-    assert saved[0].active is True
 
 
-def test_activate_switches_which_profile_the_scan_loop_reads(client, cfg):
-    """The whole point of one merged page: switching the active profile
-    must reach the single profile.local.json service.run_once reads."""
-    from broker_guard import profiles as profiles_mod
-
-    client.get("/identity")  # migrates the legacy profile in, as active
+def test_adding_a_profile_leaves_the_others_and_the_legacy_mirror_alone(client, cfg):
+    """Adding a second person must not repoint anything: both are scanned,
+    and the legacy mirror still tracks the FIRST entry."""
+    client.get("/identity")  # migrates the legacy profile in
     first = profiles_mod.load_profiles(cfg.profiles_path)[0]
 
     resp = client.post("/profiles", data={
@@ -655,32 +657,31 @@ def test_activate_switches_which_profile_the_scan_loop_reads(client, cfg):
     assert resp.status_code == 303
     assert resp.headers["location"] == "/identity"
 
-    # A second profile is added INACTIVE -- adding must not silently
-    # repoint the scan loop at someone else.
-    by_id = {p.id: p for p in profiles_mod.load_profiles(cfg.profiles_path)}
-    assert by_id["jane-doe"].active is False
-    assert by_id[first.id].active is True
+    assert [p.id for p in profiles_mod.load_profiles(cfg.profiles_path)] == [
+        first.id, "jane-doe"]
     assert profile_mod.load_profile(cfg.profile_path).first_name == FAKE_FIRST
 
-    resp = client.post("/profiles/jane-doe/activate", follow_redirects=False)
-    assert resp.status_code == 303
 
-    by_id = {p.id: p for p in profiles_mod.load_profiles(cfg.profiles_path)}
-    assert by_id["jane-doe"].active is True
-    assert by_id[first.id].active is False, "at most one profile is ever active"
+def test_both_profiles_are_scanned_with_no_activation_step(client, cfg):
+    """The feature this change exists for: two saved profiles means two
+    identities swept, without anyone having to make one 'active'."""
+    client.get("/identity")
+    client.post("/profiles", data={"first_name": "Jane", "last_name": "Doe"})
 
-    loaded = profile_mod.load_profile(cfg.profile_path)
-    assert (loaded.first_name, loaded.last_name) == ("Jane", "Doe")
-
-
-def test_activate_unknown_id_is_404(client):
-    resp = client.post("/profiles/does-not-exist/activate")
-    assert resp.status_code == 404
+    identities = profiles_mod.load_scan_identities(cfg.profiles_path, cfg.profile_path)
+    assert {(i.first_name, i.last_name) for i in identities} == {
+        (FAKE_FIRST, FAKE_LAST), ("Jane", "Doe")}
 
 
-def test_removing_the_active_profile_promotes_another_and_resyncs(client, cfg):
-    from broker_guard import profiles as profiles_mod
+def test_the_activate_route_is_gone(client, cfg):
+    """Regression guard: the endpoint was removed, not just unlinked from
+    the page -- an old bookmark must not silently re-privilege a profile."""
+    client.get("/identity")
+    resp = client.post("/profiles/jane-doe/activate")
+    assert resp.status_code in (404, 405)
 
+
+def test_removing_a_profile_resyncs_the_legacy_mirror_without_promoting(client, cfg):
     client.get("/identity")
     first = profiles_mod.load_profiles(cfg.profiles_path)[0]
     client.post("/profiles", data={"first_name": "Jane", "last_name": "Doe"})
@@ -690,7 +691,7 @@ def test_removing_the_active_profile_promotes_another_and_resyncs(client, cfg):
 
     remaining = profiles_mod.load_profiles(cfg.profiles_path)
     assert [p.id for p in remaining] == ["jane-doe"]
-    assert remaining[0].active is True, "removing the active profile must promote another"
+    # Nothing was "promoted" -- the mirror simply follows whoever is first.
     assert profile_mod.load_profile(cfg.profile_path).first_name == "Jane"
 
 
@@ -815,7 +816,6 @@ def test_autopilot_only_scan_attaches_the_poll_and_status_agrees_it_is_running(c
 # to 7/827 with no hits showed literally nothing new on this page. "Checked,
 # nothing found" was never recorded per broker anywhere.
 
-from broker_guard import profiles as profiles_mod  # noqa: E402
 from broker_guard import progress as progress_mod  # noqa: E402
 
 
@@ -831,6 +831,18 @@ def _badge(label, tone):
     appears in the filter dropdown, so asserting on the bare string would
     pass even if no row rendered it."""
     return '<span class="badge tone-{}">{}</span>'.format(tone, label)
+
+
+def _deployment_identity_key(cfg):
+    """The identity_key /brokers will actually render rows for.
+
+    Every saved profile is scanned now, and a deployment whose profiles
+    list is still empty gets its legacy profile.local.json migrated in on
+    page load -- so the rows belong to THAT identity, not to an arbitrary
+    made-up key. A test planting scan outcomes has to plant them under the
+    same key or it is asserting on rows that were never going to match.
+    """
+    return profile_mod.load_profile(cfg.profile_path).identity_key
 
 
 def _record_scan(progress, identity_key, outcomes):
@@ -852,8 +864,9 @@ def test_brokers_page_lists_every_broker_not_only_the_found_ones(client, clean_p
     assert resp.text.count(_badge("Not yet checked", "neutral")) == 3
 
 
-def test_brokers_page_renders_each_outcome_distinctly(client, clean_progress):
-    _record_scan(clean_progress, "idkey1", {"alpha": "checked", "beta": "hit"})
+def test_brokers_page_renders_each_outcome_distinctly(client, cfg, clean_progress):
+    _record_scan(clean_progress, _deployment_identity_key(cfg),
+                 {"alpha": "checked", "beta": "hit"})
     resp = client.get("/brokers")
     assert _badge("Checked -- clean", "success") in resp.text
     assert _badge("Listing found", "escalated") in resp.text
@@ -861,8 +874,8 @@ def test_brokers_page_renders_each_outcome_distinctly(client, clean_progress):
     assert resp.text.count(_badge("Not yet checked", "neutral")) == 1
 
 
-def test_a_failed_check_never_renders_as_clean(client, clean_progress):
-    _record_scan(clean_progress, "idkey1", {"alpha": "error"})
+def test_a_failed_check_never_renders_as_clean(client, cfg, clean_progress):
+    _record_scan(clean_progress, _deployment_identity_key(cfg), {"alpha": "error"})
     resp = client.get("/brokers")
     assert _badge("Check failed", "action") in resp.text
     assert _badge("Checked -- clean", "success") not in resp.text
@@ -934,14 +947,18 @@ def test_brokers_page_scopes_tracked_listings_to_the_selected_profile(client, cf
     assert ">submitted</span>" not in theirs.text
 
 
-def test_brokers_page_offers_a_profile_picker_defaulting_to_the_active_one(client, cfg,
-                                                                           clean_progress):
+def test_brokers_page_offers_a_profile_picker_defaulting_to_all_profiles(client, cfg,
+                                                                        clean_progress):
+    """No profile is privileged any more, so the page opens on EVERY
+    profile's results rather than picking one for you. Narrowing to a
+    single person stays available; it is just no longer the default."""
     a, b = _two_profiles(cfg)
     resp = client.get("/brokers")
     assert 'id="identityPicker"' in resp.text
-    assert "All profiles (combined)" in resp.text
-    # add_profile makes the FIRST profile active; it is the default selection.
-    assert '<option value="{}" selected>'.format(a.id) in resp.text
+    assert '<option value="all" selected>All profiles</option>' in resp.text
+    for profile in (a, b):
+        assert '<option value="{}"'.format(profile.id) in resp.text
+    assert "selected>" not in resp.text.split('value="all" selected')[1].split("</select>")[0]
 
 
 def test_status_includes_the_per_broker_map_only_when_asked(client, clean_progress):
@@ -951,7 +968,8 @@ def test_status_includes_the_per_broker_map_only_when_asked(client, clean_progre
     assert "brokers" not in lean["scan"]["progress"]
 
     full = client.get("/status?brokers=1").json()
-    assert full["scan"]["progress"]["brokers"]["alpha"]["outcome"] == "checked"
+    key = progress_mod.entry_key("idkey1", "alpha")
+    assert full["scan"]["progress"]["brokers"][key]["outcome"] == "checked"
     assert "not yet checked" in full["scan"]["outcome_line"]
 
 
@@ -1094,3 +1112,82 @@ def test_get_config_overlays_the_stored_settings(tmp_path, monkeypatch):
     live = webui.get_config()
     assert live.playwright_enabled is True
     assert live.interval_seconds == 3600
+
+
+# --- /brokers: per-profile rows, honest timestamps, sorting, stop ----------
+
+def test_brokers_page_names_the_profiles_the_scan_checked(client, cfg, clean_progress):
+    """Penn's ask: the page has to say WHO was checked, not just what was
+    found -- and a saved profile the scan has not reached yet is named as
+    such rather than being implied to be done."""
+    a, b = _two_profiles(cfg)
+    _record_scan(clean_progress, profiles_mod.identity_key(a), {"alpha": "checked"})
+
+    text = client.get("/brokers").text
+    assert "Profiles checked: {}".format(a.full_name) in text
+    assert "Not yet reached this scan: {}".format(b.full_name) in text
+
+
+def test_brokers_page_shows_one_row_per_profile_per_broker(client, cfg, clean_progress):
+    a, b = _two_profiles(cfg)
+    text = client.get("/brokers").text
+    # 3 roster brokers x 2 profiles, and every row says whose it is.
+    assert text.count('class="scanrow" data-broker-id=') == 6
+    for profile in (a, b):
+        assert 'data-profile="{}"'.format(profile.full_name.lower()) in text
+
+
+def test_brokers_page_never_renders_a_raw_isoformat_timestamp(client, cfg, clean_progress):
+    """The reported bug: cells showed 2026-09-22T21:45:02.742110+00:00.
+    Every timestamp on the page goes through format_scan_timestamp now."""
+    conn = state_mod.init_db(cfg.state_path)
+    try:
+        store = state_mod.StateStore(conn)
+        key = _deployment_identity_key(cfg)
+        store.record_appearance(key, "alpha", "2026-09-22T21:45:02.742110+00:00")
+        store.set_status(key, "alpha", "submitted", "2026-09-22T21:45:02.742110+00:00")
+    finally:
+        conn.close()
+
+    text = client.get("/brokers").text
+    assert "2026-09-22 21:45 UTC" in text
+    # The raw form survives only in the data-updated sort key, never in a cell.
+    for chunk in text.split("2026-09-22T21:45:02.742110+00:00")[:-1]:
+        assert chunk.endswith('data-updated="'), "a raw isoformat leaked into the page"
+
+
+def test_brokers_page_offers_a_last_update_column_sort(client, cfg, clean_progress):
+    """Sorting is client side over data-updated, which holds the RAW ISO
+    string -- it sorts correctly as text, so what is displayed and what is
+    sorted on cannot drift apart."""
+    text = client.get("/brokers").text
+    assert "sortBy('rowsContainer','.brokerrow','updated'" in text
+    assert "sortBy('scanRowsContainer','.scanrow','updated'" in text
+    assert 'class="sortable"' in text
+    assert "function sortBy(" in text
+
+
+def test_scan_stop_requests_a_stop_without_pretending_one_was_running(client,
+                                                                     clean_progress):
+    """POST /scan/stop is idempotent and never 404s: the button can be
+    clicked as a cycle is ending, and a stop nobody needed is not an
+    error."""
+    resp = client.post("/scan/stop")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["stop_requested"] is True
+    assert body["was_running"] is False
+    assert progress_mod.current().should_stop() is True
+
+
+def test_a_stopped_scan_is_reported_as_stopped_not_ok(client, cfg, clean_progress):
+    """A stopped pass did not cover every broker, so calling it 'ok' would
+    make the timestamp claim a full sweep that never happened."""
+    os.makedirs(cfg.log_dir, exist_ok=True)
+    with open(os.path.join(cfg.log_dir, "heartbeat.json"), "w", encoding="utf-8") as fh:
+        json.dump({"last_run": "2026-09-22T21:45:02.742110+00:00", "ok": True,
+                   "status": "done", "stopped": True}, fh)
+
+    text = client.get("/").text
+    assert "stopped early" in text
+    assert "(ok)" not in text

@@ -157,6 +157,10 @@ def test_scan_status_never_run_and_not_running():
         # zero that would read as "checked everything, found no errors".
         "progress": None, "progress_line": None,
         "detection_line": None, "detection_errors": None,
+        # Nobody has asked for a stop and nothing was stopped, which are
+        # both FALSE rather than None: unlike the fields above, "no stop
+        # happened" is a real, knowable fact even before the first scan.
+        "stop_requested": False, "stopped": False,
     }
 
 

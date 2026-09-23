@@ -116,162 +116,159 @@ def test_remove_one_profile_leaves_others_untouched(tmp_path):
     assert [p.id for p in remaining] == [b.id]
 
 
-# --- the one-active invariant + the merged Identity page's helpers ---------
+# --- every profile is scanned: no active flag, no promotion ---------------
+#
+# There used to be a "one active profile" invariant here (add sets the
+# first one active, update preserves it, remove promotes a replacement).
+# That whole concept is gone: every saved profile is scanned every cycle,
+# so there is nothing to activate and nothing to promote. What replaces
+# those tests is the assertion that the flag really is gone, plus the
+# FIRST-entry rules the legacy profile.local.json mirror now rests on.
 
-def test_first_profile_is_automatically_active(tmp_path):
+def test_profiles_have_no_active_flag_at_all(tmp_path):
     path = str(tmp_path / "profiles.json")
     created = profiles_mod.add_profile(path, {"first_name": FAKE_FIRST, "last_name": FAKE_LAST})
-    assert created.active is True
+    assert not hasattr(created, "active")
+    assert "active" not in created.to_dict()
 
 
-def test_second_profile_is_added_inactive(tmp_path):
-    """Adding a profile must never silently repoint the scan loop at a
-    different identity."""
-    path = str(tmp_path / "profiles.json")
-    profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
-    second = profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
-    assert second.active is False
-    assert [p.active for p in profiles_mod.load_profiles(path)] == [True, False]
+def test_a_legacy_active_key_on_disk_is_ignored_not_fatal(tmp_path):
+    """profiles.json written by an older build still has `active` in every
+    entry. Loading must drop it silently rather than blowing up on an
+    unexpected keyword."""
+    import json as _json
+
+    path = tmp_path / "profiles.json"
+    path.write_text(_json.dumps([
+        {"id": "one", "first_name": "Aaa", "last_name": "One", "active": True},
+        {"id": "two", "first_name": "Bbb", "last_name": "Two", "active": False},
+    ]), encoding="utf-8")
+
+    loaded = profiles_mod.load_profiles(str(path))
+    assert [p.id for p in loaded] == ["one", "two"]
+    assert not any(hasattr(p, "active") for p in loaded)
 
 
-def test_active_flag_round_trips_through_disk(tmp_path):
-    path = str(tmp_path / "profiles.json")
-    profiles_mod.add_profile(path, {"first_name": FAKE_FIRST, "last_name": FAKE_LAST})
-    assert profiles_mod.load_profiles(path)[0].active is True
-
-
-def test_update_profile_preserves_the_active_flag(tmp_path):
-    """Regression: update_profile rebuilt the dataclass without `active`,
-    so it fell back to the False default -- editing the active profile
-    de-activated it and left NOTHING active."""
-    path = str(tmp_path / "profiles.json")
-    created = profiles_mod.add_profile(path, {"first_name": FAKE_FIRST, "last_name": FAKE_LAST})
-    assert created.active is True
-    updated = profiles_mod.update_profile(path, created.id, {"emails": [FAKE_EMAIL]})
-    assert updated.active is True
-    assert profiles_mod.get_profile(path, created.id).active is True
-
-
-def test_update_profile_does_not_activate_an_inactive_profile(tmp_path):
-    path = str(tmp_path / "profiles.json")
-    profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
-    b = profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
-    updated = profiles_mod.update_profile(path, b.id, {"emails": [FAKE_EMAIL]})
-    assert updated.active is False
-    assert sum(1 for p in profiles_mod.load_profiles(path) if p.active) == 1
-
-
-def test_set_active_moves_the_flag_and_clears_every_other(tmp_path):
+def test_adding_a_profile_appends_without_disturbing_the_others(tmp_path):
     path = str(tmp_path / "profiles.json")
     a = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
     b = profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
-    c = profiles_mod.add_profile(path, {"first_name": "Ccc", "last_name": "Three"})
-
-    now_active = profiles_mod.set_active(path, b.id)
-    assert now_active.id == b.id and now_active.active is True
-
-    by_id = {p.id: p.active for p in profiles_mod.load_profiles(path)}
-    assert by_id == {a.id: False, b.id: True, c.id: False}
+    assert [p.id for p in profiles_mod.load_profiles(path)] == [a.id, b.id]
 
 
-def test_set_active_unknown_id_raises_not_found(tmp_path):
+def test_primary_profile_is_just_the_first_entry(tmp_path):
+    path = str(tmp_path / "profiles.json")
+    a = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
+    profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
+    assert profiles_mod.primary_profile(path).id == a.id
+
+
+def test_primary_profile_returns_none_for_an_empty_list(tmp_path):
+    assert profiles_mod.primary_profile(str(tmp_path / "profiles.json")) is None
+
+
+def test_remove_profile_returns_what_it_removed_and_promotes_nothing(tmp_path):
+    path = str(tmp_path / "profiles.json")
+    a = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
+    b = profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
+
+    removed = profiles_mod.remove_profile(path, a.id)
+    assert removed.id == a.id
+    assert [p.id for p in profiles_mod.load_profiles(path)] == [b.id]
+
+
+def test_remove_unknown_profile_raises_not_found(tmp_path):
     path = str(tmp_path / "profiles.json")
     profiles_mod.add_profile(path, {"first_name": FAKE_FIRST, "last_name": FAKE_LAST})
     with pytest.raises(profiles_mod.ProfileNotFound):
-        profiles_mod.set_active(path, "does-not-exist")
+        profiles_mod.remove_profile(path, "does-not-exist")
 
 
-def test_get_active_profile_returns_none_for_an_empty_list(tmp_path):
-    assert profiles_mod.get_active_profile(str(tmp_path / "profiles.json")) is None
-
-
-def test_remove_active_profile_promotes_another(tmp_path):
-    """Regression: remove_profile just filtered the id out, leaving a
-    non-empty list with NOTHING active -- and the scan loop pointing at a
-    deleted identity."""
-    path = str(tmp_path / "profiles.json")
-    a = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
-    b = profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
-
-    promoted = profiles_mod.remove_profile(path, a.id)
-    assert promoted is not None and promoted.id == b.id
-
-    remaining = profiles_mod.load_profiles(path)
-    assert [p.id for p in remaining] == [b.id]
-    assert remaining[0].active is True
-
-
-def test_remove_inactive_profile_leaves_the_active_one_alone(tmp_path):
-    path = str(tmp_path / "profiles.json")
-    a = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
-    b = profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
-
-    promoted = profiles_mod.remove_profile(path, b.id)
-    assert promoted is None, "nothing was promoted -- the active profile never moved"
-    assert [(p.id, p.active) for p in profiles_mod.load_profiles(path)] == [(a.id, True)]
-
-
-def test_remove_the_last_profile_promotes_nothing(tmp_path):
+def test_removing_the_last_profile_empties_the_list(tmp_path):
     path = str(tmp_path / "profiles.json")
     only = profiles_mod.add_profile(path, {"first_name": FAKE_FIRST, "last_name": FAKE_LAST})
-    assert profiles_mod.remove_profile(path, only.id) is None
+    assert profiles_mod.remove_profile(path, only.id).id == only.id
     assert profiles_mod.load_profiles(path) == []
 
 
-# --- upsert_active_profile: what POST /identity calls ----------------------
+# --- load_scan_identities: WHO gets scanned -------------------------------
+#
+# The single answer to that question, and the reason no profile needs to
+# be "active": the scan loop asks for the whole list.
 
-def test_upsert_active_profile_creates_the_first_profile(tmp_path):
+def test_load_scan_identities_returns_every_saved_profile(tmp_path):
     path = str(tmp_path / "profiles.json")
-    created = profiles_mod.upsert_active_profile(path, {
+    profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
+    profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
+
+    identities = profiles_mod.load_scan_identities(path)
+    assert [(i.first_name, i.last_name) for i in identities] == [("Aaa", "One"), ("Bbb", "Two")]
+    assert len({i.identity_key for i in identities}) == 2
+
+
+def test_load_scan_identities_falls_back_to_the_legacy_file(tmp_path):
+    """A deployment that never opened the Profiles page still has only
+    profile.local.json -- it must not silently stop being scanned."""
+    legacy = tmp_path / "profile.local.json"
+    legacy.write_text('{"first_name": "Kept", "last_name": "Asis"}', encoding="utf-8")
+
+    identities = profiles_mod.load_scan_identities(str(tmp_path / "profiles.json"), str(legacy))
+    assert [(i.first_name, i.last_name) for i in identities] == [("Kept", "Asis")]
+
+
+def test_load_scan_identities_is_empty_when_there_is_nothing_to_scan(tmp_path):
+    assert profiles_mod.load_scan_identities(str(tmp_path / "profiles.json")) == []
+
+
+def test_load_scan_identities_skips_an_unusable_entry_not_the_whole_list(tmp_path):
+    """One malformed profile must cost only that person their scan -- the
+    others still get swept."""
+    import json as _json
+
+    path = tmp_path / "profiles.json"
+    path.write_text(_json.dumps([
+        {"id": "bad", "first_name": "", "last_name": ""},
+        {"id": "good", "first_name": "Bbb", "last_name": "Two"},
+    ]), encoding="utf-8")
+
+    identities = profiles_mod.load_scan_identities(str(path))
+    assert [i.first_name for i in identities] == ["Bbb"]
+
+
+# --- upsert_primary_profile: what POST /identity calls ---------------------
+
+def test_upsert_primary_profile_creates_the_first_profile(tmp_path):
+    path = str(tmp_path / "profiles.json")
+    created = profiles_mod.upsert_primary_profile(path, {
         "first_name": FAKE_FIRST, "last_name": FAKE_LAST, "emails": [FAKE_EMAIL],
     })
-    assert created.active is True
     assert profiles_mod.load_profiles(path) == [created]
 
 
-def test_upsert_active_profile_updates_in_place_rather_than_appending(tmp_path):
+def test_upsert_primary_profile_updates_in_place_rather_than_appending(tmp_path):
     path = str(tmp_path / "profiles.json")
-    first = profiles_mod.upsert_active_profile(path, {
+    first = profiles_mod.upsert_primary_profile(path, {
         "first_name": FAKE_FIRST, "last_name": FAKE_LAST,
     })
-    again = profiles_mod.upsert_active_profile(path, {
+    again = profiles_mod.upsert_primary_profile(path, {
         "first_name": FAKE_FIRST, "last_name": FAKE_LAST, "emails": [FAKE_EMAIL],
     })
-    assert again.id == first.id, "the active profile's id is immutable across saves"
+    assert again.id == first.id, "the primary profile's id is immutable across saves"
     saved = profiles_mod.load_profiles(path)
     assert len(saved) == 1
     assert saved[0].emails == [FAKE_EMAIL]
-    assert saved[0].active is True
 
 
-def test_upsert_active_profile_only_touches_the_active_entry(tmp_path):
+def test_upsert_primary_profile_only_touches_the_first_entry(tmp_path):
     path = str(tmp_path / "profiles.json")
-    active = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
+    primary = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
     other = profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
 
-    profiles_mod.upsert_active_profile(path, {
+    profiles_mod.upsert_primary_profile(path, {
         "first_name": "Aaa", "last_name": "One", "emails": [FAKE_EMAIL],
     })
-    assert profiles_mod.get_profile(path, active.id).emails == [FAKE_EMAIL]
+    assert profiles_mod.get_profile(path, primary.id).emails == [FAKE_EMAIL]
     assert profiles_mod.get_profile(path, other.id).emails == []
-
-
-def test_upsert_active_profile_repairs_a_list_with_nothing_active(tmp_path):
-    """Degenerate input (a profiles.json written before `active` existed
-    and hand-edited since): the invariant is restored rather than leaving
-    the list with no active profile at all."""
-    path = str(tmp_path / "profiles.json")
-    stale = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
-    profiles_mod.save_profiles(path, [
-        profiles_mod.NamedProfile(**{**p.to_dict(), "active": False})
-        for p in profiles_mod.load_profiles(path)
-    ])
-    assert profiles_mod.get_active_profile(path) is None
-
-    created = profiles_mod.upsert_active_profile(path, {"first_name": "Bbb", "last_name": "Two"})
-    assert created.active is True
-    by_id = {p.id: p.active for p in profiles_mod.load_profiles(path)}
-    assert by_id == {stale.id: False, created.id: True}
 
 
 # --- the legacy profile.local.json mirror (the scan loop's contract) -------
@@ -287,34 +284,50 @@ def test_to_legacy_profile_dict_drops_bookkeeping_fields(tmp_path):
     assert legacy["emails"] == [FAKE_EMAIL]
 
 
-def test_sync_active_to_legacy_writes_a_loadable_identity(tmp_path):
-    """The whole point: whatever the list says is active must be readable
+def test_sync_primary_to_legacy_writes_a_loadable_identity(tmp_path):
+    """profile.local.json is now a COMPATIBILITY artifact mirroring the
+    first profile, not "the active one" -- but it must still be readable
     by profile.load_profile, which is what service.run_once calls."""
     from broker_guard import profile as profile_mod
 
     path = str(tmp_path / "profiles.json")
     legacy = str(tmp_path / "profile.local.json")
-    profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
-    b = profiles_mod.add_profile(path, {
-        "first_name": "Bbb", "last_name": "Two", "emails": [FAKE_EMAIL],
+    a = profiles_mod.add_profile(path, {
+        "first_name": "Aaa", "last_name": "One", "emails": [FAKE_EMAIL],
     })
-    profiles_mod.set_active(path, b.id)
+    profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
 
-    written = profiles_mod.sync_active_to_legacy(path, legacy)
-    assert written.id == b.id
+    written = profiles_mod.sync_primary_to_legacy(path, legacy)
+    assert written.id == a.id
 
     identity = profile_mod.load_profile(legacy)
-    assert (identity.first_name, identity.last_name) == ("Bbb", "Two")
+    assert (identity.first_name, identity.last_name) == ("Aaa", "One")
     assert identity.emails == [FAKE_EMAIL]
 
 
-def test_sync_active_to_legacy_leaves_the_file_alone_when_nothing_is_active(tmp_path):
+def test_sync_primary_to_legacy_follows_a_removal(tmp_path):
+    """Remove the first profile and the mirror follows whoever is first
+    now -- there is no promotion, just "first entry"."""
+    from broker_guard import profile as profile_mod
+
+    path = str(tmp_path / "profiles.json")
+    legacy = str(tmp_path / "profile.local.json")
+    a = profiles_mod.add_profile(path, {"first_name": "Aaa", "last_name": "One"})
+    profiles_mod.add_profile(path, {"first_name": "Bbb", "last_name": "Two"})
+    profiles_mod.sync_primary_to_legacy(path, legacy)
+
+    profiles_mod.remove_profile(path, a.id)
+    profiles_mod.sync_primary_to_legacy(path, legacy)
+    assert profile_mod.load_profile(legacy).first_name == "Bbb"
+
+
+def test_sync_primary_to_legacy_leaves_the_file_alone_when_the_list_is_empty(tmp_path):
     """Removing the LAST profile must not truncate the file mid-scan-cycle
     into something profile.load_profile can't read."""
     legacy = tmp_path / "profile.local.json"
     legacy.write_text('{"first_name": "Kept", "last_name": "Asis"}', encoding="utf-8")
 
-    assert profiles_mod.sync_active_to_legacy(str(tmp_path / "empty.json"), str(legacy)) is None
+    assert profiles_mod.sync_primary_to_legacy(str(tmp_path / "empty.json"), str(legacy)) is None
     assert "Kept" in legacy.read_text(encoding="utf-8")
 
 
@@ -331,7 +344,6 @@ def test_migrate_backfills_an_existing_legacy_profile(tmp_path):
 
     migrated = profiles_mod.migrate_legacy_profile_if_needed(path, str(legacy))
     assert migrated is not None
-    assert migrated.active is True
     assert migrated.emails == [FAKE_EMAIL]
     assert [p.id for p in profiles_mod.load_profiles(path)] == [migrated.id]
 

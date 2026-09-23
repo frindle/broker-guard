@@ -116,7 +116,8 @@ class AutopilotDependencies:
 
     store: object = None            # StateStore-like (is_seen/record_appearance/seen_brokers/touch/forget/set_status/get_status)
     presence_checker: object = None  # callable(broker, identity_key) -> bool
-    # callable() -> presence_checker, invoked ONCE PER SCAN CYCLE.
+    # callable(identity=None) -> presence_checker, invoked ONCE PER PROFILE
+    # PER SCAN CYCLE.
     #
     # ``presence_checker`` above is a closure over a set of broker ids
     # computed when it was BUILT (see service.build_presence_checker: it runs
@@ -131,6 +132,14 @@ class AutopilotDependencies:
     # Optional: when None, ``presence_checker`` is used as-is, which is what
     # every test that injects a plain predicate relies on.
     presence_checker_factory: object = None
+    # callable(identities) -> sweep.SweepResult, invoked ONCE PER SCAN for
+    # the whole household: one walk of the broker list checking every
+    # profile per broker, with the bounded retry for pairs a rate-limit or
+    # bot wall left unknown (see sweep.py). When wired, it is what supplies
+    # each cycle's presence checker; ``presence_checker``/
+    # ``presence_checker_factory`` above remain the per-identity fallback
+    # for callers and tests that inject their own predicate.
+    sweep_factory: object = None
     submit_removal: object = None   # callable(broker_id, eraser_profile_dict) -> result dict
     eraser_monitor: object = None   # callable() -> result dict, or None if eraser is disabled
     eraser_status: object = None    # callable() -> result dict, or None if eraser is disabled
@@ -146,8 +155,21 @@ class AutopilotDependencies:
                 log.warning("closer failed", extra={"error": str(exc)})
 
 
+def _call_presence_factory(factory, identity):
+    """Invoke *factory* with the identity when it takes one, without one
+    when it does not. See ``run_scan_cycle`` for why this is decided by
+    signature rather than by catching TypeError."""
+    import inspect
+
+    try:
+        takes_identity = bool(inspect.signature(factory).parameters)
+    except (TypeError, ValueError):  # builtins / C callables have no signature
+        takes_identity = False
+    return factory(identity) if takes_identity else factory()
+
+
 def run_scan_cycle(identity, brokers: list, deps: AutopilotDependencies,
-                    has_id_documents: bool = False) -> dict:
+                    has_id_documents: bool = False, presence_checker=None) -> dict:
     """One scan + decide + act pass.
 
     Returns ``orchestrator.run_cycle``'s result dict plus two extra keys:
@@ -163,9 +185,26 @@ def run_scan_cycle(identity, brokers: list, deps: AutopilotDependencies,
     # (the real deployment), so each scheduled scan is a genuinely fresh
     # sweep rather than a replay of the one taken at process start. See
     # AutopilotDependencies.presence_checker_factory.
-    presence_checker = deps.presence_checker
-    if deps.presence_checker_factory is not None:
-        presence_checker = deps.presence_checker_factory()
+    # A checker handed in by the caller wins: that is the multi-profile
+    # sweep (``sweep.run_sweep``) having ALREADY checked every broker for
+    # every profile in one interleaved pass, of which this cycle is one
+    # person's slice. Rebuilding one here would re-run that person's whole
+    # sweep a second time.
+    if presence_checker is not None:
+        pass
+    elif deps.presence_checker_factory is None:
+        presence_checker = deps.presence_checker
+    else:
+        # The factory is per-IDENTITY as well as per-cycle: with every
+        # profile scanned each pass, a checker built for profile A's name
+        # variants says nothing about profile B. A factory that predates
+        # that (or a test's zero-arg fake) is still called with no
+        # argument rather than blowing up. The arity is decided by
+        # INSPECTING the factory, not by catching TypeError: a TypeError
+        # raised from inside a one-argument factory would otherwise be
+        # swallowed and the whole sweep silently retried without the
+        # identity.
+        presence_checker = _call_presence_factory(deps.presence_checker_factory, identity)
 
     result = run_cycle(
         identity_key, brokers, presence_checker, deps.store,
@@ -227,6 +266,124 @@ def run_scan_cycle(identity, brokers: list, deps: AutopilotDependencies,
     result["decisions"] = decisions
     result["forgotten"] = forgotten
     return result
+
+
+def run_scan_cycles(identities: list, brokers: list, deps: AutopilotDependencies,
+                    has_id_documents: bool = False, progress=None) -> dict:
+    """``run_scan_cycle`` for EVERY profile, one after another.
+
+    This is what "there is no active profile" means at the scan loop: the
+    whole saved list is swept every pass, each profile's outcomes recorded
+    under its own ``identity_key`` (in the state db, which already scopes
+    that way, and in the live progress map).
+
+    Detection itself happens ONCE, for everybody, in ``deps.sweep_factory``
+    (``sweep.run_sweep``): one walk of the broker list with every profile
+    checked per broker, plus its bounded retry of whatever a rate-limit or
+    bot wall left unknown. Each identity's cycle below then only diffs that
+    profile's slice of the sweep against the state db and acts on it, so
+    the expensive network work is not repeated per person.
+
+    Without a sweep factory (every test that injects a plain predicate, and
+    any caller predating the sweep) this falls back to the per-identity
+    path: each cycle builds its own checker, with ``begin_scan`` opened
+    here so profile 2's results accumulate onto profile 1's rather than
+    wiping them. Pass an isolated ``ScanProgress`` in a test to stay off
+    process-wide state.
+
+    One profile's failure never costs the others their scan: an exception
+    is recorded as that profile's ``error`` entry and the loop continues.
+    Aggregates (``new_appearances``/``resolved``/``forgotten`` counts) are
+    summed for the heartbeat, but the per-identity results are returned
+    intact under ``results`` -- "who was found where" is the question, and
+    flattening it away would lose the answer.
+    """
+    from broker_guard import progress as progress_mod
+
+    progress = progress if progress is not None else progress_mod.current()
+    sweep_result = None
+    if deps.sweep_factory is not None and identities:
+        # run_sweep opens the scan itself (it is what knows how many
+        # broker x profile pairs there are), so begin_scan is deliberately
+        # NOT called here as well -- doing both would clear the map the
+        # sweep just filled.
+        sweep_result = deps.sweep_factory(identities)
+    else:
+        progress.begin_scan(identity_keys=[i.identity_key for i in identities])
+
+    results = {}
+    try:
+        for identity in identities:
+            try:
+                results[identity.identity_key] = run_scan_cycle(
+                    identity, brokers, deps, has_id_documents=has_id_documents,
+                    presence_checker=(sweep_result.checker_for(identity.identity_key)
+                                      if sweep_result is not None else None),
+                )
+            except Exception as exc:
+                log.exception("scan cycle failed for one profile",
+                              extra={"identity_key": identity.identity_key})
+                results[identity.identity_key] = {
+                    "identity_key": identity.identity_key,
+                    "error": "{}: {}".format(type(exc).__name__, exc),
+                }
+    finally:
+        progress.end_scan()
+
+    def _total(key):
+        return sum(len(r.get(key) or ()) for r in results.values())
+
+    detection_errors = sum(
+        r.get("detection_errors") or 0 for r in results.values()
+        if isinstance(r.get("detection_errors"), int)
+    )
+    return {
+        "results": results,
+        "identity_keys": [i.identity_key for i in identities],
+        "profiles_scanned": len(identities),
+        # A user-requested stop cancels the WHOLE multi-profile pass (the
+        # sweep's own loop, its pending retries, and therefore every
+        # profile's share of it) -- see sweep.py. Surfaced here so the
+        # heartbeat and the dashboard can say "stopped early" rather than
+        # reporting a truncated pass as a completed one.
+        "stopped": bool(sweep_result.stopped) if sweep_result is not None else False,
+        "retried_pairs": sweep_result.retried_pairs if sweep_result is not None else 0,
+        "unresolved_pairs": (sweep_result.unresolved_pairs
+                             if sweep_result is not None else 0),
+        "failed_profiles": [k for k, r in results.items() if r.get("error")],
+        # {identity_key: message} for the profiles that blew up -- the
+        # messages themselves, not just the count, so the heartbeat can
+        # say WHAT failed instead of only that something did.
+        "errors": {k: r["error"] for k, r in results.items() if r.get("error")},
+        "current": _total("current"),
+        "new_appearances": _total("new_appearances"),
+        "resolved": _total("resolved"),
+        "forgotten": _total("forgotten"),
+        "detection_errors": detection_errors,
+    }
+
+
+def _merge_detection(results: dict) -> "dict | None":
+    """Sum every profile's per-leg detection tallies into one
+    ``{'serp': {...}, 'browser': {...}}`` block for the heartbeat.
+
+    Returns ``None`` when not one profile reported a tally (e.g. a
+    hand-injected test checker with no ``serp_stats``), so the heartbeat
+    omits the field instead of persisting a fabricated all-zero block that
+    ``webui_data.last_scan_detection_line`` would read as a real, clean
+    scan.
+    """
+    merged = {"serp": {}, "browser": {}}
+    seen = False
+    for result in results.values():
+        detection = result.get("detection")
+        if not isinstance(detection, dict):
+            continue
+        seen = True
+        for leg in ("serp", "browser"):
+            for key, value in (detection.get(leg) or {}).items():
+                merged[leg][key] = merged[leg].get(key, 0) + value
+    return merged if seen else None
 
 
 def run_confirmation_pass(deps: AutopilotDependencies) -> dict:
@@ -346,17 +503,23 @@ def build_dependencies(cfg: Config) -> AutopilotDependencies:
             store=base.store,
         )
 
-    def presence_checker_factory():
-        """Run a FRESH sweep for the cycle that is about to start.
+    def presence_checker_factory(identity=None):
+        """Run a FRESH sweep for the profile/cycle that is about to start.
 
-        The profile and broker list are re-read here too, not captured
-        once: a profile edited through the /identity page, or a
-        regenerated brokers.json, then takes effect on the next scheduled
-        scan instead of requiring a container restart. The same now goes for
-        the detection settings themselves.
+        The broker list is re-read here too, not captured once: a
+        regenerated brokers.json takes effect on the next scheduled scan
+        instead of requiring a container restart. The same goes for the
+        detection settings themselves.
+
+        *identity* is the profile being scanned this pass -- every saved
+        profile gets its own sweep, so the checker has to be built from
+        that profile's own name variants. ``None`` falls back to the
+        legacy single-identity file, which is what the pre-multi-profile
+        callers pass.
         """
         live = live_cfg()
-        identity = profile_mod.load_profile(live.profile_path)
+        if identity is None:
+            identity = profile_mod.load_profile(live.profile_path)
         broker_list = brokers_mod.load_brokers(live.brokers_path)
         return service_mod.build_presence_checker(
             identity, broker_list, _detection_deps(live), live,
@@ -396,10 +559,19 @@ def build_dependencies(cfg: Config) -> AutopilotDependencies:
         bridge = _confirmation_bridge()
         return None if bridge is None else bridge.status()
 
+    def sweep_factory(identities):
+        """One interleaved sweep for the whole household -- see sweep.py."""
+        from broker_guard import sweep as sweep_mod
+
+        live = live_cfg()
+        broker_list = brokers_mod.load_brokers(live.brokers_path)
+        return sweep_mod.run_sweep(identities, broker_list, _detection_deps(live), live)
+
     return AutopilotDependencies(
         store=base.store,
         presence_checker=None,
         presence_checker_factory=presence_checker_factory,
+        sweep_factory=sweep_factory,
         submit_removal=submit_removal,
         eraser_monitor=eraser_monitor,
         eraser_status=eraser_status,
@@ -432,6 +604,11 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     confirmation on ``confirmation_seconds``, until ``stop`` is set. Both
     passes run once immediately on start.
 
+    Every scan pass sweeps EVERY saved profile (``run_scan_cycles``), not
+    one "active" one -- see ``profiles.py``'s module docstring. The profile
+    list is re-read at the top of each pass, so an added or edited profile
+    joins the next scan without a restart.
+
     ``sleep`` defaults to ``stop.wait`` (interruptible, matches
     ``service.main``'s pattern) but is an injection seam: a test passes a
     fake that increments a counter and sets ``stop`` after N calls, so the
@@ -456,8 +633,27 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     from broker_guard import settings as settings_mod
 
     sleep = sleep or stop.wait
-    identity = profile_mod.load_profile(cfg.profile_path)
     broker_list = brokers_mod.load_brokers(cfg.brokers_path)
+
+    def _scan_identities() -> list:
+        """Every saved profile, re-read at the top of each scan.
+
+        Re-read rather than captured once so a profile added or edited on
+        the Profile page joins the very next scheduled scan instead of
+        waiting for a container restart -- and so "all profiles are
+        scanned" keeps being true as the list changes.
+        """
+        from broker_guard import profiles as profiles_mod
+
+        try:
+            return profiles_mod.load_scan_identities(cfg.profiles_path, cfg.profile_path)
+        except Exception as exc:  # pragma: no cover - defensive
+            log.warning("profiles unreadable; falling back to the legacy profile",
+                        extra={"error": "{}: {}".format(type(exc).__name__, exc)})
+            try:
+                return [profile_mod.load_profile(cfg.profile_path)]
+            except (OSError, ValueError):
+                return []
 
     def _live_scan_seconds() -> int:
         """The scan interval as of right now: the stored setting if the
@@ -506,20 +702,44 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
             # yet", indistinguishable from the loop actually being stuck.
             service_mod.write_heartbeat(cfg, {"last_run": started, "status": "running"})
             try:
-                result = run_scan_cycle(identity, broker_list, deps, has_id_documents=has_id_documents)
-                payload = {"last_run": started, "ok": True, "status": "done"}
-                if isinstance(result, dict):
-                    payload["present"] = len(result.get("current", []))
-                    payload["new"] = len(result.get("new_appearances", []))
-                    # Persisted so the dashboard can render "last scan:
-                    # checked 827, 0 errors" vs "... 340 errors" AFTER the
-                    # cycle ends, when the in-memory progress counter has
-                    # gone inactive. A cycle that errored everywhere is not
-                    # a successful cycle that found nothing.
-                    detection = result.get("detection")
-                    if isinstance(detection, dict):
-                        payload["detection"] = detection
-                        payload["detection_errors"] = result.get("detection_errors", 0)
+                identities = _scan_identities()
+                sweep = run_scan_cycles(identities, broker_list, deps,
+                                        has_id_documents=has_id_documents)
+                payload = {
+                    "last_run": started, "ok": not sweep["failed_profiles"], "status": "done",
+                    # Aggregated across every profile scanned this pass;
+                    # `profiles_scanned` is what makes "0 found" readable
+                    # (0 across 3 people, or 0 because nobody was scanned).
+                    "present": sweep["current"],
+                    "new": sweep["new_appearances"],
+                    "profiles_scanned": sweep["profiles_scanned"],
+                    "identity_keys": sweep["identity_keys"],
+                    # A pass the person stopped is neither "completed" nor
+                    # "failed"; it is a real, partial pass, and every
+                    # surface that reads this heartbeat says so rather
+                    # than implying a full sweep finished.
+                    "stopped": sweep["stopped"],
+                    "retried_pairs": sweep["retried_pairs"],
+                    "unresolved_pairs": sweep["unresolved_pairs"],
+                }
+                if sweep["failed_profiles"]:
+                    payload["failed_profiles"] = sweep["failed_profiles"]
+                    # A per-profile failure is contained (the other
+                    # profiles still get scanned) but it is still a real
+                    # error, and the heartbeat is the only place anything
+                    # reads it back from. Keep the SAME `error` string
+                    # shape a whole-cycle exception writes, so health
+                    # checks have one field to look at instead of two.
+                    payload["error"] = "; ".join(sweep["errors"].values())
+                # Persisted so the dashboard can render "last scan:
+                # checked 827, 0 errors" vs "... 340 errors" AFTER the
+                # cycle ends, when the in-memory progress counter has
+                # gone inactive. A cycle that errored everywhere is not
+                # a successful cycle that found nothing.
+                detection = _merge_detection(sweep["results"])
+                if detection is not None:
+                    payload["detection"] = detection
+                    payload["detection_errors"] = sweep["detection_errors"]
                 service_mod.write_heartbeat(cfg, payload)
             except Exception as exc:
                 log.exception("autopilot scan cycle failed",
@@ -591,9 +811,12 @@ def main(argv=None) -> int:  # pragma: no cover - thin CLI wrapper, exercised ma
 
     try:
         if args.once:
-            identity = profile_mod.load_profile(cfg.profile_path)
+            from broker_guard import profiles as profiles_mod
+
+            identities = profiles_mod.load_scan_identities(cfg.profiles_path, cfg.profile_path)
             broker_list = brokers_mod.load_brokers(cfg.brokers_path)
-            run_scan_cycle(identity, broker_list, deps, has_id_documents=has_id_documents_on_file(cfg))
+            run_scan_cycles(identities, broker_list, deps,
+                            has_id_documents=has_id_documents_on_file(cfg))
             run_confirmation_pass(deps)
         else:
             run_forever(cfg, deps, Intervals(scan_seconds=cfg.interval_seconds), stop,

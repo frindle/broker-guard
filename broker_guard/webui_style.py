@@ -69,11 +69,12 @@ NAV_ITEMS = (
     ("dashboard", "/", "Dashboard"),
     ("brokers", "/brokers", "Brokers"),
     ("action", "/brokers#action-needed", "Action needed"),
-    # One nav entry, not two: /identity IS the profiles list now (the
-    # active profile pinned on top). /profiles still redirects there for
-    # old bookmarks, but giving it its own tab is what made people think
-    # they were two separate places to manage identity.
-    ("identity", "/identity", "Profile"),
+    # One nav entry, not two: /identity IS the profiles list now. /profiles
+    # still redirects there for old bookmarks, but giving it its own tab is
+    # what made people think they were two separate places to manage
+    # identity. Plural label, because every profile is equally real now --
+    # there is no single "your profile" to point at.
+    ("identity", "/identity", "Profiles"),
     ("exposure", "/exposure", "Exposure"),
     ("freeze", "/freeze", "Credit freeze"),
     # The runtime knobs that used to be editable ONLY as env vars in the
@@ -158,8 +159,11 @@ table.dtable { width: 100%; border-collapse: collapse; }
   background: var(--input-bg); font-size: 13px; font-family: inherit; color: var(--ink);
 }
 .toolbar input[type=text] { flex: 1; min-width: 180px; }
+/* Broker / Profile / Verification / Status / Last update / chevron.
+   The chevron column is fixed-width so the five data columns line up with
+   the .rowhead header above them. */
 .row-summary {
-  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 14px; align-items: center;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 20px; gap: 14px; align-items: center;
   padding: 13px 16px; border-bottom: 1px solid #F1EFE9; cursor: pointer; list-style: none;
 }
 .row-summary::-webkit-details-marker { display: none; }
@@ -173,11 +177,24 @@ table.dtable { width: 100%; border-collapse: collapse; }
    not expandable, because there is no per-broker detail to expand into;
    the outcome badge IS the content. */
 .scanrow {
-  display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; align-items: center;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 14px; align-items: center;
   padding: 11px 16px; border-bottom: 1px solid #F1EFE9;
 }
 .scanrow .name { font-weight: 600; font-size: 14px; }
 .scanrow .sub { font-size: 12px; color: var(--faint); }
+/* Column headers. Same grid as the rows beneath them (the class is applied
+   alongside .row-summary / .scanrow), restyled as a header strip and with
+   the row's click-to-expand cursor suppressed. */
+.rowhead {
+  cursor: default; background: #FBFBF9; border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--faint); padding-top: 9px; padding-bottom: 9px;
+}
+.rowhead .sortable { cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 4px; }
+.rowhead .sortable:hover { color: var(--teal-ink); }
+/* The arrow is empty until sortBy() fills it, so unsorted headers do not
+   imply an order that is not actually applied. */
+.sortarrow { font-size: 9px; line-height: 1; color: var(--teal); }
 #scanRowsContainer { max-height: 620px; overflow-y: auto; }
 .stepper { display: flex; align-items: flex-start; margin: 14px 0 18px; }
 .step { flex: 1; text-align: left; position: relative; }
@@ -206,11 +223,31 @@ table.dtable { width: 100%; border-collapse: collapse; }
 textarea.inp { height: auto; padding: 10px 12px; line-height: 1.5; resize: vertical; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .field label { font-size: 13px; font-weight: 500; }
+/* One button treatment for every button-shaped thing, <button> or <a>.
+   inline-flex + centering is what makes an <a class="btn"> actually look
+   like a button: height/padding do nothing on an inline element, which is
+   why the "Edit"/"Cancel" links used to render as bare underlined text
+   next to real buttons. */
 .btn {
-  height: 40px; padding: 0 18px; border: none; border-radius: 10px; background: var(--teal); color: #fff;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 40px; padding: 0 18px; border: 1px solid transparent; border-radius: 10px;
+  background: var(--teal); color: #fff; text-decoration: none; white-space: nowrap;
   font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
-.btn.secondary { background: #fff; border: 1px solid var(--input-border); color: var(--ink); }
+.btn:hover { background: var(--teal-ink); }
+.btn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.btn.secondary { background: #fff; border-color: var(--input-border); color: var(--ink); }
+.btn.secondary:hover { background: var(--teal-fill); border-color: var(--teal); color: var(--teal-ink); }
+.btn.small { height: 32px; padding: 0 12px; font-size: 12px; border-radius: 8px; }
+.btn.danger:hover { background: var(--escalated-fill); border-color: #e3b6b4; color: var(--escalated-ink); }
+.btn:disabled, .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn:disabled:hover, .btn[disabled]:hover { background: var(--teal); }
+.btn.secondary:disabled:hover, .btn.secondary[disabled]:hover { background: #fff; border-color: var(--input-border); color: var(--ink); }
+/* Button groups (profile row actions, form save/cancel): the forms that
+   wrap single buttons are display:contents so they do not break the row. */
+.rowactions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rowactions form { display: contents; }
 .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
 """
 

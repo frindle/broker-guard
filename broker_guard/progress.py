@@ -43,11 +43,12 @@ brokers the person was FOUND on), stayed empty for a whole clean scan. A
 run that checked 827 brokers and found nothing looked exactly like a run
 that had not started.
 
-So a cycle now also keeps ``brokers``: ``broker_id -> {outcome, hits,
-errors, checked_at, phase, identity_key}``. A broker absent from that map
-has NOT been reached yet in this cycle; it is deliberately never
-represented as ``checked``, which is the same "unknown is not absent"
-principle the error/checked split exists for.
+So a cycle now also keeps ``brokers``: ``entry_key(identity_key,
+broker_id) -> {broker_id, outcome, hits, errors, checked_at, phase,
+identity_key}``. A (profile, broker) pair absent from that map has NOT
+been reached yet in this scan; it is deliberately never represented as
+``checked``, which is the same "unknown is not absent" principle the
+error/checked split exists for.
 
 Cycle, not phase
 ----------------
@@ -67,14 +68,40 @@ checked > skipped -- which is exactly the precedence
 (a hit from either leg is a hit; an errored browser check is "unknown"
 even when the SERP leg came back clean).
 
-Identity
---------
-Each entry carries the ``identity_key`` of the profile that was active
-when it was recorded (``profile.Identity.identity_key`` -- the SAME key
-``state.py`` scopes ``presence``/``broker_status`` by; this module does not
-derive a second one). Only the active profile is ever scanned, so a cycle's
-entries all carry one key, but tagging them means a page filtered to
-profile B cannot silently show profile A's results.
+Identity: MANY profiles per scan
+---------------------------------
+Every saved profile is scanned on every autopilot pass (see
+``profiles.py``'s docstring -- there is no "active profile" any more), so
+one scan contains N per-identity cycles run back to back, each with its
+own SERP and browser legs.
+
+That is why the per-broker map is keyed by ``entry_key(identity_key,
+broker_id)`` and not by ``broker_id``: the same broker is checked once
+per profile, and those outcomes are DIFFERENT results about different
+people. Keying by broker id alone would have merged them through
+``OUTCOME_RANK`` and reported one person's hit as everybody's.
+
+``begin_scan()`` opens the whole multi-profile pass (this is the map's
+reset point); ``begin_cycle(identity_key, total)`` then opens each
+profile's own cycle inside it, ADDING to the map rather than clearing it,
+tagging everything it records with that profile's ``identity_key`` (the
+SAME key ``state.py`` scopes ``presence``/``broker_status`` by; this
+module does not derive a second one). ``identity_keys`` in the snapshot
+is every profile this scan has covered so far, in order -- that is what
+lets ``/brokers`` say which profiles were checked. A ``begin_cycle`` with
+no scan open still clears the map, so a single-identity caller (several
+tests, ``service.run_once``) behaves exactly as it did before.
+
+Stopping a scan
+---------------
+``request_stop()`` sets a cooperative cancellation flag that both legs
+poll BETWEEN brokers (``should_stop``). Nothing is torn down mid-broker
+and nothing already recorded is discarded -- a stopped scan is a real,
+partial scan, and the brokers it never reached stay ``pending``
+("not yet checked"), never ``checked``. ``mark_stopped()`` records that a
+sweep genuinely ended early, which is what lets every surface say
+"stopped early" instead of claiming a full pass finished. The flag is
+per-scan: opening the next one clears it.
 
 Every mutation takes ``self._lock``; ``snapshot()`` returns a plain dict
 copy taken under that same lock, so a reader can never observe a half
@@ -85,6 +112,11 @@ from datetime import datetime, timezone
 
 PHASE_SERP = "serp"
 PHASE_BROWSER = "browser"
+#: The multi-profile sweep (``sweep.run_sweep``): one phase over every
+#: (broker, profile) PAIR, because that sweep interleaves the SERP and
+#: browser legs per pair rather than running them as two separate passes.
+#: ``total`` is therefore brokers x profiles, and "412/1654" means pairs.
+PHASE_SWEEP = "sweep"
 
 #: The per-broker outcomes ``record()`` accepts. Anything else raises --
 #: a typo'd outcome silently inflating the wrong bucket is exactly the
@@ -108,6 +140,18 @@ def utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def entry_key(identity_key: str | None, broker_id) -> str:
+    """The per-broker map's key: one entry per (profile, broker) pair.
+
+    ``identity_key`` is a 32-char hex digest (see
+    ``profile.Identity.identity_key``), so ``|`` cannot occur in it and
+    this composition is unambiguous. A ``None`` identity (a caller driving
+    a phase with no profile in hand) gets its own empty-prefix namespace
+    rather than colliding with a real profile's entries.
+    """
+    return "{}|{}".format(identity_key or "", broker_id)
+
+
 class ScanProgress:
     """Thread-safe counters for the broker sweep currently in flight.
 
@@ -119,6 +163,14 @@ class ScanProgress:
     def __init__(self, now=None):
         self._lock = threading.Lock()
         self._now = now or utcnow_iso
+        # The cancellation flag for the sweep these counters describe.
+        # An Event rather than a bool because the sweep that polls it runs
+        # in a different thread from the /scan/stop request that sets it.
+        # It lives here, on the one process-wide object that already
+        # represents "the scan currently in flight", rather than in a
+        # second singleton that could disagree with this one about which
+        # scan is running.
+        self._stop = threading.Event()
         self._clear_locked()
 
     # -- mutation -----------------------------------------------------
@@ -137,11 +189,20 @@ class ScanProgress:
         self.updated_at = None
 
     def _clear_cycle_locked(self) -> None:
-        """Reset only the per-CYCLE, per-broker state."""
+        """Reset only the per-SCAN, per-broker state."""
         self.brokers = {}
         self.identity_key = None
+        self.identity_keys = []
         self.cycle_total = 0
         self.cycle_started_at = None
+        self.scan_open = False
+        # A stop request belongs to the scan it was made against: clearing
+        # the per-scan state clears it too, so a request that arrived after
+        # a sweep already ended can never cancel the NEXT one before it has
+        # checked a single broker.
+        self._stop.clear()
+        self.stop_requested = False
+        self.stopped = False
 
     def _clear_locked(self) -> None:
         self._clear_counters_locked()
@@ -205,43 +266,128 @@ class ScanProgress:
         setattr(self, _FIELD_FOR[outcome], getattr(self, _FIELD_FOR[outcome]) + count)
         self.updated_at = self._now()
 
-    def begin_cycle(self, identity_key: str | None = None, total: int = 0) -> None:
-        """Open a new cycle: clear the per-broker map, tag it with the
-        identity being scanned, and record how many brokers it covers.
+    def begin_scan(self, identity_keys=(), total: int = 0) -> None:
+        """Open a multi-profile scan: the reset point for the per-broker
+        map when more than one identity is about to be swept.
 
-        Called once per cycle (``service.build_presence_checker``) BEFORE
-        either leg starts, which is what lets the SERP and browser legs'
-        per-broker results coexist while ``start()`` goes on resetting the
-        aggregate counters per phase. Also clears the aggregate counters,
-        so a cycle that reaches ``begin_cycle`` and then does nothing (no
-        search backend, no browser) does not leave the previous cycle's
-        numbers on screen as if they were this one's.
+        Called ONCE by the driver that is about to check every broker
+        against every profile (``sweep.run_sweep``, and the per-identity
+        drivers ``autopilot.run_scan_cycles`` / ``service.run_all``).
+        Each profile's results then ACCUMULATE into the same map instead
+        of wiping the profiles already done -- which is exactly what
+        ``begin_cycle`` had to do back when one scan meant one identity.
+
+        *total* is the number of (broker, profile) pairs this scan covers,
+        so "not yet checked" counts the whole household's work, not one
+        person's. *identity_keys* is who is being scanned, which is what
+        /brokers renders as "profiles checked"; ``set_identity`` adds any
+        that show up later.
         """
         with self._lock:
             self._clear_counters_locked()
             self._clear_cycle_locked()
-            self.identity_key = identity_key
+            self.scan_open = True
+            self.identity_keys = [k for k in identity_keys if k]
             self.cycle_total = max(0, int(total))
             self.cycle_started_at = self._now()
 
-    def record_outcome(self, broker_id, outcome: str, hits: int = 0, errors: int = 0) -> None:
-        """Record ONE broker's outcome: the aggregate counters AND the
-        per-broker map, under a single acquisition of the lock.
+    def set_identity(self, identity_key: str | None) -> None:
+        """Tag everything recorded from now on as *identity_key*'s.
+
+        The multi-profile sweep interleaves profiles WITHIN one broker, so
+        the current identity changes many times per phase; this is the
+        cheap per-pair tag for that, where ``begin_cycle`` is the "a whole
+        cycle belongs to this person" call the single-identity path uses.
+        """
+        with self._lock:
+            self.identity_key = identity_key
+            if identity_key is not None and identity_key not in self.identity_keys:
+                self.identity_keys.append(identity_key)
+
+    def end_scan(self) -> None:
+        """Close the multi-profile scan, KEEPING everything it recorded.
+
+        Only the "a scan is open" flag flips, so the next standalone
+        ``begin_cycle`` (a single-identity caller) reverts to clearing the
+        map, while the finished scan's results stay readable on /brokers
+        until the next one starts -- the same rule ``finish()`` follows for
+        the aggregate counters.
+        """
+        with self._lock:
+            self.scan_open = False
+
+    def begin_cycle(self, identity_key: str | None = None, total: int = 0) -> None:
+        """Open ONE identity's cycle: tag what follows with *identity_key*
+        and account for the *total* brokers it covers.
+
+        Called once per identity (``service.build_presence_checker``)
+        BEFORE either leg starts, which is what lets the SERP and browser
+        legs' per-broker results coexist while ``start()`` goes on
+        resetting the aggregate counters per phase. Also clears the
+        aggregate counters, so a cycle that reaches ``begin_cycle`` and
+        then does nothing (no search backend, no browser) does not leave
+        the previous cycle's numbers on screen as if they were this one's.
+
+        Inside an open ``begin_scan`` the per-broker map is PRESERVED and
+        *total* ADDS to ``cycle_total`` -- the scan covers every profile's
+        brokers, so "not yet reached" has to count them all. With no scan
+        open it clears the map, the pre-multi-profile behaviour every
+        single-identity caller still relies on.
+        """
+        with self._lock:
+            self._clear_counters_locked()
+            if not self.scan_open:
+                self._clear_cycle_locked()
+                self.cycle_total = max(0, int(total))
+                self.cycle_started_at = self._now()
+            else:
+                self.cycle_total += max(0, int(total))
+            self.identity_key = identity_key
+            if identity_key is not None and identity_key not in self.identity_keys:
+                self.identity_keys.append(identity_key)
+
+    def record_outcome(self, broker_id, outcome: str, hits: int = 0, errors: int = 0,
+                       replace: bool = False) -> None:
+        """Record ONE (profile, broker) outcome: the aggregate counters AND
+        the per-broker map, under a single acquisition of the lock.
 
         ``record()``'s behaviour is unchanged and still usable on its own;
         this is the strictly larger operation, not a replacement. A
         ``broker_id`` of ``None`` still counts toward the aggregate (a
         caller with nothing to key by must not silently lose the tick).
+
+        ``replace`` is the RETRY path (``sweep.run_sweep``): the pair
+        already has an entry and has already been counted once, so the
+        entry is overwritten rather than rank-merged -- a retry that came
+        back clean must not stay pinned to the ``error`` it replaces,
+        which is the whole point of retrying -- and the aggregate counters
+        are left alone, because re-checking a broker does not make it a
+        second broker.
         """
         _check_outcome(outcome)
         with self._lock:
-            self._record_locked(outcome, 1)
+            if not replace:
+                self._record_locked(outcome, 1)
+            else:
+                self.updated_at = self._now()
             if broker_id is None:
                 return
-            key = str(broker_id)
+            if replace:
+                key = entry_key(self.identity_key, broker_id)
+                self.brokers[key] = {
+                    "broker_id": str(broker_id), "outcome": outcome,
+                    "hits": max(0, int(hits or 0)), "errors": max(0, int(errors or 0)),
+                    "checked_at": self.updated_at, "phase": self.phase,
+                    "identity_key": self.identity_key, "retried": True,
+                }
+                return
+            # Keyed per (profile, broker): the same broker checked for two
+            # profiles is two independent results, and merging them through
+            # OUTCOME_RANK would report one person's hit as the other's.
+            key = entry_key(self.identity_key, broker_id)
             entry = self.brokers.get(key)
             if entry is None:
-                entry = {"broker_id": key, "outcome": outcome, "hits": 0,
+                entry = {"broker_id": str(broker_id), "outcome": outcome, "hits": 0,
                          "errors": 0, "checked_at": None, "phase": None,
                          "identity_key": self.identity_key}
                 self.brokers[key] = entry
@@ -252,6 +398,41 @@ class ScanProgress:
             entry["checked_at"] = self.updated_at
             entry["phase"] = self.phase
             entry["identity_key"] = self.identity_key
+
+    # -- cancellation --------------------------------------------------
+
+    def request_stop(self) -> None:
+        """Ask the sweep in flight to stop at the next broker boundary.
+
+        Cooperative, not a kill: the legs (``serpwatch.run_serpwatch``,
+        ``playwright_checks.run_playwright_checks``) poll ``should_stop``
+        BETWEEN brokers, so an in-flight HTTP request or page load
+        finishes rather than being torn down half way, and everything
+        already recorded stays recorded. Idempotent, and safe to call when
+        nothing is running (it is cleared when the next scan opens).
+        """
+        with self._lock:
+            self._stop.set()
+            self.stop_requested = True
+
+    def should_stop(self) -> bool:
+        """Has a stop been requested for the scan in flight? Lock-free on
+        purpose: this is polled once per broker, and ``Event.is_set`` is
+        already atomic."""
+        return self._stop.is_set()
+
+    def mark_stopped(self) -> None:
+        """Record that a sweep actually ENDED EARLY because of a stop
+        request.
+
+        Kept distinct from ``stop_requested`` (which only says a request
+        arrived) so a request that landed as the last broker finished does
+        not get reported as a truncated scan. This is what the dashboard,
+        the /scan job status and the heartbeat all read to say "stopped
+        early" rather than either "completed" or "failed".
+        """
+        with self._lock:
+            self.stopped = True
 
     def finish(self) -> None:
         """Mark the phase complete, KEEPING the counters.
@@ -273,8 +454,9 @@ class ScanProgress:
         ``percent`` is None -- not 0 -- when ``total`` is 0, so a caller
         cannot render a confident "0%" for a denominator nobody knows.
 
-        ``include_brokers`` adds the per-broker map (a deep-enough copy:
-        fresh dicts, so a reader cannot mutate live state). It is off by
+        ``include_brokers`` adds the per-broker map, keyed by
+        ``entry_key(identity_key, broker_id)`` (a deep-enough copy: fresh
+        dicts, so a reader cannot mutate live state). It is off by
         default because the dashboard's 1.5s poll wants five integers, not
         827 objects; only ``/brokers`` asks for the map.
 
@@ -302,6 +484,12 @@ class ScanProgress:
                 "started_at": self.started_at,
                 "updated_at": self.updated_at,
                 "identity_key": self.identity_key,
+                # Every profile this scan has covered so far, in order --
+                # what /brokers renders as "profiles checked".
+                "identity_keys": list(self.identity_keys),
+                "scan_open": self.scan_open,
+                "stop_requested": self.stop_requested,
+                "stopped": self.stopped,
                 "cycle_total": self.cycle_total,
                 "cycle_started_at": self.cycle_started_at,
                 "recorded": recorded,

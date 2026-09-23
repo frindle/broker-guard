@@ -2,30 +2,19 @@
 UI, backing what used to require running ``eraser profile add/edit/remove``
 by hand against ``~/.eraser/config.yaml``.
 
-Scope (v1), stated explicitly per the feature request this implements
-------------------------------------------------------------------------
-This module is CRUD + eraser-sync ONLY. A broker-guard "profile" here is a
-named identity, stored in ``data/profiles.json`` (path: ``Config.
-profiles_path``), and mirrored into eraser's ``~/.eraser/config.yaml``
-``profiles:`` list (see ``eraser_config.sync_profiles``) so ``eraser send
---profile <id>`` etc. keep working for any of them from the CLI.
+Scope
+--------
+This module is the profile STORE (CRUD + eraser-sync). A broker-guard
+"profile" here is a named identity, stored in ``data/profiles.json``
+(path: ``Config.profiles_path``), and mirrored into eraser's
+``~/.eraser/config.yaml`` ``profiles:`` list (see
+``eraser_config.sync_profiles``) so ``eraser send --profile <id>`` etc.
+keep working for any of them from the CLI.
 
-It does NOT wire multiple profiles through broker-guard's own scan /
-removal-detection / autopilot loop -- that loop (``service.run_once`` /
-``autopilot.run_scan_cycle``) still reads exactly one identity, from the
-single legacy ``profile.local.json`` (``Config.profile_path``), same as
-before this feature. Scanning/removal-tracking N profiles concurrently
-(separate ``presence``/``broker_status`` rows per profile, a profile
-switcher on the dashboard, etc.) is real additional work -- a stated
-follow-up, not something silently half-wired here.
-
-Why a *separate* store rather than replacing ``profile.local.json``
----------------------------------------------------------------------
-Every other module (``service``, ``autopilot``, ``webui``'s non-Profiles
-routes, the state db's ``identity_key`` scoping) reads exactly one
-``Identity`` from ``Config.profile_path``. Changing that to "one of N" is
-the multi-profile-scan follow-up above, not this change -- so this module
-adds a parallel list store instead of touching that contract.
+Every profile in this list is scanned on every cycle -- see "Every
+profile is scanned" below for how that reaches the scan loop, and
+``load_scan_identities`` for the one function that hands it the set of
+identities to sweep.
 
 ID stability, ported from eraser's own Go rule
 -------------------------------------------------
@@ -51,38 +40,44 @@ from eraser's ``profiles:`` list. It never touches eraser's ``history.db``
 reachable again if a profile with that same id is ever re-added, exactly
 matching ``cmd_profile.go``'s documented behavior.
 
-The "Identity" tab IS the active profile (post-merge)
---------------------------------------------------------
-Live feedback after v1 shipped: having a separate "Identity" page and
-"Profiles" section was confusing -- two places to manage identity data,
-and a profile added on one didn't show up on the other. The fix is NOT a
-new third store; it is one invariant on this list: at most one
-``NamedProfile.active`` is ``True`` at a time (enforced by every writer
-below -- ``add_profile``, ``set_active``, ``remove_profile``), and the
-merged ``/identity`` page in ``webui.py`` is just this list with that one
-entry pinned to the top and pre-selected for editing. Editing it (still
-via ``POST /identity``, unchanged route/validation) upserts the active
-entry here too (``upsert_active_profile``), so a save always shows up in
-the list. ``migrate_legacy_profile_if_needed`` is the one-time backfill
-for a deployment that already had a ``profile.local.json`` before this
-merge shipped, so that pre-existing identity appears in the list too,
-without the person having to re-enter it.
+Every profile is scanned, every cycle -- there is no "active" one
+------------------------------------------------------------------
+There USED to be an ``active`` flag on this list: exactly one profile was
+``active``, it was the only identity the scan/autopilot loop ever ran
+against, and the UI had a "Make active" button to switch it. That is
+gone. A data-broker monitor whose whole job is scrubbing a household's
+personal data has no reason to watch one person at a time, and the flag
+made "who is actually being scanned" a piece of hidden state that had to
+be remembered and toggled.
 
-This still does NOT touch the scan-loop boundary described above:
-whichever profile is ``active`` here is mirrored into the same, single
-``profile.local.json`` the loop already read before this merge -- the
-loop's contract ("read exactly one Identity from ``Config.profile_path``")
-is unchanged. Only the UI now offers one place to view/switch it, plus
-sync FROM the multi-profile list back to that single legacy file whenever
-the active profile changes (edit, add-the-first-one, remove-the-active-
-one, or an explicit "Set active"). Concurrently scanning N profiles is
-still the same stated follow-up, not part of this change either.
+The rule now: **every saved profile is scanned on every cycle**
+(``autopilot.run_scan_cycles`` / ``service.run_all``), and every result
+is tagged with that profile's own ``identity_key`` -- the same key
+``state.py`` already scopes ``presence``/``broker_status`` by, and the
+same key ``progress.ScanProgress`` now tags each per-broker outcome with
+(it holds outcomes for MANY identities per scan, keyed by
+``identity_key|broker_id``). Results are therefore per person, end to
+end, with no global "which profile is this?" to get wrong.
+
+``profile.local.json`` (``Config.profile_path``) still exists as a
+COMPATIBILITY artifact, not as "the active profile": it is kept mirrored
+to the FIRST entry in this list (``sync_primary_to_legacy``) so single-
+identity entry points that predate multi-profile scanning
+(``service.run_once``, ``POST /identity``, a deployment whose
+``profiles.json`` has not been created yet) keep working unchanged.
+``load_scan_identities`` is what the scan loops actually call: every
+saved profile, falling back to that legacy file when the list is empty.
+``migrate_legacy_profile_if_needed`` is the one-time backfill for a
+deployment that had a ``profile.local.json`` before the list existed.
 """
 import json
 import os
+import logging
 import re
 import tempfile
 from dataclasses import asdict, dataclass, field
+
+log = logging.getLogger(__name__)
 
 _NON_SLUG_CHARS = re.compile(r"[^a-z0-9]+")
 
@@ -130,13 +125,11 @@ class NamedProfile:
     phones: list = field(default_factory=list)
     addresses: list = field(default_factory=list)
     eraser_profile: str | None = None
-    # Exactly one profile in the list this came from is ever ``True`` at a
-    # time (see "The Identity tab IS the active profile" above) -- the one
-    # whose data is mirrored into the legacy ``profile.local.json`` that
-    # ``service``/``autopilot`` actually read. Every writer in this module
-    # (add_profile/set_active/remove_profile) maintains that invariant;
-    # load_profiles trusts what's on disk rather than re-deriving it.
-    active: bool = False
+    # NOTE: there is deliberately no ``active`` field. Every profile is
+    # scanned every cycle -- see the module docstring. A profiles.json
+    # written before that change still carries an ``active`` key per entry;
+    # ``load_profiles`` simply ignores it, so an old file loads cleanly and
+    # the flag disappears the next time the list is saved.
 
     @property
     def full_name(self) -> str:
@@ -190,7 +183,6 @@ def load_profiles(path: str) -> list[NamedProfile]:
             phones=_as_str_list(entry.get("phones")),
             addresses=_as_str_list(entry.get("addresses")),
             eraser_profile=entry.get("eraser_profile"),
-            active=bool(entry.get("active", False)),
         ))
     return out
 
@@ -231,12 +223,8 @@ def add_profile(path: str, data: dict) -> NamedProfile:
     The id is ALWAYS derived here via ``slugify_profile_id`` -- a caller
     never supplies one, so two profiles can never collide.
 
-    If *path* has no profiles at all yet, the new one is automatically
-    ``active`` -- there is always exactly one active profile once the list
-    is non-empty. A caller that already migrated/created an active profile
-    (the normal case once the merged UI has been opened once -- see
-    ``migrate_legacy_profile_if_needed``) just adds a second, inactive
-    entry; switching which one is active is ``set_active``, not this."""
+    Every profile added here is scanned from the next cycle onward; there
+    is nothing to activate (see the module docstring)."""
     first_name = (data.get("first_name") or "").strip()
     last_name = (data.get("last_name") or "").strip()
     _validate_names(first_name, last_name)
@@ -252,7 +240,6 @@ def add_profile(path: str, data: dict) -> NamedProfile:
         phones=_as_str_list(data.get("phones")),
         addresses=_as_str_list(data.get("addresses")),
         eraser_profile=(data.get("eraser_profile") or None),
-        active=not profiles,
     )
     profiles.append(profile)
     save_profiles(path, profiles)
@@ -278,13 +265,6 @@ def update_profile(path: str, profile_id: str, data: dict) -> NamedProfile:
                 phones=_as_str_list(data.get("phones")) if "phones" in data else existing.phones,
                 addresses=_as_str_list(data.get("addresses")) if "addresses" in data else existing.addresses,
                 eraser_profile=(data.get("eraser_profile") if "eraser_profile" in data else existing.eraser_profile) or None,
-                # Editing a profile must never change WHICH profile is active
-                # -- ``active`` is owned by set_active/add_profile/
-                # remove_profile, and *data* (an identity form submission)
-                # never carries it. Rebuilding the dataclass without this
-                # silently reset it to the ``False`` default, which
-                # de-activated the active profile on every save.
-                active=existing.active,
             )
             profiles[i] = updated
             save_profiles(path, profiles)
@@ -292,64 +272,35 @@ def update_profile(path: str, profile_id: str, data: dict) -> NamedProfile:
     raise ProfileNotFound(profile_id)
 
 
-def remove_profile(path: str, profile_id: str) -> "NamedProfile | None":
+def remove_profile(path: str, profile_id: str) -> NamedProfile:
     """Delete a profile from broker-guard's own store. Does NOT touch
     eraser's history.db -- see module docstring's "Removal keeps history"
     section. Raises ``ProfileNotFound`` for an unknown id rather than
     silently no-op'ing, so a caller's "removed" confirmation is honest.
 
-    Maintains the one-active invariant: removing the ACTIVE profile would
-    otherwise leave a non-empty list with nothing active (and nothing
-    mirrored into ``profile.local.json``), so the first remaining profile
-    is promoted. Returns the profile that is active afterwards when that
-    promotion happened -- the caller's cue to re-sync the legacy file --
-    and ``None`` when the active profile was untouched or the list is now
-    empty.
+    Returns the profile that was removed. Nothing is promoted and nothing
+    else changes: with no "active" profile there is no invariant to
+    restore -- the remaining profiles all go on being scanned exactly as
+    they were.
     """
     profiles = load_profiles(path)
-    remaining = [p for p in profiles if p.id != profile_id]
-    if len(remaining) == len(profiles):
+    removed = next((p for p in profiles if p.id == profile_id), None)
+    if removed is None:
         raise ProfileNotFound(profile_id)
-
-    removed_the_active_one = any(p.id == profile_id and p.active for p in profiles)
-    promoted = None
-    if removed_the_active_one and remaining:
-        remaining = [
-            NamedProfile(**{**p.to_dict(), "active": (i == 0)})
-            for i, p in enumerate(remaining)
-        ]
-        promoted = remaining[0]
-
-    save_profiles(path, remaining)
-    return promoted
+    save_profiles(path, [p for p in profiles if p.id != profile_id])
+    return removed
 
 
-def set_active(path: str, profile_id: str) -> NamedProfile:
-    """Make *profile_id* the one active profile, clearing ``active`` on
-    every other entry (the invariant in the module docstring). Returns the
-    now-active profile so the caller can mirror it into the legacy
-    ``profile.local.json`` the scan loop reads -- see
-    ``sync_active_to_legacy``."""
+def primary_profile(path: str) -> "NamedProfile | None":
+    """The FIRST profile in the list, or ``None`` when the list is empty.
+
+    "Primary" here means one thing only: which profile is mirrored into
+    the legacy single-identity ``profile.local.json`` for the entry points
+    that still read it (see ``sync_primary_to_legacy``). It confers no
+    scanning privilege whatsoever -- every profile is scanned every cycle.
+    """
     profiles = load_profiles(path)
-    if not any(p.id == profile_id for p in profiles):
-        raise ProfileNotFound(profile_id)
-    updated = [
-        NamedProfile(**{**p.to_dict(), "active": (p.id == profile_id)})
-        for p in profiles
-    ]
-    save_profiles(path, updated)
-    return next(p for p in updated if p.id == profile_id)
-
-
-def get_active_profile(path: str) -> "NamedProfile | None":
-    """The one profile flagged ``active``, or ``None`` when the list is
-    empty. If several are somehow flagged (hand-edited profiles.json), the
-    first wins -- ``load_profiles`` trusts the file rather than rewriting
-    it, so this resolves the ambiguity read-side without a surprise write."""
-    for p in load_profiles(path):
-        if p.active:
-            return p
-    return None
+    return profiles[0] if profiles else None
 
 
 def identity_key(profile: NamedProfile) -> str:
@@ -371,34 +322,29 @@ def identity_key(profile: NamedProfile) -> str:
     return profile_mod.Identity(**to_legacy_profile_dict(profile)).identity_key
 
 
-def upsert_active_profile(path: str, data: dict) -> NamedProfile:
-    """Write the identity form's *data* onto the ACTIVE profile, creating
-    that profile if the list has none yet.
+def upsert_primary_profile(path: str, data: dict) -> NamedProfile:
+    """Write *data* onto the FIRST profile in the list, creating it if the
+    list is empty.
 
-    This is what the merged ``POST /identity`` calls so a save on the
-    Profile page always shows up in the profiles list, instead of the two
-    stores drifting apart (see the module docstring's "The 'Identity' tab
-    IS the active profile" section). The active entry's id is preserved,
-    same immutable-id rule as ``update_profile``.
+    This backs the legacy single-identity ``POST /identity`` route, which
+    predates multi-profile scanning and has no profile id to work with: it
+    has to mean SOME one profile, and "the first one" is the same entry
+    ``sync_primary_to_legacy`` mirrors into ``profile.local.json``, so the
+    two stores cannot drift. The entry's id is preserved, same immutable-id
+    rule as ``update_profile``. Per-profile editing in the UI goes through
+    ``update_profile`` (``POST /profiles/<id>``) instead, and does not care
+    about ordering at all.
     """
-    active = get_active_profile(path)
-    if active is not None:
-        return update_profile(path, active.id, data)
-    created = add_profile(path, data)
-    if not created.active:
-        # Degenerate case: a non-empty list where nothing was flagged
-        # active (e.g. a profiles.json written before this field existed
-        # and hand-edited since). add_profile only auto-activates into an
-        # EMPTY list, so restore the invariant explicitly here.
-        created = set_active(path, created.id)
-    return created
+    first = primary_profile(path)
+    if first is not None:
+        return update_profile(path, first.id, data)
+    return add_profile(path, data)
 
 
 def to_legacy_profile_dict(profile: NamedProfile) -> dict:
     """The ``profile.local.json`` shape (``profile.load_profile``'s input)
-    for *profile*. Deliberately drops ``id``/``active`` -- those are this
-    module's bookkeeping, not part of the single-Identity contract the
-    scan loop reads."""
+    for *profile*. Deliberately drops ``id`` -- that is this module's
+    bookkeeping, not part of the ``Identity`` contract."""
     return {
         "first_name": profile.first_name,
         "middle_name": profile.middle_name,
@@ -433,25 +379,79 @@ def write_legacy_profile(legacy_path: str, profile: NamedProfile) -> None:
         pass
 
 
-def sync_active_to_legacy(profiles_path: str, legacy_path: str) -> "NamedProfile | None":
-    """Mirror whichever profile is active into *legacy_path*. Returns the
-    profile written, or ``None`` when there is no active profile (an empty
-    list) -- in which case the legacy file is deliberately left ALONE
-    rather than truncated, so removing the last profile never leaves the
-    scan loop with an unreadable identity mid-cycle."""
-    active = get_active_profile(profiles_path)
-    if active is None:
+def sync_primary_to_legacy(profiles_path: str, legacy_path: str) -> "NamedProfile | None":
+    """Mirror the FIRST profile into *legacy_path*. Returns the profile
+    written, or ``None`` when the list is empty -- in which case the
+    legacy file is deliberately left ALONE rather than truncated, so
+    removing the last profile never leaves a single-identity entry point
+    with an unreadable identity mid-cycle.
+
+    This file is compatibility only (``service.run_once``, ``POST
+    /identity``, ``POST /brokers/<id>/remove`` without a profile). The
+    scan loops read ``load_scan_identities`` -- every profile -- not this.
+    """
+    first = primary_profile(profiles_path)
+    if first is None:
         return None
-    write_legacy_profile(legacy_path, active)
-    return active
+    write_legacy_profile(legacy_path, first)
+    return first
+
+
+def load_scan_identities(profiles_path: str, legacy_path: str | None = None) -> list:
+    """Every identity a scan cycle should sweep, as ``profile.Identity``
+    objects -- one per saved profile, in list order.
+
+    This is the ONE place "who gets scanned" is decided, and the answer is
+    "everyone": there is no active-profile filter here, by design (see the
+    module docstring). A profile whose stored fields don't satisfy
+    ``profile.Identity``'s validation is SKIPPED with the rest of the list
+    still returned, so one half-filled profile can never cost the others
+    their scan.
+
+    Falls back to the single legacy ``profile.local.json`` at
+    *legacy_path* when the profiles list is empty or unreadable -- a
+    deployment that never opened the Profile page still scans the identity
+    it has. Returns ``[]`` when there is genuinely nothing to scan;
+    callers must treat that as "nothing to do", never as an error.
+    """
+    from broker_guard import profile as profile_mod
+
+    try:
+        saved = load_profiles(profiles_path)
+    except (OSError, ValueError):
+        saved = []
+
+    identities = []
+    for p in saved:
+        # A profile with no name at all is not scannable: the search terms
+        # would collapse to the address/email fields alone, and a
+        # name-less query is exactly the kind of thing that matches
+        # everybody. Skipped rather than scanned badly.
+        if not (p.first_name or "").strip() and not (p.last_name or "").strip():
+            log.warning("skipping a profile with no name", extra={"profile_id": p.id})
+            continue
+        try:
+            identities.append(profile_mod.Identity(**to_legacy_profile_dict(p)))
+        except (TypeError, ValueError):
+            log.warning("skipping an unusable profile", extra={"profile_id": p.id})
+            continue
+    if identities:
+        return identities
+
+    if not legacy_path or not os.path.exists(legacy_path):
+        return []
+    try:
+        return [profile_mod.load_profile(legacy_path)]
+    except (OSError, ValueError):
+        return []
 
 
 def migrate_legacy_profile_if_needed(profiles_path: str, legacy_path: str) -> "NamedProfile | None":
     """One-time backfill: a deployment that already had a populated
-    ``profile.local.json`` before the Identity/Profiles merge shipped gets
-    that identity added to the profiles list automatically, as the active
-    profile, so it shows up on the merged page without the person
-    re-entering anything.
+    ``profile.local.json`` before the profiles list existed gets that
+    identity added to the list automatically, so it shows up on the
+    Profile page -- and gets scanned like every other profile -- without
+    the person re-entering anything.
 
     Runs only when the profiles list is EMPTY -- once there is at least one
     profile the list is the source of truth and this is a no-op, so it is

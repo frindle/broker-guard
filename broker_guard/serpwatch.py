@@ -93,6 +93,7 @@ def run_serpwatch(
     addresses: list[str],
     searx_search,
     observer=None,
+    should_stop=None,
 ) -> list:
     """Search each broker's site for each identity query and return hits.
 
@@ -138,6 +139,15 @@ def run_serpwatch(
     terms = list(name_variants) + list(phones) + list(emails) + list(addresses)
     hits = []
     for broker in brokers:
+        # Cooperative cancellation, checked BETWEEN brokers (see
+        # progress.ScanProgress.request_stop): the broker in flight is
+        # allowed to finish, everything already found is returned, and the
+        # brokers never reached are simply absent from the results -- which
+        # is what makes the caller treat them as unknown rather than clean.
+        if should_stop is not None and should_stop():
+            log.info("serpwatch stopped early by request",
+                     extra={"checked_brokers": len(hits)})
+            break
         broker_id = broker.get('id')
         domain = broker_domain(broker)
         if not domain:

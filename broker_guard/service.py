@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 
 from broker_guard import broker_normalize, brokers as brokers_mod
 from broker_guard import health, profile as profile_mod, scheduler, serpwatch
-from broker_guard import playwright_checks, progress as progress_mod
+from broker_guard import playwright_checks, profiles as profiles_mod, progress as progress_mod
 from broker_guard import settings as settings_mod
 from broker_guard.config import Config, ConfigError, load_config, validate_runtime_paths
 from broker_guard.eraser import needs_reverify, status_after_removal
@@ -298,14 +298,96 @@ def submit_removals(identity, broker_ids, deps, now_iso) -> list[dict]:
 
 
 def run_once(cfg: Config, deps: Dependencies) -> dict:
-    """One full cycle: load inputs, detect, diff, alert, submit removals."""
-    started = deps.now()
+    """One full cycle for the single legacy ``profile.local.json`` identity.
+
+    Kept as-is for the entry points that predate multi-profile scanning
+    (the headless ``service.main`` loop, tests). ``run_all`` is the one
+    that sweeps every saved profile -- see its docstring.
+    """
     identity = profile_mod.load_profile(cfg.profile_path)
     broker_list = brokers_mod.load_brokers(cfg.brokers_path)
+    return run_once_for(cfg, deps, identity, broker_list)
+
+
+def run_all(cfg: Config, deps: Dependencies) -> dict:
+    """One full cycle for EVERY saved profile, in list order.
+
+    There is no "active" profile (see ``profiles.py``): a scan sweeps the
+    whole household, and each profile's findings are recorded under that
+    profile's own ``identity_key`` -- in the state db, which already scopes
+    ``presence``/``broker_status`` that way, and in the live progress map.
+
+    Detection is ONE interleaved pass for everybody (``sweep.run_sweep``:
+    outer loop brokers, inner loop profiles, plus its bounded retry of the
+    pairs a rate-limit or bot wall left unknown). Each profile's cycle then
+    diffs its own slice of that sweep, so the network work is not repeated
+    per person.
+
+    Returns ``{"identities": [...], "results": {identity_key: result},
+    "stopped": bool, "ran_at": iso}``. Per-profile results are NOT merged
+    into one blob: "which person was found where" is the question this tool
+    exists to answer, so the per-identity shape is preserved all the way
+    out.
+
+    A profile whose cycle RAISES does not cost the remaining profiles
+    their scan -- the failure is recorded as that profile's ``error`` and
+    the loop continues. Nothing about the resolved/unknown safety net
+    changes: each profile's own ``run_cycle`` applies it as before, and a
+    pair the sweep never reached (stopped early, or blocked through every
+    retry) is UNKNOWN, so it is excluded from ``resolved`` too.
+    """
+    from broker_guard import sweep as sweep_mod
+
+    started = deps.now()
+    identities = profiles_mod.load_scan_identities(cfg.profiles_path, cfg.profile_path)
+    broker_list = brokers_mod.load_brokers(cfg.brokers_path)
+
+    sweep_result = sweep_mod.run_sweep(identities, broker_list, deps, cfg)
+    results = {}
+    try:
+        for identity in identities:
+            try:
+                results[identity.identity_key] = run_once_for(
+                    cfg, deps, identity, broker_list, started,
+                    presence_checker=sweep_result.checker_for(identity.identity_key),
+                )
+            except Exception as exc:
+                log.exception("cycle failed for one profile",
+                              extra={"identity_key": identity.identity_key})
+                results[identity.identity_key] = {
+                    "identity_key": identity.identity_key,
+                    "error": "{}: {}".format(type(exc).__name__, exc),
+                }
+    finally:
+        progress_mod.current().end_scan()
+
+    return {
+        "identities": [
+            {"identity_key": i.identity_key, "full_name": i.full_name} for i in identities
+        ],
+        "results": results,
+        "stopped": sweep_result.stopped,
+        "retried_pairs": sweep_result.retried_pairs,
+        "unresolved_pairs": sweep_result.unresolved_pairs,
+        "ran_at": started,
+    }
+
+
+def run_once_for(cfg: Config, deps: Dependencies, identity, broker_list: list,
+                 started: str | None = None, presence_checker=None) -> dict:
+    """One full cycle for ONE identity: detect, diff, alert, submit removals.
+
+    *presence_checker* lets a caller supply detection that has ALREADY
+    happened -- ``run_all`` passes this identity's slice of the one
+    household-wide sweep. Left None, this builds its own single-identity
+    checker exactly as before.
+    """
+    started = started or deps.now()
     identity_key = identity.identity_key
     log.info("cycle start", extra={"brokers": len(broker_list), "identity_key": identity_key})
 
-    presence_checker = build_presence_checker(identity, broker_list, deps, cfg)
+    if presence_checker is None:
+        presence_checker = build_presence_checker(identity, broker_list, deps, cfg)
     result = run_cycle(
         identity_key, broker_list, presence_checker, deps.store,
         deps.alert_sink or (lambda payload: None), started,

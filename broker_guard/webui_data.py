@@ -20,6 +20,10 @@ import sqlite3
 from datetime import datetime, timedelta
 
 from broker_guard import brokers as brokers_mod
+# The ONE place the per-broker progress map's key shape is defined. Imported
+# rather than re-derived here so this module and ScanProgress can never
+# disagree about how a (profile, broker) entry is looked up.
+from broker_guard.progress import entry_key as progress_entry_key
 
 
 def query_presence_history(conn: sqlite3.Connection, broker_id: str | None = None, limit: int = 200) -> list[dict]:
@@ -415,48 +419,62 @@ _SCAN_OUTCOME_RANK = {name: i for i, name in enumerate(SCAN_OUTCOME_ORDER)}
 
 
 def scan_outcome_rows(brokers: list[dict], progress: dict | None,
-                      identity_key: str | None = None) -> list[dict]:
-    """One row per broker in the ROSTER, carrying this cycle's outcome.
+                      profiles: list[dict] | None = None) -> list[dict]:
+    """One row per (PROFILE, broker) pair, carrying this scan's outcome.
 
     The roster -- ``brokers.json`` as loaded by ``brokers.load_brokers`` --
     is the source of rows, not the ``presence`` table. That is the whole
-    point: ``query_broker_status`` can only ever show brokers the person
+    point: ``query_broker_status`` can only ever show brokers a person
     was FOUND on, so a scan that checked 827 brokers and found nothing had
     nothing to display. Here every broker gets a row, and the ones the
     scan has not reached yet get the explicit ``pending`` outcome rather
     than being quietly rendered as clean.
 
-    *progress* is a ``ScanProgress.snapshot(include_brokers=True)`` dict
-    (or None). An entry is only applied to a row when it was recorded for
-    *identity_key* -- so filtering the page to profile B can never show
-    profile A's results. ``identity_key=None`` means "any identity".
+    Every profile is scanned every cycle now, so a broker's result is not
+    one fact but one PER PERSON -- "clean for Ann, listed for Bob". Rows
+    are therefore per pair, each carrying ``profile_name``/
+    ``identity_key``, and the page shows which profile each result belongs
+    to. *profiles* is ``[{'identity_key': str, 'name': str}, ...]`` (the
+    saved profiles, in list order); ``None``/``[]`` falls back to a single
+    profile-less pass over the roster, which is what a deployment with no
+    saved profiles yet sees.
 
-    Sorted by ``SCAN_OUTCOME_ORDER`` then by name, so hits and failures
-    are at the top of the list instead of buried under 800 clean rows.
+    *progress* is a ``ScanProgress.snapshot(include_brokers=True)`` dict
+    (or None), whose per-broker map is keyed by
+    ``progress.entry_key(identity_key, broker_id)`` -- so a row only ever
+    picks up the entry recorded for ITS OWN profile, and one person's hit
+    can never be painted onto another's row.
+
+    Sorted by ``SCAN_OUTCOME_ORDER``, then broker name, then profile, so
+    hits and failures are at the top of the list instead of buried under
+    800 clean rows.
     """
     entries = (progress or {}).get("brokers") or {}
+    targets = [{"identity_key": p.get("identity_key"), "name": p.get("name") or ""}
+               for p in (profiles or [])] or [{"identity_key": None, "name": ""}]
     rows = []
     for broker in brokers:
         broker_id = str(broker.get("id") or "")
-        entry = entries.get(broker_id)
-        if entry is not None and identity_key is not None \
-                and entry.get("identity_key") != identity_key:
-            entry = None
-        outcome = (entry or {}).get("outcome") or "pending"
-        if outcome not in _SCAN_OUTCOME_RANK:
-            outcome = "pending"
         name = broker.get("name") or broker_id
-        rows.append({
-            "broker_id": broker_id,
-            "name": name,
-            "url": broker.get("url") or "",
-            "outcome": outcome,
-            "hits": (entry or {}).get("hits") or 0,
-            "errors": (entry or {}).get("errors") or 0,
-            "checked_at": (entry or {}).get("checked_at"),
-            "identity_key": (entry or {}).get("identity_key"),
-        })
-    rows.sort(key=lambda row: (_SCAN_OUTCOME_RANK[row["outcome"]], row["name"].lower()))
+        for target in targets:
+            entry = entries.get(progress_entry_key(target["identity_key"], broker_id))
+            outcome = (entry or {}).get("outcome") or "pending"
+            if outcome not in _SCAN_OUTCOME_RANK:
+                outcome = "pending"
+            rows.append({
+                "broker_id": broker_id,
+                "name": name,
+                "url": broker.get("url") or "",
+                "outcome": outcome,
+                "hits": (entry or {}).get("hits") or 0,
+                "errors": (entry or {}).get("errors") or 0,
+                "checked_at": (entry or {}).get("checked_at"),
+                "identity_key": target["identity_key"],
+                "profile_name": target["name"],
+                "retried": bool((entry or {}).get("retried")),
+            })
+    rows.sort(key=lambda row: (_SCAN_OUTCOME_RANK[row["outcome"]],
+                               row["name"].lower(), row["profile_name"].lower()))
     return rows
 
 
@@ -493,7 +511,33 @@ def scan_outcome_counts_from_progress(progress: dict | None) -> dict:
     return counts
 
 
-def scan_outcome_line(counts: dict, active: bool = False) -> str:
+def profiles_checked_line(profiles: list[dict] | None, progress: dict | None) -> str:
+    """"Profiles checked: Ann Lee, Bob Lee." -- who this scan covered.
+
+    Every saved profile is scanned every cycle, so this is not a setting
+    being echoed back: it is read from the scan's own record of which
+    ``identity_key``s it actually recorded outcomes for
+    (``ScanProgress.identity_keys``). A saved profile the scan has not
+    reached yet is named separately rather than being listed as checked,
+    which is the same "not yet checked is not clean" rule the per-broker
+    outcomes follow.
+    """
+    saved = list(profiles or [])
+    if not saved:
+        return "No profiles saved yet -- add one on the Profile page and every scan will include it."
+    checked_keys = set((progress or {}).get("identity_keys") or ())
+    checked = [p["name"] for p in saved if p.get("identity_key") in checked_keys]
+    waiting = [p["name"] for p in saved if p.get("identity_key") not in checked_keys]
+    if not checked:
+        return "Profiles checked: none yet this scan. Every saved profile ({}) is scanned each cycle.".format(
+            ", ".join(waiting))
+    line = "Profiles checked: {}.".format(", ".join(checked))
+    if waiting:
+        line += " Not yet reached this scan: {}.".format(", ".join(waiting))
+    return line
+
+
+def scan_outcome_line(counts: dict, active: bool = False, stopped: bool = False) -> str:
     """One honest sentence over ``scan_outcome_counts``.
 
     Examples::
@@ -512,9 +556,17 @@ def scan_outcome_line(counts: dict, active: bool = False) -> str:
     if reached <= 0:
         return ("No per-broker results yet in this process -- every broker below reads "
                 "\"not yet checked\" until the next scan runs.")
+    if active:
+        label = "Scan running"
+    elif stopped:
+        # Neither "completed" nor "failed": a scan the person stopped is a
+        # real partial scan, and saying "Most recent scan" here would imply
+        # the remaining brokers had been looked at and found clean.
+        label = "Last scan (stopped early)"
+    else:
+        label = "Most recent scan"
     line = "{}: {} of {} checked -- {} listing(s) found, {} check(s) failed".format(
-        "Scan running" if active else "Most recent scan", reached, total,
-        counts.get("hit", 0), counts.get("error", 0),
+        label, reached, total, counts.get("hit", 0), counts.get("error", 0),
     )
     if counts.get("skipped", 0):
         line += ", {} not checkable".format(counts["skipped"])
@@ -597,6 +649,13 @@ def scan_status(heartbeat: dict | None, jobs_summary: dict, scan_interval_second
     common = {
         "running": running,
         "progress": progress or None,
+        # Cancellation, from the live sweep first and the persisted
+        # heartbeat second, so "stopped early" survives the scan going
+        # inactive and a page reload. `stop_requested` is what the Stop
+        # button uses to disable itself once a stop is already in flight.
+        "stop_requested": bool((progress or {}).get("stop_requested")),
+        "stopped": bool((progress or {}).get("stopped")
+                        or (not running and (heartbeat or {}).get("stopped"))),
         "progress_line": scan_progress_line(live_progress),
         "detection_line": last_scan_detection_line(heartbeat),
         "detection_errors": (heartbeat or {}).get("detection_errors"),

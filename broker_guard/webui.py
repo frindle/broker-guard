@@ -195,13 +195,27 @@ def _scan_line(scan: dict) -> str:
        errored on every broker used to render identically to a clean one;
        now "827 broker(s), 340 error(s)" is right there in the line.
     3. Nothing has ever run.
+
+    A scan the user stopped is reported as "stopped early", never as "ok":
+    it did not cover every broker, so calling it ok would make the
+    timestamp claim a full pass that never happened. "failed" would be
+    just as dishonest in the other direction -- nothing went wrong.
     """
     if scan.get("running"):
+        if scan.get("stop_requested"):
+            base = scan.get("progress_line") or "Scan in progress right now."
+            return base + " Stopping after the current broker..."
         return scan.get("progress_line") or "Scan in progress right now."
     if scan.get("last_run_at"):
+        if scan.get("stopped"):
+            state = "stopped early"
+        elif scan.get("last_run_ok"):
+            state = "ok"
+        else:
+            state = "failed"
         line = "Last scan: {} ({}). Next scan around: {}.".format(
             format_scan_timestamp(scan["last_run_at"]) or scan["last_run_at"],
-            "ok" if scan.get("last_run_ok") else "failed",
+            state,
             format_scan_timestamp(scan.get("next_run_at")) or "unknown",
         )
         detection_line = scan.get("detection_line")
@@ -299,7 +313,9 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
             '<span class="when">{when}</span></div>'.format(
                 bid=html.escape(str(r["broker_id"])),
                 status=html.escape(str(r["removal_status"] or "not submitted")),
-                when=html.escape(str(r["status_updated_at"] or "")),
+                # Same human formatting as every other timestamp in the UI,
+                # rather than the raw isoformat the row carries.
+                when=html.escape(format_scan_timestamp(r["status_updated_at"]) or ""),
             )
             for r in recent
         )
@@ -329,10 +345,23 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
         scan_btn_attrs = ""
         scan_btn_label = "Run scan now"
 
+    # "Stop scan" is enabled from exactly the signal that disables "Run scan
+    # now" -- scan.running -- so the pair can never both be live or both be
+    # dead. Once a stop is already requested it goes back to disabled, since
+    # asking twice does nothing.
+    if scan["running"] and not scan.get("stop_requested"):
+        stop_attrs = ""
+    else:
+        stop_attrs = " disabled"
+    stop_label = "Stopping..." if scan.get("stop_requested") else "Stop scan"
+
     body = """
 <div class="page-head">
   <div><h1>Removals</h1><div class="muted" id="scanline">{scan_line}</div></div>
-  <button class="btn secondary" id="runScanBtn" onclick="runScanNow()"{scan_btn_attrs}>{scan_btn_label}</button>
+  <div class="rowactions">
+    <button class="btn secondary" id="runScanBtn" onclick="runScanNow()"{scan_btn_attrs}>{scan_btn_label}</button>
+    <button type="button" class="btn secondary" id="stopScanBtn" onclick="stopScan()"{stop_attrs}>{stop_label}</button>
+  </div>
 </div>
 <div class="chips">{chips}</div>
 <div class="grid-main">
@@ -374,13 +403,29 @@ function pollScan() {{
     if (!scan.running) {{ location.reload(); return; }}
     if (btn) {{ btn.disabled = true; btn.textContent = 'Scanning...'; }}
     if (line && scan.line) {{ line.textContent = scan.line; }}
+    var stopBtn = document.getElementById('stopScanBtn');
+    if (stopBtn) {{
+      stopBtn.disabled = !!scan.stop_requested;
+      stopBtn.textContent = scan.stop_requested ? 'Stopping...' : 'Stop scan';
+    }}
     setTimeout(pollScan, 1500);
   }}).catch(function () {{ setTimeout(pollScan, 1500); }});
+}}
+
+// Cooperative stop: the sweep finishes the broker it is on and then ends,
+// so the button says "Stopping..." until /status stops reporting a running
+// scan -- it never claims the scan is already over.
+function stopScan() {{
+  var btn = document.getElementById('stopScanBtn');
+  if (btn) {{ btn.disabled = true; btn.textContent = 'Stopping...'; }}
+  fetch('/scan/stop', {{method: 'POST'}}).catch(function () {{}});
 }}
 
 function runScanNow() {{
   var btn = document.getElementById('runScanBtn');
   btn.disabled = true; btn.textContent = 'Starting...';
+  var stopBtn = document.getElementById('stopScanBtn');
+  if (stopBtn) {{ stopBtn.disabled = false; stopBtn.textContent = 'Stop scan'; }}
   // /scan registers the job as 'queued' BEFORE responding, so scan.running
   // is already true by the time this resolves -- no race where the first
   // poll sees "not running" and reloads the page instantly.
@@ -402,6 +447,7 @@ function runScanNow() {{
         stackbar=style.stacked_bar(kind_segments), kind_legend=kind_legend,
         donut=donut, action_legend=action_legend,
         scan_btn_attrs=scan_btn_attrs, scan_btn_label=scan_btn_label,
+        stop_attrs=stop_attrs, stop_label=stop_label,
     )
 
     return style.render_page("Dashboard", "dashboard", body, action_needed_count=action_needed)
@@ -409,12 +455,26 @@ function runScanNow() {{
 
 # --- /brokers + /status : presence and removal status -----------------------
 
-def _broker_row_html(row: dict, broker_meta: dict, scan_interval_seconds: int) -> str:
-    """One expandable ``<details>`` row: summary line (name, kind, status,
-    last update) plus the 4-step lifecycle stepper and remove action on
-    expand. ``data-*`` attributes carry the values the brokers-page's
-    client-side search/status/action-needed filters key off of -- filtering
-    never re-fetches or re-renders, it only shows/hides these same rows.
+def _format_steps(steps: list[dict]) -> list[dict]:
+    """The stepper's ``at`` timestamps, rendered the same way every other
+    timestamp in the UI is (``format_scan_timestamp``) rather than as the
+    raw ``2026-09-22T21:45:02.742110+00:00`` isoformat the db stores."""
+    return [{**s, "at": format_scan_timestamp(s.get("at"))} for s in steps]
+
+
+def _broker_row_html(row: dict, broker_meta: dict, scan_interval_seconds: int,
+                      profile_names: dict | None = None) -> str:
+    """One expandable ``<details>`` row: summary line (name, profile, kind,
+    status, last update) plus the 4-step lifecycle stepper and remove
+    action on expand. ``data-*`` attributes carry the values the
+    brokers-page's client-side search/status/action-needed filters and the
+    last-update sort key off of -- neither ever re-fetches or re-renders,
+    they only show/hide and reorder these same rows.
+
+    The profile column exists because every profile is scanned every cycle
+    now: a tracked listing is one PERSON's listing, and a page that showed
+    "found on Spokeo" without saying who would be ambiguous the moment a
+    second profile existed.
     """
     broker_id = str(row["broker_id"])
     meta = broker_meta.get(broker_id, {})
@@ -423,16 +483,22 @@ def _broker_row_html(row: dict, broker_meta: dict, scan_interval_seconds: int) -
     status = row.get("removal_status")
     step = webui_data.broker_stepper(row, scan_interval_seconds)
     action_needed = status in ("needs_document", "needs_review")
-
-    stepper_note = ""
-    for s in step["steps"]:
-        if s.get("note"):
-            stepper_note = s["note"]
+    identity_key = str(row.get("identity_key") or "")
+    profile_name = (profile_names or {}).get(identity_key) or "unknown profile"
+    # The sort/display pair for "last update": the newest real timestamp
+    # this row has. data-updated stays the RAW ISO value because ISO-8601
+    # sorts correctly as plain text, while the cell shows the formatted one.
+    updated_raw = max(
+        [t for t in (row.get("last_seen"), row.get("status_updated_at")) if t],
+        default="",
+    )
 
     return """
-<details class="brokerrow" data-name="{name_lower}" data-status="{status}" data-action-needed="{action_needed}">
+<details class="brokerrow" data-name="{name_lower}" data-status="{status}" data-action-needed="{action_needed}"
+         data-profile="{profile_lower}" data-updated="{updated_attr}">
   <summary class="row-summary">
     <span><span class="name">{name}</span><br><span class="sub">{url}</span></span>
+    <span class="sub">{profile}</span>
     <span>{kind_label}</span>
     <span>{status_badge}</span>
     <span class="sub">{last_seen}</span>
@@ -442,11 +508,13 @@ def _broker_row_html(row: dict, broker_meta: dict, scan_interval_seconds: int) -
     {stepper}
     <dl class="pii-grid">
       <dt>Broker</dt><dd>{name} &middot; {url}</dd>
+      <dt>Profile</dt><dd>{profile}</dd>
       <dt>First seen</dt><dd>{first_seen}</dd>
       <dt>Last checked</dt><dd>{last_seen}</dd>
       <dt>Removal status</dt><dd>{status_text}</dd>
     </dl>
     <form method="post" action="/brokers/{broker_id_attr}/remove">
+      <input type="hidden" name="identity_key" value="{identity_attr}">
       <button type="submit" class="btn secondary">Send removal now</button>
     </form>
   </div>
@@ -455,15 +523,19 @@ def _broker_row_html(row: dict, broker_meta: dict, scan_interval_seconds: int) -
         name_lower=style.escape_attr(name.lower()),
         status=style.escape_attr(status or ""),
         action_needed="true" if action_needed else "false",
+        profile_lower=style.escape_attr(profile_name.lower()),
+        updated_attr=style.escape_attr(updated_raw),
         name=html.escape(name),
         url=html.escape(str(meta.get("url") or "")),
+        profile=html.escape(profile_name),
         kind_label=html.escape(style.KIND_LABELS.get(kind, kind)),
         status_badge=style.status_badge(status),
-        last_seen=html.escape(str(row.get("last_seen") or "")),
-        stepper=style.stepper(step["steps"]),
-        first_seen=html.escape(str(row.get("first_seen") or "")),
+        last_seen=html.escape(format_scan_timestamp(row.get("last_seen")) or ""),
+        stepper=style.stepper(_format_steps(step["steps"])),
+        first_seen=html.escape(format_scan_timestamp(row.get("first_seen")) or ""),
         status_text=html.escape(status or "not submitted"),
         broker_id_attr=style.escape_attr(broker_id),
+        identity_attr=style.escape_attr(identity_key),
     )
 
 
@@ -473,7 +545,20 @@ def _identity_options(cfg: Config) -> list[dict]:
     (``profiles.identity_key``, which delegates to the one canonical
     derivation in ``profile.Identity``). An unreadable/empty profiles list
     yields ``[]``, which the page renders as "no profiles saved yet"
-    rather than 500ing."""
+    rather than 500ing.
+
+    The legacy ``profile.local.json`` is migrated into the list first (a
+    cheap no-op once the list is non-empty). Without that, a deployment
+    that never opened the Profiles page would be SCANNED -- the scan loop
+    falls back to the legacy file, see ``load_scan_identities`` -- while
+    showing no profiles at all here, so every one of its results rendered
+    as "not yet checked". The set of people shown and the set of people
+    swept have to be the same set.
+    """
+    try:
+        profiles_mod.migrate_legacy_profile_if_needed(cfg.profiles_path, cfg.profile_path)
+    except (OSError, ValueError):
+        pass
     try:
         saved = profiles_mod.load_profiles(cfg.profiles_path)
     except (OSError, ValueError):
@@ -484,31 +569,44 @@ def _identity_options(cfg: Config) -> list[dict]:
             key = profiles_mod.identity_key(p)
         except Exception:  # pragma: no cover - defensive
             continue
-        options.append({"id": p.id, "name": p.full_name or p.id,
-                        "identity_key": key, "active": p.active})
+        options.append({"id": p.id, "name": p.full_name or p.id, "identity_key": key})
     return options
 
 
 def _scan_result_row_html(row: dict) -> str:
-    """One row of the "Scan results" card: every broker in the roster,
-    with THIS scan's outcome for it. ``data-outcome`` is what the
-    client-side filter and the live poll update key off."""
+    """One row of the "Scan results" card: every broker in the roster
+    paired with every profile, carrying THIS scan's outcome for that pair.
+
+    ``data-outcome`` is what the client-side filter and the live poll
+    update key off; ``data-row-key`` is the progress map's own
+    ``identity_key|broker_id`` key, so the poll repaints a row with the
+    entry for that row's PROFILE and never another's. ``data-updated``
+    carries the raw ISO timestamp for the last-update sort while the cell
+    shows the formatted one.
+    """
     label = webui_data.SCAN_OUTCOME_LABELS[row["outcome"]]
     tone = webui_data.SCAN_OUTCOME_TONES[row["outcome"]]
     return """
-<div class="scanrow" data-broker-id="{bid_attr}" data-name="{name_lower}" data-outcome="{outcome}">
+<div class="scanrow" data-broker-id="{bid_attr}" data-row-key="{row_key}" data-name="{name_lower}"
+     data-outcome="{outcome}" data-profile="{profile_lower}" data-updated="{updated_attr}">
   <span><span class="name">{name}</span><br><span class="sub">{url}</span></span>
+  <span class="sub profile">{profile}</span>
   <span class="outcome">{badge}</span>
   <span class="sub when">{checked_at}</span>
 </div>
 """.format(
         bid_attr=style.escape_attr(row["broker_id"]),
+        row_key=style.escape_attr(
+            progress_mod.entry_key(row.get("identity_key"), row["broker_id"])),
         name_lower=style.escape_attr(str(row["name"]).lower()),
         outcome=style.escape_attr(row["outcome"]),
+        profile_lower=style.escape_attr(str(row.get("profile_name") or "").lower()),
+        updated_attr=style.escape_attr(str(row.get("checked_at") or "")),
         name=html.escape(str(row["name"])),
         url=html.escape(str(row["url"] or "")),
+        profile=html.escape(str(row.get("profile_name") or "--")),
         badge=style.badge(html.escape(label), tone),
-        checked_at=html.escape(str(row.get("checked_at") or "")),
+        checked_at=html.escape(format_scan_timestamp(row.get("checked_at")) or ""),
     )
 
 
@@ -525,27 +623,21 @@ def brokers_page(identity: str = "", cfg: Config = Depends(get_config),
       outcome the most recent scan in THIS process recorded for it --
       found / clean / failed / not checkable / not yet checked.
 
-    ``identity`` is a profile id; results are scoped to that profile's
-    ``identity_key``, defaulting to the active profile. ``identity=all``
-    shows every identity's tracked listings combined (the pre-selector
-    behaviour). A profile OTHER than the one the last scan ran under
-    still shows its own tracked-listing history from the db -- that is
-    persisted per identity_key and is not affected by which profile is
-    active now -- while the in-memory scan results honestly report that
-    the last scan did not cover it.
+    Every saved profile is scanned every cycle (there is no "active" one
+    -- see ``profiles.py``), so BOTH cards are per-person by default:
+    every row says which profile it belongs to, and the page shows every
+    profile at once. ``identity=<profile id>`` narrows both cards to one
+    person; the default, and ``identity=all``, is the whole household.
     """
     options = _identity_options(cfg)
-    show_all = identity == "all"
-    selected = None
-    if not show_all:
-        selected = next((o for o in options if o["id"] == identity), None)
-        if selected is None:
-            selected = next((o for o in options if o["active"]), None)
+    selected = next((o for o in options if o["id"] == identity), None) if identity else None
     selected_key = selected["identity_key"] if selected else None
+    shown_profiles = [selected] if selected else options
+    profile_names = {o["identity_key"]: o["name"] for o in options}
 
     conn = state_mod.init_db(cfg.state_path)
     try:
-        rows = webui_data.query_broker_status(conn, identity_key=None if show_all else selected_key)
+        rows = webui_data.query_broker_status(conn, identity_key=selected_key)
     finally:
         conn.close()
 
@@ -556,34 +648,40 @@ def brokers_page(identity: str = "", cfg: Config = Depends(get_config),
     broker_meta = {b["id"]: b for b in broker_list}
 
     progress_snapshot = progress_mod.snapshot(include_brokers=True)
-    scan_rows = webui_data.scan_outcome_rows(
-        broker_list, progress_snapshot, identity_key=None if show_all else selected_key,
-    )
+    scan_rows = webui_data.scan_outcome_rows(broker_list, progress_snapshot, shown_profiles)
     scan_counts = webui_data.scan_outcome_counts(scan_rows)
     with _JOBS_LOCK:
         jobs_summary = {jid: j.get("status") for jid, j in jobs.items()}
     scan = webui_data.scan_status(_read_heartbeat(cfg), jobs_summary, cfg.interval_seconds,
                                    progress=progress_snapshot)
-    scan_line = webui_data.scan_outcome_line(scan_counts, active=bool(progress_snapshot.get("active")))
+    scan_line = webui_data.scan_outcome_line(
+        scan_counts, active=bool(progress_snapshot.get("active")),
+        stopped=bool(scan.get("stopped")),
+    )
+    profiles_line = webui_data.profiles_checked_line(shown_profiles, progress_snapshot)
 
     action_needed = _action_needed_count(rows)
-    rows_html = "".join(_broker_row_html(row, broker_meta, cfg.interval_seconds) for row in rows)
+    rows_html = "".join(
+        _broker_row_html(row, broker_meta, cfg.interval_seconds, profile_names)
+        for row in rows
+    )
     if not rows:
-        rows_html = ('<p class="muted" style="padding:16px;">No listings tracked for this profile yet'
-                     ' -- this card only fills in when a scan actually FINDS the person somewhere.'
+        rows_html = ('<p class="muted" style="padding:16px;">No listings tracked yet'
+                     ' -- this card only fills in when a scan actually FINDS someone somewhere.'
                      ' Every broker that has been checked is in "Scan results" below.</p>')
 
     if options:
-        picker = '<select id="identityPicker" onchange="switchIdentity()">{}</select>'.format(
+        picker = '<select id="identityPicker" onchange="switchIdentity()">{}{}</select>'.format(
+            '<option value="all"{}>All profiles</option>'.format(
+                "" if selected else " selected"),
             "".join(
                 '<option value="{v}"{sel}>{label}</option>'.format(
                     v=style.escape_attr(o["id"]),
                     sel=" selected" if (selected and o["id"] == selected["id"]) else "",
-                    label=html.escape(o["name"] + (" (active)" if o["active"] else "")),
+                    label=html.escape(o["name"]),
                 )
                 for o in options
-            ) + '<option value="all"{}>All profiles (combined)</option>'.format(
-                " selected" if show_all else "")
+            ),
         )
     else:
         picker = '<span class="muted">No profiles saved yet.</span>'
@@ -595,13 +693,14 @@ def brokers_page(identity: str = "", cfg: Config = Depends(get_config),
 
     body = """
 <div class="page-head">
-  <div><h1>Brokers</h1><div class="muted">{count} listing(s) tracked for this profile</div></div>
+  <div><h1>Brokers</h1><div class="muted">{count} listing(s) tracked{scope_label}</div></div>
   <div style="display:flex;align-items:center;gap:8px;">
+    <button type="button" class="btn secondary" id="stopScanBtn" onclick="stopScan()"{stop_attrs}>{stop_label}</button>
     <span class="muted" style="font-size:13px;">Profile</span>{picker}
   </div>
 </div>
 <div class="card">
-  <div class="section-label">Tracked listings -- where this profile was found, and removal status</div>
+  <div class="section-label">Tracked listings -- who was found where, and removal status</div>
   <div class="toolbar">
     <input type="text" id="searchBox" placeholder="Search brokers..." oninput="filterRows()">
     <select id="statusFilter" onchange="filterRows()">
@@ -617,12 +716,20 @@ def brokers_page(identity: str = "", cfg: Config = Depends(get_config),
       <input type="checkbox" id="actionOnly" onchange="filterRows()"> Action needed only
     </label>
   </div>
+  <div class="row-summary rowhead">
+    <span class="sortable" data-sort="name" onclick="sortBy('rowsContainer','.brokerrow','name',this)">Broker<span class="sortarrow"></span></span>
+    <span class="sortable" data-sort="profile" onclick="sortBy('rowsContainer','.brokerrow','profile',this)">Profile<span class="sortarrow"></span></span>
+    <span>Verification</span>
+    <span>Status</span>
+    <span class="sortable" data-sort="updated" onclick="sortBy('rowsContainer','.brokerrow','updated',this)">Last update<span class="sortarrow"></span></span>
+    <span></span>
+  </div>
   <div id="rowsContainer">{rows_html}</div>
 </div>
-<div class="card" style="margin-top:18px;" data-scan-running="{scan_running}" id="scanCard"
-     data-identity-key="{identity_key_attr}">
-  <div class="section-label">Scan results -- every broker, this scan</div>
+<div class="card" style="margin-top:18px;" data-scan-running="{scan_running}" id="scanCard">
+  <div class="section-label">Scan results -- every broker, every profile, this scan</div>
   <div class="muted" id="scanOutcomeLine">{scan_line}</div>
+  <div class="muted" id="profilesCheckedLine" style="margin-top:4px;">{profiles_line}</div>
   <div class="toolbar" style="margin-top:14px;">
     <input type="text" id="scanSearchBox" placeholder="Search brokers..." oninput="filterScanRows()">
     <select id="outcomeFilter" onchange="filterScanRows()">
@@ -630,9 +737,52 @@ def brokers_page(identity: str = "", cfg: Config = Depends(get_config),
       {outcome_options}
     </select>
   </div>
+  <div class="scanrow rowhead">
+    <span class="sortable" onclick="sortBy('scanRowsContainer','.scanrow','name',this)">Broker<span class="sortarrow"></span></span>
+    <span class="sortable" onclick="sortBy('scanRowsContainer','.scanrow','profile',this)">Profile<span class="sortarrow"></span></span>
+    <span>Outcome</span>
+    <span class="sortable" onclick="sortBy('scanRowsContainer','.scanrow','updated',this)">Last update<span class="sortarrow"></span></span>
+  </div>
   <div id="scanRowsContainer">{scan_rows_html}</div>
 </div>
 <script>
+// Column sorting, shared by both cards. Purely client side over the rows
+// already on the page: it reorders DOM nodes, it never re-queries. The
+// key is read from a data-* attribute, and `updated` sorts on the RAW ISO
+// timestamp (which sorts correctly as text) while the cell displays the
+// formatted one -- so what you see and what you sort by cannot diverge.
+// A row with no timestamp always sorts LAST, in both directions: "never
+// updated" is not "updated at the beginning of time".
+function sortBy(containerId, itemSelector, key, header) {{
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var asc = header.dataset.dir !== 'asc';
+  document.querySelectorAll('.sortable').forEach(function (h) {{
+    if (h !== header) {{ h.dataset.dir = ''; h.querySelector('.sortarrow').textContent = ''; }}
+  }});
+  header.dataset.dir = asc ? 'asc' : 'desc';
+  header.querySelector('.sortarrow').textContent = asc ? ' \\u25B2' : ' \\u25BC';
+  var items = Array.prototype.slice.call(container.querySelectorAll(itemSelector));
+  items.sort(function (a, b) {{
+    var av = a.dataset[key] || '', bv = b.dataset[key] || '';
+    if (!av && !bv) return 0;
+    if (!av) return 1;
+    if (!bv) return -1;
+    if (av === bv) return 0;
+    return (av < bv ? -1 : 1) * (asc ? 1 : -1);
+  }});
+  items.forEach(function (item) {{ container.appendChild(item); }});
+}}
+
+// Stop scan: cooperative, so the button reports "Stopping..." until the
+// server confirms the sweep has actually ended rather than claiming the
+// scan is over the instant it is clicked.
+function stopScan() {{
+  var btn = document.getElementById('stopScanBtn');
+  if (btn) {{ btn.disabled = true; btn.textContent = 'Stopping...'; }}
+  fetch('/scan/stop', {{method: 'POST'}}).catch(function () {{}});
+}}
+
 function filterRows() {{
   var q = document.getElementById('searchBox').value.toLowerCase();
   var statusVal = document.getElementById('statusFilter').value;
@@ -676,13 +826,12 @@ var OUTCOME_LABELS = {outcome_labels_json};
 var OUTCOME_TONES = {outcome_tones_json};
 
 function applyScanUpdate(entries) {{
-  var card = document.getElementById('scanCard');
-  var wantKey = card ? card.dataset.identityKey : '';
   document.querySelectorAll('.scanrow').forEach(function(row) {{
-    var entry = entries[row.dataset.brokerId];
+    // Keyed by identity_key|broker_id, so a row can only ever pick up the
+    // entry recorded for ITS OWN profile -- one person's hit is never
+    // painted onto another person's row.
+    var entry = entries[row.dataset.rowKey];
     if (!entry) return;
-    // Never paint another profile's result onto this profile's row.
-    if (wantKey && entry.identity_key && entry.identity_key !== wantKey) return;
     var outcome = entry.outcome;
     if (!OUTCOME_LABELS[outcome]) return;
     row.dataset.outcome = outcome;
@@ -692,7 +841,12 @@ function applyScanUpdate(entries) {{
       badge.className = 'badge tone-' + OUTCOME_TONES[outcome];
     }}
     var when = row.querySelector('.when');
-    if (when && entry.checked_at) {{ when.textContent = entry.checked_at; }}
+    // checked_at_display is the SERVER-formatted timestamp (the same
+    // format_scan_timestamp the page was rendered with); checked_at is the
+    // raw ISO value, kept only as the sort key. Painting the raw one into
+    // the cell is exactly the bug this split exists to prevent.
+    if (when && entry.checked_at_display) {{ when.textContent = entry.checked_at_display; }}
+    if (entry.checked_at) {{ row.dataset.updated = entry.checked_at; }}
   }});
   filterScanRows();
 }}
@@ -704,6 +858,13 @@ function pollScanResults() {{
     if (progress.brokers) {{ applyScanUpdate(progress.brokers); }}
     var line = document.getElementById('scanOutcomeLine');
     if (line && scan.outcome_line) {{ line.textContent = scan.outcome_line; }}
+    var plines = document.getElementById('profilesCheckedLine');
+    if (plines && scan.profiles_line) {{ plines.textContent = scan.profiles_line; }}
+    var stopBtn = document.getElementById('stopScanBtn');
+    if (stopBtn) {{
+      stopBtn.disabled = !scan.running || scan.stop_requested;
+      stopBtn.textContent = scan.stop_requested ? 'Stopping...' : 'Stop scan';
+    }}
     if (!scan.running) {{ location.reload(); return; }}
     setTimeout(pollScanResults, 2000);
   }}).catch(function () {{ setTimeout(pollScanResults, 2000); }});
@@ -716,9 +877,13 @@ function pollScanResults() {{
 </script>
 """.format(
         count=len(rows), rows_html=rows_html, picker=picker,
+        scope_label=(" for {}".format(html.escape(selected["name"])) if selected
+                     else " across every profile"),
         scan_line=html.escape(scan_line), scan_rows_html=scan_rows_html,
+        profiles_line=html.escape(profiles_line),
         scan_running="1" if scan.get("running") else "0",
-        identity_key_attr=style.escape_attr(selected_key or ""),
+        stop_attrs="" if scan.get("running") and not scan.get("stop_requested") else " disabled",
+        stop_label="Stopping..." if scan.get("stop_requested") else "Stop scan",
         outcome_options="".join(
             '<option value="{}">{}</option>'.format(
                 style.escape_attr(name), html.escape(webui_data.SCAN_OUTCOME_LABELS[name]))
@@ -738,7 +903,9 @@ def _run_scan_job(job_id: str, cfg: Config, jobs: dict, deps_factory) -> None:
     try:
         deps = deps_factory(cfg)
         try:
-            result = service_mod.run_once(cfg, deps)
+            # run_all, not run_once: a manual "Run scan now" sweeps every
+            # saved profile, exactly like the autopilot's scheduled pass.
+            result = service_mod.run_all(cfg, deps)
         finally:
             deps.close()
             store = getattr(deps, "store", None)
@@ -747,8 +914,13 @@ def _run_scan_job(job_id: str, cfg: Config, jobs: dict, deps_factory) -> None:
                     store.close()
                 except Exception:  # pragma: no cover - best-effort teardown
                     pass
+        # "stopped", not "done": a scan the person cancelled is a real,
+        # partial pass. Reporting it as done would make the dashboard
+        # claim a full sweep finished, which is precisely the kind of lie
+        # the unknown/resolved split exists to prevent elsewhere.
+        status = "stopped" if (isinstance(result, dict) and result.get("stopped")) else "done"
         with _JOBS_LOCK:
-            jobs[job_id] = {"status": "done", "result": result, "finished_at": _utcnow_iso()}
+            jobs[job_id] = {"status": status, "result": result, "finished_at": _utcnow_iso()}
     except Exception as exc:
         with _JOBS_LOCK:
             jobs[job_id] = {
@@ -775,6 +947,35 @@ def start_scan(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)
     )
     thread.start()
     return {"job_id": job_id, "status": "queued"}
+
+
+@app.post("/scan/stop")
+def stop_scan(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
+    """Ask the scan in flight to stop at the next broker boundary.
+
+    Cooperative, and deliberately so (see
+    ``progress.ScanProgress.request_stop``): the broker being checked
+    right now finishes, everything already recorded STAYS recorded, and
+    the sweep -- including its pending retry passes -- ends there. It
+    cancels the whole multi-profile pass, not just the profile currently
+    being checked: "stop the scan" means the scan, and stopping one
+    person's share of a household sweep would be a surprising thing for
+    that button to do.
+
+    Never 404s or 409s when nothing is running: the flag is cleared when
+    the next scan opens, so a stop that arrives a moment too late is a
+    harmless no-op rather than an error the UI has to explain. Works the
+    same for a manual /scan job and for the autopilot's own background
+    cycle, because both drive the one process-wide ScanProgress.
+    """
+    progress = progress_mod.current()
+    snapshot = progress.snapshot()
+    with _JOBS_LOCK:
+        running_jobs = any(j.get("status") == "running" for j in jobs.values())
+    progress.request_stop()
+    log.info("scan stop requested", extra={"was_active": bool(snapshot.get("active"))})
+    return {"stop_requested": True,
+            "was_running": bool(snapshot.get("active")) or running_jobs}
 
 
 @app.get("/status")
@@ -810,29 +1011,53 @@ def get_status(job_id: str | None = None, brokers: bool = False,
     # polling it, but it is no longer the signal the UI decides on -- it is
     # blind to the autopilot background thread's own cycle.
     snapshot = progress_mod.snapshot(include_brokers=brokers)
+    if brokers:
+        # The poll paints these straight into the page, so it gets the
+        # SAME formatted timestamp the server-rendered row carries. The
+        # raw ISO value stays alongside it as the sort key -- see
+        # applyScanUpdate.
+        for entry in snapshot.get("brokers", {}).values():
+            entry["checked_at_display"] = format_scan_timestamp(entry.get("checked_at"))
     scan = webui_data.scan_status(_read_heartbeat(cfg), jobs_summary, cfg.interval_seconds,
                                    progress=snapshot)
     scan["line"] = _scan_line(scan)
     scan["outcome_line"] = webui_data.scan_outcome_line(
         webui_data.scan_outcome_counts_from_progress(snapshot),
-        active=bool(snapshot.get("active")),
+        active=bool(snapshot.get("active")), stopped=bool(scan.get("stopped")),
     )
+    scan["profiles_line"] = webui_data.profiles_checked_line(_identity_options(cfg), snapshot)
     return {"brokers": rows, "pending_removals": pending, "jobs": jobs_summary,
             "scan": scan}
 
 
 @app.post("/brokers/{broker_id}/remove")
-def remove_broker(broker_id: str, cfg: Config = Depends(get_config),
+def remove_broker(broker_id: str, identity_key: str = Form(""),
+                   cfg: Config = Depends(get_config),
                    bridge: EraserBridge = Depends(get_eraser_bridge)):
     """Manual, on-demand removal for one broker -- independent of the
     automated new-appearance trigger in service.submit_removals. A human (or
     the /freeze-style UI) can ask for a specific broker to be re-sent at any
     time, whether or not it was just detected as newly present.
+
+    ``identity_key`` says WHOSE listing this is: the /brokers row that
+    posts here knows which profile it belongs to, and with every profile
+    scanned every cycle, sending Ann's removal and then writing the
+    resulting status under Bob's identity_key would corrupt both people's
+    history. An unrecognized or absent key falls back to the legacy
+    single-identity profile, which is what a deployment with no saved
+    profiles (or an old bookmarked form) has.
     """
-    try:
-        identity = profile_mod.load_profile(cfg.profile_path)
-    except (OSError, ValueError) as exc:
-        raise HTTPException(status_code=400, detail=f"cannot load profile: {exc}")
+    identity = None
+    if identity_key:
+        for p in profiles_mod.load_profiles(cfg.profiles_path):
+            if profiles_mod.identity_key(p) == identity_key:
+                identity = profile_mod.Identity(**profiles_mod.to_legacy_profile_dict(p))
+                break
+    if identity is None:
+        try:
+            identity = profile_mod.load_profile(cfg.profile_path)
+        except (OSError, ValueError) as exc:
+            raise HTTPException(status_code=400, detail=f"cannot load profile: {exc}")
 
     if not bridge.available():
         raise HTTPException(status_code=503, detail="eraser binary not available")
@@ -898,21 +1123,17 @@ def normalize_phone(raw: str) -> str:
 
 @app.get("/identity", response_class=HTMLResponse)
 def identity_get(edit: str = "", cfg: Config = Depends(get_config)):
-    """The ONE identity page: the profiles list with the active profile
-    pinned to the top and pre-selected in the editable identity form.
+    """The ONE identity page: every saved profile, all of them scanned.
 
     This replaces the old split between a single-identity "Profile" page
     and a separate "Profiles" list -- two disconnected places to manage
-    who you are, where a profile added on one never showed up on the
-    other. There is still exactly one identity store per surface: the
-    profiles list (``cfg.profiles_path``) is the source of truth for the
-    UI, and whichever entry is active is mirrored into the single
-    ``cfg.profile_path`` the scan/autopilot loop reads -- that loop's
-    contract is unchanged (see ``profiles.py``'s module docstring).
+    who you are -- and, since the active-profile concept was removed, the
+    "Active profile" form that used to sit at the top of it. There is no
+    privileged entry any more: the list IS the set of people Broker Guard
+    watches, and every one of them is checked on every cycle.
 
-    ``?edit=<id>`` opens a non-active profile for editing in place on this
-    same page (posting to ``/profiles/<id>``); the active profile is
-    always edited through the main form at the top (``POST /identity``).
+    ``?edit=<id>`` opens a profile for editing in place on this same page
+    (posting to ``/profiles/<id>``).
     """
     # One-time backfill for a deployment that already had a populated
     # profile.local.json before this merge shipped -- a no-op once the
@@ -928,30 +1149,10 @@ def identity_get(edit: str = "", cfg: Config = Depends(get_config)):
         log.warning("profiles list unreadable", extra={"error": str(exc)})
         all_profiles = []
 
-    active = next((p for p in all_profiles if p.active), None)
-    others = [p for p in all_profiles if active is None or p.id != active.id]
-
-    if active is not None:
-        first_name, middle_name, last_name = active.first_name, active.middle_name, active.last_name
-        emails = "\n".join(active.emails)
-        phones = "\n".join(active.phones)
-        addresses = "\n".join(active.addresses)
-        eraser_profile = active.eraser_profile or ""
-        active_heading = "Active profile -- {}".format(active.full_name or active.id)
-    else:
-        # No profiles at all (and nothing to migrate): a blank form that
-        # creates the first -- which add_profile marks active for us.
-        first_name = middle_name = last_name = ""
-        emails = phones = addresses = eraser_profile = ""
-        active_heading = "Active profile"
-
-    rows_html = "".join(_profile_row_html(p) for p in others)
-    if not others:
-        empty_note = (
-            "No profiles yet." if active is None
-            else "No other profiles yet -- add one below."
-        )
-        rows_html = '<tr><td colspan="4" class="muted" style="padding:16px;">{}</td></tr>'.format(empty_note)
+    rows_html = "".join(_profile_row_html(p) for p in all_profiles)
+    if not all_profiles:
+        rows_html = ('<tr><td colspan="4" class="muted" style="padding:16px;">'
+                     'No profiles yet -- add one to start scanning for them.</td></tr>')
 
     edit_card = ""
     if edit:
@@ -962,33 +1163,39 @@ def identity_get(edit: str = "", cfg: Config = Depends(get_config)):
         edit_card = _profile_edit_card_html(editing)
 
     body = """
-<div class="page-head"><h1>Profile</h1></div>
-<p class="muted" style="max-width:680px;">Every identity Broker Guard manages, in one place. The
-<strong>active</strong> profile is the one the dashboard, scan and autopilot loop run against, and
-it is the one mirrored into eraser's config for <code>--profile &lt;id&gt;</code> on the CLI.
-Scanning several profiles at once is a planned follow-up -- switching the active one here is what
-changes who gets scanned today.</p>
+<div class="page-head"><h1>Profiles</h1></div>
+<p class="muted" style="max-width:680px;">Every identity Broker Guard manages, in one place.
+<strong>All of them are scanned on every cycle</strong> -- there is no profile to "activate", and
+results on the <a href="/brokers" style="text-decoration:underline;">Brokers</a> page are shown per
+person. Each profile is also mirrored into eraser's config for <code>--profile &lt;id&gt;</code> on
+the CLI.</p>
+{edit_card}
 <div class="grid-main">
   <div class="card">
-    <h2>{active_heading}</h2>
-    <form method="post" action="/identity">
-      <div class="field"><label>First name</label>
-        <input class="inp" type="text" name="first_name" value="{first_name}"></div>
-      <div class="field"><label>Middle name</label>
-        <input class="inp" type="text" name="middle_name" value="{middle_name}"></div>
-      <div class="field"><label>Last name</label>
-        <input class="inp" type="text" name="last_name" value="{last_name}"></div>
-      <div class="field"><label>Emails (one per line)</label>
-        <textarea class="inp" name="emails" rows="3">{emails}</textarea></div>
-      <div class="field"><label>Phones (one per line)</label>
-        <textarea class="inp" name="phones" rows="3">{phones}</textarea></div>
-      <div class="field"><label>Addresses (one per line)</label>
-        <textarea class="inp" name="addresses" rows="3">{addresses}</textarea></div>
-      <div class="field"><label>Eraser profile id (optional)</label>
-        <input class="inp" type="text" name="eraser_profile" value="{eraser_profile}"></div>
-      <button type="submit" class="btn">Save</button>
+    <h2>Profiles</h2>
+    <table class="dtable">
+      <tr style="text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--faint);">
+        <th style="padding-bottom:8px;">Name / id</th><th>Emails</th><th>Phones</th><th></th>
+      </tr>
+      {rows}
+    </table>
+  </div>
+  <div class="card">
+    <h2>Add a profile</h2>
+    <p class="muted" style="font-size:13px;">A new profile joins the very next scan -- nothing else to switch on.</p>
+    <form method="post" action="/profiles">
+      <div class="field"><label>First name</label><input class="inp" type="text" name="first_name" required></div>
+      <div class="field"><label>Middle name</label><input class="inp" type="text" name="middle_name"></div>
+      <div class="field"><label>Last name</label><input class="inp" type="text" name="last_name" required></div>
+      <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="2"></textarea></div>
+      <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="2"></textarea></div>
+      <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="2"></textarea></div>
+      <div class="field"><label>Eraser profile id (optional)</label><input class="inp" type="text" name="eraser_profile"></div>
+      <button type="submit" class="btn">Add profile</button>
     </form>
   </div>
+</div>
+<div class="grid-main" style="margin-top:24px;">
   <div class="card">
     <h2>Government ID</h2>
     <div class="encnote">Encrypted at rest with BG_CRYPTO_KEY -- never stored or transmitted in plaintext.</div>
@@ -1000,38 +1207,7 @@ changes who gets scanned today.</p>
     </form>
   </div>
 </div>
-{edit_card}
-<div class="grid-main" style="margin-top:24px;">
-  <div class="card">
-    <h2>Other profiles</h2>
-    <table class="dtable">
-      <tr style="text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--faint);">
-        <th style="padding-bottom:8px;">Name / id</th><th>Emails</th><th>Phones</th><th></th>
-      </tr>
-      {rows}
-    </table>
-  </div>
-  <div class="card">
-    <h2>Add a profile</h2>
-    <p class="muted" style="font-size:13px;">Added profiles are inactive until you make one active.</p>
-    <form method="post" action="/profiles">
-      <div class="field"><label>First name</label><input class="inp" type="text" name="first_name" required></div>
-      <div class="field"><label>Middle name</label><input class="inp" type="text" name="middle_name"></div>
-      <div class="field"><label>Last name</label><input class="inp" type="text" name="last_name" required></div>
-      <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="2"></textarea></div>
-      <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="2"></textarea></div>
-      <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="2"></textarea></div>
-      <button type="submit" class="btn">Add profile</button>
-    </form>
-  </div>
-</div>
-""".format(
-        active_heading=html.escape(active_heading),
-        first_name=html.escape(first_name), middle_name=html.escape(middle_name),
-        last_name=html.escape(last_name), emails=html.escape(emails), phones=html.escape(phones),
-        addresses=html.escape(addresses), eraser_profile=html.escape(eraser_profile),
-        rows=rows_html, edit_card=edit_card,
-    )
+""".format(rows=rows_html, edit_card=edit_card)
     return style.render_page("Profile", "identity", body)
 
 
@@ -1104,13 +1280,13 @@ def identity_post(
             pass
         raise
 
-    # ...and mirror the same save onto the ACTIVE entry in the profiles
-    # list (creating it if this is the first identity ever saved), so the
-    # merged page's list and the legacy file the scan loop reads can never
-    # drift apart. Deliberately AFTER the validated write above: a bad
+    # ...and mirror the same save onto the FIRST entry in the profiles
+    # list (creating it if this is the first identity ever saved), so this
+    # legacy single-identity route and the profiles list can never drift
+    # apart. Deliberately AFTER the validated write above: a bad
     # submission is rejected before either store is touched.
     try:
-        profiles_mod.upsert_active_profile(cfg.profiles_path, data)
+        profiles_mod.upsert_primary_profile(cfg.profiles_path, data)
     except (OSError, ValueError) as exc:
         log.warning("profiles list upsert failed", extra={"error": str(exc)})
     else:
@@ -1301,40 +1477,45 @@ def _sync_eraser_profiles(cfg: Config) -> None:
         log.warning("eraser profiles sync failed", extra={"error": str(exc)})
 
 
-def _sync_active_profile_to_legacy(cfg: Config) -> None:
-    """Mirror whichever profile is active into cfg.profile_path -- the
-    single profile.local.json that service.run_once/autopilot read.
+def _sync_primary_profile_to_legacy(cfg: Config) -> None:
+    """Mirror the FIRST profile into cfg.profile_path -- the single
+    profile.local.json kept for the entry points that predate
+    multi-profile scanning (``service.run_once``, ``POST /identity``, a
+    manual removal with no profile attached).
 
-    This is the ONLY direction the merged UI writes that file outside
-    ``POST /identity`` (which writes it directly, after validating). The
-    scan loop's contract is unchanged by the merge: it still reads exactly
-    one Identity from cfg.profile_path; this just keeps that one file
-    pointing at whichever profile the list says is active.
+    It is compatibility, not privilege: the scan loops read every profile
+    (``profiles.load_scan_identities``), so which profile lands in this
+    file no longer decides who gets scanned.
     """
     try:
-        profiles_mod.sync_active_to_legacy(cfg.profiles_path, cfg.profile_path)
+        profiles_mod.sync_primary_to_legacy(cfg.profiles_path, cfg.profile_path)
     except (OSError, ValueError) as exc:
-        log.warning("active profile sync to legacy file failed", extra={"error": str(exc)})
+        log.warning("primary profile sync to legacy file failed", extra={"error": str(exc)})
 
 
 def _profile_row_html(p: "profiles_mod.NamedProfile") -> str:
-    """One non-active profile's row on the merged /identity page. "Make
-    active" is what switches which identity the scan loop runs against;
-    "Edit" opens this profile in place on the same page rather than
-    navigating to a second, divergent profile UI."""
+    """One profile's row on the /identity page.
+
+    Two actions, both styled with the app's own button tokens (``btn
+    secondary small``) rather than the ad-hoc inline heights they used to
+    carry -- which was why the "Edit" anchor in particular rendered as a
+    bare link: ``.btn`` had no ``display``, so height/padding did nothing
+    on an inline ``<a>``. See webui_style.PAGE_CSS.
+
+    There is no "Make active": every profile is scanned every cycle.
+    """
     return """
 <tr>
   <td><strong>{name}</strong><br><span class="sub faint" style="font-size:12px;">{pid}</span></td>
   <td>{emails}</td>
   <td>{phones}</td>
-  <td style="display:flex;gap:8px;">
-    <form method="post" action="/profiles/{pid_attr}/activate">
-      <button type="submit" class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;">Make active</button>
-    </form>
-    <a class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;" href="/identity?edit={pid_attr}">Edit</a>
-    <form method="post" action="/profiles/{pid_attr}/remove" onsubmit="return confirm('Remove this profile? Its eraser send history is kept and reappears if re-added with the same id.');">
-      <button type="submit" class="btn secondary" style="height:32px;padding:0 12px;font-size:12px;">Remove</button>
-    </form>
+  <td>
+    <div class="rowactions">
+      <a class="btn secondary small" href="/identity?edit={pid_attr}">Edit</a>
+      <form method="post" action="/profiles/{pid_attr}/remove" onsubmit="return confirm('Remove this profile? It stops being scanned. Its eraser send history is kept and reappears if re-added with the same id.');">
+        <button type="submit" class="btn secondary small danger">Remove</button>
+      </form>
+    </div>
   </td>
 </tr>
 """.format(
@@ -1346,9 +1527,11 @@ def _profile_row_html(p: "profiles_mod.NamedProfile") -> str:
 
 
 def _profile_edit_card_html(p: "profiles_mod.NamedProfile") -> str:
-    """The in-place edit card for a NON-active profile (``/identity?edit=
-    <id>``). The active profile is edited through the main form at the top
-    of the page instead, which posts to /identity."""
+    """The in-place edit card for one profile (``/identity?edit=<id>``).
+
+    Every profile is edited the same way now -- there is no separate
+    "active profile" form at the top of the page to be the odd one out.
+    """
     return """
 <div class="grid-main" style="margin-top:24px;">
   <div class="card">
@@ -1360,8 +1543,11 @@ def _profile_edit_card_html(p: "profiles_mod.NamedProfile") -> str:
       <div class="field"><label>Emails (one per line)</label><textarea class="inp" name="emails" rows="3">{emails}</textarea></div>
       <div class="field"><label>Phones (one per line)</label><textarea class="inp" name="phones" rows="3">{phones}</textarea></div>
       <div class="field"><label>Addresses (one per line)</label><textarea class="inp" name="addresses" rows="3">{addresses}</textarea></div>
-      <button type="submit" class="btn">Save</button>
-      <a class="btn secondary" href="/identity" style="margin-left:8px;">Cancel</a>
+      <div class="field"><label>Eraser profile id (optional)</label><input class="inp" type="text" name="eraser_profile" value="{eraser_profile}"></div>
+      <div class="rowactions">
+        <button type="submit" class="btn">Save</button>
+        <a class="btn secondary" href="/identity">Cancel</a>
+      </div>
     </form>
   </div>
 </div>
@@ -1371,6 +1557,7 @@ def _profile_edit_card_html(p: "profiles_mod.NamedProfile") -> str:
         last_name=html.escape(p.last_name),
         emails=html.escape("\n".join(p.emails)), phones=html.escape("\n".join(p.phones)),
         addresses=html.escape("\n".join(p.addresses)),
+        eraser_profile=html.escape(p.eraser_profile or ""),
     )
 
 
@@ -1394,8 +1581,11 @@ def profiles_add(
     emails: str = Form(""),
     phones: str = Form(""),
     addresses: str = Form(""),
+    eraser_profile: str = Form(""),
     cfg: Config = Depends(get_config),
 ):
+    """Add a profile. It is scanned from the next cycle on -- there is
+    nothing to activate."""
     email_list = _dedupe_case_insensitive(_split_list(emails))
     invalid_emails = [e for e in email_list if not _EMAIL_RE.match(e)]
     if invalid_emails:
@@ -1403,18 +1593,17 @@ def profiles_add(
     phone_list = _dedupe_case_insensitive([normalize_phone(p) for p in _split_list(phones)])
 
     try:
-        created = profiles_mod.add_profile(cfg.profiles_path, {
+        profiles_mod.add_profile(cfg.profiles_path, {
             "first_name": first_name, "middle_name": middle_name, "last_name": last_name,
             "emails": email_list, "phones": phone_list, "addresses": _split_list(addresses),
+            "eraser_profile": eraser_profile.strip() or None,
         })
     except profiles_mod.ProfileValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    # add_profile auto-activates the very first profile -- which means it
-    # is now the identity the scan loop runs against, so mirror it into
-    # the legacy file that loop reads.
-    if created.active:
-        _sync_active_profile_to_legacy(cfg)
+    # Keep the legacy single-identity file populated for the entry points
+    # that still read it (it is compatibility, not "the scanned profile").
+    _sync_primary_profile_to_legacy(cfg)
     _sync_eraser_profiles(cfg)
     return RedirectResponse(url="/identity", status_code=303)
 
@@ -1434,20 +1623,10 @@ def profiles_edit_get(profile_id: str, cfg: Config = Depends(get_config)):
     )
 
 
-@app.post("/profiles/{profile_id}/activate")
-def profiles_activate(profile_id: str, cfg: Config = Depends(get_config)):
-    """Switch which profile is active -- i.e. which single identity the
-    dashboard/scan/autopilot loop runs against. Mirrors the newly active
-    profile into cfg.profile_path (the loop's unchanged one-Identity
-    contract) and re-syncs eraser's list."""
-    try:
-        profiles_mod.set_active(cfg.profiles_path, profile_id)
-    except profiles_mod.ProfileNotFound:
-        raise HTTPException(status_code=404, detail="unknown profile")
-
-    _sync_active_profile_to_legacy(cfg)
-    _sync_eraser_profiles(cfg)
-    return RedirectResponse(url="/identity", status_code=303)
+# NOTE: there is no POST /profiles/<id>/activate any more. Every profile is
+# scanned on every cycle (see profiles.py), so there is nothing to switch
+# between -- the route was removed rather than kept as a no-op, because a
+# button that silently does nothing is worse than one that is gone.
 
 
 @app.post("/profiles/{profile_id}")
@@ -1459,6 +1638,7 @@ def profiles_edit_post(
     emails: str = Form(""),
     phones: str = Form(""),
     addresses: str = Form(""),
+    eraser_profile: str = Form(""),
     cfg: Config = Depends(get_config),
 ):
     email_list = _dedupe_case_insensitive(_split_list(emails))
@@ -1468,19 +1648,20 @@ def profiles_edit_post(
     phone_list = _dedupe_case_insensitive([normalize_phone(p) for p in _split_list(phones)])
 
     try:
-        updated = profiles_mod.update_profile(cfg.profiles_path, profile_id, {
+        profiles_mod.update_profile(cfg.profiles_path, profile_id, {
             "first_name": first_name, "middle_name": middle_name, "last_name": last_name,
             "emails": email_list, "phones": phone_list, "addresses": _split_list(addresses),
+            "eraser_profile": eraser_profile.strip() or None,
         })
     except profiles_mod.ProfileNotFound:
         raise HTTPException(status_code=404, detail="unknown profile")
     except profiles_mod.ProfileValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    # Editing the active profile has to reach the legacy file too, or the
-    # scan loop would keep running against the pre-edit identity.
-    if updated.active:
-        _sync_active_profile_to_legacy(cfg)
+    # An edit can change the first profile, which is what the legacy
+    # single-identity file mirrors -- re-sync so that file does not keep
+    # a pre-edit copy of it.
+    _sync_primary_profile_to_legacy(cfg)
     _sync_eraser_profiles(cfg)
     return RedirectResponse(url="/identity", status_code=303)
 
@@ -1492,19 +1673,18 @@ def profiles_remove(profile_id: str, cfg: Config = Depends(get_config)):
     history is preserved and reappears if a profile with this same id is
     ever re-added (see profiles.py's module docstring).
 
-    Removing the ACTIVE profile promotes another one (remove_profile keeps
-    the one-active invariant); that promoted profile is mirrored into the
-    legacy file so the scan loop is never left pointing at a deleted
-    identity. Removing the LAST profile leaves the legacy file alone
-    rather than truncating it -- see ``sync_active_to_legacy``.
+    A removed profile simply stops being scanned; nothing is promoted,
+    because no profile was privileged in the first place. The legacy
+    single-identity file is re-synced to whichever profile is now first,
+    and removing the LAST profile leaves that file alone rather than
+    truncating it -- see ``sync_primary_to_legacy``.
     """
     try:
-        promoted = profiles_mod.remove_profile(cfg.profiles_path, profile_id)
+        profiles_mod.remove_profile(cfg.profiles_path, profile_id)
     except profiles_mod.ProfileNotFound:
         raise HTTPException(status_code=404, detail="unknown profile")
 
-    if promoted is not None:
-        _sync_active_profile_to_legacy(cfg)
+    _sync_primary_profile_to_legacy(cfg)
     _sync_eraser_profiles(cfg)
     return RedirectResponse(url="/identity", status_code=303)
 

@@ -908,10 +908,16 @@ def test_record_outcome_keeps_the_broker_id_not_just_the_tally():
     p.record_outcome("alpha", "checked")
     p.record_outcome("beta", "hit", hits=3)
 
+    # The map is keyed by (identity, broker) now that one cycle can sweep
+    # several profiles -- entry_key is the single place that shape is
+    # spelled out, so the test reads it the same way the code writes it.
     snap = p.snapshot(include_brokers=True)
-    assert snap["brokers"]["alpha"]["outcome"] == "checked"
-    assert snap["brokers"]["beta"]["outcome"] == "hit"
-    assert snap["brokers"]["beta"]["hits"] == 3
+    alpha = progress_mod.entry_key("idkey1", "alpha")
+    beta = progress_mod.entry_key("idkey1", "beta")
+    assert snap["brokers"][alpha]["outcome"] == "checked"
+    assert snap["brokers"][alpha]["broker_id"] == "alpha"
+    assert snap["brokers"][beta]["outcome"] == "hit"
+    assert snap["brokers"][beta]["hits"] == 3
     # ...and the aggregate counters still behave exactly as before.
     assert snap["processed"] == 2 and snap["checked"] == 1 and snap["hits"] == 1
 
@@ -920,7 +926,8 @@ def test_record_outcome_tags_each_broker_with_the_scanned_identity():
     p = progress_mod.ScanProgress(now=lambda: "T0")
     p.begin_cycle(identity_key="idkeyA", total=1)
     p.record_outcome("alpha", "checked")
-    assert p.snapshot(include_brokers=True)["brokers"]["alpha"]["identity_key"] == "idkeyA"
+    entry = p.snapshot(include_brokers=True)["brokers"][progress_mod.entry_key("idkeyA", "alpha")]
+    assert entry["identity_key"] == "idkeyA"
     assert p.snapshot()["identity_key"] == "idkeyA"
 
 
@@ -930,7 +937,7 @@ def test_observer_closure_records_the_broker_id():
     p = progress_mod.ScanProgress(now=lambda: "T0")
     p.begin_cycle(identity_key="idkey1", total=1)
     p.observer()("alpha", "checked", 0, 0)
-    assert "alpha" in p.snapshot(include_brokers=True)["brokers"]
+    assert progress_mod.entry_key("idkey1", "alpha") in p.snapshot(include_brokers=True)["brokers"]
 
 
 def test_a_second_phase_keeps_the_first_phases_per_broker_results():
@@ -950,9 +957,9 @@ def test_a_second_phase_keeps_the_first_phases_per_broker_results():
     p.finish()
 
     brokers = p.snapshot(include_brokers=True)["brokers"]
-    assert set(brokers) == {"alpha", "beta", "gamma"}
-    assert brokers["alpha"]["outcome"] == "hit"
-    assert brokers["beta"]["outcome"] == "checked"
+    assert {e["broker_id"] for e in brokers.values()} == {"alpha", "beta", "gamma"}
+    assert brokers[progress_mod.entry_key("idkey1", "alpha")]["outcome"] == "hit"
+    assert brokers[progress_mod.entry_key("idkey1", "beta")]["outcome"] == "checked"
     # The aggregate counters DO still reset per phase (different
     # denominators), which is the behaviour the dashboard line depends on.
     assert p.snapshot()["total"] == 1
@@ -965,7 +972,8 @@ def test_a_browser_error_outranks_a_clean_serp_result_for_the_same_broker():
     p.begin_cycle(identity_key="idkey1", total=1)
     p.record_outcome("alpha", "checked")
     p.record_outcome("alpha", "error", errors=1)
-    assert p.snapshot(include_brokers=True)["brokers"]["alpha"]["outcome"] == "error"
+    entry = p.snapshot(include_brokers=True)["brokers"][progress_mod.entry_key("idkey1", "alpha")]
+    assert entry["outcome"] == "error"
 
 
 def test_a_hit_from_either_leg_survives_a_later_clean_check():
@@ -973,7 +981,8 @@ def test_a_hit_from_either_leg_survives_a_later_clean_check():
     p.begin_cycle(identity_key="idkey1", total=1)
     p.record_outcome("alpha", "hit", hits=1)
     p.record_outcome("alpha", "checked")
-    assert p.snapshot(include_brokers=True)["brokers"]["alpha"]["outcome"] == "hit"
+    entry = p.snapshot(include_brokers=True)["brokers"][progress_mod.entry_key("idkey1", "alpha")]
+    assert entry["outcome"] == "hit"
 
 
 def test_begin_cycle_clears_the_previous_scans_per_broker_results():
@@ -1020,9 +1029,10 @@ def test_snapshot_hands_out_copies_not_live_entries():
     p = progress_mod.ScanProgress(now=lambda: "T0")
     p.begin_cycle(identity_key="idkey1", total=1)
     p.record_outcome("alpha", "checked")
+    key = progress_mod.entry_key("idkey1", "alpha")
     snap = p.snapshot(include_brokers=True)
-    snap["brokers"]["alpha"]["outcome"] = "hit"
-    assert p.snapshot(include_brokers=True)["brokers"]["alpha"]["outcome"] == "checked"
+    snap["brokers"][key]["outcome"] = "hit"
+    assert p.snapshot(include_brokers=True)["brokers"][key]["outcome"] == "checked"
 
 
 def test_per_broker_results_are_written_by_a_real_cycle(cfg, deps_factory):
@@ -1038,7 +1048,10 @@ def test_per_broker_results_are_written_by_a_real_cycle(cfg, deps_factory):
     service.build_presence_checker(identity, broker_list, deps, cfg, progress=isolated)
 
     snap = isolated.snapshot(include_brokers=True)
-    assert set(snap["brokers"]) == {"alpha", "beta", "gamma"}
+    assert {e["broker_id"] for e in snap["brokers"].values()} == {"alpha", "beta", "gamma"}
+    assert set(snap["brokers"]) == {
+        progress_mod.entry_key(identity.identity_key, b) for b in ("alpha", "beta", "gamma")
+    }
     assert all(e["outcome"] == "checked" for e in snap["brokers"].values())
     assert snap["identity_key"] == identity.identity_key
     assert all(e["identity_key"] == identity.identity_key for e in snap["brokers"].values())
@@ -1123,9 +1136,28 @@ def test_a_real_cycle_scans_unknown_brokers_before_known_ones(cfg, deps_factory)
 # --------------------------------------------------------------------------
 
 def _snapshot_with(entries, cycle_total=3, active=False, identity_key="idkey1"):
-    return {"brokers": entries, "cycle_total": cycle_total, "active": active,
+    """A progress snapshot built from a readable ``{broker_id: entry}`` map.
+
+    The real map is keyed by ``entry_key(identity_key, broker_id)`` now
+    that one cycle sweeps every profile, so the helper composes the key
+    from each entry's OWN ``identity_key`` -- which is what lets a test
+    plant one profile's result and assert another profile never sees it.
+    """
+    keyed = {
+        progress_mod.entry_key(entry.get("identity_key"), broker_id):
+            {"broker_id": broker_id, **entry}
+        for broker_id, entry in entries.items()
+    }
+    return {"brokers": keyed, "cycle_total": cycle_total, "active": active,
             "identity_key": identity_key,
-            "not_reached": max(0, cycle_total - len(entries))}
+            "identity_keys": [identity_key],
+            "not_reached": max(0, cycle_total - len(keyed))}
+
+
+# The saved-profile list the rows below are built for. Rows are per
+# (profile, broker) now, so a row-building test has to say WHOSE rows it
+# wants -- there is no implicit "the active profile" any more.
+_ONE_PROFILE = [{"identity_key": "idkey1", "name": "Ann Example"}]
 
 
 def test_scan_outcome_rows_cover_every_broker_not_just_the_found_ones():
@@ -1134,7 +1166,7 @@ def test_scan_outcome_rows_cover_every_broker_not_just_the_found_ones():
     roster = _roster(3)
     rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
         "b0": {"outcome": "checked", "identity_key": "idkey1"},
-    }))
+    }), profiles=_ONE_PROFILE)
     assert len(rows) == 3
     assert {r["broker_id"] for r in rows} == {"b0", "b1", "b2"}
 
@@ -1143,7 +1175,7 @@ def test_a_broker_not_reached_yet_is_pending_never_clean():
     roster = _roster(2)
     rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
         "b0": {"outcome": "checked", "identity_key": "idkey1"},
-    }))
+    }), profiles=_ONE_PROFILE)
     by_id = {r["broker_id"]: r for r in rows}
     assert by_id["b0"]["outcome"] == "checked"
     assert by_id["b1"]["outcome"] == "pending"
@@ -1161,8 +1193,9 @@ def test_scan_outcome_rows_never_show_another_identitys_results():
     roster = _roster(2)
     rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
         "b0": {"outcome": "hit", "identity_key": "idkeyOTHER"},
-    }), identity_key="idkeyMINE")
+    }), profiles=[{"identity_key": "idkeyMINE", "name": "Mine"}])
     assert {r["outcome"] for r in rows} == {"pending"}
+    assert {r["profile_name"] for r in rows} == {"Mine"}
 
 
 def test_scan_outcome_rows_sort_the_interesting_ones_first():
@@ -1171,7 +1204,7 @@ def test_scan_outcome_rows_sort_the_interesting_ones_first():
         "b0": {"outcome": "checked", "identity_key": "idkey1"},
         "b1": {"outcome": "hit", "identity_key": "idkey1"},
         "b2": {"outcome": "error", "identity_key": "idkey1"},
-    }, cycle_total=4))
+    }, cycle_total=4), profiles=_ONE_PROFILE)
     assert [r["outcome"] for r in rows] == ["hit", "error", "checked", "pending"]
 
 
@@ -1179,7 +1212,7 @@ def test_scan_outcome_counts_keep_pending_out_of_checked():
     roster = _roster(3)
     rows = webui_data.scan_outcome_rows(roster, _snapshot_with({
         "b0": {"outcome": "checked", "identity_key": "idkey1"},
-    }))
+    }), profiles=_ONE_PROFILE)
     counts = webui_data.scan_outcome_counts(rows)
     assert counts["checked"] == 1
     assert counts["pending"] == 2
@@ -1209,6 +1242,7 @@ def test_scan_outcome_counts_from_progress_matches_the_roster_path():
         "b0": {"outcome": "checked", "identity_key": "idkey1"},
         "b1": {"outcome": "error", "identity_key": "idkey1"},
     })
-    from_rows = webui_data.scan_outcome_counts(webui_data.scan_outcome_rows(roster, snap))
+    from_rows = webui_data.scan_outcome_counts(
+        webui_data.scan_outcome_rows(roster, snap, profiles=_ONE_PROFILE))
     from_progress = webui_data.scan_outcome_counts_from_progress(snap)
     assert from_rows == from_progress
