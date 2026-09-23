@@ -175,6 +175,12 @@ FLAVOR_CAREERBUILDER_JSON_DSR = "careerbuilder_formless_json_privacy_request"
 # must be reached through ``form:has(...)`` rather than by its id.
 FLAVOR_CONVEX_HUBSPOT = "convex_hubspot_privacy_request_form"
 
+# Porch Group Media's individual opt-out, on its own subdomain. Named for the
+# defect that dictates how it must be addressed: several controls SHARE an id
+# (``UserData_LastName`` is on last_name, phone AND sign_date), so ids are
+# unusable here and every selector keys on the ``name`` attribute.
+FLAVOR_PGM_OPTOUT = "porchgroupmedia_individual_optout"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -1521,6 +1527,88 @@ CAREERBUILDER = FormRecipe(
 )
 
 
+PORCHGROUPMEDIA = FormRecipe(
+    broker_id="porchgroupmedia-com",
+    broker_name="Porch Group Media",
+    url="https://optout.porchgroupmedia.com/",
+    flavor=FLAVOR_PGM_OPTOUT,
+    steps=(
+        # A radio, driven by Check because page.check() handles radios too.
+        # The other two options are "guardian" and "deceased", and choosing
+        # either would be a false statement about who is asking.
+        Check(selector="input[name='who'][value='myself']",
+              label="I certify this request relates to Myself"),
+        Field(selector="input[name='first_name']", source="first_name",
+              label="First Name"),
+        Field(selector="input[name='last_name']", source="last_name",
+              label="Last Name"),
+        Field(selector="input[name='address_1']", source="street",
+              label="Address 1"),
+        Field(selector="input[name='city']", source="city", label="City"),
+        # 54 options and the labels ARE the two-letter codes.
+        Field(selector="select[name='state']", source="state_code",
+              label="State", kind="select"),
+        Field(selector="input[name='zip_code']", source="zip",
+              label="Zip Code"),
+        # Capital E. The only control on the form whose name is not
+        # lower_snake_case, and a silent no-match waiting to happen.
+        Field(selector="input[name='Email']", source="email", label="Email"),
+        Field(selector="input[name='phone']", source="phone", label="Phone",
+              required=False),
+    ),
+    submit_selector="button[name='submit']",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23. This is the "
+        "broker's real suppression surface and it is unusually explicit "
+        "about what it does: 'we will only use [this] to remove your name, "
+        "address, phone and/or email information from our databases ... "
+        "PGM Solutions will remove your data from PGM Solutions' databases "
+        "and will no longer share your data with third parties', within "
+        "ten business days. POST to /submit2.action.php.\n"
+        "\n"
+        "WHY EVERY SELECTOR USES name= AND NOT AN id. The page has "
+        "duplicate ids, which is a defect on their side rather than a "
+        "style choice: id='UserData_FirstName' is on BOTH first_name and "
+        "middle_init, and id='UserData_LastName' is on last_name, phone "
+        "AND sign_date. A recipe written against those ids would fill the "
+        "wrong boxes and look like it worked. The placeholders lie in the "
+        "same way -- phone and sign_date both render placeholder 'Last "
+        "Name' -- so placeholder-based selectors are out too.\n"
+        "\n"
+        "TWO FIELDS ARE DELIBERATELY NOT FILLED. middle_init, because an "
+        "identity record here has no middle initial to give. And "
+        "sign_date, which is a free-text input (maxlength 50) asking the "
+        "requester to date their certification: nothing in resolve_fields "
+        "supplies today's date, and hardcoding one into a recipe would age "
+        "into a lie. Whoever turns this on must decide how sign_date is "
+        "populated -- it is NOT marked required in the DOM, but a request "
+        "certifying an identity is exactly where a blank date may get it "
+        "rejected. That is the single open question on this recipe.\n"
+        "\n"
+        "No captcha script, no captcha element, no hidden inputs at all "
+        "and no honeypot -- every control computes visible. "
+        "no_captcha_verified stays False regardless, because no human has "
+        "swept it and no dry run was performed. The only required field "
+        "per the DOM is the state select.\n"
+        "\n"
+        "DATASET FINDING, and the consent-portal trap in a new costume. "
+        "The row's recorded opt_out_url (/inbound/do-not-sell-my-personal- "
+        "information/) redirects to datarightsrequest.porchgroupmedia.com, "
+        "a DSAR form whose four request options are access / correct / "
+        "portable copy / delete -- NO opt-out of sale among them -- and "
+        "which says so itself: 'To opt out of the sale of your personal "
+        "information, please go here'. That link leads here. So the "
+        "recorded URL would have filed the wrong request type. Worth "
+        "noting about that DSAR form too: it carries no captcha SCRIPT but "
+        "does carry a hidden input[name='_captcha'] with value 'true', "
+        "which is a FormSubmit-style instruction to challenge on submit -- "
+        "a reminder that 'no captcha script on the page' is not the same "
+        "finding as 'no captcha'. Second channel for a human: "
+        "privacy@porchgroupmedia.com."
+    ),
+)
+
+
 _CONVEX_FORM = "form:has(select[name='request_type'])"
 
 CONVEX = FormRecipe(
@@ -1604,6 +1692,7 @@ STAGED_RECIPES: dict = {
     PROPERTYCHECKER.broker_id: PROPERTYCHECKER,
     CAREERBUILDER.broker_id: CAREERBUILDER,
     CONVEX.broker_id: CONVEX,
+    PORCHGROUPMEDIA.broker_id: PORCHGROUPMEDIA,
 }
 
 
@@ -4152,6 +4241,163 @@ OPTOUT_UNDECIDED = {
         "from the row's own businesswatchnetwork.com, which is worth "
         "verifying before relying on it."
     ),
+    "datamasters-org": (
+        "Verified by browser render 2026-09-23: the page promises an opt- "
+        "out form and does not appear to serve one, which is the whole "
+        "finding. datamasters.org/opt-out/ says 'DataMasters has two easy "
+        "ways the consumers can opt out ... Option 1: Fill in your "
+        "information and submit the form below to be opted out from any "
+        "future Direct Mail, Telephone or Email Marketing Communications. "
+        "Option 2: call our Dedicated Opt Out Line (469) 882-2000'. But "
+        "the ONLY form on the page besides the menu search is "
+        "#form_contact2, a Formidable SALES form: its fields are Name, "
+        "Last, Email, Phone Number, Website, 'Do you know who your target "
+        "market is' (Automotive / Consumer / Business / Medical Data), "
+        "'What type of data are you interested in' (Direct mailing list / "
+        "Email marketing list), a Message textarea and a submit button "
+        "reading GET A QUOTE. Either the opt-out form has been replaced "
+        "by the quote form by mistake, or Option 1 means typing the "
+        "request into that Message box. A recipe must not guess between "
+        "those. Note it does carry a honeypot "
+        "(input[name='item_meta[86]'], computed-invisible) and a "
+        "reCAPTCHA, so it is walled as well as ambiguous. The phone line "
+        "is the channel that plainly works. Dataset contact "
+        "sales@datamasters.org is a sales alias."
+    ),
+    "datapartners-com": (
+        "Verified by browser render 2026-09-23: the recorded URL is a "
+        "correct hub page rather than a form. "
+        "datapartners.com/donotsellmyinformation/ ('Manage Your Privacy "
+        "Preferences') carries no inputs and instead links out to three "
+        "separate request pages: /opt-out-request/, /delete-my- "
+        "information-request/ and /information-access-request/. The first "
+        "of those is the one this tool would want and it was not opened. "
+        "Next step is exactly that: render /opt-out-request/, transcribe "
+        "it and check for a captcha there -- nothing about the hub page "
+        "predicts what the request page carries. Dataset contact "
+        "info@datapartners.com is a general alias."
+    ),
+    "datasys-com": (
+        "Verified by browser render 2026-09-23: the privacy policy at "
+        "datasys.com/privacy-policy does not itself take requests; it "
+        "links repeatedly to 'Your Privacy Choices' at "
+        "datasys.com/privacy/my-privacy-choices, which was not opened, "
+        "alongside the usual third-party ad-tech opt-out links "
+        "(optout.aboutads.info). So the real surface is one hop away and "
+        "identified. Next step: render /privacy/my-privacy-choices, "
+        "transcribe the form and check for a captcha. Dataset contact: "
+        "privacy@datasys.com."
+    ),
+    "deeprootanalytics-com": (
+        "Verified by browser render 2026-09-23: "
+        "privacy.deeprootanalytics.com is a genuine privacy centre -- it "
+        "offers 'Access your data' ('We will provide you a report of all "
+        "your personal data') and 'Delete your data' -- but the landing "
+        "page carries no form and no controls at all; the request flow is "
+        "behind whichever tile a visitor picks. No captcha at this stage, "
+        "which per the standing rule says nothing about the stage after "
+        "it. Next step: click through the Delete (and any suppression) "
+        "tile, transcribe the field set and re-check for a captcha there. "
+        "The dataset records no email for this row, so this portal is the "
+        "only known channel."
+    ),
+    "diablomedia-com": (
+        "Verified by browser render 2026-09-23: the form is EMBEDDED and "
+        "did not populate in time, which the new frame-walking made "
+        "visible rather than hiding. diablomedia.com/privacy-request/ "
+        "('Looking to Opt-Out? ... Please use this form') has zero forms "
+        "in its main frame; a child iframe points at "
+        "my.datasubject.com/aSCwO6P3vw/60584 -- the same hosted-portal "
+        "vendor already recorded for convergemarketing-com, which gates "
+        "on jurisdiction before rendering anything. Next step: drive the "
+        "jurisdiction gate, record the request types and field set, and "
+        "check for a captcha THEN. Note the page's own framing is narrow "
+        "-- 'Would you like to opt-out of future mailings?' -- so a "
+        "future writer should establish whether this suppresses data or "
+        "only mailings. Dataset contact: data@diablomedia.com."
+    ),
+    "decide-co": (
+        "Verified by browser render 2026-09-23: decide.co/privacy carries "
+        "a small in-page form (#marketingForm, POST to the same page) "
+        "whose select offers only 'Request Account Deletion' and 'Request "
+        "Account Information' -- both scoped to an ACCOUNT rather than to "
+        "a person's data, which is the wrong request type for a broker "
+        "suppression -- plus an Email field and a computed-invisible "
+        "'Name' input that is almost certainly a honeypot. There is also "
+        "a .recaptcha-signature element on the page with no captcha "
+        "script loaded, so what that element does is unresolved. "
+        "Undecided because the surface exists but does not offer the "
+        "request this tool needs, and because whether Decide holds non- "
+        "account data about non-users was not established. Note the "
+        "corporate history on the page: Decide Technologies Inc. is 'fka "
+        "LockerDome, Inc.', so a LockerDome row would be the same "
+        "company. Dataset contact: privacy@decide.co."
+    ),
+    "demandscience-com": (
+        "Verified by browser render 2026-09-23: "
+        "demandscience.com/privacy-policy-ccpa/ redirects to the general "
+        "/privacy-policy/, which carries no rights-request form -- its "
+        "only forms are two copies of a knowledge-base search and a "
+        "Pardot newsletter signup (posting to "
+        "b2bleadgen.demandscience.com) that a careless reader could "
+        "mistake for a request form. Recording that explicitly for the "
+        "same reason as cuebiq and datadecisionsgroup in the previous "
+        "batch. The company is Demand Science Group, LLC selling B2B "
+        "demand generation, so it certainly holds person-level contact "
+        "data. Next step: find whether the CCPA page moved or whether the "
+        "channel is mailbox-only. Dataset contact: "
+        "dataprivacy@demandscience.com."
+    ),
+    "coresignal-com": (
+        "Verified by browser render 2026-09-23: coresignal.com publishes "
+        "no opt-out page reachable from its homepage -- the only form on "
+        "it is a 'Get a free consultation' contact modal (#wf-form- "
+        "contact-us-modal, with a computed-invisible privacy-policy "
+        "checkbox). This one is worth someone's time rather than writing "
+        "off: Coresignal sells bulk datasets of EMPLOYEE records scraped "
+        "from the public web, so it holds person-level data about people "
+        "who have never heard of it, and the dataset does record "
+        "privacy@coresignal.com. Next step: look for a privacy policy or "
+        "GDPR/CCPA request page under coresignal.com and establish "
+        "whether the channel is a form or that mailbox."
+    ),
+    "delivr-ai": (
+        "Verified by browser render 2026-09-23: delivr.ai exposes no opt- "
+        "out or privacy page from its homepage and carries no rights form "
+        "-- the only input is the 'See your own intent signal' demo box. "
+        "Delivr sells deterministic identity resolution and person-level "
+        "intent, so it holds exactly the kind of data this tool exists to "
+        "suppress, and the absence of a visible channel is itself "
+        "notable. Next step: check /privacy, /legal and the Company menu "
+        "for a rights page before concluding it is mailbox-only. Dataset "
+        "contact support@delivr.ai is general support, not a privacy "
+        "alias."
+    ),
+    "dataskip-io": (
+        "Verified by browser render 2026-09-23: the dataset's opt_out_url "
+        "(dataskip.io/product/start-order/) redirects to /pricing -- a "
+        "rate sheet for skip-tracing lookups, not an opt-out of any kind "
+        "-- so the recorded surface is wrong. No privacy or opt-out page "
+        "is linked from the navigation (PRICING / INDUSTRIES / DEVELOPERS "
+        "/ FAQ / CONTACT US / SIGN IN). Worth pursuing rather than "
+        "dismissing, because a skip-tracing service holds current address "
+        "and phone data on people by design. Next step: check CONTACT US "
+        "and any footer legal pages for a suppression channel. Dataset "
+        "contact: support@dataskip.io."
+    ),
+    "deluxe-com": (
+        "Reachability failure, 2026-09-23, and of a kind not yet seen in "
+        "this sweep: https://www.deluxe.com/policy/donotsell/ fails with "
+        "net::ERR_HTTP2_PROTOCOL_ERROR -- the host answers and then the "
+        "connection breaks at the protocol level, which is different from "
+        "both a DNS failure (bridgevine, brightswipe, calltruth) and a "
+        "silent timeout (carmarketsolutions). It may be an anti-bot "
+        "measure that rejects this client specifically, or a genuine "
+        "server fault. Recorded as undecided and worth a plain retry, "
+        "ideally with a different HTTP stack. The URL shape suggests the "
+        "surface exists. Dataset contact: "
+        "privacyprogramoffice@deluxe.com."
+    ),
 }
 
 
@@ -4908,6 +5154,58 @@ OPTOUT_BLOCKED = {
         "directly. The dataset records no email for this row, so the wall "
         "currently leaves no channel at all."
     ),
+    "datonics-com": (
+        "Verified by browser render 2026-09-23: a thorough, correctly "
+        "typed rights form behind a VISIBLE captcha. "
+        "datonics.com/privacy/privacy-choices carries form#datonics- "
+        "privacy-form with #datonics-email (required), #datonics- "
+        "resident-of (required state select), a conditional #datonics- "
+        "other-location, #datonics-request-type (required, opening on "
+        "'Opt-out of Targeted Advertising' and also offering delete / "
+        "access / correct / limit sensitive), an optional #datonics-maid "
+        "for a Mobile Advertising ID, a resident-versus-agent "
+        "certification radio pair, and #datonics-submit. It ALSO carries "
+        "a honeypot: input#datonics-website labelled 'Website', which "
+        "would need to go in forbidden_selectors. Blocked by reCAPTCHA "
+        "Enterprise rendered as a visible 'I'm not a robot' checkbox -- "
+        "the anchor and bframe challenge frames are both present. The "
+        "dataset records no email for this row, so the captcha currently "
+        "leaves no channel."
+    ),
+    "decisionlinks-com": (
+        "Verified by browser render 2026-09-23: the recorded /opt-out "
+        "redirects to /legal-pages/opt-out, a Webflow form (#wf-form-Opt- "
+        "Out-Requests) with Opt-Out-First-Name, -Last-Name, -Address, "
+        "-City, -State, -Zip all required plus optional -Email and "
+        "-Phone. Blocked by reCAPTCHA with a visible 'I'm not a robot' "
+        "checkbox. Two things worth carrying forward. First, that "
+        "challenge frame ALSO reports 'This site is exceeding reCAPTCHA "
+        "Enterprise free quota' -- the second broker in two batches in "
+        "that state (see datalinedata-com), which means the form may be "
+        "failing for ordinary human visitors too, not just for this tool; "
+        "anyone revisiting should check before assuming they are being "
+        "singled out. Second, read the scope honestly: the page says "
+        "DecisionLinks 'honors your right to opt-out of marketing "
+        "messages', which is narrower than a database suppression, so a "
+        "future writer should establish what this form actually removes. "
+        "Dataset contact: support@decisionlinks.com."
+    ),
+    "dice-com": (
+        "Verified by browser render 2026-09-23: a real and correctly "
+        "typed form, walled. dice.com/about/ccpa/ carries form#form-dice- "
+        "ccpa posting to ccpa-forwarder.svc.dhigroupinc.com with "
+        "input#name and input#email (both required) and a three-way radio "
+        "group (name=description) whose options are access / 'I wish to "
+        "Opt-out of the sale of my data' / delete. It carries a HONEYPOT, "
+        "input[name='user_name'], off-layout and unlabelled, which would "
+        "need to go in forbidden_selectors. Blocked by reCAPTCHA "
+        "Enterprise with a visible 'I'm not a robot' checkbox (anchor and "
+        "bframe frames both present). The rights notice covers "
+        "California, Colorado, Connecticut, Utah, Virginia, Montana, "
+        "Delaware, Iowa, Nebraska, New Hampshire and New Jersey. Dataset "
+        "contact support@dice.com is general support rather than a "
+        "privacy alias."
+    ),
 }
 
 
@@ -5294,6 +5592,28 @@ OPTOUT_OUT_OF_SCOPE = {
         "is an independent blocker. Recorded for the dataset: the domain "
         "cadent.tv now redirects to cadent.com, while the privacy portal "
         "stays on privacy.cadent.tv."
+    ),
+    "demystdata-com": (
+        "Verified by browser render 2026-09-23: a real, reachable, "
+        "captcha-free DSAR form that this codebase must not complete. "
+        "demystdata.com now serves demyst.com/data-subject-action- "
+        "request, whose form asks for Full name, Former names, Email "
+        "address, Phone number, DATE OF BIRTH, Current address, a free- "
+        "text 'identify your relationship with Demyst Data, Ltd', and a "
+        "set of checkboxes and radios that are computed-invisible in the "
+        "DOM (styled controls rather than honeypots, given every one of "
+        "them sits under a visible label). Out of scope rather than "
+        "staged for two reasons. First, date of birth: this repo's "
+        "identity record is a name and address, and DOB is a materially "
+        "more sensitive datum to hand a broker than anything a recipe has "
+        "been asked to submit so far -- that is a decision for the "
+        "person, not for a tool. Second, the 'relationship with Demyst' "
+        "free-text has no honest automatic answer for someone who has "
+        "never dealt with them. Note also that the form's controls carry "
+        "their LABELS as both name and id (name='Date of birth'), spaces "
+        "included, so any future recipe would need attribute selectors "
+        "with quoted values. No captcha was loaded. Dataset contact: "
+        "privacy@demystdata.com."
     ),
 }
 

@@ -2567,6 +2567,125 @@ NO_SEARCH_SURFACE = {
         "search, a newsletter subscribe (user[email]) and a Yotpo review "
         "widget. No person lookup exists."
     ),
+    "porchgroupmedia-com": (
+        "Verified by browser render 2026-09-23: Porch Group Media sells "
+        "consumer marketing data and mover/new-homeowner audiences to "
+        "brands; delivery is by list and platform under contract. Neither "
+        "porchgroupmedia.com nor its two consumer subdomains offers a "
+        "lookup of any kind. No search surface."
+    ),
+    "deluxe-com": (
+        "Verified by browser render 2026-09-23: Deluxe is a payments and "
+        "business-services company (checks, payroll, merchant services) "
+        "whose consumer data arrives through its business customers. No "
+        "public person lookup exists. Recorded alongside a reachability "
+        "note on the opt-out leg: the recorded do-not-sell URL failed "
+        "with an HTTP/2 protocol error."
+    ),
+    "datapartners-com": (
+        "Verified by browser render 2026-09-23: Data Partners sells "
+        "consumer and B2B marketing lists to advertisers and agencies. "
+        "Its public site is marketing plus a set of request forms; there "
+        "is no lookup and no directory."
+    ),
+    "dataskip-io": (
+        "Verified 2026-09-23: DataSkip is a SKIP-TRACING service, which "
+        "makes it a genuine people-lookup business -- but the lookup is a "
+        "paid, authenticated product, not a public page. The recorded URL "
+        "redirects to /pricing, which advertises '4 cents per hit', a "
+        "'98.9% hit rate on typical lists', a dashboard and a developer "
+        "API, all behind SIGN IN / SIGN UP. There is no free query "
+        "surface to read, and a paid one is a purchase decision rather "
+        "than a research one."
+    ),
+    "datasys-com": (
+        "Verified by browser render 2026-09-23: Datasys sells omnichannel "
+        "marketing data and audience activation to advertisers. The site "
+        "is platform marketing with a 'Talk to an Expert' contact route; "
+        "no consumer lookup exists anywhere on it."
+    ),
+    "datonics-com": (
+        "Verified by browser render 2026-09-23: Datonics sells audience "
+        "segments built on browser and device identifiers to ad buyers -- "
+        "its own rights form offers a Mobile Advertising ID field, which "
+        "is the shape of its records. No name-keyed public lookup."
+    ),
+    "datamasters-org": (
+        "Verified by browser render 2026-09-23: DataMasters rents direct- "
+        "mail, telephone and email marketing lists by segment, sold by "
+        "quote. The only forms on the site are a menu search and a 'GET A "
+        "QUOTE' sales form. No person lookup exists."
+    ),
+    "decide-co": (
+        "Verified by browser render 2026-09-23: Decide Technologies "
+        "(formerly LockerDome) runs an advertising decision marketplace "
+        "for advertisers and publishers. Its records are ad-serving "
+        "identifiers and accounts, not a consumer directory, and the site "
+        "offers no lookup."
+    ),
+    "decisionlinks-com": (
+        "Verified by browser render 2026-09-23: DecisionLinks sells "
+        "compiled consumer marketing data and credit-adjacent products to "
+        "businesses; its own opt-out page describes the right as opting "
+        "out of MARKETING messages. Products sit behind Login / Book a "
+        "demo. No public person lookup."
+    ),
+    "deeprootanalytics-com": (
+        "Verified by browser render 2026-09-23: Deep Root Analytics is a "
+        "political media-analytics firm selling audience targeting to "
+        "campaigns; its data is delivered inside client engagements. "
+        "privacy.deeprootanalytics.com is a request portal, not a "
+        "directory, and the main site publishes no lookup."
+    ),
+    "coresignal-com": (
+        "Verified by browser render 2026-09-23: Coresignal sells bulk "
+        "public-web datasets and APIs about companies, employees and jobs "
+        "to data teams -- delivery is by dataset or API key under "
+        "contract, gated behind Log in / Start free. Its site offers no "
+        "per-person query page. Note the business does hold person-level "
+        "employment records, so the opt-out leg matters even though the "
+        "search leg has no surface."
+    ),
+    "delivr-ai": (
+        "Verified by browser render 2026-09-23: Delivr sells "
+        "deterministic identity resolution and person-level intent to B2B "
+        "marketers. It does put one lookup-shaped control on its homepage "
+        "-- an email box labelled 'See your own intent signal' with a "
+        "'Look up' button -- but that is a self-service demo keyed to the "
+        "VISITOR's own email address, not a name-driven search of a third "
+        "party, and it feeds a sales funnel ('Get Started', 'Talk to "
+        "Sales'). Not a search surface in the sense this module means, "
+        "and recorded explicitly so a future reader does not mistake it "
+        "for one."
+    ),
+    "demandscience-com": (
+        "Verified by browser render 2026-09-23: Demand Science sells B2B "
+        "demand generation and buying-committee contact data to "
+        "marketers, delivered as leads under contract. The public site is "
+        "marketing plus a Pardot newsletter form; no lookup exists."
+    ),
+    "demystdata-com": (
+        "Verified by browser render 2026-09-23: Demyst is a data- "
+        "orchestration platform for banks and insurers -- it brokers "
+        "access to third-party data sources inside a customer's "
+        "underwriting workflow rather than publishing anything. No public "
+        "lookup. Note the domain has moved: demystdata.com now serves "
+        "demyst.com."
+    ),
+    "diablomedia-com": (
+        "Verified by browser render 2026-09-23: Diablo Media is a "
+        "performance-marketing and lead-generation network; its consumer "
+        "touchpoint is a mailing list, not a directory. The site offers "
+        "no lookup of any kind."
+    ),
+    "dice-com": (
+        "Verified by browser render 2026-09-23: Dice is a technology job "
+        "board. Candidate profiles are visible to paying employers behind "
+        "a recruiter login, and no public page takes a name and returns a "
+        "person. Same shape as careerbuilder-com. Note the corporate "
+        "parent named on its request endpoint, DHI Group, which may "
+        "appear as its own row."
+    ),
 }
 
 

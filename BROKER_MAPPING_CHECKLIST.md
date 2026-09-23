@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **256** / 969
-- Search leg mapped: 258 / 969
-- Opt-out leg mapped: 260 / 969
+- Fully mapped (both legs): **272** / 969
+- Search leg mapped: 274 / 969
+- Opt-out leg mapped: 276 / 969
 
 ## How to resume
 
@@ -280,39 +280,39 @@ of those dicts against source-brokers.json).
 - [x] **Data Decisions Group, LLC** (`datadecisionsgroup-com`) -- search: no-surface, opt-out: undecided
 - [x] **Data Facts, Inc.** (`datafacts-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Data Marketing Solutions, Inc.** (`businesswatchnetwork-com`) -- search: no-surface, opt-out: undecided
-- [ ] **DATA PARTNERS Inc** (`datapartners-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **DATA PARTNERS Inc** (`datapartners-com`) -- search: no-surface, opt-out: undecided
 - [ ] **DataCrédito Experian Colombia** (`com-co`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Datadelivers LLC** (`datadelivers-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Datadojo CDP Inc.** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Datafy LLC** (`datafy-com`) -- search: no-surface, opt-out: blocked
 - [x] **DATALINE Inc** (`datalinedata-com`) -- search: no-surface, opt-out: undecided
-- [ ] **DATAMENTORS LLC** (`porchgroupmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **DATAMENTORS LLC** (`porchgroupmedia-com`) -- search: no-surface, opt-out: staged
 - [x] **DATANYZE LLC** (`datanyze-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Dataskip** (`dataskip-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DATASYS GROUP Inc** (`datasys-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Dataskip** (`dataskip-io`) -- search: no-surface, opt-out: undecided
+- [x] **DATASYS GROUP Inc** (`datasys-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Date Detective Inc** (`date-detective-app`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Datonics, LLC** (`datonics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **David Rickenbacher** (`datamasters-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Datonics, LLC** (`datonics-com`) -- search: no-surface, opt-out: blocked
+- [x] **David Rickenbacher** (`datamasters-org`) -- search: no-surface, opt-out: undecided
 - [ ] **DealerDirect LLC** (`forddirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **DealerSocket, LLC** (`dealersocket-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Dealerx Partners LLC** (`dealerx-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Decide Technologies Inc.** (`decide-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DECISIONLINKS LLC** (`decisionlinks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Deep Root Analytics, LLC** (`deeprootanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Deeptrace Inc.** (`coresignal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Decide Technologies Inc.** (`decide-co`) -- search: no-surface, opt-out: undecided
+- [x] **DECISIONLINKS LLC** (`decisionlinks-com`) -- search: no-surface, opt-out: blocked
+- [x] **Deep Root Analytics, LLC** (`deeprootanalytics-com`) -- search: no-surface, opt-out: undecided
+- [x] **Deeptrace Inc.** (`coresignal-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Dehashed** (`dehashed-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Delaware Court Records (CourtRecords.us network)** (`delawarecourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Delivr.Ai Inc** (`delivr-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Delivr.Ai Inc** (`delivr-ai`) -- search: no-surface, opt-out: undecided
 - [ ] **Delivr.ai Inc** (`pii-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Deloitte Consulting LLP** (`deloitte-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Deluxe Corporation** (`deluxe-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Demand Science Group, LLC** (`demandscience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Deluxe Corporation** (`deluxe-com`) -- search: no-surface, opt-out: undecided
+- [x] **Demand Science Group, LLC** (`demandscience-com`) -- search: no-surface, opt-out: undecided
 - [x] **Demandbase** (`demandbase-com`) -- search: no-surface, opt-out: out-of-scope
-- [ ] **Demyst Data, Ltd** (`demystdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Demyst Data, Ltd** (`demystdata-com`) -- search: no-surface, opt-out: out-of-scope
 - [ ] **Demyst Data, Ltd** (`demyst-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Deutsche Post Direkt GmbH** (`deutschepost-de`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Diablo Media** (`diablomedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Dice Career Solutions, Inc.** (`dice-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Diablo Media** (`diablomedia-com`) -- search: no-surface, opt-out: undecided
+- [x] **Dice Career Solutions, Inc.** (`dice-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Digital Advertising Alliance WebChoices (AboutAds)** (`optout-aboutads-info`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Digital Media Solutions, LLC** (`dmsunsub-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Digital Safety Products, LLC** (`spyfly-com`) -- search: UNMAPPED, opt-out: UNMAPPED
