@@ -343,12 +343,55 @@ SEARCHPUBLICRECORDS = SearchRecipe(
     ),
 )
 
+CYBERBACKGROUNDCHECKS = SearchRecipe(
+    broker_id="cyberbackgroundchecks-com",
+    broker_name="Cyber Background Checks",
+    search_url="https://www.cyberbackgroundchecks.com/",
+    fields=(
+        SearchField(selector="#SearchCriteriaViewModel_FirstName",
+                    source="first_name", label="First Name"),
+        SearchField(selector="#SearchCriteriaViewModel_LastName",
+                    source="last_name", label="Last Name"),
+    ),
+    # The homepage carries FOUR search forms in tabs (name/address/phone/
+    # email), each with its own submit button, so the button is addressed by
+    # the id of the NAME one specifically.
+    submit_selector="#button-search-by-name",
+    results_host="cyberbackgroundchecks.com",
+    no_results_markers=(
+        "unfortunately we did not find any results",
+    ),
+    hit_markers=("view details",),
+    # "250 results for Michael Thompson" / "0 results for Zylphrenna
+    # Quixbottom" -- this broker prints its own zero, which is the strongest
+    # possible evidence of absence.
+    count_pattern=r"([\d,]+)\s+results\s+for",
+    verified_on="2026-09-22",
+    notes=(
+        "Verified live both ways on 2026-09-22 from headless Chromium with "
+        "this codebase's production UA. A plain server-rendered ASP.NET MVC "
+        "form: submitting navigates to /people/<first>-<last> and prints "
+        "'250 results for Michael Thompson' with 'VIEW DETAILS' cards; the "
+        "nonsense name lands on the same URL shape and prints '0 results "
+        "for Zylphrenna Quixbottom' plus 'Unfortunately we did not find any "
+        "results'. Note the miss page ALSO echoes the searched name eight "
+        "times under 'Sponsored by Truthfinder.com'/'Sponsored by "
+        "Spokeo.com' partner blocks, each with a bare 'DETAILS' link -- "
+        "hence hit_markers is the two-word 'view details', which those "
+        "affiliate blocks do not contain. The optional 'City & State' box "
+        "(#SearchByName_AddressLine2) is deliberately not filled. Contrast "
+        "this broker's OPT-OUT page, which is permanently behind a "
+        "Cloudflare managed challenge -- see optout_forms."
+    ),
+)
+
 RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
     SEARCHPEOPLEFREE.broker_id: SEARCHPEOPLEFREE,
     USPHONEBOOK.broker_id: USPHONEBOOK,
     ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
     SEARCHPUBLICRECORDS.broker_id: SEARCHPUBLICRECORDS,
+    CYBERBACKGROUNDCHECKS.broker_id: CYBERBACKGROUNDCHECKS,
 }
 
 
