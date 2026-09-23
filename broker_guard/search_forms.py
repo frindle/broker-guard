@@ -2832,6 +2832,131 @@ NO_SEARCH_SURFACE = {
         "leg is closed rather than left open for a recipe that could "
         "never be written."
     ),
+    "lightcast-io": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Lightcast sells labour-market analytics to "
+        "employers, colleges and government; its public pages carry a "
+        "HubSpot newsletter box and nothing else. The leg is closed "
+        "rather than left open, because a search recipe could never be "
+        "written against a surface the broker does not offer."
+    ),
+    "edvisors-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Edvisors is a student-finance content site "
+        "funded by lead generation -- its forms collect emails for FAFSA "
+        "guides, and its only lookup is a site search. The leg is closed "
+        "rather than left open, because a search recipe could never be "
+        "written against a surface the broker does not offer."
+    ),
+    "socialgist-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Socialgist sells bulk social-conversation "
+        "feeds to AI and intelligence products; socialgist.com now "
+        "redirects to socialgist.ai, which carries no form at all. The "
+        "leg is closed rather than left open, because a search recipe "
+        "could never be written against a surface the broker does not "
+        "offer."
+    ),
+    "worldpay-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Worldpay is a payments processor; its site "
+        "has no inputs beyond navigation, and the consumer-facing "
+        "reporting product behind this dataset row (ChexSystems) lives on "
+        "a different domain entirely. The leg is closed rather than left "
+        "open, because a search recipe could never be written against a "
+        "surface the broker does not offer."
+    ),
+    "mastercard-us": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. The recorded URL is Mastercard's data- "
+        "subject request portal for Ekata, not a product; it returns HTTP "
+        "403 and there is no lookup on it or behind it. The leg is closed "
+        "rather than left open, because a search recipe could never be "
+        "written against a surface the broker does not offer."
+    ),
+    "electroniccommerceatoz-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. electroniccommerceatoz.com does not resolve "
+        "in DNS, so neither leg has a surface to describe; see the opt- "
+        "out entry for the recheck that is owed. The leg is closed rather "
+        "than left open, because a search recipe could never be written "
+        "against a surface the broker does not offer."
+    ),
+    "evs7-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. EVS7 sells auto-dialer and call-centre "
+        "software; its only forms are a sales contact form and the "
+        "privacy request form itself. The leg is closed rather than left "
+        "open, because a search recipe could never be written against a "
+        "surface the broker does not offer."
+    ),
+    "eltoro-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. El Toro sells IP-targeted advertising to "
+        "marketers; the only form on its privacy pages is an embedded "
+        "OneTrust request portal. The leg is closed rather than left "
+        "open, because a search recipe could never be written against a "
+        "surface the broker does not offer."
+    ),
+    "emailmovers-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Emailmovers is a UK B2B list vendor selling "
+        "to marketers; its only form is a sales enquiry box asking for "
+        "company and requirements. The leg is closed rather than left "
+        "open, because a search recipe could never be written against a "
+        "surface the broker does not offer."
+    ),
+    "emerges-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. eMerges has ceased operating as a list "
+        "broker entirely -- see the opt-out entry -- and its remaining "
+        "site is four brochure pages with no inputs. The leg is closed "
+        "rather than left open, because a search recipe could never be "
+        "written against a surface the broker does not offer."
+    ),
+    "enformion-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Enformion sells people-search data to "
+        "businesses through Tracers.com and Endato.com, all behind a "
+        "login; the public site offers a demo request, not a lookup. The "
+        "leg is closed rather than left open, because a search recipe "
+        "could never be written against a surface the broker does not "
+        "offer."
+    ),
+    "enigma-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Enigma sells business (not consumer) data "
+        "through an API; its public pages carry no lookup and its only "
+        "form is the do-not-sell request that ships as a staged recipe. "
+        "The leg is closed rather than left open, because a search recipe "
+        "could never be written against a surface the broker does not "
+        "offer."
+    ),
+    "eprodirect-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. EproDirect sells event and meeting-planner "
+        "mailing lists to marketers; its only form is the CCPA request "
+        "form. The leg is closed rather than left open, because a search "
+        "recipe could never be written against a surface the broker does "
+        "not offer."
+    ),
+    "propstream-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. PropStream is a subscription real-estate "
+        "research tool -- the lookup it does have is behind a paid login "
+        "and is keyed to PROPERTIES, not to a person looking themselves "
+        "up. The leg is closed rather than left open, because a search "
+        "recipe could never be written against a surface the broker does "
+        "not offer."
+    ),
+    "force-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. The dataset row is e.Republic, a government- "
+        "media publisher, keyed to a Salesforce hosting domain; neither "
+        "erepublic.com nor the Salesforce site offers any lookup. The leg "
+        "is closed rather than left open, because a search recipe could "
+        "never be written against a surface the broker does not offer."
+    ),
 }
 
 
@@ -3741,6 +3866,29 @@ SEARCH_UNDECIDED = {
         "network is not proof the domain is retired, so this is undecided "
         "pending a recheck from elsewhere. The dataset holds no email for "
         "this row, so it currently has no working channel at all."
+    ),
+    "listmatch-com": (
+        "NO VERDICT as of 2026-09-23, and it is the rare case where a "
+        "search leg was found somewhere other than a product page. "
+        "listmatch.com/privacy/ carries a self-lookup: "
+        "'Check/Manage/Delete your Data Record', a single "
+        "input[name='dataaddress'] taking an email address, and the page "
+        "states its purpose -- 'Completing the form bellow will give you "
+        "the option to view your consumer data record and have your "
+        "record deleted' [sic].  So a person CAN look themselves up here. "
+        "What is missing is the only thing that would make it a recipe: "
+        "this leg requires verifying a hit response and a no-results "
+        "response against each other, and both require submitting a real "
+        "email address to a list broker. That is not a read, and it is "
+        "not this pass's to do unilaterally -- an address handed to an "
+        "email-list vendor to test a form is an address they now have. "
+        "For whoever takes it: the form GETs to "
+        "index.php?action=checkemail, and the two traps are recorded "
+        "under the opt-out entry -- a HIDDEN input[name='email'] sitting "
+        "beside the visible one (a honeypot, and the name collision is "
+        "vicious), and an 'isca' checkbox for California residency. Use a "
+        "disposable address, run it twice (a known-present one and "
+        "nonsense), and record both markers."
     ),
 }
 

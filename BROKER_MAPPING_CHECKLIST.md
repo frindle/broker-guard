@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **288** / 969
-- Search leg mapped: 290 / 969
-- Opt-out leg mapped: 292 / 969
+- Fully mapped (both legs): **304** / 969
+- Search leg mapped: 306 / 969
+- Opt-out leg mapped: 308 / 969
 
 ## How to resume
 
@@ -339,28 +339,28 @@ of those dicts against source-brokers.json).
 - [ ] **e.Republic, LLC** (`erepublic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **EAB Global, Inc.** (`box-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Early Warning Services, LLC** (`earlywarning-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **ECONOMIC MODELING LLC** (`lightcast-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Edvisors Network, Inc.** (`edvisors-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Effyis, Inc.** (`socialgist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **ECONOMIC MODELING LLC** (`lightcast-io`) -- search: no-surface, opt-out: blocked
+- [x] **Edvisors Network, Inc.** (`edvisors-com`) -- search: no-surface, opt-out: blocked
+- [x] **Effyis, Inc.** (`socialgist-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Effyis, Inc.** (`socialgist-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Efunds Corporation** (`worldpay-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Ekata, Inc. (Mastercard)** (`mastercard-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **EL Toro.Com, LLC** (`eltoro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Electronic Commerce A To Z** (`electroniccommerceatoz-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ELECTRONIC VOICE SERVICES Inc** (`evs7-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Efunds Corporation** (`worldpay-com`) -- search: no-surface, opt-out: undecided
+- [x] **Ekata, Inc. (Mastercard)** (`mastercard-us`) -- search: no-surface, opt-out: blocked
+- [x] **EL Toro.Com, LLC** (`eltoro-com`) -- search: no-surface, opt-out: blocked
+- [x] **Electronic Commerce A To Z** (`electroniccommerceatoz-com`) -- search: no-surface, opt-out: undecided
+- [x] **ELECTRONIC VOICE SERVICES Inc** (`evs7-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Electronic Voice Services, Inc. (TelephoneLists.biz)** (`telephonelists-biz`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Email Marketing Services, Inc** (`listmatch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Emailmovers Ltd** (`emailmovers-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **EMERGES.COM INCORPORATED** (`emerges-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Email Marketing Services, Inc** (`listmatch-com`) -- search: undecided, opt-out: undecided
+- [x] **Emailmovers Ltd** (`emailmovers-com`) -- search: no-surface, opt-out: no-surface
+- [x] **EMERGES.COM INCORPORATED** (`emerges-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Endgame Labs, Inc** (`endgame-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Enformion LLC** (`enformion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ENIGMA TECHNOLOGIES Inc** (`enigma-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Eprodirect** (`eprodirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Enformion LLC** (`enformion-com`) -- search: no-surface, opt-out: blocked
+- [x] **ENIGMA TECHNOLOGIES Inc** (`enigma-com`) -- search: no-surface, opt-out: staged
+- [x] **Eprodirect** (`eprodirect-com`) -- search: no-surface, opt-out: blocked
 - [x] **Epsilon Data Management** (`epsilon-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Equativ (formerly Smart AdServer)** (`equativ-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Equifax Marketing Services** (`equifax-com`) -- search: no-surface, opt-out: out-of-scope
-- [ ] **Equimine** (`propstream-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Erepublic LLC** (`force-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Equimine** (`propstream-com`) -- search: no-surface, opt-out: blocked
+- [x] **Erepublic LLC** (`force-com`) -- search: no-surface, opt-out: blocked
 - [ ] **eTarget s.r.o.** (`etarget-sk`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Evorra Ltd** (`evorra-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **EXACT OPCO LLC** (`exactcustomer-com`) -- search: UNMAPPED, opt-out: UNMAPPED

@@ -181,6 +181,10 @@ FLAVOR_CONVEX_HUBSPOT = "convex_hubspot_privacy_request_form"
 # unusable here and every selector keys on the ``name`` attribute.
 FLAVOR_PGM_OPTOUT = "porchgroupmedia_individual_optout"
 
+# Enigma's do-not-sell form is the shortest honest surface found so far: four
+# boxes, three of them required, one submit, and nothing else on the page.
+FLAVOR_ENIGMA_HUBSPOT = "enigma_do_not_sell_hubspot_form"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -1682,6 +1686,64 @@ CONVEX = FormRecipe(
 )
 
 
+_ENIGMA_FORM = "form.hs-form-private:has(input[name='firstname'])"
+
+ENIGMA = FormRecipe(
+    broker_id="enigma-com",
+    broker_name="Enigma Technologies",
+    url="https://www.enigma.com/legal/do-not-sell",
+    flavor=FLAVOR_ENIGMA_HUBSPOT,
+    fields=(
+        Field(selector=_ENIGMA_FORM + " input[name='firstname']",
+              source="first_name", label="First name"),
+        Field(selector=_ENIGMA_FORM + " input[name='lastname']",
+              source="last_name", label="Last name"),
+        Field(selector=_ENIGMA_FORM + " input[name='email']",
+              source="email", label="Email"),
+        # The page labels this one "U.S. State (optional)" and it is a plain
+        # text box, NOT a select -- so kind stays "text" and the source is
+        # "state" (the full name) rather than "state_code". Nothing on the
+        # page constrains the format, and a two-letter code in a box asking
+        # for a state is a guess about their parser, not a reading of it.
+        Field(selector=_ENIGMA_FORM + " input[name='state']",
+              source="state", label="U.S. State", required=False),
+    ),
+    submit_selector=_ENIGMA_FORM + " input[type='submit']",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23, loaded twice. The "
+        "page states the right plainly -- 'You may have a right to opt-out "
+        "from future \"sales\" or \"sharing\" of personal information' -- "
+        "and this form is the surface it offers for exercising it. Four "
+        "fields, three required, all four already sourced by "
+        "resolve_fields.\n"
+        "\n"
+        "WHY THE SELECTOR IS STRUCTURAL rather than the form's id. The id "
+        "here (#hsForm_7cce78e6-7f9d-4f0e-b3f4-69db6c988d2a) came back "
+        "IDENTICAL on both loads, so unlike Convex -- whose HubSpot id was "
+        "re-minted per render as #hsform-53822860 then #hsform-41419905 -- "
+        "this one looks stable. It is still not used. A GUID that happened "
+        "to match twice is weak evidence next to a known HubSpot behaviour "
+        "that has already broken one recipe in this module, and the "
+        "structural selector costs nothing. Unlike Convex there is no "
+        "second form on the page to disambiguate from, which is why the "
+        "scoping here is simpler.\n"
+        "\n"
+        "NOT LIVE-VERIFIED, and staged rather than shipped for the usual "
+        "reason: nothing was submitted, so the success markers are unknown "
+        "and success_markers is deliberately empty rather than guessed at. "
+        "no_captcha_verified stays False. No captcha script, no captcha "
+        "element and no hidden challenge input were present on either load "
+        "-- but HubSpot can attach a challenge at the submit step, and "
+        "porchgroupmedia in this same module is the worked example of a "
+        "form that carried no captcha script and a hidden _captcha input "
+        "all the same. The absence seen here is real and is still not a "
+        "verification.\n"
+        "\n"
+        "Second channel for a human: privacy@enigma.com."
+    ),
+)
+
+
 # Brokers whose form has been WRITTEN DOWN but which are not yet turned on.
 # It exists so that "we transcribed the form" and "we are willing to submit
 # to it" stay two separate decisions. Nothing reads this at runtime: a broker
@@ -1693,6 +1755,7 @@ STAGED_RECIPES: dict = {
     CAREERBUILDER.broker_id: CAREERBUILDER,
     CONVEX.broker_id: CONVEX,
     PORCHGROUPMEDIA.broker_id: PORCHGROUPMEDIA,
+    ENIGMA.broker_id: ENIGMA,
 }
 
 
@@ -2423,6 +2486,68 @@ NO_OPTOUT_SURFACE = {
         "So there is no web opt-out surface to automate, and the real "
         "recourse is the FCRA access and dispute rights the site already "
         "routes people to."
+    ),
+    "socialgist-com": (
+        "Verified 2026-09-23. socialgist.com redirects to socialgist.ai "
+        "-- a domain change the dataset does not record, flagged here and "
+        "left unfixed in data/source-brokers.json. The site that answers "
+        "is a brochure for social-conversation data sold to AI and "
+        "intelligence platforms, and it contains no form element at all: "
+        "the only controls in the whole document are the cookie banner's "
+        "Accept and Decline.  There is no privacy request page, no rights "
+        "page and no do-not-sell link anywhere on it. This matches what "
+        "the dataset already says -- method email, info@socialgist.com -- "
+        "and the finding is that the web side is genuinely empty rather "
+        "than walled. Note that info@ is a general enquiries address "
+        "rather than a privacy one, so a person writing to it should not "
+        "assume it reaches a rights process."
+    ),
+    "emailmovers-com": (
+        "Verified 2026-09-23 by rendering both the homepage and /privacy- "
+        "policy/. Emailmovers is a UK B2B list vendor, and its privacy "
+        "policy page contains NO form at all -- the only artefacts on it "
+        "are the cookie consent manager and a stray reCAPTCHA badge left "
+        "by the site-wide Contact Form 7 script. There is no rights page, "
+        "no do-not-sell link and no request form anywhere on the site. "
+        "The only real form is on the homepage and it is a SALES enquiry: "
+        "your-firstname, your-lastname, your-email, company and telephone "
+        "all required, a 'Requirements...' box, and a submit button "
+        "reading 'Let's Go!'. It is reCAPTCHA-protected and it is not an "
+        "opt-out surface; recorded here so nobody mistakes it for one, "
+        "which is an error this sweep has had to correct before.  This "
+        "matches the dataset -- method email, compliance@emailmovers.com, "
+        "which at least is a compliance address rather than a general "
+        "one. As a UK company its statutory channel is a UK GDPR request "
+        "by email, so the absence of a web form is a gap in convenience "
+        "rather than in rights."
+    ),
+    "emerges-com": (
+        "Verified 2026-09-23, and this is the first row in the sweep "
+        "where the right answer is that THE BROKER HAS LEFT THE BUSINESS. "
+        "emerges.com still serves a site advertising 'watercraft, "
+        "aircraft, voter and snowmobile registrations with pilot, hunting "
+        "and fishing licenses', and its nav still carries 'REMOVE ME/OPT "
+        "OUT' pointing at a Google Form. Following that form to its full "
+        "address (docs.google.com/forms/d/e/1FAIpQLSdi3KjEPMsVnXQL- "
+        "KllxvgOQWxvLpLfuz30-Z_eqXDHGEbX6w) redirects to /closedform, "
+        "which says, in the broker's own words:    'eMerges Opt Out is "
+        "now Disabled. *As of July 1, 2025 eMerges ceased   operating as "
+        "a List Broker. 1) eMerges is not acquiring, processing, "
+        "publishing or selling any lists either directly or indirectly "
+        "and   including but not limited to government records. 2) "
+        "eMerges has   ceased operating its entire list business "
+        "therefore this opt out   resource has been disabled effective "
+        "20260223.'  So there is no surface, and uniquely there is "
+        "nothing that a surface would accomplish. Recorded as no-surface "
+        "rather than blocked or undecided because the absence is "
+        "deliberate, dated, and explained by the broker.  DATASET NOTE, "
+        "flagged and not acted on: this row is arguably retired rather "
+        "than mapped, and a defunct broker in a 969-row checklist is "
+        "worth distinguishing from a live one with no form. That is a "
+        "decision about the dataset's shape, not about this broker, so it "
+        "is left to a human. Note also, in passing, that the surviving "
+        "evidence is a Google Form -- the same pattern as clay-com, which "
+        "is still open pending aria-labelledby resolution."
     ),
 }
 
@@ -4584,6 +4709,88 @@ OPTOUT_UNDECIDED = {
         "be said about whether a form exists behind the redirect. "
         "legal@thedatatrust.com is on file."
     ),
+    "worldpay-com": (
+        "NO VERDICT as of 2026-09-23, and the reason is a tangle in the "
+        "dataset row rather than anything the broker has done.  DATASET "
+        "DEFECT, flagged and NOT fixed: the row is named 'Efunds "
+        "Corporation', keyed to worldpay.com, with "
+        "chexsystems.compliance@fisglobal.com as the contact. Those are "
+        "three different things. eFunds is the company behind "
+        "CHEXSYSTEMS, the banking consumer reporting agency that decides "
+        "whether someone can open a checking account. Worldpay is a "
+        "payments processor. Both passed through FIS ownership, which is "
+        "how they came to share a row, but the consumer-facing reporting "
+        "product is not on worldpay.com at all -- and ChexSystems, like "
+        "earlywarning-com in this module, is an FCRA agency whose file is "
+        "not something a consumer can opt out of.  What was actually "
+        "found at the recorded domain: worldpay.com carries 'Do not sell "
+        "or share my personal information' pointing at "
+        "privacy.worldpay.com, which resolves to /policies and is a "
+        "Transcend-powered privacy centre ('Powered by Transcend') "
+        "offering 'Make a Privacy Request' and 'View Past Requests'. It "
+        "is a single-page app -- /request 404s WITHIN it, so the request "
+        "flow opens from the button rather than from a URL, and nothing "
+        "could be transcribed without driving it.  Next steps, in order, "
+        "because they are two different jobs: (1) drive the Transcend "
+        "portal from the button, enumerate the request-type options and "
+        "the fields, and re-check for a captcha at that stage -- none is "
+        "loaded on the landing page, which proves nothing; (2) decide "
+        "whether this row should be re-keyed to chexsystems.com, and if "
+        "so whether it belongs with earlywarning-com as an FCRA agency "
+        "with no opt-out rather than here."
+    ),
+    "electroniccommerceatoz-com": (
+        "NO VERDICT as of 2026-09-23: electroniccommerceatoz.com does not "
+        "resolve. The navigation failed with net::ERR_NAME_NOT_RESOLVED, "
+        "i.e. DNS returned nothing -- not a refused connection, not a "
+        "timeout, not a certificate mismatch. Nothing about the broker "
+        "can be said from that.  It is recorded as undecided rather than "
+        "as having no surface because a single DNS failure from one "
+        "network is weak evidence. This sweep has already accumulated a "
+        "short list of rows failing the same way (nuwber, bridgevine, "
+        "brightswipe, carmarketsolutions, calltruth, blisspointmedia) and "
+        "they should be rechecked together from a different resolver "
+        "before any of them is written off -- a local resolver, a captive "
+        "network or an upstream block would produce exactly this result "
+        "for a domain that is perfectly alive.  The dataset records no "
+        "opt-out email and an opt_out_method of 'unknown' for this row, "
+        "so if the domain really is dead there may be no channel at all, "
+        "which is itself worth establishing rather than assuming."
+    ),
+    "listmatch-com": (
+        "NO VERDICT as of 2026-09-23, and this is the closest thing to an "
+        "unwalled surface in its batch -- which is exactly why it is "
+        "written up in full rather than closed.  listmatch.com/privacy/ "
+        "carries TWO forms and they are not equally guarded. The second, "
+        "a general contact form GETting to index.php?action=contact, is "
+        "protected by hCaptcha (newassets.hcaptcha.com frame, .h-captcha "
+        "element, h-captcha-response textarea) -- and carries a leftover "
+        "g-recaptcha-response textarea beside it, a fossil of a previous "
+        "migration. The FIRST form, index.php?action=checkemail, has no "
+        "captcha field of any kind: an email box, a checkbox, a submit "
+        "reading 'Check/Manage/Delete Data Record'. The hCaptcha SCRIPT "
+        "is loaded page-wide, so this is precisely the situation "
+        "porchgroupmedia warns about and the absence must not be recorded "
+        "as verified.  THE HONEYPOT IS NASTY AND MUST BE RECORDED. Form "
+        "one contains a hidden input[name='EMAIL'] sitting beside the "
+        "visible input[name='dataaddress'], which is the box that "
+        "actually takes the email address. The obvious selector -- the "
+        "one any recipe-writer reaches for first -- is the trap, and "
+        "filling it would flag the submission as a bot. Any future recipe "
+        "needs input[name='dataaddress'] in fields and "
+        "input[name='email'] in forbidden_selectors. There is also an "
+        "input[name='isca'] checkbox, 'Check this if you are a resident "
+        "of California'.  Why undecided and not staged: this form does "
+        "not opt anyone out. The page says it 'will give you the option "
+        "to view your consumer data record and have your record deleted' "
+        "-- so it is step one of at least two, and the deletion happens "
+        "on a page that cannot be seen without submitting a real address. "
+        "A recipe stopping at step one would report success having done "
+        "nothing.  Worth recording verbatim, because it narrows who needs "
+        "this at all: 'As of 2024 we do not sell/share/buy data in the "
+        "following states: "
+        "CA,CO,CT,DE,IA,IN,KY,MD,MT,NE,NH,NJ,OR,TN,TX,UT,VA,VT'."
+    ),
 }
 
 
@@ -5528,6 +5735,214 @@ OPTOUT_BLOCKED = {
         "stable URL for a recipe to navigate to.  privacy@dynata.com and "
         "(833) 909-1804 / 833-681-0436 are the channels the published "
         "policy names, and email is the only automatable one."
+    ),
+    "lightcast-io": (
+        "Verified 2026-09-23. Two findings, and the first is the one a "
+        "careless reader would get wrong.  THE FORM ON THE PAGE IS NOT "
+        "THE FORM. /privacy-request redirects to /legal/privacy-request, "
+        "whose main frame contains one HubSpot form "
+        "(#hsForm_9cf26c34-...) asking EMAIL and INDUSTRY -- and behind "
+        "those, twenty-four hidden marketing fields: newsletter__c, "
+        "lead_category, lead_action, annualrevenue, numberofemployees, "
+        "company_sector. That is a newsletter signup wearing a privacy "
+        "page's URL. Writing a recipe against it would subscribe the user "
+        "to marketing while telling them they had opted out.  The real "
+        "request form is in a CHILD FRAME -- "
+        "privacyportal.onetrust.com/webform/0f61f895-... -- taking "
+        "Country, State, First Name, Last Name, Email and phone, all "
+        "required. It was invisible to the main-frame read and only the "
+        "frame-walking probe found it, which is the same failure mode "
+        "that produced two wrong entries earlier in this sweep.  It is "
+        "blocked because that frame carries reCAPTCHA: a g-recaptcha- "
+        "response textarea inside the OneTrust form, with both "
+        "recaptcha/api2/anchor and .../bframe frames attached. "
+        "legal@lightcast.io is the published channel."
+    ),
+    "edvisors-com": (
+        "Verified 2026-09-23. The dataset's /third-party-opt-out/ "
+        "redirects to /your-privacy-choices/, and the real surface there "
+        "is #centralized-privacy-settings -- an ASP.NET form POSTing to "
+        "/async/Communication/Centralize... which asks for state of "
+        "residence, whether the requester is acting for themselves or as "
+        "an authorised agent, what kind of person they are (consumer, "
+        "employee, job applicant, business contact, contractor) and an "
+        "email, then 'Continue' into a further step.  Blocked on two "
+        "independent counts. reCAPTCHA ENTERPRISE: a g-recaptcha-response "
+        "textarea sits inside the form and the attached frames are "
+        "recaptcha/ENTERPRISE/anchor and /enterprise/bframe, not the "
+        "ordinary api2 pair -- worth noting as a distinct variant, since "
+        "enterprise mode scores the whole session rather than gating on a "
+        "puzzle. Second, a per-load __RequestVerificationToken, so no "
+        "stored POST can be replayed.  Also on the page and NOT to be "
+        "mistaken for the opt-out: two 'GetGuideModal' forms harvesting "
+        "emails for a FAFSA guide and a student loan handbook, each with "
+        "its own AgreeToTerms checkbox. The dataset records no opt-out "
+        "email for this row."
+    ),
+    "mastercard-us": (
+        "Verified 2026-09-23. The dataset's URL is Mastercard's data- "
+        "subject request portal scoped to Ekata (.../dgr-public/personal- "
+        "data-request.html#/ekata/request/personalinfo), Ekata being the "
+        "identity-verification business Mastercard acquired. Requesting "
+        "it returns HTTP 403 and an Akamai edge refusal: 'Access Denied "
+        "-- You don't have permission to access ... on this server', "
+        "Reference #18.65c90b17.1790206369.1f446d44, served from "
+        "errors.edgesuite.net.  Recorded as blocked rather than undecided "
+        "because the refusal is at the CDN edge, before any application: "
+        "no captcha was offered, no challenge page, no form -- the "
+        "request simply is not served. Whether that is geography, the "
+        "client fingerprint or a rule against the whole unauthenticated "
+        "path cannot be told from outside.  Worth a retry from a "
+        "different network before anyone concludes the portal is gone, "
+        "since an Akamai deny of this shape is often reputational. "
+        "privacysupport@ekata.com is the address on file."
+    ),
+    "evs7-com": (
+        "Verified 2026-09-23 by rendering https://www.evs7.com/personal- "
+        "information-request. A real request form is there -- Contact "
+        "Form 7, ten visible fields including a select and a three-way "
+        "checkbox group, most of them required -- under a page titled "
+        "'Personal Information Request' and linked from the site as 'Do "
+        "Not Sell My Personal Informaton' [sic].  Blocked by reCAPTCHA, "
+        "and it is the invisible v3 variant: the form carries a hidden "
+        "_wpcf7_recaptcha_response, the page loads gstatic's "
+        "recaptcha__en.js plus a site integration script, a grecaptcha- "
+        "badge is rendered and a recaptcha/api2/anchor frame is attached. "
+        "There is no checkbox to see, which is exactly why a static fetch "
+        "would have called this form clean.  Recorded for anyone who "
+        "revisits: the field names are Contact Form 7's auto-generated "
+        "ones -- text-163, text-52, text-637, text-566, menu-415, "
+        "text-863, tel-877, email-382, text-190 -- carrying no meaning "
+        "and re-minted whenever the form is edited in the WordPress "
+        "admin. Even past the captcha, they would have to be re-read "
+        "against the live page and matched to their labels by position, "
+        "which is fragile. richard@evs7.com is the address on file."
+    ),
+    "eltoro-com": (
+        "Verified 2026-09-23. El Toro's /do-not-sell-my-personal- "
+        "information/ embeds a OneTrust request portal "
+        "(privacyportal.onetrust.com/webform/96e88ef7-...) in a child "
+        "frame; the main frame has no form at all, so this is another one "
+        "that would have read as 'no form found' before the probe learned "
+        "to walk frames. The form itself is thorough -- First/Last name, "
+        "Email, Street, City, Country, State and Zip all required, plus "
+        "optional IP Address(es) and MAID(s) boxes, under a heading "
+        "naming all three rights at once: 'DO NOT SELL OR SHARE MY "
+        "PERSONAL INFORMATION / OPTOUT OF TARGETED ADVERTISING / LIMIT "
+        "THE USE MY SENSITIVE INFORMATION'.  It is blocked by a captcha "
+        "of a kind not yet seen in this sweep: BotDetect, not reCAPTCHA "
+        "or hCaptcha. The tell is a cluster of hidden inputs -- "
+        "BDC_VCID_angularBasicCaptcha, BDC_BackWorkaround_..., "
+        "BDC_Hs_..., BDC_SP_... -- beside a VISIBLE text "
+        "input[name='captchaCode'] labelled 'Captcha'. That is a server- "
+        "rendered image challenge the user types back, so unlike an "
+        "invisible reCAPTCHA there is no token to be granted and no "
+        "scoring to pass: it cannot be satisfied by a recipe at all. "
+        "Note the optional MAID box as a small piece of good news amid "
+        "the wall -- several brokers this sweep REQUIRE a mobile "
+        "advertising id, which nothing in this codebase can supply; here "
+        "it is optional. privacy@eltoro.com is published."
+    ),
+    "enformion-com": (
+        "Verified 2026-09-23. Enformion is worth reading carefully "
+        "because the page the dataset points at is the wrong one and the "
+        "right one is heavily defended.  The recorded /do-not-sell/ is a "
+        "NOTICE, not a form. Its only form is a HubSpot box asking First "
+        "name, Last name, BUSINESS EMAIL and Industry -- a sales lead "
+        "capture, and the 'business email' label is the tell. The actual "
+        "surface is the 'Opt-Out Form' link to /opt-out/, titled "
+        "'Enformion Privacy Portal', which states its own scope usefully: "
+        "it covers 'Enformion and our affiliated websites, including "
+        "Tracers.com and Endato.com', so one request there reaches three "
+        "brokers.  That page renders FOUR copies of the same .enf- "
+        "zendesk-form, one per requester type, shown and hidden by script "
+        "-- so any recipe must disambiguate by visibility rather than by "
+        "selector, and an unscoped match would hit four elements. Two of "
+        "the four additionally require DATE OF BIRTH, phone and full "
+        "address.  Blocked by reCAPTCHA Enterprise: a g-recaptcha- "
+        "response textarea in every copy, with four enterprise/anchor and "
+        "four enterprise/bframe frames attached.  One detail worth "
+        "carrying forward: the form contains "
+        "input[type=number][name='yourFavoriteNumber'], which is a "
+        "HONEYPOT wearing a friendly name rather than a hidden one. This "
+        "sweep has been detecting honeypots by computed style; this one "
+        "would also need to be caught by reading the name, because a "
+        "field asking a human for their favourite number on a privacy "
+        "form is not a real question. databroker@enformion.com is the "
+        "published channel."
+    ),
+    "eprodirect-com": (
+        "Verified 2026-09-23. The form at /do-not-sell-my-personal- "
+        "information/ is real and well-scoped -- WPForms #wpforms- "
+        "form-208196 with a 'Please do not sell my personal information' "
+        "checkbox, a required email, and an optional address block "
+        "(address1, address2, city, a state select, postal) -- under copy "
+        "saying California residents may use it to opt out of sale or "
+        "rental, access their information and delete it.  Blocked by "
+        "reCAPTCHA: the page renders a .wpforms-recaptcha-container and a "
+        ".g-recaptcha element, a g-recaptcha-response textarea sits in "
+        "the form, and both api2/anchor and api2/bframe frames are "
+        "attached -- the bframe being the tell that this is the CHECKBOX "
+        "variant with a puzzle behind it, not invisible v3.  Recorded for "
+        "a future attempt: input[name='wpforms[hp]'], labelled 'Name', is "
+        "WPForms' standard honeypot and would have to go in "
+        "forbidden_selectors -- it is a plain visible-looking text input, "
+        "so the trap here is the opposite of listmatch's, caught by "
+        "knowing the framework rather than by computed style. "
+        "optout@eprodirect.com is the address on file."
+    ),
+    "propstream-com": (
+        "Verified 2026-09-23. /privacy-request redirects straight out to "
+        "a hosted OneTrust portal (privacyportal.onetrust.com/webform/23d "
+        "bbccc-a76c-4410-a68e-f247d70e566c/...), titled 'PropStream "
+        "Privacy Request', asking a short set: an 'I am a' role picker, "
+        "requestor's country of residence, First name, Last name and "
+        "Email, all required.  Blocked by reCAPTCHA -- g-recaptcha- "
+        "response inside the form, api2/anchor and api2/bframe frames "
+        "attached. Short as the form is, there is no honest way past "
+        "that.  Two things worth noting for whoever returns. The country- "
+        "of-residence field is the jurisdiction-gating pattern this sweep "
+        "keeps meeting (hightouch, crunchbase, dstillery): the field set "
+        "can change once a country is chosen, so even past the captcha "
+        "the form would have to be re-read after that selection rather "
+        "than transcribed from its initial state. And PropStream serves a "
+        "SEPARATE channel for a specific population -- "
+        "redactionrequest@propstream.com, with a 'Public Servant "
+        "Redaction Request' FAQ -- which is not the general opt-out but "
+        "is the right route for anyone eligible. "
+        "privacyinquiry@propstream.com is the general address."
+    ),
+    "force-com": (
+        "Verified 2026-09-23. Two layers of confusion resolved, then a "
+        "wall.  DATASET DEFECT, flagged and NOT fixed: the row is "
+        "e.Republic (a government-and-education media company) but is "
+        "KEYED to force.com, which is Salesforce's hosting domain rather "
+        "than anything e.Republic owns. The broker_id 'force-com' is "
+        "therefore meaningless, and any future row hosted on Salesforce "
+        "would collide with it.  The recorded URL "
+        "(erepublic.secure.force.com/PrivacyRequest/) is dead: Salesforce "
+        "answers 'URL No Longer Exists'. So does erepublic.com/privacy- "
+        "policy/. The live surface was found on the footer of "
+        "e.Republic's own 404 page -- erepublic.my.salesforce- "
+        "sites.com/PrivacyRequest/ -- i.e. the same app migrated from the "
+        "retired *.secure.force.com hostname to the current "
+        "*.my.salesforce-sites.com one.  That form is genuine (a request- "
+        "type select, name, phone, email, full address, a state select, a "
+        "comments box and a declaration 'under penalty of...' checkbox) "
+        "and is blocked three times over:  * reCAPTCHA, via a hidden "
+        "recaptchaToken input. * A HONEYPOT named almost plausibly: a "
+        "hidden text input ending   ':HomeAddressHP' -- the HP suffix "
+        "being the only giveaway on a form   that also asks for a real "
+        "home address. * A TIMING TRAP, which is new in this sweep and "
+        "worth naming: the form   carries formLoadTime and TimeSpent "
+        "inputs, so the server judges HOW   LONG the form took to fill. A "
+        "recipe that fills instantly is   detectable even with every "
+        "field correct and every honeypot avoided.  And even past all "
+        "three, the field names are Visualforce's positional auto-ids -- "
+        "j_id0:j_id2:j_id3:j_id31:j_id36 and so on -- which renumber "
+        "whenever the page is edited. This is the most fragile naming "
+        "scheme the sweep has met, worse than Gravity's input_N. "
+        "privacy@erepublic.com is the published channel."
     ),
 }
 
