@@ -857,6 +857,19 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    "equifax-com": (
+        "Equifax is a nationwide consumer reporting agency under the FCRA, "
+        "and the dataset carries it as 'Equifax Marketing Services'. "
+        "Either way there is no public people lookup. Verified "
+        "2026-09-23: equifax.com's entire homepage carries exactly ONE "
+        "input, and it is the site's own content search -- "
+        "input[name='efxNavSiteSearchQuery'], placeholder 'Search "
+        "Personal' -- which searches Equifax's web pages, not people. "
+        "Same finding as chexsystems-com: what Equifax holds about a "
+        "person is reached by requesting your own file with "
+        "identity-verified credentials, which this tool must not "
+        "automate, not by typing a stranger's name into a box."
+    ),
     "epsilon-com": (
         "Epsilon Data Management is a B2B marketing-services and "
         "consumer-data licensing business, not a consumer people-search "
