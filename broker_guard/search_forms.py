@@ -1946,6 +1946,115 @@ NO_SEARCH_SURFACE = {
         "certificate that does not match its name; see "
         "optout_forms.OPTOUT_UNDECIDED."
     ),
+    "bbdirect-com": (
+        "Verified by browser render 2026-09-23: BB Direct is a postal and "
+        "email list broker selling to marketers, and its public site "
+        "carries no consumer lookup -- the only form on its compliance "
+        "page is the opt-out itself. Nothing accepts a person's name for "
+        "searching. See optout_forms.OPTOUT_BLOCKED for that leg."
+    ),
+    "brooksim-com": (
+        "Verified by browser render 2026-09-23: Brooks Integrated "
+        "Marketing (BrooksIM) states on its own privacy page that it is "
+        "'a registered data broker in California and other states' and "
+        "that it does 'not engage directly with individual consumers, nor "
+        "do we compile data independently'. Its public site is agency "
+        "marketing plus a SaaS data platform pitch, with no consumer "
+        "lookup of any kind. Nothing to search; the consumer surface is "
+        "the request form alone, and that is Turnstile-walled (see "
+        "optout_forms.OPTOUT_BLOCKED)."
+    ),
+    "business-com": (
+        "Verified by browser render 2026-09-23: business.com is a B2B "
+        "content and lead-generation publisher, not a people directory, "
+        "and nothing on it accepts a person's name for lookup. Its rights "
+        "surface is not even its own -- the opt-out redirects to a shared "
+        "Centerfield-operated portal; see optout_forms.OPTOUT_BLOCKED, "
+        "which also notes that other Centerfield properties in the "
+        "dataset will land on that same form."
+    ),
+    "buxtonco-com": (
+        "Verified by browser render 2026-09-23: Buxton sells customer- "
+        "analytics and site-selection work to retailers and "
+        "municipalities; its public presence now redirects into "
+        "audiense.com, and neither site exposes a consumer lookup. There "
+        "is no people-search to probe. The opt-out form is transcribed in "
+        "full; see optout_forms.OPTOUT_UNDECIDED."
+    ),
+    "buyerlink-com": (
+        "Verified by browser render 2026-09-23: Buyerlink (now at "
+        "buyerlink.CO) runs a real-time auction marketplace matching "
+        "consumer demand to service providers -- its site is marketing "
+        "copy plus 'Request a Demo' and 'Log In', with no lookup that "
+        "accepts a person's name. Nothing to search. See "
+        "optout_forms.OPTOUT_UNDECIDED, where the do-not-sell page turns "
+        "out to be effectively empty."
+    ),
+    "big-village-com": (
+        "Verified by browser render 2026-09-23: Big Village sells "
+        "audience products to advertisers and its public site offers no "
+        "consumer lookup at all. Consistent with that, the only opt-out "
+        "it offers is keyed to a mobile advertising identifier rather "
+        "than to a person -- there is no name-keyed surface here in "
+        "either direction. See optout_forms.OPTOUT_UNDECIDED."
+    ),
+    "cadent-tv": (
+        "Verified by browser render 2026-09-23: Cadent sells TV and video "
+        "advertising technology to media buyers; its site is platform "
+        "marketing behind Login and Contact, with no consumer lookup. "
+        "There is nothing to query. Note for the dataset: cadent.tv "
+        "redirects to cadent.com. The opt-out leg is a multi-step "
+        "verification wizard; see optout_forms.OPTOUT_OUT_OF_SCOPE."
+    ),
+    "verve-com": (
+        "Verified by browser render 2026-09-23: Verve is a mobile "
+        "advertising and audience platform selling to publishers and "
+        "advertisers, and its public site exposes no consumer lookup -- "
+        "the only form on the relevant page is the data-subject request "
+        "form itself. Nothing to search. See optout_forms.OPTOUT_BLOCKED."
+    ),
+    "buildertrend-com": (
+        "Verified by browser render 2026-09-23: Buildertrend is "
+        "construction project-management SaaS sold to builders and "
+        "remodelers. Its only public forms are its privacy request form "
+        "and marketing captures; there is no people lookup of any kind. "
+        "Flagging the row itself as a probable dataset scope artifact -- "
+        "a construction SaaS vendor holds customer data as a service "
+        "provider, which is a different thing from the people-search and "
+        "audience-data businesses this pilot targets."
+    ),
+    "700credit-com": (
+        "Verified by browser render 2026-09-23: 700Credit sells credit "
+        "reports, soft pulls, identity verification and lead generation "
+        "to AUTO DEALERS -- every entry point on the site is Dealer "
+        "Login, Agents or Sign Up, and there is no consumer-facing "
+        "lookup. Consumers interact with it only through the CCPA request "
+        "form. Worth noting for anyone revisiting: as a credit-report "
+        "reseller this row sits close to the FCRA-regulated territory "
+        "already flagged under chexsystems-com, so its data is not simply "
+        "opt-out-able. See optout_forms.OPTOUT_BLOCKED."
+    ),
+    "datasubject-com": (
+        "Verified by browser render 2026-09-23: my.datasubject.com serves "
+        "privacy-request portals on behalf of OTHER companies -- the "
+        "tokenised URL this dataset records renders branded as 'Blue "
+        "Action', not as DataSubject -- so datasubject.com is a rights- "
+        "request VENDOR and has no people-search surface of its own. "
+        "Flagging the row as a probable scrape artifact: what was "
+        "captured is one customer's form on a vendor platform, and the "
+        "broker that actually holds the data is whoever that tenant is. "
+        "See optout_forms.OPTOUT_UNDECIDED."
+    ),
+    "biointelli-com": (
+        "Verified by browser render 2026-09-23: Biointelli ('Scientific "
+        "Signal Intelligence') mines grants, publications, patents and "
+        "conference attendance to tell life-science sales teams which "
+        "researchers are about to buy. Everything is behind Login or "
+        "Request Demo -- the only public form is a demo-request popup -- "
+        "so there is no consumer-facing lookup to probe, even though the "
+        "company plainly profiles named individuals. See "
+        "optout_forms.OPTOUT_UNDECIDED; its recorded privacy URL 404s."
+    ),
 }
 
 
@@ -2718,6 +2827,46 @@ SEARCH_UNDECIDED = {
         "Next pass: resolve the name from a different network first. See "
         "the opt-out leg's entry, which is unresolved for the same "
         "reason."
+    ),
+    "peoplesmart-com": (
+        "The forms are transcribed; what is undecided is whether their "
+        "URLs are stable. Verified by browser render 2026-09-23: "
+        "www.peoplesmart.com serves THREE search surfaces. A people "
+        "search (form.js-people-form, GET) with name/#input-name, "
+        "company/#input-company, state/#input-state (select), job/#input- "
+        "job-title, industry/#input-industry and seniority/#input- "
+        "seniority behind a SEARCH button; a phone search (form.js-phone- "
+        "form) with phone/#input-phone; and an email search (form.js- "
+        "email-form) with email/#input-email. The problem is the actions: "
+        "they point at /lp/88dce3/2/loading, /lp/2310c2/2/building-report "
+        "and /lp/5b2812/2/building-report -- opaque landing-page variant "
+        "ids that look like campaign routing rather than stable "
+        "endpoints, and a recipe pinned to them would rot silently. Note "
+        "the positioning too: PeopleSmart now markets itself as a B2B "
+        "contact-search tool ('Search over 100M targeted leads', "
+        "Recruitment / Sales / B2B Lead Gen), so what it returns for a "
+        "private individual is unknown. Next pass: run a search and see "
+        "what an unauthenticated result page shows. The opt-out leg is "
+        "Cloudflare-walled; see optout_forms.OPTOUT_BLOCKED."
+    ),
+    "blisspointmedia-com": (
+        "NO VERDICT as of 2026-09-23: www.blisspointmedia.com did not "
+        "RESOLVE (net::ERR_NAME_NOT_RESOLVED) from a headless Chromium on "
+        "this host, so nothing about either leg can be stated. Recheck "
+        "from a different network before calling it dead, and check "
+        "whether the company now trades under another name. Same "
+        "situation as nuwber-com; see the opt-out leg's entry."
+    ),
+    "corelogic-com": (
+        "NO VERDICT as of 2026-09-23. corelogic.com now redirects to "
+        "COTALITY.com and the recorded path 404s, so the site that was "
+        "going to be examined no longer exists under that brand. What "
+        "rendered on the 404 page was only a content search bar (GET "
+        "cotality.com/search, input name=query) and a HubSpot newsletter "
+        "form, neither of which is a people or property lookup. CoreLogic "
+        "is a large property-data holder, so whether Cotality exposes any "
+        "consumer-facing lookup is worth establishing properly rather "
+        "than assuming. Next pass: examine cotality.com directly."
     ),
 }
 
