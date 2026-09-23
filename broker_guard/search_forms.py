@@ -725,8 +725,115 @@ TRUEPEOPLESEARCH = SearchRecipe(
     ),
 )
 
+MYLIFE = SearchRecipe(
+    broker_id="mylife-com",
+    broker_name="MyLife",
+    search_url="https://www.mylife.com/",
+    fields=(
+        # One box, whole name. The page carries a mobile duplicate of this
+        # form (#search-form-mobile / #single-search-input-mobile), so the
+        # desktop one is named explicitly.
+        SearchField(selector="#single-search-input", source="full_name",
+                    label="Enter any name"),
+    ),
+    submit_selector="#search-form input[type='submit']",
+    results_host="mylife.com",
+    no_results_markers=(
+        "we didn't find",
+    ),
+    hit_markers=("results for",),
+    # "We Found 100 Results for John Smith".
+    count_pattern=r"we\s+found\s+([\d,]+)\s+results",
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. Submitting navigates the "
+        "same tab to /pub-multisearch.pubview?... on the broker's own host. "
+        "The miss page says 'We didn't find Zylphrenna Quixbottom. Please "
+        "check the spelling and other information and search again' "
+        "(plain ASCII apostrophe, read off the live page); the hit page "
+        "says 'We Found 100 Results for John Smith' over free, UNMASKED "
+        "rows carrying full name, age, city, ZIP+4, aliases and places "
+        "lived. Both markers were checked against BOTH pages: the miss "
+        "page does not contain 'results for' and the hit page does not "
+        "contain \"we didn't find\".\n"
+        "\n"
+        "The hidden companions of the visible box (searchFirstName, "
+        "searchLastName, searchLocation) are populated by the site's own "
+        "JS from what is typed, so the recipe fills only the visible "
+        "input. searchLocation is one of them, and it stays empty -- the "
+        "usual narrowing rule.\n"
+        "\n"
+        "Its OPT-OUT leg is out of scope; see optout_forms, and note that "
+        "the dataset's opt-out URL for this broker (/ccpa/index.pubview) "
+        "is a hard 404 today."
+    ),
+)
+
+FASTPEOPLESEARCH = SearchRecipe(
+    broker_id="fastpeoplesearch-com",
+    broker_name="FastPeopleSearch",
+    search_url="https://www.fastpeoplesearch.com/",
+    fields=(
+        # One box, whole name. The form's second input (#search-name-address,
+        # "City, State or ZIP") is the optional narrowing box the module
+        # docstring refuses to fill.
+        SearchField(selector="#search-name-name", source="full_name",
+                    label="Name"),
+    ),
+    # The name form carries TWO buttons -- a "Close" button[type=button] and
+    # the real one -- so it is addressed by the submit button's own class
+    # inside that one form. Both selectors resolve to exactly 1 element,
+    # checked live on 2026-09-23.
+    submit_selector="#form-search-name button.search-form-button-submit",
+    results_host="fastpeoplesearch.com",
+    no_results_markers=(
+        "no results found for",
+        "we could not find any results based on your search criteria",
+    ),
+    # Deliberately NOT "results found": the MISS page says "No results found
+    # for <name>", so that marker would fire on both pages. "records found
+    # for" appears only on the hit page.
+    hit_markers=("records found for",),
+    # "Over 100+ FREE public records found for John Smith." The whitespace is
+    # ragged in the HTML ("public  records found\n\t\t\tfor"), which does not
+    # matter because search_probe reads inner_text("body") and the browser
+    # collapses it -- but the pattern is written tolerantly anyway.
+    count_pattern=r"([\d,]+)\s*\+?\s*free\s+public\s+records\s+found",
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. Submitting is a plain GET to "
+        "/search which lands on /name/<first>-<last> on the broker's own "
+        "host. 'John Smith' answers HTTP 200 titled 'John Smith in | Fast "
+        "and Free People Search of Public Records' and prints 'Over 100+ "
+        "FREE public records found for John Smith.' above real listing cards "
+        "(name, age, city, past addresses, relatives) with no paywall in "
+        "front of them. 'Zylphrenna Quixbottom' answers HTTP 404 titled "
+        "'Free People Search | FastPeopleSearch.com' and prints 'No results "
+        "found for Zylphrenna Quixbottom' plus 'We could not find any "
+        "results based on your search criteria:' over an echo of the parsed "
+        "query (First Name: zylphrenna / Last Name: quixbottom).\n"
+        "\n"
+        "Two traps on that miss page, both handled by the existing ordering "
+        "rather than by anything new here. (1) It echoes the searched name "
+        "more than a dozen times, in 'Get current phone number for "
+        "Zylphrenna Quixbottom' teaser rows -- rule (1) of the module "
+        "docstring, and the no-results markers are consulted first. (2) "
+        "Those teaser rows are third-party paid placements ('Paid Results "
+        "Sponsored by TruthFinder.com', then BeenVerified.com, then "
+        "InstantCheckMate.com) that appear on the MISS page and not on the "
+        "hit page, which is the opposite of the usual shape; they carry no "
+        "marker of either kind, so they change nothing. The 404 status is "
+        "the broker's own 'not listed' answer, not a bot wall, and "
+        "browser.bot_wall_reason does not treat 404 as one.\n"
+        "\n"
+        "Its opt-out leg is NOT automatable -- the removal form is behind a "
+        "one-time emailed link; see optout_forms.OPTOUT_OUT_OF_SCOPE."
+    ),
+)
+
 RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
+    MYLIFE.broker_id: MYLIFE,
     TRUEPEOPLESEARCH.broker_id: TRUEPEOPLESEARCH,
     SPOKEO.broker_id: SPOKEO,
     WHITEPAGES.broker_id: WHITEPAGES,
@@ -740,6 +847,7 @@ RECIPES = {
     PRIVATENUMBERCHECKER.broker_id: PRIVATENUMBERCHECKER,
     REVEALPHONEOWNER.broker_id: REVEALPHONEOWNER,
     UNITEDSTATESPHONEBOOK.broker_id: UNITEDSTATESPHONEBOOK,
+    FASTPEOPLESEARCH.broker_id: FASTPEOPLESEARCH,
 }
 
 
