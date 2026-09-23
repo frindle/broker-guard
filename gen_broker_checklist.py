@@ -55,6 +55,13 @@ for k in getattr(of, "OPTOUT_BLOCKED", {}):
     OPTOUT_STATE.setdefault(k, "blocked")
 for k in getattr(of, "OPTOUT_OUT_OF_SCOPE", {}):
     OPTOUT_STATE.setdefault(k, "out-of-scope")
+# A third: STAGED_RECIPES. The form IS transcribed element by element against
+# the live page -- the research is finished -- it is simply not turned on,
+# because "we wrote the form down" and "we are willing to submit to it" are
+# two separate decisions. Counting it as UNMAPPED would send the next agent
+# to re-transcribe a form this repo already holds in full.
+for k in getattr(of, "STAGED_RECIPES", {}):
+    OPTOUT_STATE.setdefault(k, "staged")
 
 brokers = json.load(open("data/source-brokers.json"))
 
@@ -85,6 +92,7 @@ MARK = {
     "undecided": "undecided",
     "blocked": "blocked",
     "out-of-scope": "out-of-scope",
+    "staged": "staged",
     "unmapped": "UNMAPPED",
 }
 
@@ -95,7 +103,7 @@ lines.append("Resume state for the broker-by-broker search/opt-out mapping works
 lines.append("cross-references `data/source-brokers.json` (the canonical %d-broker dataset)" % total)
 lines.append("against every terminal dict in `broker_guard/search_forms.py` and")
 lines.append("`broker_guard/optout_forms.py` -- `RECIPES`, `NO_*_SURFACE`, `*_UNDECIDED`,")
-lines.append("`*_BLOCKED` and `OPTOUT_OUT_OF_SCOPE`.")
+lines.append("`*_BLOCKED`, `OPTOUT_OUT_OF_SCOPE` and `STAGED_RECIPES`.")
 lines.append("")
 lines.append("**A broker is \"mapped\" once BOTH legs (search, opt-out) are categorized into one of")
 lines.append("the terminal states below -- not just recipe.** Every state but `UNMAPPED` is a")
@@ -107,6 +115,8 @@ lines.append("- `undecided` -- surface exists but not yet resolved to a recipe o
 lines.append("- `blocked` -- surface exists and is behind an anti-bot wall on every visit")
 lines.append("- `out-of-scope` -- real reachable form, asking for something this codebase will not do")
 lines.append("  (government-ID upload, picking your own record out of a result list, a modal wizard)")
+lines.append("- `staged` -- opt-out form transcribed element by element from the live page,")
+lines.append("  held in `STAGED_RECIPES` and deliberately not turned on (no human dry run)")
 lines.append("- `UNMAPPED` -- not yet looked at for this leg at all")
 lines.append("")
 lines.append("**Regenerate this file** after mapping more brokers: `python3 gen_broker_checklist.py`")

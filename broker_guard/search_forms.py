@@ -1794,6 +1794,35 @@ NO_SEARCH_SURFACE = {
         "surface; its data is keyed to device and app identifiers "
         "collected through its and its affiliates' apps, not to names."
     ),
+    "cybba-com": (
+        "Verified 2026-09-23: cybba.com is a business-facing advertising "
+        "agency ('Turning Ads Into Outcomes'), selling campaign services "
+        "to brands. There is no consumer-facing lookup of any kind -- no "
+        "name, phone, address or email search -- so there is nothing for "
+        "a presence check to query. Cybba holds personal data as an "
+        "adtech intermediary, which is why the broker row is legitimate, "
+        "but the only consumer-visible surface it operates is a rights "
+        "request form; see optout_forms.OPTOUT_BLOCKED for that leg."
+    ),
+    "cardlytics-com": (
+        "Verified 2026-09-23: cardlytics.com is a B2B card-linked-offers "
+        "platform whose customers are banks and advertisers, and the site "
+        "carries no consumer lookup at all -- the homepage's only "
+        "privacy-adjacent links are its Privacy Policy and Candidate "
+        "Privacy Notice. Cardlytics' data reaches consumers only through "
+        "their own bank's offers feed, which its policy confirms ('you "
+        "can do so through the Publishing Partner directly'). Nothing to "
+        "search, so nothing to detect."
+    ),
+    "demandbase-com": (
+        "Verified 2026-09-23: Demandbase is an account-based B2B "
+        "marketing platform, and says so on its own rights form "
+        "('Demandbase is a business to business (B2B) company'). All "
+        "lookup functionality sits behind a paid customer login and is "
+        "keyed to companies rather than to individuals; there is no "
+        "public people-search to probe. See "
+        "optout_forms.OPTOUT_OUT_OF_SCOPE for the opt-out leg."
+    ),
 }
 
 
@@ -2502,6 +2531,46 @@ SEARCH_UNDECIDED = {
         "certificate (see take5mg-com, which turned out to be a parked "
         "domain) -- so check first whether assurance.com is still a live "
         "business or a lapsed one."
+    ),
+    "propertychecker-com": (
+        "The form is fully transcribed; what is undecided is the half a "
+        "search recipe needs beyond it. Verified by browser render "
+        "2026-09-23: propertychecker.com's homepage carries four separate "
+        "Yii2 search forms, of which the name-search one is the relevant "
+        "surface -- POST to propertychecker.com/loader?ltid=home&mercSubI "
+        "d=name&searchTab=name, fields "
+        "NameSearchForm[firstname]/#namesearchform-firstname, "
+        "NameSearchForm[lastname]/#namesearchform-lastname, "
+        "NameSearchForm[city]/#namesearchform-city, "
+        "NameSearchForm[state]/#namesearchform-state (select), a hidden "
+        "NameSearchForm[type], and a hidden _csrf-frontend token minted "
+        "per page load (so this can only be driven in a browser, never as "
+        "a canned POST). No captcha script and no widget on the page. The "
+        "other three tabs are address search (/loader-address2), parcel "
+        "search (/loader-parcel) and a zip-code area search (/area- "
+        "search/search-loader). Undecided because nothing is yet known "
+        "about what the results page looks like or whether it is "
+        "paywalled at the point a presence check would need to read it -- "
+        "that, not the form, is the remaining work."
+    ),
+    "courtcasefinder-com": (
+        "Same shape as propertychecker-com: form captured, results side "
+        "unknown. Verified by browser render 2026-09-23: "
+        "courtcasefinder.com's homepage carries three search forms, all "
+        "with id 'searchForm' -- a name search POSTing to /search/loader "
+        "with firstName/#firstName, lastName/#lastName, city/#city and a "
+        "52-option state/#state select behind button#search-button; an "
+        "address search GETting /search/address/loader with "
+        "houseNumber/#addressHouseNumber, streetName/#addressStreetName, "
+        "aptUnit/#addressAptUnit, city/#cityAddress and state; and a "
+        "phone search GETting /search/loader with phone/#phoneNumber. No "
+        "captcha script and no widget. Two cautions for the next pass: "
+        "the three forms share a DOM id, so any selector must be scoped "
+        "by the field it contains rather than by '#searchForm', and the "
+        "site is a subscription lookup (it carries LOGIN and SIGN UP), so "
+        "whether an unauthenticated result page reveals enough for a "
+        "presence check is exactly the open question. The opt-out leg is "
+        "transcribed and staged; see optout_forms.STAGED_RECIPES."
     ),
 }
 

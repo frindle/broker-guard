@@ -146,6 +146,20 @@ FLAVOR_PIPL_WEBTOCASE = "pipl_salesforce_webtocase_form"
 # marker, no JavaScript widget of any kind, no honeypot -- and no bot check.
 FLAVOR_REVEALPHONEOWNER_BESPOKE = "revealphoneowner_bespoke_form"
 
+# AGR Marketing Solutions' opt-out, embedded directly in its privacy policy
+# rather than on a page of its own. A plain WordPress form (#agr-optout-form)
+# posting to wp-admin/admin-post.php with action=agr_optout and a per-load
+# nonce, ten visible fields, no bot check -- and a honeypot: a hidden
+# "Website" box (name=agr_website) inside a display:none wrapper.
+FLAVOR_AGR_WP_OPTOUT = "agr_wordpress_admin_post_optout"
+
+# PropertyChecker's own do-not-sell form. A Yii2 server-rendered POST form
+# (#w0) whose fields carry the framework's model-array names,
+# ``OptOutForm[fullName]`` and friends, with a per-load ``_csrf-frontend``
+# token. Notable because PropertyChecker sits in the same corporate family
+# as the InfoPay sites but does NOT serve the shared InfoPay form.
+FLAVOR_PROPERTYCHECKER_YII = "propertychecker_yii_optout_form"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -1271,10 +1285,156 @@ RECIPES = {
 }
 
 
+# --- staged recipes ----------------------------------------------------------
+#
+# Transcribed element by element against the live page in a real browser on
+# 2026-09-23, every selector read off the rendered DOM rather than inferred,
+# and every one of them swept for a bot check that turned out to be absent.
+# They are staged rather than shipped for one honest reason: no human has
+# dry-run them, and ``no_captcha_verified`` is the flag this module reserves
+# for a HUMAN sweep. Each carries False accordingly.
+
+AGR_MARKETING = FormRecipe(
+    broker_id="agrmarketingsolutions-com",
+    broker_name="AGR Marketing Solutions",
+    url="https://agrmarketingsolutions.com/privacy-policy/",
+    flavor=FLAVOR_AGR_WP_OPTOUT,
+    fields=(
+        Field(selector="#optout-first-name", source="first_name",
+              label="First Name"),
+        Field(selector="#optout-last-name", source="last_name",
+              label="Last Name"),
+        Field(selector="#optout-email", source="email", label="Email"),
+        Field(selector="#optout-phone", source="phone", label="Phone Number"),
+        Field(selector="#optout-address", source="street", label="Address"),
+        Field(selector="#optout-city", source="city", label="City"),
+        # A plain text box, NOT a <select>, so nothing on the page settles
+        # whether it wants "Nevada" or "NV". See the notes.
+        Field(selector="#optout-state", source="state_code", label="State"),
+        Field(selector="#optout-zip", source="zip", label="ZIP"),
+    ),
+    forbidden_selectors=("#optout-website",),
+    submit_selector="#optout-submit-btn",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23. Form "
+        "#agr-optout-form posts to /wp-admin/admin-post.php with "
+        "action=agr_optout and a WordPress nonce (agr_optout_nonce) minted "
+        "per page load, so it can only ever be driven in a browser, never "
+        "as a canned POST. HONEYPOT, and the reason forbidden_selectors is "
+        "populated: input[name=agr_website]/#optout-website is labelled "
+        "'Website' and sits inside <p class='agr-hp hidden' "
+        "style='display:none !important' aria-hidden='true' "
+        "tabindex='-1'> -- filling it is how the form identifies a bot. "
+        "NO bot check of any kind was found: no reCAPTCHA, hCaptcha, "
+        "Turnstile or BotDetect script, and no widget element. "
+        "no_captcha_verified stays False regardless, because no human has "
+        "swept it. TWO OPEN QUESTIONS, and why this is staged rather than "
+        "shipped: (1) #optout-state is a free-text box, so state_code "
+        "above is a judgement call from the form's Address/City/State/ZIP "
+        "mailing shape, not something the page states; (2) no surrounding "
+        "text ties the form to a named legal right, so whether this is a "
+        "CCPA opt-out of sale or a narrower do-not-mail suppression is "
+        "still unsettled. A dry run should settle (1); reading AGR's "
+        "policy should settle (2)."
+    ),
+)
+
+# CourtCaseFinder is a FOURTH InfoPay property carrying the shared opt-out
+# form -- same vendor model-path field ids as courtrecords.us,
+# staterecords.org and recordsfinder.com, enumerated separately rather than
+# assumed, per this module's own warning that shared hosting is not a shared
+# schema. What differs: it posts OFF-SITE, to
+# members.courtcasefinder.com/removeMyData/, and it carries no
+# _csrf-frontend hidden field.
+COURTCASEFINDER = FormRecipe(
+    broker_id="courtcasefinder-com",
+    broker_name="CourtCaseFinder.com",
+    url=("https://courtcasefinder.com/"
+         "do-not-sell-share-my-personal-information"),
+    flavor=FLAVOR_INFOPAY_DNS,
+    steps=_infopay_steps(),
+    submit_selector=_INFOPAY_SUBMIT,
+    success_markers=_INFOPAY_SUCCESS,
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23. Form #yw0 posts "
+        "to https://members.courtcasefinder.com/removeMyData/ with the "
+        "four familiar InfoPay fields -- "
+        "InfoPay_Core_Components_OptOuts_DataRemovalServiceModel[fname], "
+        "[lname], [state] (a 52-option select) and [city] -- and a bare "
+        "button[type=submit] reading 'SUBMIT'. Field ids match the three "
+        "shipped InfoPay recipes exactly, which is why _infopay_steps() is "
+        "reused verbatim; city is again the one field without the form's "
+        "required marker. No captcha script and no widget on the page, "
+        "matching the no-bot-check finding on its three siblings -- but "
+        "no_captcha_verified is False here because no human has swept it "
+        "and no dry run was performed. Inherits the siblings' SCOPE "
+        "CAVEAT: the page says a submission removes only the specific "
+        "records the requester then selects, so a completed submission is "
+        "a request STARTED, not a person removed. Note also that the "
+        "dataset's opt_out_url for this row is a TrustArc form that "
+        "explicitly refuses do-not-sell requests (see "
+        "propertychecker-com's entry) -- this URL, off the site's own "
+        "footer, is the real surface."
+    ),
+)
+
+PROPERTYCHECKER = FormRecipe(
+    broker_id="propertychecker-com",
+    broker_name="PropertyChecker",
+    url=("https://propertychecker.com/"
+         "do-not-sell-share-my-personal-information"),
+    flavor=FLAVOR_PROPERTYCHECKER_YII,
+    fields=(
+        Field(selector="#optoutform-fullname", source="full_name",
+              label="Full Name"),
+        Field(selector="#optoutform-street", source="street", label="Street"),
+        Field(selector="#optoutform-city", source="city", label="City"),
+        # 52 options, full state NAMES, so source="state" not "state_code".
+        Field(selector="#optoutform-state", source="state", label="State",
+              kind="select"),
+        Field(selector="#optoutform-zip", source="zip", label="Zip Code"),
+        Field(selector="#optoutform-email", source="email",
+              label="Email Address"),
+        Field(selector="#optoutform-phone", source="phone", label="Phone",
+              required=False),
+    ),
+    submit_selector="form#w0 button[type='submit']",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23. Form #w0 posts "
+        "to itself with Yii2-style names OptOutForm[fullName], [street], "
+        "[city], [state] (52-option select of full state names), [zip], "
+        "[email] and [phone] (the only optional one), plus a "
+        "_csrf-frontend token minted per page load -- so browser-driven "
+        "only, never a canned POST. No captcha script, no widget, no "
+        "honeypot found; no_captcha_verified is still False because no "
+        "human has swept it and no dry run was performed. IMPORTANT "
+        "DATASET FINDING: the recorded opt_out_url for this row is a "
+        "TrustArc IRM form that REFUSES this request type in its own "
+        "words -- 'To submit a Do Not Sell or Share request, please use "
+        "the Do Not Sell or Share My Personal Information link located in "
+        "the website footer' -- so a recipe written against the dataset "
+        "URL would have filed the wrong kind of request. The footer link "
+        "leads here. Note too that /optout, which the footer also offers "
+        "as 'Your Privacy Choices', is a rights-explainer page with zero "
+        "inputs on it, the same trap already documented on the InfoPay "
+        "rows. Unlike its sibling courtcasefinder-com, this site does NOT "
+        "use the shared InfoPay form -- same corporate family, different "
+        "opt-out implementation, which is exactly why each one is "
+        "enumerated separately. Second channel for a human: "
+        "privacy@propertychecker.com."
+    ),
+)
+
+
 # Brokers whose form has been WRITTEN DOWN but which are not yet turned on.
-# Empty today; it exists so that "we transcribed the form" and "we are willing
-# to submit to it" stay two separate decisions.
-STAGED_RECIPES: dict = {}
+# It exists so that "we transcribed the form" and "we are willing to submit
+# to it" stay two separate decisions. Nothing reads this at runtime: a broker
+# here is absent from RECIPES, which is what actually stops a submission.
+STAGED_RECIPES: dict = {
+    AGR_MARKETING.broker_id: AGR_MARKETING,
+    COURTCASEFINDER.broker_id: COURTCASEFINDER,
+    PROPERTYCHECKER.broker_id: PROPERTYCHECKER,
+}
 
 
 # Brokers investigated for this pilot and found to have NO self-service
@@ -1641,6 +1801,26 @@ NO_OPTOUT_SURFACE = {
         "addefend-com. The dataset carries no opt_out_email for this row "
         "either."
     ),
+    "cardlytics-com": (
+        "Verified by browser render 2026-09-23, and this row is also a "
+        "dataset defect. The recorded opt_out_url, "
+        "datagrail.cardlytics.com, returns a hard HTTP 404 ('Page not "
+        "found') -- the DataGrail portal is gone, not merely JS-rendered. "
+        "www.cardlytics.com/privacy-notice and /privacy also 404; the "
+        "live policy is www.cardlytics.com/privacy-policy, which was read "
+        "in full (about 50k characters) and offers NO web form of any "
+        "kind: every rights path it names is a mailbox. Its California, "
+        "Colorado and Connecticut sections each say rights are exercised "
+        "'by emailing us at privacy@cardlytics.com', and appeals go to "
+        "the same address with the subject 'Appeal of Consumer Rights "
+        "Request'. Separately, the policy says opting out of a card- "
+        "linked marketing program is done through the Publishing Partner "
+        "(the consumer's own bank), not through Cardlytics. Mailbox-only "
+        "with no webform is the definition of this bucket. Note the "
+        "dataset carries legalnotices@cardlytics.com while the policy "
+        "names privacy@cardlytics.com -- the dataset should be corrected "
+        "on both the dead URL and the address."
+    ),
 }
 
 
@@ -1897,21 +2077,6 @@ OPTOUT_UNDECIDED = {
         "a fetcher that tolerates the certificate chain, then transcribe "
         "the form."
     ),
-    "4legalleads-com": (
-        "A REAL FORM, fully labelled, held back from RECIPES for one "
-        "reason. Verified 2026-09-23: www.4legalleads.com/removal serves "
-        "a CCPA removal form whose visible labels are 'First Name*', "
-        "'Last Name*', 'Subscriber's Phone Number*', 'Subscriber's Email "
-        "Address*', a required dropdown offering 'You submitted your "
-        "information to 4LegalLeads and now want it removed.' / 'You "
-        "aren't sure if your information was submitted...', and an "
-        "optional 'Comments'; the submit button reads 'Submit Your "
-        "Request for Removal.' What is missing is what FormRecipe "
-        "actually needs -- element names/selectors, the form's action and "
-        "method, and a dry run -- none of which this pass captured. A "
-        "recipe-writer with a browser should be able to finish this one "
-        "quickly."
-    ),
     "5x5data-com": (
         "NO VERDICT as of 2026-09-23. The dataset's URL (5x5data.com/dsr- "
         "out/) 404s. The live path is 5x5data.com/privacy-policy/, whose "
@@ -1935,35 +2100,6 @@ OPTOUT_UNDECIDED = {
         "field of it is known. Next pass: a JS-capable browser against "
         "privacy.6sense.com."
     ),
-    "bookyourdata-com": (
-        "A REAL FORM, labelled, held back from RECIPES for the usual "
-        "reason. Verified 2026-09-23: the dataset's page "
-        "(www.bookyourdata.com/ccpa-ready) embeds nothing and only points "
-        "at 'Submit your request at optout.bookyourdata.com', and THAT "
-        "page carries the form -- visible labels 'Email address*' "
-        "(required), 'Full name', 'State / region', and a required 'What "
-        "would you like us to do?*' group with checkboxes 'Do not sell or "
-        "share my personal information' and 'Delete my personal "
-        "information'; the submit button reads 'Submit my request.' "
-        "Missing: element names/selectors, action/method and a dry run. "
-        "The dataset's opt_out_url should be corrected to "
-        "optout.bookyourdata.com."
-    ),
-    "abovedata-io": (
-        "A REAL, NATIVE form -- not a third-party widget -- labelled but "
-        "not yet transcribed at the element level. Verified 2026-09-23: "
-        "the dataset's privacy-policy URL embeds nothing, but its footer "
-        "link 'Opt Out of Targeted Advertising' leads to "
-        "www.abovedata.io/opt-out/, which carries visible fields 'First "
-        "Name', 'Last Name', 'Company (optional)', 'Email', 'Country' and "
-        "a 'Request Type' checkbox group ('Opt out of targeted "
-        "advertising' / 'Request access to information about me' / "
-        "'Request deletion of information about me' / 'Correction of "
-        "information about me'), with a 'Submit Request' button. Missing "
-        "for a recipe: element names/selectors, action/method, a dry run, "
-        "and whether any bot check sits on it. Correct the dataset's URL "
-        "to /opt-out/."
-    ),
     "accudata-com": (
         "A REAL and unusually complete form, held back from RECIPES for a "
         "substantive reason as well as the usual one. Verified "
@@ -1982,20 +2118,6 @@ OPTOUT_UNDECIDED = {
         "generated questions' AFTER submission, so the flow does not end "
         "at the form and a recipe that stopped there would report a "
         "success it did not achieve."
-    ),
-    "accurateappend-com": (
-        "A REAL, reachable suppression form, held back from RECIPES only "
-        "for want of element-level detail and a dry run. Verified "
-        "2026-09-23: clients.accurateappend.com/Public/OptOut loads a "
-        "genuine consumer form citing CCPA, Daniel's Law, CDPA, CPA and "
-        "CTDPA, with visible fields First Name, Last Name, a repeatable "
-        "'Other First/Last Name', Street Address, City, a State dropdown, "
-        "Postal Code (US-only, 12345 or 12345-6789), Phone with up to "
-        "three more via 'Add another phone', Email with up to four more "
-        "via 'Add another email', and a 'Submit' button. Missing: element "
-        "names/selectors, action/method, whether a bot check sits on it, "
-        "and a dry run. One of the better recipe candidates in this "
-        "batch."
     ),
     "acronymix-com": (
         "NO VERDICT as of 2026-09-23, for the same reason as the search "
@@ -2275,20 +2397,6 @@ OPTOUT_UNDECIDED = {
         "RECIPES. The whitepages-com row should be decided first and this "
         "one inherited from it."
     ),
-    "remodeling-com": (
-        "A REAL, transcribed CCPA form, held out of RECIPES only for want "
-        "of element-level detail and a dry run. Verified 2026-09-23: "
-        "remodeling.com/do-not-sell/ serves a form with visible fields "
-        "First/Last Name, Email, Phone Number, Street Address, State of "
-        "Residence, Zip Code and the checkboxes 'Do Not Sell My Personal "
-        "Information' / 'Delete My Personal Information', with a submit "
-        "button labelled 'Submit'; privacy@evercommerce.com and "
-        "privacy@remodeling.com are given as fallbacks. Two caveats a "
-        "recipe-writer must weigh: the page states a California-only "
-        "scope, so a non-CA subject may be out of scope, and no element "
-        "names, action or method were captured. Same corporate family as "
-        "33mileradius-com."
-    ),
     "attribits-com": (
         "A REAL but very thin form. Verified 2026-09-23: "
         "www.attribits.com/do-not-sell carries a single input under "
@@ -2442,27 +2550,6 @@ OPTOUT_UNDECIDED = {
         "optional a recipe becomes possible; until someone confirms that, "
         "this stays undecided, and if they are required it belongs under "
         "NO_OPTOUT_SURFACE. The submit control was also never captured."
-    ),
-    "agrmarketingsolutions-com": (
-        "A REAL, directly-embedded form -- the cleanest opt-out evidence "
-        "in its batch, and still short of a recipe on two counts. "
-        "Verified 2026-09-23 across two separate fetches of "
-        "agrmarketingsolutions.com/privacy-policy/, which carries an "
-        "'OPT-OUT' section whose visible labels are First Name "
-        "(required), Last Name (required), Email (required), Phone Number "
-        "(required), Additional Email(s), Additional Phone Number(s), "
-        "Address (required), City (required), State (required) and ZIP "
-        "(required), with the note 'All Starred fields are required' and "
-        "a submit button reading 'Submit OPT-OUT Request'. It is not "
-        "first-party-widget-wrapped and not behind a consent portal, "
-        "which is rare here. What is missing: (1) element "
-        "names/selectors, the form's action and method, and a dry run -- "
-        "none of which this pass captured, so a RECIPES entry would be "
-        "fabricating the parts that matter; and (2) the page gave no "
-        "surrounding text tying the form to a specific legal right, so "
-        "whether this is a CCPA opt-out of sale or a narrower do-not-mail "
-        "suppression is unsettled. Highest-value target on this list for "
-        "the next recipe-writing pass."
     ),
     "andrewswharton-com": (
         "NO VERDICT as of 2026-09-23. The dataset's opt_out_url for this "
@@ -2681,21 +2768,6 @@ OPTOUT_UNDECIDED = {
         "Next pass: get the Do Not Sell/Share URL off the policy page and "
         "transcribe it; a recipe here also has to CHOOSE among the three "
         "forms, which is a decision rather than a detail."
-    ),
-    "atdata-com": (
-        "A REAL form, held out of RECIPES for want of element-level "
-        "detail. Verified 2026-09-23: instantdata.atdata.com/optout "
-        "serves a consumer opt-out form with visible fields Email, First "
-        "Name, Last Name, Street Address, City, State, a Country "
-        "dropdown, and Zip/Postal Code, framed as opting out of (1) "
-        "sharing for targeted or cross-context behavioural advertising, "
-        "(2) sale, (3) profiling for decisions with significant effects, "
-        "and (4) direct marketing. No CAPTCHA was seen. Missing: the "
-        "submit control (never rendered), element names, the form's "
-        "action and method, and a dry run. Also worth weighing: AtData's "
-        "key is the EMAIL address, so what an opt-out keyed to one "
-        "address reaches is worth confirming. One of the better "
-        "candidates on this list."
     ),
     "attomdata-com": (
         "A REAL and fully transcribed CCPA form, held back for two "
@@ -2934,6 +3006,152 @@ OPTOUT_BLOCKED = {
         "for this row (robert@lighthouselist.com) is a personal address "
         "at a THIRD company, which is worth re-checking whenever the wall "
         "lifts."
+    ),
+    "accurateappend-com": (
+        "CORRECTION to an earlier entry, and the reason this pass exists. "
+        "A WebFetch-based look on 2026-09-23 transcribed this form's "
+        "labels and reported no CAPTCHA; rendering the same page in a "
+        "real browser the same day shows that was wrong. "
+        "clients.accurateappend.com/Public/OptOut is form #optOutForm, "
+        "POST to /Public/OptOut, and it carries a Cloudflare Turnstile "
+        "widget -- the rendered DOM contains an input named cf-turnstile- "
+        "response with id #cf-chl-widget-4embv_response (the widget id "
+        "suffix is per-load). The form itself is otherwise complete and "
+        "was transcribed while it was open: "
+        "Name.FirstName/#Name_FirstName, Name.LastName/#Name_LastName, "
+        "three hidden OtherNames[0..2].FirstName|LastName pairs revealed "
+        "by an 'ADD OTHER NAMES' control, Address/#Address, City/#City, "
+        "State/#State (a 73-option select), PostalCode/#PostalCode, "
+        "Phone.Number/#Phone_Number, Email.Address/#Email_Address, "
+        "repeatable OtherPhones[0..2].Number and "
+        "OtherEmails[0..2].Address, submit #submitBtn reading 'SUBMIT'. "
+        "All of that is recorded so nobody re-does it: if the Turnstile "
+        "ever comes down this becomes a recipe in an afternoon. Until "
+        "then the standing rule applies -- a bot check is where "
+        "automation stops."
+    ),
+    "atdata-com": (
+        "CORRECTION to an earlier entry. The 2026-09-23 WebFetch pass "
+        "said 'No CAPTCHA was seen'; a browser render the same day shows "
+        "a reCAPTCHA on the form. instantdata.atdata.com/optout is form "
+        "#new_opt_out, POST to /optout#opt_form, Rails-shaped with a "
+        "hidden authenticity_token that is minted per page load, and the "
+        "rendered DOM carries the usual hidden <textarea "
+        "name='g-recaptcha-response'>. Transcribed while open, so the "
+        "work is not lost: opt_out[email]/#opt_out_email, "
+        "opt_out[first_name]/#opt_out_first_name, "
+        "opt_out[last_name]/#opt_out_last_name, "
+        "opt_out[street]/#opt_out_street, opt_out[city]/#opt_out_city, "
+        "opt_out[state]/#opt_out_state, "
+        "opt_out[country_code]/#opt_out_country_code (a 251-option "
+        "select), opt_out[zip]/#opt_out_zip, and a submit named 'commit'. "
+        "Two notes for whoever revisits: the per-load authenticity_token "
+        "means this can only ever be driven in a browser, never as a "
+        "canned POST, and AtData keys on the EMAIL address, so what one "
+        "submission actually reaches is worth confirming before trusting "
+        "a success."
+    ),
+    "4legalleads-com": (
+        "CORRECTION to an earlier entry that called this 'a real form... "
+        "a recipe-writer with a browser should be able to finish this one "
+        "quickly'. A browser did, on 2026-09-23, and found a wall. "
+        "www.4legalleads.com/removal POSTs to "
+        "/fsg?pageId=5364fa9a-a3b7-4758-b8e3-d5d78a29fd93&variant=c and "
+        "loads challenges.cloudflare.com/turnstile/v0/api.js with "
+        "render=explicit; the rendered DOM contains cf-turnstile-response "
+        "(#cf-chl-widget-rjq13_response, suffix per-load). It also "
+        "carries ActiveProspect TrustedForm consent-certificate fields "
+        "(trustedform_cert_url, xxTrustedFormToken, "
+        "xxTrustedFormPingUrl), which are lead-industry session receipts "
+        "rather than a bot check, but are worth knowing about. The form "
+        "is fully transcribed: first_name/#first_name, "
+        "last_name/#last_name, subscribers_phone_number, "
+        "subscribers_email_address, a REQUIRED radio pair (not the "
+        "dropdown the earlier note described) named "
+        "you_are_requesting_removal_and_opt_out_from_our_system_because, "
+        "an optional textarea comments_not_required, and submit button "
+        "#lp-pom-button-934 'Submit Your Request for Removal'."
+    ),
+    "bookyourdata-com": (
+        "CORRECTION to an earlier entry. Verified by browser render "
+        "2026-09-23: optout.bookyourdata.com is form #dns-form and it "
+        "loads challenges.cloudflare.com/turnstile/v0/api.js, with a cf- "
+        "turnstile-response input in the rendered DOM -- so the bot check "
+        "the label-only pass could not see is there. Everything else was "
+        "captured: email/#email (type=email, required), name/#name, "
+        "state/#state, a checkbox pair both named 'rt', a bare text input "
+        "named 'website' with no label at all (almost certainly a "
+        "honeypot, and it would belong in forbidden_selectors if this "
+        "ever became a recipe), and submit #submit 'Submit my request'. "
+        "Also confirmed: the dataset's opt_out_url for this row "
+        "(www.bookyourdata.com/ccpa-ready) is NOT the form -- it only "
+        "points at optout.bookyourdata.com -- and should be corrected."
+    ),
+    "abovedata-io": (
+        "A REAL, native, fully transcribed form that is nonetheless "
+        "blocked, verified by browser render 2026-09-23. "
+        "www.abovedata.io/opt-out is form #dsr-form and the page loads "
+        "google.com/recaptcha/enterprise.js with a render= site key -- "
+        "reCAPTCHA Enterprise in its invisible, score-based mode, so "
+        "there is no visible widget but every submission is scored. Filed "
+        "here rather than in RECIPES because this module's standing rule "
+        "is that a bot check of any kind is where automation stops; the "
+        "honest caveat is that an invisible v3-style check is a weaker "
+        "wall than a Turnstile interstitial, and if the project ever "
+        "decides score-based checks are acceptable this row is ready to "
+        "ship. Transcribed: a honeypot FIRST -- input name=_gotcha "
+        "class=hp, computed position:absolute left:-9999px opacity:0, "
+        "which must go in forbidden_selectors -- then firstName/#dsr- "
+        "first, lastName/#dsr-last, company/#dsr-company, email/#dsr- "
+        "email, country/#dsr-country, four checkboxes all named "
+        "'requests' with values 'Opt out of targeted advertising', "
+        "'Request access to information about me', 'Request deletion of "
+        "information about me', 'Correction of information about me', and "
+        "button.dsr-submit 'Submit Request'. Correct the dataset URL to "
+        "/opt-out."
+    ),
+    "remodeling-com": (
+        "A REAL, fully transcribed WPForms form, blocked for the same "
+        "reason as abovedata-io, verified by browser render 2026-09-23. "
+        "remodeling.com/do-not-sell/ is form #wpforms-form-42452, POST to "
+        "the same URL, and the page loads google.com/recaptcha/api.js "
+        "with a render= site key (invisible reCAPTCHA v3); the form "
+        "carries the matching hidden wpforms[recaptcha] field alongside "
+        "wpforms[time_token], a WPForms anti-replay token minted per page "
+        "load. Transcribed: "
+        "wpforms[fields][1][first]/#wpforms-42452-field_1 and "
+        "[1][last]/#wpforms-42452-field_1-last (Name), [2] Emails, [3] "
+        "Phone Numbers, [4] Street Address (optional), [5] a SELECT whose "
+        "only option is 'California', [6] Zip Code, and checkbox pair "
+        "[7][] with values 'Do Not Sell My Personal Information' and "
+        "'Delete My Personal Information'; submit is button#wpforms- "
+        "submit-42452. The California-only select is the substantive "
+        "finding: this is not a nationwide surface, and a non-CA subject "
+        "has nothing to submit here at all. Same corporate family as "
+        "33mileradius-com."
+    ),
+    "cybba-com": (
+        "Verified by browser render 2026-09-23. The dataset's OneTrust "
+        "webform (cybba- "
+        "requests.my.onetrust.com/webform/a4a1351e-.../81d37a05-...) "
+        "renders fine and is a genuine rights form, but it is gated by a "
+        "BotDetect image CAPTCHA -- a visible 'Captcha' text box "
+        "(#captchaCode) backed by hidden BDC_VCID_angularBasicCaptcha / "
+        "BDC_Hs_angularBasicCaptcha / BDC_SP_angularBasicCaptcha fields "
+        "-- which is an OCR puzzle and squarely where this tool stops. "
+        "Transcribed anyway: OneTrust's element ids are stable across "
+        "tenants, so countryDSARElement, stateDSARElement, "
+        "firstNameDSARElement, lastNameDSARElement, emailDSARElement, "
+        "formField78DSARElement, requestDetailsDSARElement and #dsar- "
+        "webform-submit-button are all present, alongside a file picker "
+        "and a required request-type checkbox group. SECOND AND MORE "
+        "IMPORTANT FINDING, which generalises beyond this row: this DSAR "
+        "form explicitly EXCLUDES the opt-out of sale. Its own text reads "
+        "'To opt out of the sale, sharing, or use of personal information "
+        "for targeted advertising... visit Your Privacy Choices', so the "
+        "surface the dataset records for this broker is the wrong one for "
+        "a do-not-sell request. The Your Privacy Choices widget was not "
+        "opened; that is the next step here."
     ),
 }
 
@@ -3279,6 +3497,29 @@ OPTOUT_OUT_OF_SCOPE = {
         "recorded in this dict's header and applied to adform-com's "
         "mailed identity-verification PDF. If Apollo Interactive ever "
         "makes that upload optional, this becomes a recipe candidate."
+    ),
+    "demandbase-com": (
+        "Verified by browser render 2026-09-23, including clicking into "
+        "the second step. demandbase.com/privacy- "
+        "center.html?ketch_preferences_tab=rightsTab is a Ketch consent- "
+        "management widget, and the rights flow is a MODAL WIZARD: step "
+        "one is a 'Select a Request Type' screen with four buttons "
+        "(Delete your data / Withdraw consent / Access your data / "
+        "Correct your data) and no fields at all; only after clicking one "
+        "does the form appear, in the same modal, with a back-navigation "
+        "control and no URL change. That is the multi-page-modal shape "
+        "this bucket exists for -- FormRecipe carries one url and one "
+        "flat list of fields, not a session-gated sequence of panels. The "
+        "step-two form was transcribed anyway: text-field-firstName, "
+        "text-field-lastName, text-field-email, select-field-country, "
+        "text-field-stateRegion, select-field-typeCode ('I am a (an)'), "
+        "text-field-typeRelationshipDetails, a Submit button, and a "
+        "hidden g-recaptcha-response textarea (so there is an invisible "
+        "reCAPTCHA here too, an independent reason this could not ship). "
+        "Worth recording for the pilot's own purposes: NONE of the four "
+        "request types is an opt-out of sale or sharing. Demandbase's own "
+        "preamble says it is a B2B company, and the nearest thing on "
+        "offer is 'Withdraw consent'."
     ),
 }
 

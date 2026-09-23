@@ -4,7 +4,7 @@ Resume state for the broker-by-broker search/opt-out mapping workstream --
 cross-references `data/source-brokers.json` (the canonical 969-broker dataset)
 against every terminal dict in `broker_guard/search_forms.py` and
 `broker_guard/optout_forms.py` -- `RECIPES`, `NO_*_SURFACE`, `*_UNDECIDED`,
-`*_BLOCKED` and `OPTOUT_OUT_OF_SCOPE`.
+`*_BLOCKED`, `OPTOUT_OUT_OF_SCOPE` and `STAGED_RECIPES`.
 
 **A broker is "mapped" once BOTH legs (search, opt-out) are categorized into one of
 the terminal states below -- not just recipe.** Every state but `UNMAPPED` is a
@@ -16,6 +16,8 @@ legitimate resolution, not a TODO.
 - `blocked` -- surface exists and is behind an anti-bot wall on every visit
 - `out-of-scope` -- real reachable form, asking for something this codebase will not do
   (government-ID upload, picking your own record out of a result list, a modal wizard)
+- `staged` -- opt-out form transcribed element by element from the live page,
+  held in `STAGED_RECIPES` and deliberately not turned on (no human dry run)
 - `UNMAPPED` -- not yet looked at for this leg at all
 
 **Regenerate this file** after mapping more brokers: `python3 gen_broker_checklist.py`
@@ -25,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **158** / 969
-- Search leg mapped: 160 / 969
-- Opt-out leg mapped: 162 / 969
+- Fully mapped (both legs): **163** / 969
+- Search leg mapped: 165 / 969
+- Opt-out leg mapped: 167 / 969
 
 ## How to resume
 
@@ -46,19 +48,19 @@ of those dicts against source-brokers.json).
 - [x] **01Advertising Inc.** (`01advertising-com`) -- search: no-surface, opt-out: undecided
 - [x] **180 By Two, LLC** (`180bytwo-com`) -- search: no-surface, opt-out: undecided
 - [x] **192.com** (`192-com`) -- search: undecided, opt-out: undecided
-- [x] **33 MILE RADIUS LLC** (`remodeling-com`) -- search: no-surface, opt-out: undecided
+- [x] **33 MILE RADIUS LLC** (`remodeling-com`) -- search: no-surface, opt-out: blocked
 - [x] **33 Mile Radius LLC** (`33mileradius-com`) -- search: no-surface, opt-out: undecided
 - [x] **33ACROSS Inc** (`33across-com`) -- search: no-surface, opt-out: undecided
 - [x] **411.com** (`411-com`) -- search: undecided, opt-out: undecided
 - [x] **4C Insights Inc.** (`mediaocean-com`) -- search: undecided, opt-out: undecided
 - [x] **4Eyes.Ai, Inc.** (`4-eyes-ai`) -- search: no-surface, opt-out: no-surface
-- [x] **4Legalleads** (`4legalleads-com`) -- search: no-surface, opt-out: undecided
+- [x] **4Legalleads** (`4legalleads-com`) -- search: no-surface, opt-out: blocked
 - [x] **5X5 US, LLC** (`5x5data-com`) -- search: no-surface, opt-out: undecided
 - [x] **6SENSE INSIGHTS Inc** (`6sense-com`) -- search: undecided, opt-out: undecided
-- [x] **A DIRECT MARKETING Inc** (`bookyourdata-com`) -- search: undecided, opt-out: undecided
-- [x] **Above Data, Inc.** (`abovedata-io`) -- search: no-surface, opt-out: undecided
+- [x] **A DIRECT MARKETING Inc** (`bookyourdata-com`) -- search: undecided, opt-out: blocked
+- [x] **Above Data, Inc.** (`abovedata-io`) -- search: no-surface, opt-out: blocked
 - [x] **ACCUDATA INTEGRATED Marketing, Inc.** (`accudata-com`) -- search: no-surface, opt-out: undecided
-- [x] **Accurate Append Inc.** (`accurateappend-com`) -- search: no-surface, opt-out: undecided
+- [x] **Accurate Append Inc.** (`accurateappend-com`) -- search: no-surface, opt-out: blocked
 - [x] **ACE Agents Inc.** (`degree-me`) -- search: undecided, opt-out: no-surface
 - [x] **ACRONYMIX LLC** (`acronymix-com`) -- search: undecided, opt-out: undecided
 - [x] **Activimpact, LLC** (`activimpact-ai`) -- search: no-surface, opt-out: undecided
@@ -85,7 +87,7 @@ of those dicts against source-brokers.json).
 - [x] **AdvisorTarget, LLC** (`finsum-com`) -- search: no-surface, opt-out: undecided
 - [x] **AFFINITY ANSWERS CORPORATION** (`affinityanswers-com`) -- search: no-surface, opt-out: undecided
 - [x] **Affinity Solutions** (`affinity-solutions`) -- search: no-surface, opt-out: undecided
-- [x] **AGR Marketing Solutions LLC** (`agrmarketingsolutions-com`) -- search: no-surface, opt-out: undecided
+- [x] **AGR Marketing Solutions LLC** (`agrmarketingsolutions-com`) -- search: no-surface, opt-out: staged
 - [x] **Aidentified, Inc.** (`aidentified-com`) -- search: no-surface, opt-out: undecided
 - [x] **Airlines Reporting Corporation** (`arccorp-com`) -- search: no-surface, opt-out: undecided
 - [x] **AIS Portfolio Services LLC** (`aisinfo-com`) -- search: no-surface, opt-out: undecided
@@ -134,7 +136,7 @@ of those dicts against source-brokers.json).
 - [x] **Asset International, Inc.** (`issgovernance-com`) -- search: undecided, opt-out: undecided
 - [x] **Assurance Iq, Inc.** (`assurance-com`) -- search: undecided, opt-out: undecided
 - [x] **Astoria Company Marketing LLC** (`astoriacompany-com`) -- search: no-surface, opt-out: undecided
-- [x] **AtData, LLC** (`atdata-com`) -- search: no-surface, opt-out: undecided
+- [x] **AtData, LLC** (`atdata-com`) -- search: no-surface, opt-out: blocked
 - [x] **Atlantic Fox Technologies, Inc.** (`atlanticfox-com`) -- search: no-surface, opt-out: no-surface
 - [x] **ATTOM Data Solutions LLC** (`attomdata-com`) -- search: no-surface, opt-out: undecided
 - [x] **Audience Acuity LLC** (`audienceacuity-com`) -- search: no-surface, opt-out: undecided
@@ -191,7 +193,7 @@ of those dicts against source-brokers.json).
 - [ ] **Captify Technologies** (`captifytechnologies-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Car Market Solutions LLC** (`carmarketsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **CARCO Group, Inc.** (`cisive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CARDLYTICS Inc** (`cardlytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **CARDLYTICS Inc** (`cardlytics-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Careerbuilder, LLC** (`careerbuilder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Carry Technologies, Inc** (`hightouch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Catalina Marketing Corporation** (`catalina-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -253,7 +255,7 @@ of those dicts against source-brokers.json).
 - [ ] **CoreLogic** (`corelogic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Cortera, Inc.** (`cortera-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Costar Group** (`costar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CourtCaseFinder.com** (`courtcasefinder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **CourtCaseFinder.com** (`courtcasefinder-com`) -- search: undecided, opt-out: staged
 - [x] **CourtRec.com** (`courtrec-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **CourtRecords.us** (`courtrecords-us`) -- search: undecided, opt-out: recipe
 - [ ] **Crawlbee Corp** (`crawlbee-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -269,7 +271,7 @@ of those dicts against source-brokers.json).
 - [ ] **Crunchbase Inc** (`crunchbase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **CTAM Leadshare Corp.** (`smartmove-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Cuebiq Group, LLC** (`cuebiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Cybba Inc.** (`cybba-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Cybba Inc.** (`cybba-com`) -- search: no-surface, opt-out: blocked
 - [x] **Cyber Background Checks** (`cyberbackgroundchecks-com`) -- search: recipe, opt-out: blocked
 - [ ] **Cyndx Networks LLC** (`cyndx-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Círculo de Crédito S.A. de C.V. S.I.C.** (`circulodecredito-com-mx`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -305,7 +307,7 @@ of those dicts against source-brokers.json).
 - [ ] **Deloitte Consulting LLP** (`deloitte-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Deluxe Corporation** (`deluxe-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Demand Science Group, LLC** (`demandscience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Demandbase** (`demandbase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Demandbase** (`demandbase-com`) -- search: no-surface, opt-out: out-of-scope
 - [ ] **Demyst Data, Ltd** (`demystdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Demyst Data, Ltd** (`demyst-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Deutsche Post Direkt GmbH** (`deutschepost-de`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -751,7 +753,7 @@ of those dicts against source-brokers.json).
 - [ ] **Project Affinity, Inc** (`affinity-co`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Project Applecart LLC** (`applecart-co`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Property Reach LP** (`propertyreach-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PropertyChecker** (`propertychecker-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PropertyChecker** (`propertychecker-com`) -- search: undecided, opt-out: staged
 - [ ] **PropertyRadar, Inc.** (`propertyradar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **PropertyRecord.com** (`propertyrecord-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **PropertyRecs** (`propertyrecs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
