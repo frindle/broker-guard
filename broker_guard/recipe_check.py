@@ -27,6 +27,12 @@ because ``page.fill`` runs in Playwright's strict mode and a second match
 turns into a hard failure the next time the recipe actually runs -- the
 classic outcome of a site adding a mobile copy of its own form.
 
+A selector a recipe DECLARES as conditional (``appears_later``) is skipped
+rather than reported: it does not exist until an earlier step is answered,
+and this check answers nothing, so "missing" would be the expected state of
+a perfectly healthy recipe. Those selectors are covered by the passive half
+instead, when the recipe really runs.
+
 A page that cannot be read at all (timeout, bot wall) is reported as
 ``blocked``/``transient`` and does NOT count as drift, for the same reason
 ``recipe_health`` does not alert on those: ThatsThem's recipe is correct and
@@ -59,6 +65,15 @@ def selectors_for_optout(recipe) -> list:
     """
     out = []
     for step in optout_forms.ordered_steps(recipe):
+        # A field the recipe declares as conditional does not exist on the
+        # page this function's caller is about to open -- it appears only
+        # once an earlier step has been answered, and this check answers
+        # nothing. Probing for it would report a healthy recipe as drifted
+        # (Nielsen's State, request-type and Zip controls, which its own
+        # notes have described as Country-gated since it was written).
+        # See optout_forms.Field.appears_later for what this costs.
+        if getattr(step, "appears_later", False):
+            continue
         if isinstance(step, (optout_forms.Field, optout_forms.Check)):
             # A Field whose value is a deliberately-empty literal (the
             # ACHCOOP State / SearchPublicRecords Age refusals) is still a

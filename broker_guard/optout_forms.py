@@ -143,6 +143,10 @@ class Choice:
     container: str      # CSS selector for the listbox
     option_label: str   # exact aria-label of the option to click
     label: str          # human name, for the audit record
+    # True when this element does not EXIST on the freshly-loaded page and
+    # is rendered only once an earlier step has been answered. See Field's
+    # copy of this flag for why it has to be declared rather than guessed.
+    appears_later: bool = False
 
 
 @dataclass(frozen=True)
@@ -173,6 +177,22 @@ class Field:
     kind: str = "text"
     value: str = ""
     required: bool = True
+    # True when this element does not EXIST on the freshly-loaded page and
+    # is rendered only after an earlier step is answered -- Nielsen's State
+    # and request-type controls appear only once Country is filled.
+    #
+    # It is here for the benefit of ``--check-recipes``, which opens the
+    # page and looks for every selector WITHOUT filling anything in: a
+    # conditional field is legitimately absent there, and reporting it as
+    # missing raises a drift alert about a recipe that is perfectly
+    # healthy. That is the exact failure mode the alerting design set out
+    # to avoid (noise Penn learns to ignore), so it is worth a declared
+    # flag rather than a heuristic like "anything after the first Choice".
+    # The cost is explicit: a conditional selector is NOT covered by the
+    # active check, and its rot is caught only when the recipe actually
+    # runs -- where ``recipe_health`` classifies the Playwright failure as
+    # structural and alerts anyway.
+    appears_later: bool = False
 
 
 @dataclass(frozen=True)
@@ -334,12 +354,14 @@ NIELSEN = FormRecipe(
                # Nielsen's own typo ("of of"). Matched verbatim on purpose:
                # this is an aria-label lookup, not prose.
                option_label="Right to Opt Out of of Sale or Sharing",
-               label="Request type"),
-        Field(selector="#stateDSARElement", source="state", label="State", kind="combo"),
+               label="Request type", appears_later=True),
+        Field(selector="#stateDSARElement", source="state", label="State",
+              kind="combo", appears_later=True),
         Field(selector="#firstNameDSARElement", source="first_name", label="First Name"),
         Field(selector="#lastNameDSARElement", source="last_name", label="Last Name"),
         Field(selector="#emailDSARElement", source="email", label="Email"),
-        Field(selector="#zipDSARElement", source="zip", label="Zip", required=False),
+        Field(selector="#zipDSARElement", source="zip", label="Zip",
+              required=False, appears_later=True),
     ),
     submit_selector="#dsar-webform-submit-button",
     captcha_selectors=_BOTDETECT_SELECTORS,

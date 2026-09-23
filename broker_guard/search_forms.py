@@ -404,7 +404,14 @@ UNITEDSTATESPHONEBOOK = SearchRecipe(
         SearchField(selector="input[name='last']", source="last_name",
                     label="Surname"),
     ),
-    submit_selector="input[name='Search']",
+    # Scoped to the name form on purpose: input[name='Search'] alone matches
+    # EIGHT controls on this homepage (the reverse-phone form's own Search,
+    # plus six promo buttons named the same). page.click would still have
+    # worked -- Page-level selectors are not strict, so it takes the first
+    # match, which happens to be the right one -- but a recipe that relies
+    # on DOM order is a recipe that breaks silently the day the site
+    # reorders its homepage. --check-recipes is what caught this.
+    submit_selector="form[action='search.php'] input[name='Search']",
     results_host="unitedstatesphonebook.com",
     no_results_markers=("there is no match in our free white pages database",),
     hit_markers=("results from our white pages database",),

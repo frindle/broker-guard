@@ -392,7 +392,39 @@ def test_the_probe_covers_every_selector_a_recipe_would_touch():
         assert recipe.submit_selector in selectors
         for step in optout_forms.ordered_steps(recipe):
             target = getattr(step, "selector", None) or getattr(step, "container", None)
+            if getattr(step, "appears_later", False):
+                # Declared conditional: it does not exist on the page this
+                # probe opens, so being absent from the sweep is the point.
+                assert target not in selectors
+                continue
             assert target in selectors
+
+
+def test_a_conditional_field_is_not_probed_for_and_must_say_so():
+    """The false-alarm case that nearly trained Penn to ignore the report.
+
+    Nielsen's request-type, State and Zip controls do not exist in the DOM
+    until Country is filled -- which the recipe's own notes said long before
+    --check-recipes existed. The probe fills nothing, so it saw three
+    perfectly healthy selectors as MISSING and raised recipe_drift for a
+    recipe that works. Skipping is therefore not a convenience: it is the
+    difference between an alert that means something and one that does not.
+    """
+    from broker_guard import optout_forms
+
+    nielsen = optout_forms.RECIPES["nielsen"]
+    conditional = {getattr(s, "selector", None) or getattr(s, "container", None)
+                   for s in optout_forms.ordered_steps(nielsen)
+                   if getattr(s, "appears_later", False)}
+    assert conditional == {"#requestTypesDSARElement", "#stateDSARElement",
+                           "#zipDSARElement"}
+
+    probed = {s for s, _ in recipe_check.selectors_for_optout(nielsen)}
+    assert not probed.intersection(conditional)
+    # ...and the unconditional ones are still every bit as covered.
+    assert {"#subjectTypesDSARElement", "#countryDSARElement",
+            "#firstNameDSARElement", "#lastNameDSARElement",
+            "#emailDSARElement", nielsen.submit_selector} <= probed
 
 
 def test_the_probe_never_touches_a_forbidden_selector():
