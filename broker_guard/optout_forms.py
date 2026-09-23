@@ -1152,6 +1152,18 @@ NO_OPTOUT_SURFACE = {
         "this broker's name would be filing a request with the wrong "
         "company."
     ),
+    "searchusapeople-com": (
+        "Verified 2026-09-23: its own /data-removal-request/ page, titled "
+        "'Data Removal Request - Opt Out', contains no removal form at "
+        "all -- the only form on it is the site's InfoTracer-affiliate "
+        "search box -- and its removal instructions are one sentence: 'For "
+        "removal requests / opt-out, please visit InfoTracer and follow "
+        "their instructions.' Same affiliate-front finding as "
+        "publicrecordsnow-com and peoplefinder-com: filing here would mean "
+        "filing with a different company. See "
+        "search_forms.NO_SEARCH_SURFACE for the User-Agent block that made "
+        "this domain look rate-limited rather than hostile."
+    ),
     "arrestwarrant-org": (
         "Verified 2026-09-23: the only removal channel is a PRINTABLE PDF. "
         "arrestwarrant.org/privacy.html links 'our data removal policy' to "
