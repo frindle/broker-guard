@@ -213,7 +213,9 @@ Because of that, four things must all be true before anything is sent:
    filled and photographed but Submit is never pressed.
 3. The broker has a hand-verified recipe in `broker_guard/optout_forms.py`.
    That allow-list is the safety boundary: there is no "guess the form from
-   the URL" fallback. Currently: **CONSUMER CANVAS LLC** only.
+   the URL" fallback. Currently five brokers, each one opened and read by
+   hand: **CONSUMER CANVAS LLC**, **Nielsen**, **bolttech**, **Credit.com**
+   and **L.S Mobile Apps Holdings Ltd**.
 4. `BG_PLAYWRIGHT_ENABLED=true` and the image was built with
    `INSTALL_BROWSERS=true` (the default).
 
@@ -222,11 +224,24 @@ screenshots the filled-in form, and records the attempt as *needs you* — which
 shows up in the existing **Action needed** badge. It is not bypassed, not
 out-sourced to a solver, not retried.
 
-That is the normal outcome for the first supported broker: Consumer Canvas's
-OneTrust form carries a mandatory BotDetect image CAPTCHA, so an automated run
-will always stop there. What you get is a screenshot of the completely
-filled-in form plus the audit record — open the form, type the six characters,
-press Submit yourself.
+That is the normal outcome for **all five** supported brokers, not an edge
+case: Consumer Canvas, Nielsen and Credit.com carry a BotDetect image CAPTCHA,
+bolttech uses reCAPTCHA v2, and L.S Mobile Apps draws its own security code on
+a canvas. What you get is a screenshot of the completely filled-in form plus
+the audit record — open the form, type the code, press Submit yourself. Turning
+DRY RUN off therefore does not currently change the outcome for any supported
+broker; it only removes the last interlock for when a CAPTCHA-free form is
+added.
+
+Two things to check against your own profile before running these:
+
+* **Nielsen** offers no "consumer" subject type at all (its options are
+  panel-member and employee flavoured), so the recipe picks *Other (see
+  description)*, and the form has no free-text box to explain in.
+* **L.S Mobile Apps** requires a phone number in international format and asks
+  whether you use one of their apps; the recipe answers **No**. If you do use
+  one, change that line in `optout_forms.py` — it is a factual claim made in
+  your name.
 
 **Every attempt is audited.** Success, failure and bail-out alike write a JSON
 record (timestamp, broker, form URL, the exact fields submitted) plus a
