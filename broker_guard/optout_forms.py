@@ -1539,6 +1539,31 @@ OPTOUT_OUT_OF_SCOPE = {
         "front of it -- but the per-result shape is the deciding fact, "
         "which is why this is out-of-scope rather than OPTOUT_BLOCKED."
     ),
+    "intelius-com": (
+        "Verified 2026-09-23. intelius.com/privacy-center/ 302s to "
+        "app.intelius.com/privacy-center/, which is real and reachable and "
+        "carries exactly one plain form -- firstName, middleInitial, "
+        "lastName, month/day/year of birth, city, state, email, Submit -- "
+        "but that form is NOT the listing removal. Its own section heading "
+        "is 'Right to Opt Out' and its copy says it exists to 'prevent "
+        "your name from appearing as a possible relative or associate in "
+        "other persons' reports'. The actual removal is the 'Suppress your "
+        "Background Report' section, whose only control is a 'Manage My "
+        "Suppression Rules' button, and pressing it opens a NEW TAB at "
+        "https://suppression.peopleconnect.us/login -- a different domain "
+        "(PeopleConnect, Intelius's parent) serving 'Suppression Center / "
+        "Free - Start Here / Step 1 / Enter your email address ... you "
+        "will receive a verification email with a link to proceed', with a "
+        "Terms-of-Use consent checkbox. That is the multi-PAGE, "
+        "session-gated wizard shape this bucket names: the form is not at "
+        "a URL, the flow is gated on clicking a link in a mailbox this "
+        "codebase does not have, and Intelius's own page says the later "
+        "steps require 'your full name, date of birth, and a phone or "
+        "email address that you can verify'. Nothing was submitted. Note "
+        "for whoever revisits: search_forms.NO_SEARCH_SURFACE already "
+        "records peoplefinder-com as pointing its opt-out here, so this "
+        "single wizard is the terminus for more than one dataset broker."
+    ),
 }
 
 

@@ -1201,6 +1201,30 @@ SEARCH_UNDECIDED = {
         "one flat field list and one submit selector, so there is nothing "
         "to point it at even if the paywall were not there."
     ),
+    "intelius-com": (
+        "Verified 2026-09-23. The form itself is trivially drivable -- "
+        "<form name='people-search-form' action='/search/' method='GET'> "
+        "with firstName/lastName/city/state on the broker's own host, so "
+        "https://www.intelius.com/search/?firstName=..&lastName=.. IS the "
+        "results URL. What is served there is not a result. It is a "
+        "twelve-screen engagement wizard: 'Let's Narrow This Down' -> "
+        "'QUESTION 1 OF 5' (middle initial, city, more than one city or "
+        "state, age range, only child) -> three unskippable interstitials "
+        "('Public Records May Reveal More Than Expected', 'Why This Might "
+        "Matter', \"You're Not the Only One Checking\") -> a 'VIEW MY "
+        "RESULTS' button. Every screen was walked with 'Zylphrenna "
+        "Quixbottom', and the site answered a name that cannot exist "
+        "exactly as it would answer a real one -- the wizard never says "
+        "'no results', never prints a count, and the page title stays "
+        "'Searching for Zylphrenna Quixbottom in ALL - Intelius' "
+        "throughout. So there is no page state here that means absence, "
+        "and a recipe could only ever report 'unknown'. Two further "
+        "blockers even if there were: the answer is a dozen clicks deep "
+        "and SearchRecipe carries one submit selector, and 'VIEW MY "
+        "RESULTS' was not pressed because Intelius sells its reports and "
+        "this tool will not buy one to read an answer. Its opt-out leg is "
+        "separately out of scope; see optout_forms."
+    ),
 }
 
 
