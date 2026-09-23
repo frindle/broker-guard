@@ -1052,6 +1052,45 @@ NO_OPTOUT_SURFACE = {
         "or expunged by a court order', not on request, which is a "
         "different thing from a discretionary consumer opt-out anyway."
     ),
+    "cocofinder-com": (
+        "Verified 2026-09-22: CocoFinder's 'Do Not Sell My Information' "
+        "link goes to a Google Form (docs.google.com/forms), and Google "
+        "has DISABLED that form -- the page returns Google's own notice "
+        "that the form was taken down for violating Google's Terms of "
+        "Service, so there are no inputs to fill and nothing to submit. "
+        "The only other channel named on the site is a mailto to "
+        "support@cocofinder.com, which this codebase cannot send. Recorded "
+        "under no-surface rather than blocked: nothing is standing between "
+        "us and the form, the form is gone."
+    ),
+}
+
+
+# A DIFFERENT finding from NO_OPTOUT_SURFACE, kept separate on purpose.
+#
+# These brokers DO host a real, self-service opt-out form. We simply cannot
+# reach it: an anti-bot wall stands in front of it on every visit, and this
+# tool's standing rule is that a bot check is where automation STOPS -- it is
+# never solved, worked around, or waited out. Lumping these in with "there is
+# no surface" would be a false statement about the broker and would also hide
+# the one thing that distinguishes them: if the wall ever comes down, a recipe
+# becomes possible here, whereas a mailbox-only broker will never become
+# automatable no matter what changes.
+#
+# Notes, not behaviour: nothing reads this at runtime. A broker listed here is
+# simply absent from RECIPES, which is what actually stops a submission.
+OPTOUT_BLOCKED = {
+    "cyberbackgroundchecks-com": (
+        "Verified 2026-09-22 across repeated visits, including with the "
+        "production browser user-agent: the opt-out page is served behind a "
+        "Cloudflare MANAGED CHALLENGE every time ('Verifying you are human' "
+        "/ 'Just a moment...'), and the form itself never renders, so there "
+        "is nothing to transcribe. This is a wall in front of a real "
+        "surface, not an absent surface -- and per this tool's policy a bot "
+        "check is a full stop, never something to solve. Note the contrast "
+        "with the SEARCH leg, which is not challenged at all and ships as a "
+        "working recipe in search_forms."
+    ),
 }
 
 

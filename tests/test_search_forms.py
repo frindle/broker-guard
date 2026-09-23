@@ -498,3 +498,17 @@ def test_brokers_with_no_public_search_surface_are_recorded_with_reasons():
         assert not search_forms.is_supported(broker_id)
         assert len(reason) > 80
     assert {"gladiknow-com", "chexsystems-com"} <= set(search_forms.NO_SEARCH_SURFACE)
+
+
+def test_undecided_searches_are_neither_supported_nor_called_surfaceless():
+    """The third category has to stay a third category.
+
+    A broker whose search surface is real but unreadable must not drift into
+    RECIPES (the tool would report an absence it never established) and must
+    not drift into NO_SEARCH_SURFACE (a future reader would stop looking at a
+    site that plainly has a search box).
+    """
+    for broker_id, reason in search_forms.SEARCH_UNDECIDED.items():
+        assert not search_forms.is_supported(broker_id)
+        assert broker_id not in search_forms.NO_SEARCH_SURFACE
+        assert len(reason) > 80

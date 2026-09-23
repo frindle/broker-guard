@@ -358,6 +358,21 @@ def test_brokers_with_no_opt_out_surface_are_recorded_with_reasons():
     assert "chexsystems-com" in optout_forms.NO_OPTOUT_SURFACE
 
 
+def test_a_walled_opt_out_form_is_not_filed_as_a_missing_one():
+    """'We cannot reach the form' and 'there is no form' are different facts.
+
+    Only one of them can change back: if a wall comes down, a recipe becomes
+    possible, whereas a mailbox-only broker never becomes automatable. And a
+    blocked broker must still be unsubmittable, which is what absence from
+    RECIPES -- not this note -- actually enforces.
+    """
+    for broker_id, reason in optout_forms.OPTOUT_BLOCKED.items():
+        assert not optout_forms.is_supported(broker_id)
+        assert broker_id not in optout_forms.NO_OPTOUT_SURFACE
+        assert len(reason) > 80
+    assert "cyberbackgroundchecks-com" in optout_forms.OPTOUT_BLOCKED
+
+
 # --- the driver: interlocks --------------------------------------------------
 
 def test_refuses_when_the_feature_is_off(identity, tmp_path):

@@ -507,6 +507,61 @@ NO_SEARCH_SURFACE = {
         "nothing on publicrecordsnow.com itself that can answer whether it "
         "lists a person."
     ),
+    "cocofinder-com": (
+        "Same shape as gladiknow-com. Verified 2026-09-22: CocoFinder's own "
+        "name form does not produce results on cocofinder.com -- pressing "
+        "SEARCH hands the query to truthfinder.com's results page with a "
+        "cocofinder affiliate campaign tag. It is an affiliate front, so a "
+        "recipe here would be reporting TruthFinder's answer (and "
+        "TruthFinder's paywall) as CocoFinder's, which is exactly the "
+        "mistake the allow-list exists to prevent."
+    ),
+}
+
+
+# A search surface EXISTS here, but we could not get a trustworthy verdict
+# out of it, so no recipe ships and no verdict is guessed.
+#
+# This is deliberately a third category, separate from RECIPES ("we can read
+# this broker") and NO_SEARCH_SURFACE ("there is nothing here to read").
+# Collapsing it into either one would be a lie in a different direction: into
+# RECIPES and the tool reports absence it never established, into
+# NO_SEARCH_SURFACE and a future reader stops looking at a site that plainly
+# has a search box. Each entry says what was observed and what would have to
+# change for a recipe to become possible.
+#
+# Notes, not behaviour: nothing reads this at runtime. A broker listed here is
+# simply absent from RECIPES, which is what actually prevents a search.
+SEARCH_UNDECIDED = {
+    "privaterecords-net": (
+        "Verified 2026-09-22. The site is a single-page app that first "
+        "shows an FCRA consent interstitial; the search form underneath "
+        "cannot be submitted until 'I AGREE' is clicked, and clicking the "
+        "search button beforehand fails with the consent overlay "
+        "intercepting the pointer (which is how the interstitial was found "
+        "-- the Playwright error named the intercepting element rather than "
+        "just timing out). After agreeing, the form does submit, but the "
+        "results view never leaves its loading state: no results, no "
+        "'no results' copy, and no error, across repeated attempts and "
+        "waits of well over a minute. There is therefore no page state this "
+        "tool could read as either 'present' or 'absent', and "
+        "classify_search_page would (correctly) refuse it. Left undecided "
+        "rather than called infeasible: the surface is real, and a recipe "
+        "would become possible if the results view ever completes. Note "
+        "also that SearchRecipe has no way to express the consent click "
+        "even if it did -- see the same finding on peoplesearcher-com and "
+        "on courtrecords.us, where the consent click DOES lead to a "
+        "readable results page."
+    ),
+    "peoplesearcher-com": (
+        "Verified 2026-09-22: the same Angular single-page application as "
+        "privaterecords-net, down to the FCRA consent interstitial, the "
+        "markup of the search form, and the loading view that never "
+        "resolves. Recorded separately rather than as 'see privaterecords' "
+        "because they are separate dataset brokers and each leg gets its "
+        "own independent verdict, but the finding and the condition for "
+        "revisiting it are identical."
+    ),
 }
 
 
