@@ -857,6 +857,26 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    "onetrust-com": (
+        "The dataset files this one under the NAME 'Nielsen' but gives the "
+        "url onetrust.com, and onetrust.com is not Nielsen -- it is the "
+        "privacy-portal SaaS vendor whose webform Nielsen's opt-out is "
+        "hosted on. The search leg has to be decided against the site the "
+        "dataset actually points at, and that site is a B2B marketing "
+        "site with no people lookup. Verified 2026-09-23: www.onetrust.com "
+        "carries one search form, GET /search/ with a single "
+        "input[name='q'] whose placeholder is 'Search keyword'. Submitting "
+        "the nonsense name 'Zylphrenna Quixbottom' returned the string "
+        "'928 results(s) found', and the results are OneTrust's own "
+        "corporate pages -- 'Zendesk (Integrations)', 'Red Clover "
+        "Advisors (Partner Locator)', 'TrustWeek 2026' -- not person "
+        "records. That 928 is the reason this is NO_SEARCH_SURFACE and "
+        "not an UNDECIDED: a content search that returns most of the site "
+        "for a name nobody has would report a confident HIT for every "
+        "person alive. Absence here can never be stated by the broker, so "
+        "there is nothing to build a recipe against. Its opt-out leg is a "
+        "real OneTrust-hosted webform and is recorded separately."
+    ),
     "lexisnexis-com": (
         "LexisNexis Risk Solutions sells risk/identity data to licensed "
         "businesses; it has no public people lookup. Verified 2026-09-23 "
