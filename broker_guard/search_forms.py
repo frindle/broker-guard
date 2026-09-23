@@ -1529,6 +1529,97 @@ NO_SEARCH_SURFACE = {
         "path still resolves on the old domain, which is how the opt-out "
         "leg was read."
     ),
+    "andrewswharton-com": (
+        "Andrews Wharton is a B2B data-driven marketing vendor -- "
+        "audience targeting, data enhancement, email marketing, analytics "
+        "-- and its own footer brands it 'A Stirista Solution'. Verified "
+        "2026-09-23: www.andrewswharton.com carries no public people- "
+        "search tool; the only form on it is a newsletter signup for "
+        "product news. Its sibling domain stirista.com is walled and "
+        "recorded separately."
+    ),
+    "verinext-com": (
+        "The dataset files this row as 'Anexinet Corp.' and Verinext is "
+        "the merged successor, but either way it is not a people-search "
+        "company: verified 2026-09-23, Verinext is a business technology "
+        "services firm (enterprise AI, data protection, infrastructure, "
+        "automation, networking, security, managed services). The only "
+        "form reached on the site is a B2B sales contact form -- Name, "
+        "Business Email, Phone Number, Job Title, Company Name, two "
+        "dropdowns and a Message -- with no lookup of any kind. Caveat "
+        "for the record: this was read off /contact/ rather than the "
+        "homepage, so if a future pass finds a consumer product here, "
+        "revisit."
+    ),
+    "missionwired-com": (
+        "MissionWired (the trade name of Anne Lewis Strategies, LLC) is a "
+        "fundraising and marketing firm for nonprofits and political "
+        "organisations -- digital, email, SMS and direct mail, plus a "
+        "donor-acquisition product it calls The Digital Co-Op. Verified "
+        "2026-09-23: missionwired.com's only input is a newsletter email "
+        "signup. There is no person-lookup surface; the donor data it "
+        "holds is reached by its client organisations."
+    ),
+    "anteriad-com": (
+        "Anteriad is a B2B marketing and demand-generation platform -- "
+        "the 'Anteriad Marketing Cloud', BDR-as-a-service, audience "
+        "identification sold to marketers. Verified 2026-09-23: its only "
+        "search affordance is a generic nav placeholder and there is no "
+        "person lookup anywhere. Note this is the same site the 180bytwo- "
+        "com row now redirects into, 180byTwo having been absorbed into "
+        "Anteriad; the two rows are one company and should be decided "
+        "together."
+    ),
+    "hubspot-com": (
+        "The dataset files this row under the NAME 'Apihub, Inc.' but "
+        "gives the url hubspot.com, and whatever Apihub is, hubspot.com "
+        "is HubSpot's own CRM and marketing-software site. Same shape as "
+        "the termly-io and smartsheet-com rows: the search leg has to be "
+        "decided against the site the dataset actually points at. "
+        "Verified 2026-09-23: that site is product pages, case studies, "
+        "integration showcases and 'Get a demo' / 'Get started free' "
+        "buttons, with no input anywhere that retrieves person records by "
+        "name. The name/domain mismatch should be reconciled in the "
+        "dataset."
+    ),
+    "apollointeractive-com": (
+        "Apollo Interactive is a performance-marketing lead vendor -- it "
+        "sells 'Data Leads', 'Clicks' and 'Calls' in the health, auto, "
+        "insurance, mortgage and home-services verticals. Verified "
+        "2026-09-23: the only inputs on www.apollointeractive.com are a "
+        "contact form (Name, Last Name, Email, Message and a captcha) and "
+        "a newsletter signup. There is no consumer lookup; its leads are "
+        "delivered to buyers, not searched by the public."
+    ),
+    "appsci-io": (
+        "Verified 2026-09-23: appsci.io 301-redirects to appscience.ai -- "
+        "the two dataset rows are one company. App Science sells cross- "
+        "platform media analytics and measurement (Insights, Attribution, "
+        "Political + Advocacy, Audience Intelligence) built on a "
+        "proprietary household graph. Its homepage's only controls are "
+        "LOGIN, REQUEST DEMO and nav links; there is no person-lookup "
+        "input. See appscience-ai for the identical finding on the other "
+        "row."
+    ),
+    "appscience-ai": (
+        "Same company and same finding as appsci-io, which 301-redirects "
+        "here. Verified 2026-09-23: www.appscience.ai sells advanced "
+        "analytics and measurement for media planning to advertisers and "
+        "political/advocacy buyers, and the homepage offers only LOGIN, "
+        "REQUEST DEMO, nav and a LinkedIn link. No person-lookup input "
+        "exists."
+    ),
+    "arity-com": (
+        "Arity (an Allstate company) is a mobility data and analytics "
+        "vendor -- driving-behaviour telematics, crash detection, a "
+        "marketing platform targeting on driving behaviour, traffic "
+        "analytics -- sold to auto insurers, marketers, retailers and the "
+        "public sector, on what it calls the world's largest driving "
+        "dataset tied to insurance claims (40M+ drivers, 3T+ miles). "
+        "Verified 2026-09-23: arity.com carries no search box, text input "
+        "or lookup form of any kind. What it holds is keyed to driving "
+        "and devices, not to a name box."
+    ),
 }
 
 
@@ -1560,6 +1651,19 @@ SEARCH_BLOCKED = {
         "terminal block page ('Sorry, you have been blocked. You are unable "
         "to access FreePeopleSearch.com'). Nothing renders, nothing is "
         "offered to solve, and no recipe can change that."
+    ),
+    "stirista-com": (
+        "Verified 2026-09-23: every page of this domain serves an anti- "
+        "bot interstitial. www.stirista.com and www.stirista.com/opt-out- "
+        "preferences/ both return nothing but a loader and the string "
+        "'Please wait while your request is being verified...' -- the "
+        "real page never renders for an automated visitor, so there is no "
+        "form to read on either leg. Same shape as voterrecords-com. What "
+        "the company is can be read off its sibling domain "
+        "andrewswharton.com, which brands itself 'A Stirista Solution' "
+        "and sells B2B audience targeting and data enhancement, so a "
+        "search surface is unlikely -- but unlikely is not verified, and "
+        "this wall is why."
     ),
 }
 
@@ -2107,6 +2211,63 @@ SEARCH_UNDECIDED = {
         "paywall/signup gate, and whether a hit in a census index is even "
         "the kind of presence this tool is meant to report. The homepage "
         "itself shows no anonymous search box and pushes a 14-day trial."
+    ),
+    "networkadvertising-org": (
+        "NO VERDICT as of 2026-09-23, and the first problem is that the "
+        "domain is not the broker. The dataset names this row 'Anne Lewis "
+        "Strategies, LLC' (i.e. MissionWired, which has its own row at "
+        "missionwired-com) but points at networkadvertising.org, which is "
+        "the Network Advertising Initiative -- the ad-industry "
+        "association whose optout.networkadvertising.org tool is the "
+        "shared member opt-out page MissionWired merely links to. So this "
+        "row is a link, not a company, the same mistake as the termly-io "
+        "row. It is undecided rather than no-surface only because "
+        "optout.networkadvertising.org/?c=1 and the bare host both failed "
+        "to return anything to this fetcher, so nothing was observed "
+        "first-hand. Next pass: render the NAI tool, confirm it is the "
+        "industry cookie opt-out it is universally described as, and then "
+        "fold this row into missionwired-com rather than mapping it as a "
+        "broker."
+    ),
+    "apollo-io": (
+        "NO VERDICT as of 2026-09-23. Apollo.io is a B2B sales- "
+        "intelligence platform and its homepage exposes no "
+        "unauthenticated lookup -- every route is 'Sign up for free', "
+        "'Log in' or 'Request a demo'. What holds the call is the product "
+        "behind that wall: Apollo advertises access to '240M contacts & "
+        "30M companies', and a contact database of that shape may well "
+        "answer 'is this named person listed', which is exactly the "
+        "question this tool asks. Signup is free, so a future pass can "
+        "settle it without paying. Same shape as the bookyourdata-com and "
+        "6sense-com entries."
+    ),
+    "archives-com": (
+        "NO VERDICT as of 2026-09-23, and it is the same question as the "
+        "ancestry-com row -- Archives.com is an Ancestry property (its "
+        "privacy and terms links point at Ancestry.com, and the dataset's "
+        "contact is usprivacyrequests@ancestry.com). A real anonymous "
+        "search form exists on www.archives.com: First name, Last name "
+        "(required), a Country select (United States, United Kingdom, "
+        "England, Wales), a US state Location dropdown, and Birth year "
+        "and Death year with +/- ranges. But it searches 11.8 billion "
+        "HISTORICAL records -- photos, newspapers, vital records, the "
+        "1950 census -- explicitly framed as finding ancestors, and full "
+        "access is behind a paid subscription after a 7-day trial. Two "
+        "things to settle before a recipe: whether an anonymous visitor "
+        "sees result records or only a paywall, and whether a hit in a "
+        "census index is the kind of presence this tool should report at "
+        "all. Decide ancestry-com first; this row should inherit that "
+        "answer."
+    ),
+    "aristotle-com": (
+        "NO VERDICT as of 2026-09-23: blocked. "
+        "www.aristotle.com/privacy/do-not-sell-my-personal-info/ returned "
+        "HTTP 403 to this fetcher and no page of the site was rendered on "
+        "either leg. Aristotle International is known as a political-data "
+        "and voter-file vendor, which would ordinarily point at no- "
+        "surface, but a voter-file company is exactly the kind that "
+        "sometimes exposes a registration lookup, so the guess is not "
+        "safe. Next pass needs a fetcher Aristotle will serve."
     ),
 }
 

@@ -2,36 +2,40 @@
 
 Resume state for the broker-by-broker search/opt-out mapping workstream --
 cross-references `data/source-brokers.json` (the canonical 969-broker dataset)
-against `broker_guard/search_forms.py`'s `RECIPES`/`NO_SEARCH_SURFACE`/`SEARCH_UNDECIDED`
-and `broker_guard/optout_forms.py`'s `RECIPES`/`NO_OPTOUT_SURFACE`/`OPTOUT_UNDECIDED`.
+against every terminal dict in `broker_guard/search_forms.py` and
+`broker_guard/optout_forms.py` -- `RECIPES`, `NO_*_SURFACE`, `*_UNDECIDED`,
+`*_BLOCKED` and `OPTOUT_OUT_OF_SCOPE`.
 
 **A broker is "mapped" once BOTH legs (search, opt-out) are categorized into one of
-the three terminal states below -- not just recipe.** `no-surface` and `undecided` are
-legitimate resolutions, not TODOs.
+the terminal states below -- not just recipe.** Every state but `UNMAPPED` is a
+legitimate resolution, not a TODO.
 
 - `recipe` -- concrete automatable recipe exists in `RECIPES`
 - `no-surface` -- confirmed no honest search/opt-out surface exists (dead end, documented)
 - `undecided` -- surface exists but not yet resolved to a recipe or a no-surface call
+- `blocked` -- surface exists and is behind an anti-bot wall on every visit
+- `out-of-scope` -- real reachable form, asking for something this codebase will not do
+  (government-ID upload, picking your own record out of a result list, a modal wizard)
 - `UNMAPPED` -- not yet looked at for this leg at all
 
 **Regenerate this file** after mapping more brokers: `python3 gen_broker_checklist.py`
-(script lives in this repo's tooling; ask if missing -- it's a ~70-line cross-reference
-of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
+(script lives in this repo's tooling; ask if missing -- it's a short cross-reference
+of those dicts against source-brokers.json).
 
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **99** / 969
-- Search leg mapped: 121 / 969
-- Opt-out leg mapped: 103 / 969
+- Fully mapped (both legs): **136** / 969
+- Search leg mapped: 138 / 969
+- Opt-out leg mapped: 140 / 969
 
 ## How to resume
 
 1. Pick any `[ ]` row below (not yet fully mapped).
 2. Research that broker's domain: does it have a people-search surface? An opt-out form/email?
-3. Add a `RECIPES` entry (if automatable), or add it to the matching `NO_*_SURFACE` dict
-   (if genuinely no surface exists, with a one-line reason), in `search_forms.py` /
-   `optout_forms.py` -- keyed by the broker's id shown in parens below.
+3. Add a `RECIPES` entry (if automatable), or add it to the matching `NO_*_SURFACE`,
+   `*_BLOCKED` or `OPTOUT_OUT_OF_SCOPE` dict, with a specific reason, in
+   `search_forms.py` / `optout_forms.py` -- keyed by the broker's id in parens below.
 4. If you can't fully resolve a leg this session, add it to `*_UNDECIDED` with what you
    found so far, so the next agent doesn't repeat the research.
 5. Re-run the generator to flip this checklist's row to `[x]`.
@@ -106,20 +110,20 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [x] **AnalyticsIQ** (`analytics-iq-com`) -- search: no-surface, opt-out: undecided
 - [x] **Ancestry.com** (`ancestry-com`) -- search: undecided, opt-out: undecided
 - [x] **Anchor Computer** (`anchorcomputer-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Andrews Wharton, Inc.** (`stirista-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Andrews Wharton, Inc.** (`andrewswharton-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Anexinet Corp.** (`verinext-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Anne Lewis Strategies, LLC** (`networkadvertising-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Anne Lewis Strategies, LLC** (`missionwired-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Anteriad, LLC** (`anteriad-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Apihub, Inc.** (`hubspot-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **APOLLO INTERACTIVE LLC** (`apollointeractive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Apollo.io (Zenleads Inc.)** (`apollo-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Appscience** (`appsci-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AppScience** (`appscience-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Archives.com** (`archives-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ARISTOTLE INTERNATIONAL Inc** (`aristotle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Arity 875, LLC** (`arity-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Andrews Wharton, Inc.** (`stirista-com`) -- search: blocked, opt-out: blocked
+- [x] **Andrews Wharton, Inc.** (`andrewswharton-com`) -- search: no-surface, opt-out: undecided
+- [x] **Anexinet Corp.** (`verinext-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Anne Lewis Strategies, LLC** (`networkadvertising-org`) -- search: undecided, opt-out: undecided
+- [x] **Anne Lewis Strategies, LLC** (`missionwired-com`) -- search: no-surface, opt-out: undecided
+- [x] **Anteriad, LLC** (`anteriad-com`) -- search: no-surface, opt-out: undecided
+- [x] **Apihub, Inc.** (`hubspot-com`) -- search: no-surface, opt-out: undecided
+- [x] **APOLLO INTERACTIVE LLC** (`apollointeractive-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Apollo.io (Zenleads Inc.)** (`apollo-io`) -- search: undecided, opt-out: undecided
+- [x] **Appscience** (`appsci-io`) -- search: no-surface, opt-out: undecided
+- [x] **AppScience** (`appscience-ai`) -- search: no-surface, opt-out: undecided
+- [x] **Archives.com** (`archives-com`) -- search: undecided, opt-out: undecided
+- [x] **ARISTOTLE INTERNATIONAL Inc** (`aristotle-com`) -- search: undecided, opt-out: undecided
+- [x] **Arity 875, LLC** (`arity-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Arizona Court Records (CourtRecords.us network)** (`arizonacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Arkansas Court Records (CourtRecords.us network)** (`arkansascourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Arkeero (Rock Internet, S.L.)** (`arkeero-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -149,7 +153,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **BB Direct, Inc** (`bbdirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Bdex, LLC** (`bdex-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **BDO USA, LLP** (`bdo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **BeenVerified** (`beenverified-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **BeenVerified** (`beenverified-com`) -- search: undecided, opt-out: out-of-scope
 - [ ] **Beeswax** (`bidr-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Beeswax** (`beeswax-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Belardi Ostroy** (`belardiwong-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -250,7 +254,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Cortera, Inc.** (`cortera-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Costar Group** (`costar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **CourtCaseFinder.com** (`courtcasefinder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CourtRec.com** (`courtrec-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **CourtRec.com** (`courtrec-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **CourtRecords.us** (`courtrecords-us`) -- search: undecided, opt-out: recipe
 - [ ] **Crawlbee Corp** (`crawlbee-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Credit Bureau Of Council Bluffs, Inc** (`creditinfosystems-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -266,7 +270,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **CTAM Leadshare Corp.** (`smartmove-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Cuebiq Group, LLC** (`cuebiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Cybba Inc.** (`cybba-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Cyber Background Checks** (`cyberbackgroundchecks-com`) -- search: recipe, opt-out: UNMAPPED
+- [x] **Cyber Background Checks** (`cyberbackgroundchecks-com`) -- search: recipe, opt-out: blocked
 - [ ] **Cyndx Networks LLC** (`cyndx-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Círculo de Crédito S.A. de C.V. S.I.C.** (`circulodecredito-com-mx`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Data Axle, Inc.** (`data-axle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -352,7 +356,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Eprodirect** (`eprodirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Epsilon Data Management** (`epsilon-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Equativ (formerly Smart AdServer)** (`equativ-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Equifax Marketing Services** (`equifax-com`) -- search: no-surface, opt-out: UNMAPPED
+- [x] **Equifax Marketing Services** (`equifax-com`) -- search: no-surface, opt-out: out-of-scope
 - [ ] **Equimine** (`propstream-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Erepublic LLC** (`force-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **eTarget s.r.o.** (`etarget-sk`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -373,7 +377,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Faraday, Inc.** (`faraday-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Faraday, Inc.** (`faraday-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **FastBackgroundCheck** (`fastbackgroundcheck-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **FastPeopleSearch** (`fastpeoplesearch-com`) -- search: recipe, opt-out: UNMAPPED
+- [x] **FastPeopleSearch** (`fastpeoplesearch-com`) -- search: recipe, opt-out: out-of-scope
 - [ ] **Fideo Intelligence, Inc.** (`fideo-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Fifty Technology Ltd** (`fifty-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Findem, Inc.** (`findem-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -395,7 +399,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [x] **FreeBackgroundCheck.org** (`freebackgroundcheck-org`) -- search: undecided, opt-out: no-surface
 - [ ] **Freemium Data Services, LLC** (`reachdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **FreePeopleDirectory** (`freepeopledirectory-com`) -- search: UNMAPPED, opt-out: no-surface
-- [ ] **Freepeoplesearch.Com, LLC** (`freepeoplesearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Freepeoplesearch.Com, LLC** (`freepeoplesearch-com`) -- search: blocked, opt-out: blocked
 - [ ] **Freewheel Media Inc** (`freewheel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Fullcontact, Inc.** (`fullcontact-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Fused Leads, LLC** (`fusedleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -493,7 +497,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Intalytics, Inc.** (`kalibrate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Integrated Direct Marketing, LLC (IDM)** (`idm-us-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Integrated Medical Data, LLC.** (`integratedmedicaldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Intelius** (`intelius-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **Intelius** (`intelius-com`) -- search: undecided, opt-out: out-of-scope
 - [ ] **Intellicorp Records, Inc.** (`intellicorp-net`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Intent IQ LLC** (`intentiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Intentgine Inc.** (`intentgine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -550,7 +554,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Leidos Digital Solutions, Inc.** (`leidosiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Lender Feed LLC** (`monitorbase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **LET IT RIDE SPORTS LLC** (`outlastdfs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **LexisNexis Risk Solutions** (`lexisnexis-com`) -- search: no-surface, opt-out: UNMAPPED
+- [x] **LexisNexis Risk Solutions** (`lexisnexis-com`) -- search: no-surface, opt-out: out-of-scope
 - [ ] **Lifesight LLC** (`lifesight-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Lightbox Parent, L.P.** (`lightboxre-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Lighthouse List Company** (`lighthouselist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -633,13 +637,13 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Mugshots.com** (`mugshots-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **MULTIMEDIA LISTS, INC.** (`multimedialists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **MyHeritage** (`myheritage-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MyLife** (`mylife-com`) -- search: recipe, opt-out: UNMAPPED
+- [x] **MyLife** (`mylife-com`) -- search: recipe, opt-out: out-of-scope
 - [ ] **Names and Facts** (`namesandfacts-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Narvar, Inc.** (`narvar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **National Consumer Telecom & Utilities Exchange, Inc.** (`nctue-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **National Data Analytics, LLC** (`publicdatacheck-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **National Opinion Institute, LLC** (`nationalopinioninstitute-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **National Public Data** (`nationalpublicdata-com`) -- search: recipe, opt-out: UNMAPPED
+- [x] **National Public Data** (`nationalpublicdata-com`) -- search: recipe, opt-out: blocked
 - [ ] **NATIONAL STUDENT CLEARINGHOUSE** (`studentclearinghouse-org`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Nativo, Inc.** (`nativo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **NC VENTURES LLC** (`ncsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -713,7 +717,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **PeopleSearchNow** (`peoplesearchnow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **PeopleSearchUSA** (`peoplesearchusa-org`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **PeopleSmart** (`peoplesmart-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Peoplewhiz** (`peoplewhiz-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **Peoplewhiz** (`peoplewhiz-com`) -- search: undecided, opt-out: out-of-scope
 - [ ] **PeopleWin** (`peoplewin-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Perf Labs, Inc.** (`interseller-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Permutive, Inc** (`permutive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -739,9 +743,9 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **PREDICTIVE POP Inc** (`audigent-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Preferred Communications** (`preferredcommunications-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Preqin Ltd** (`preqin-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PRIVATE RECORDS LLC** (`privaterecords-net`) -- search: undecided, opt-out: UNMAPPED
+- [x] **PRIVATE RECORDS LLC** (`privaterecords-net`) -- search: undecided, opt-out: out-of-scope
 - [ ] **PrivateEye** (`privateeye-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PrivateNumberChecker** (`privatenumberchecker-com`) -- search: recipe, opt-out: UNMAPPED
+- [x] **PrivateNumberChecker** (`privatenumberchecker-com`) -- search: recipe, opt-out: blocked
 - [ ] **Privco Media LLC** (`privco-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **ProdPro Inc** (`prodpro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Project Affinity, Inc** (`affinity-co`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -756,8 +760,8 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Proxima Platform** (`proximaplatform-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **PublicDataUSA** (`publicdatausa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **PUBLICNSA LLC** (`bigdbm-com`) -- search: no-surface, opt-out: recipe
-- [ ] **PublicRecords.info** (`publicrecords-info`) -- search: undecided, opt-out: UNMAPPED
-- [ ] **PublicRecords.us** (`publicrecords-us`) -- search: undecided, opt-out: UNMAPPED
+- [x] **PublicRecords.info** (`publicrecords-info`) -- search: undecided, opt-out: out-of-scope
+- [x] **PublicRecords.us** (`publicrecords-us`) -- search: undecided, opt-out: out-of-scope
 - [x] **PublicRecords360** (`publicrecords360-com`) -- search: no-surface, opt-out: no-surface
 - [x] **PublicRecordsNow** (`publicrecordsnow-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **PublicSearcher** (`publicsearcher-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -834,7 +838,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **SealedRecords** (`sealedrecords-net`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Seamless Contacts, Inc.** (`seamless-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Search America LLC** (`locateplus-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Searchbug** (`searchbug-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **Searchbug** (`searchbug-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **SearchPeopleFree** (`searchpeoplefree-com`) -- search: recipe, opt-out: undecided
 - [ ] **SearchQuarry** (`searchquarry-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **SearchUSAPeople** (`searchusapeople-com`) -- search: no-surface, opt-out: no-surface
@@ -869,7 +873,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Specialists Marketing Services, Inc.** (`sms-inc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Spectrum Mailing Lists** (`spectrummailinglists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **SPEEDEON DATA LLC** (`speedeondata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Spokeo** (`spokeo-com`) -- search: recipe, opt-out: UNMAPPED
+- [x] **Spokeo** (`spokeo-com`) -- search: recipe, opt-out: out-of-scope
 - [ ] **Spy Dialer, Inc.** (`spydialer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Spycloud, Inc.** (`spycloud-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **STACKADAPT Inc** (`stackadapt-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -910,8 +914,8 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **THE ALESCO GROUP LLC** (`alescodata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **The Data Group** (`thedatagroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **The Nielsen Company** (`nielsen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **The Open Data People, Inc.** (`openpeoplesearch-com`) -- search: no-surface, opt-out: UNMAPPED
-- [ ] **The People Searchers LLC** (`peoplesearcher-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **The Open Data People, Inc.** (`openpeoplesearch-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **The People Searchers LLC** (`peoplesearcher-com`) -- search: undecided, opt-out: out-of-scope
 - [ ] **The Work Number (Equifax)** (`theworknumber-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **THROTLE Inc** (`throtle-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Tinuiti, Inc.** (`tinuiti-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -929,7 +933,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [x] **TruePeopleSearch** (`truepeoplesearch-com`) -- search: recipe, opt-out: undecided
 - [ ] **TruePeopleSearch.net** (`truepeoplesearch-net`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **TRUTH NOW LLC** (`checksecrets-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **TruthFinder** (`truthfinder-com`) -- search: undecided, opt-out: UNMAPPED
+- [x] **TruthFinder** (`truthfinder-com`) -- search: undecided, opt-out: out-of-scope
 - [ ] **TruthRecord** (`truthrecord-org`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Tunnl, LLC** (`tunnldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Twine Data, Inc** (`twinedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -952,7 +956,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Usa Official** (`usa-official-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **USA People Search** (`usa-people-search-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Usadata, Inc.** (`usadata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Uspeoplesearch.Com, LLC** (`uspeoplesearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Uspeoplesearch.Com, LLC** (`uspeoplesearch-com`) -- search: blocked, opt-out: blocked
 - [x] **USPhonebook** (`usphonebook-com`) -- search: recipe, opt-out: undecided
 - [ ] **USWarrants** (`uswarrants-org`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Utah Court Records (CourtRecords.us network)** (`utahcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -978,7 +982,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Visitiq.Io** (`visitiq-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Vistar Media, Inc.** (`vistarmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **VISUAL VISITOR LLC** (`visualvisitor-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **VoterRecords** (`voterrecords-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **VoterRecords** (`voterrecords-com`) -- search: blocked, opt-out: blocked
 - [ ] **VRTCAL Markets Inc** (`vrtcal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Warmly, Inc** (`warmly-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Washington Court Records (CourtRecords.us network)** (`washingtoncourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -988,7 +992,7 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 - [ ] **Webbula, LLC** (`webbula-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **West Publishing Corporation** (`thomsonreuters-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **West Virginia Court Records (CourtRecords.us network)** (`westvirginiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Whitepages** (`whitepages-com`) -- search: recipe, opt-out: UNMAPPED
+- [x] **Whitepages** (`whitepages-com`) -- search: recipe, opt-out: out-of-scope
 - [ ] **Wholesale Mail** (`domymail-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Whoodle, LLC** (`whoodle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Wiland Inc** (`wiland-com`) -- search: UNMAPPED, opt-out: UNMAPPED

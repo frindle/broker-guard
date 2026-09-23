@@ -1610,6 +1610,17 @@ NO_OPTOUT_SURFACE = {
         "mailbox request is outside what a form-filling recipe can "
         "represent."
     ),
+    "verinext-com": (
+        "Verified 2026-09-23: the dataset's URL, verinext.com/contact/, "
+        "is a general SALES contact form, not a privacy surface -- Name, "
+        "Business Email, Phone Number, Job Title, Company Name, 'How did "
+        "you hear about us?', 'What solution are you most interested in?' "
+        "and Message, submitting to 'Submit', with an SMS-consent "
+        "disclaimer. Nothing on it exercises a data right, and the page "
+        "carries no privacy-request mechanism at all. The dataset's own "
+        "fallback, dpo@verinext.com, is a mailbox, which is outside what "
+        "a form-filling recipe can represent."
+    ),
 }
 
 
@@ -2433,6 +2444,137 @@ OPTOUT_UNDECIDED = {
         "suppression is unsettled. Highest-value target on this list for "
         "the next recipe-writing pass."
     ),
+    "andrewswharton-com": (
+        "NO VERDICT as of 2026-09-23. The dataset's opt_out_url for this "
+        "row is just the HOMEPAGE, www.andrewswharton.com, which is not "
+        "an opt-out page -- but the footer does carry a 'Your Privacy "
+        "Choices' link (repeated three times), so a real surface is being "
+        "pointed at and was never followed. Nothing rendered of whatever "
+        "sits behind it. Next pass: follow that footer link, and expect "
+        "it to land on Stirista infrastructure, which is currently behind "
+        "the anti-bot wall recorded under stirista-com. Correct the "
+        "dataset's URL once the real one is known."
+    ),
+    "networkadvertising-org": (
+        "NO VERDICT as of 2026-09-23, and see the search leg first: this "
+        "row's domain is the Network Advertising Initiative, not Anne "
+        "Lewis Strategies. The dataset's URL, "
+        "optout.networkadvertising.org/?c=1, and the bare host both "
+        "returned nothing to this fetcher, so nothing was observed. What "
+        "the NAI tool is universally described as -- an industry-wide "
+        "COOKIE opt-out that sets browser opt-out cookies across member "
+        "companies -- would make it a no-surface of the adelement-com "
+        "kind rather than a record removal, but that has to be seen "
+        "before it is written down. Next pass: render it, then fold this "
+        "row into missionwired-com."
+    ),
+    "missionwired-com": (
+        "NO VERDICT as of 2026-09-23. missionwired.com/privacy-policy/ "
+        "embeds no form; its California section offers three routes -- a "
+        "'Your Privacy Choices' footer link, an email address, and an "
+        "external request form at info.missionwired.com/personal- "
+        "information-request. That external page WAS fetched and is "
+        "plainly the right one (it renders the heading 'Personal "
+        "Information Rights Request Form' and refers to 'the form "
+        "below'), but not one field, label or button rendered -- a JS- "
+        "embedded form, and the info.* subdomain suggests HubSpot. Next "
+        "pass needs a JS-capable browser against that URL, and the "
+        "dataset's opt_out_url should be corrected to it."
+    ),
+    "anteriad-com": (
+        "NO VERDICT as of 2026-09-23. anteriad.com/privacy-center embeds "
+        "no form; it is a hub linking to policy documents and to a 'Do "
+        "Not Sell My Personal Information' privacy portal whose vendor it "
+        "does not name on the page. Note the sibling row 180bytwo-com "
+        "resolved to a OneTrust webform through the same company, so this "
+        "is very likely the same OneTrust portal -- worth confirming and "
+        "then deciding both rows at once. The dataset carries no "
+        "opt_out_email for this row."
+    ),
+    "hubspot-com": (
+        "NO VERDICT as of 2026-09-23, and note the row's name/domain "
+        "mismatch recorded on the search leg. The dataset's URL, "
+        "preferences.hubspot.com, resolves to a DataGrail-powered "
+        "'Privacy Request Center' -- so it is a data-rights request "
+        "surface rather than the email-preference centre its hostname "
+        "suggests, which is the useful finding here. It rendered only its "
+        "title with no fields, the same JS-widget failure as the 6sense- "
+        "com row, which is also DataGrail. Solving the DataGrail form "
+        "once should close both. Next pass needs a JS-capable browser."
+    ),
+    "apollo-io": (
+        "NO VERDICT as of 2026-09-23, and the doubt is about what it "
+        "removes, not whether it works. www.apollo.io/privacy- "
+        "policy/remove is live and carries a single input labelled 'Work "
+        "email' and a button reading 'Get verification information'; the "
+        "page promises 'we will honor your request by removing your "
+        "profile from our services, and we will retain the email address "
+        "you enter solely for purposes of storing and respecting your "
+        "opt-out preference'. Three things are unresolved: the flow does "
+        "not end at the button (a verification step follows and was never "
+        "walked), an email-keyed removal only reaches records already "
+        "keyed to that address, and the field asks specifically for a "
+        "BUSINESS email, which a consumer may not have. No CAPTCHA was "
+        "seen and no record-picking step is mentioned, so this is a "
+        "promising candidate once the verification step is understood."
+    ),
+    "appsci-io": (
+        "NO VERDICT as of 2026-09-23. appsci.io/do-not-sell-my-info "
+        "301-redirects to www.appscience.ai/do-not-sell-my-info -- the "
+        "two dataset rows share one opt-out page, recorded identically "
+        "under appscience-ai. The page says to opt out 'by providing your "
+        "email and mobile advertising ID via the form below', and that "
+        "form did not render to the fetcher. The mobile advertising ID is "
+        "the substantive problem: like adadapted-com, this company's "
+        "records are keyed to a MAID this codebase does not hold, so even "
+        "a rendered form may be unfillable. Next pass: render it and find "
+        "out whether the MAID is required or optional."
+    ),
+    "appscience-ai": (
+        "Same page and same open questions as appsci-io, which redirects "
+        "here. Verified 2026-09-23: www.appscience.ai/do-not-sell-my-info "
+        "states outright that App Science engages in 'profiling, targeted "
+        "advertising and the sale/sharing of Personal Information' and "
+        "may be considered to have sold data in the past 12 months, then "
+        "offers three routes -- mobile OS opt-out signals, CTV operating- "
+        "system signals, and a direct opt-out 'via the form below' taking "
+        "an email and a mobile advertising ID. The form itself did not "
+        "render. Whether a recipe is possible turns on whether the MAID "
+        "field is required."
+    ),
+    "archives-com": (
+        "NO VERDICT as of 2026-09-23, and it inherits the ancestry-com "
+        "row's answer. The dataset's URL, "
+        "www.archives.com/support/privacy-policy, returns HTTP 404 -- so "
+        "the recorded path is simply wrong. Archives.com is an Ancestry "
+        "property (its own privacy and terms links point at Ancestry.com) "
+        "and the dataset's contact, usprivacyrequests@ancestry.com, "
+        "agrees, so the real surface is almost certainly Ancestry's own "
+        "ccpa-donotshare-sell page, which is itself recorded as undecided "
+        "because its widget renders nothing. Next pass: confirm the "
+        "routing, correct the dead URL, and decide both rows together."
+    ),
+    "aristotle-com": (
+        "NO VERDICT as of 2026-09-23: blocked, same as the search leg. "
+        "www.aristotle.com/privacy/do-not-sell-my-personal-info/ returned "
+        "HTTP 403 and no content was retrieved, so neither the presence "
+        "nor the shape of a form can be stated. The page's NAME says it "
+        "should be a do-not-sell surface, and the dataset's fallback is "
+        "info@aristotle.com -- a general mailbox, not a privacy one. Next "
+        "pass needs a fetcher Aristotle will serve."
+    ),
+    "arity-com": (
+        "NO VERDICT as of 2026-09-23. arity.com/yourprivacychoices/ "
+        "embeds no form; it directs the reader to an external webform at "
+        "arityoptout.consumerprivacyinfo.com, which was not followed. "
+        "That host is the useful finding -- it is a distinct third-party "
+        "privacy vendor, not one of the OneTrust/DataGrail/TrustArc "
+        "families already seen in this dataset, so it will need its own "
+        "handling. Also worth noting for whoever writes the recipe: Arity "
+        "frames its activity as 'sharing' for targeted advertising rather "
+        "than a sale, and its data is keyed to driving and devices, so "
+        "what an opt-out here removes is not obvious."
+    ),
 }
 
 
@@ -2494,6 +2636,16 @@ OPTOUT_BLOCKED = {
         "check is a full stop, never something to solve. Note the contrast "
         "with the SEARCH leg, which is not challenged at all and ships as a "
         "working recipe in search_forms."
+    ),
+    "stirista-com": (
+        "Same wall as search_forms.SEARCH_BLOCKED. Verified 2026-09-23: "
+        "the dataset's URL, www.stirista.com/opt-out-preferences/, is "
+        "plainly the right page by name and serves only the interstitial "
+        "'Please wait while your request is being verified...' -- no "
+        "fields, no buttons, nothing. Note the dataset's opt_out_email "
+        "for this row (robert@lighthouselist.com) is a personal address "
+        "at a THIRD company, which is worth re-checking whenever the wall "
+        "lifts."
     ),
 }
 
@@ -2821,6 +2973,24 @@ OPTOUT_OUT_OF_SCOPE = {
         "each dataset broker gets its own verdict, and because the two "
         "pages were opened separately rather than assumed identical from "
         "a shared parent company. Nothing was submitted."
+    ),
+    "apollointeractive-com": (
+        "A real, reachable, unwalled form -- and it asks for a government "
+        "ID, which is the line this codebase does not cross. Verified "
+        "2026-09-23: www.apollointeractive.com/data-rights.php serves a "
+        "full state-privacy request form -- a 'Select State' dropdown, "
+        "First Name, Last Name, Address, City, State, Zip, Phone, Email, "
+        "a request-category choice among 'Opt-Out of Sale and Use', 'Opt- "
+        "Out of Use of Sensitive Personal Information', 'Right to "
+        "Delete', 'Right to Know' and 'Right to Correct', a correction "
+        "free-text box, an agent-authorisation Yes/No with its own "
+        "'Upload proof of authorization', a residency attestation, and a "
+        "'Submit' button. The blocker is the field 'Upload a valid "
+        "government issued photo ID': this tool will not send a scan of "
+        "Penn's ID into a broker's ticket queue, which is the same rule "
+        "recorded in this dict's header and applied to adform-com's "
+        "mailed identity-verification PDF. If Apollo Interactive ever "
+        "makes that upload optional, this becomes a recipe candidate."
     ),
 }
 

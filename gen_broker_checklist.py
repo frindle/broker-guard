@@ -33,6 +33,11 @@ for k in sf.NO_SEARCH_SURFACE:
     SEARCH_STATE[k] = "no-surface"
 for k in sf.SEARCH_UNDECIDED:
     SEARCH_STATE[k] = "undecided"
+# Also terminal: a search surface that exists and is walled by an anti-bot
+# challenge on every visit. Decided, documented, and not a TODO -- so it must
+# count as mapped, or the checklist sends the next agent to redo the research.
+for k in getattr(sf, "SEARCH_BLOCKED", {}):
+    SEARCH_STATE.setdefault(k, "blocked")
 
 OPTOUT_STATE = {}
 for k in of.RECIPES:
@@ -41,6 +46,15 @@ for k in of.NO_OPTOUT_SURFACE:
     OPTOUT_STATE[k] = "no-surface"
 for k in of.OPTOUT_UNDECIDED:
     OPTOUT_STATE[k] = "undecided"
+# Two more terminal states this file used to ignore, which is why brokers that
+# had in fact been decided kept showing up as UNMAPPED and inviting rework:
+#   blocked      -- a real opt-out surface behind an anti-bot wall every visit
+#   out-of-scope -- a real, reachable form asking for something this codebase
+#                   will not do (ID upload, per-result picking, modal wizard)
+for k in getattr(of, "OPTOUT_BLOCKED", {}):
+    OPTOUT_STATE.setdefault(k, "blocked")
+for k in getattr(of, "OPTOUT_OUT_OF_SCOPE", {}):
+    OPTOUT_STATE.setdefault(k, "out-of-scope")
 
 brokers = json.load(open("data/source-brokers.json"))
 
@@ -65,28 +79,39 @@ done = sum(1 for r in rows if r["done"])
 search_mapped = sum(1 for r in rows if r["search"] != "unmapped")
 optout_mapped = sum(1 for r in rows if r["optout"] != "unmapped")
 
-MARK = {"recipe": "recipe", "no-surface": "no-surface", "undecided": "undecided", "unmapped": "UNMAPPED"}
+MARK = {
+    "recipe": "recipe",
+    "no-surface": "no-surface",
+    "undecided": "undecided",
+    "blocked": "blocked",
+    "out-of-scope": "out-of-scope",
+    "unmapped": "UNMAPPED",
+}
 
 lines = []
 lines.append("# Broker Mapping Checklist")
 lines.append("")
 lines.append("Resume state for the broker-by-broker search/opt-out mapping workstream --")
 lines.append("cross-references `data/source-brokers.json` (the canonical %d-broker dataset)" % total)
-lines.append("against `broker_guard/search_forms.py`'s `RECIPES`/`NO_SEARCH_SURFACE`/`SEARCH_UNDECIDED`")
-lines.append("and `broker_guard/optout_forms.py`'s `RECIPES`/`NO_OPTOUT_SURFACE`/`OPTOUT_UNDECIDED`.")
+lines.append("against every terminal dict in `broker_guard/search_forms.py` and")
+lines.append("`broker_guard/optout_forms.py` -- `RECIPES`, `NO_*_SURFACE`, `*_UNDECIDED`,")
+lines.append("`*_BLOCKED` and `OPTOUT_OUT_OF_SCOPE`.")
 lines.append("")
 lines.append("**A broker is \"mapped\" once BOTH legs (search, opt-out) are categorized into one of")
-lines.append("the three terminal states below -- not just recipe.** `no-surface` and `undecided` are")
-lines.append("legitimate resolutions, not TODOs.")
+lines.append("the terminal states below -- not just recipe.** Every state but `UNMAPPED` is a")
+lines.append("legitimate resolution, not a TODO.")
 lines.append("")
 lines.append("- `recipe` -- concrete automatable recipe exists in `RECIPES`")
 lines.append("- `no-surface` -- confirmed no honest search/opt-out surface exists (dead end, documented)")
 lines.append("- `undecided` -- surface exists but not yet resolved to a recipe or a no-surface call")
+lines.append("- `blocked` -- surface exists and is behind an anti-bot wall on every visit")
+lines.append("- `out-of-scope` -- real reachable form, asking for something this codebase will not do")
+lines.append("  (government-ID upload, picking your own record out of a result list, a modal wizard)")
 lines.append("- `UNMAPPED` -- not yet looked at for this leg at all")
 lines.append("")
 lines.append("**Regenerate this file** after mapping more brokers: `python3 gen_broker_checklist.py`")
-lines.append("(script lives in this repo's tooling; ask if missing -- it's a ~70-line cross-reference")
-lines.append("of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).")
+lines.append("(script lives in this repo's tooling; ask if missing -- it's a short cross-reference")
+lines.append("of those dicts against source-brokers.json).")
 lines.append("")
 lines.append("## Progress")
 lines.append("")
@@ -99,9 +124,9 @@ lines.append("## How to resume")
 lines.append("")
 lines.append("1. Pick any `[ ]` row below (not yet fully mapped).")
 lines.append("2. Research that broker's domain: does it have a people-search surface? An opt-out form/email?")
-lines.append("3. Add a `RECIPES` entry (if automatable), or add it to the matching `NO_*_SURFACE` dict")
-lines.append("   (if genuinely no surface exists, with a one-line reason), in `search_forms.py` /")
-lines.append("   `optout_forms.py` -- keyed by the broker's id shown in parens below.")
+lines.append("3. Add a `RECIPES` entry (if automatable), or add it to the matching `NO_*_SURFACE`,")
+lines.append("   `*_BLOCKED` or `OPTOUT_OUT_OF_SCOPE` dict, with a specific reason, in")
+lines.append("   `search_forms.py` / `optout_forms.py` -- keyed by the broker's id in parens below.")
 lines.append("4. If you can't fully resolve a leg this session, add it to `*_UNDECIDED` with what you")
 lines.append("   found so far, so the next agent doesn't repeat the research.")
 lines.append("5. Re-run the generator to flip this checklist's row to `[x]`.")
