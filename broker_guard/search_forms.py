@@ -1823,6 +1823,129 @@ NO_SEARCH_SURFACE = {
         "public people-search to probe. See "
         "optout_forms.OPTOUT_OUT_OF_SCOPE for the opt-out leg."
     ),
+    "centeda-com": (
+        "Verified by browser render 2026-09-23: centeda.com no longer "
+        "operates. Every path on it now serves a notice titled 'This "
+        "Domain Has Been Transferred by Court Order' -- the domain was "
+        "transferred to Atlas Data Privacy Corporation under a final "
+        "judgment of the New Jersey Superior Court in Atlas Data Privacy "
+        "Corporation, et al. v. Radaris.com, et al. (Docket No. "
+        "MID-L-000847-24) and is 'no longer under the control of its "
+        "former operators'. The page carries no input of any kind. There "
+        "is no people-search here to probe, and there will not be one "
+        "again."
+    ),
+    "liveramp-com": (
+        "Verified 2026-09-23 against liveramp.com/privacy: LiveRamp is a "
+        "B2B identity-resolution and data-collaboration company whose "
+        "customers are brands and platforms, and the only form anywhere "
+        "on its public site is a site-content search box (GET "
+        "liveramp.com/search, input name=query). There is no consumer "
+        "lookup -- no name, phone, address or email search -- so a "
+        "presence check has nothing to query. LiveRamp's consumer-facing "
+        "surfaces are all opt-out surfaces rather than search ones; see "
+        "optout_forms.OPTOUT_UNDECIDED, which records the three of them."
+    ),
+    "bdex-com": (
+        "Verified by browser render 2026-09-23: BDEX runs a business-to- "
+        "business data exchange, and its public site offers only a site- "
+        "content search box (Elementor's, GET to bdex.com with name=s) "
+        "plus a 'Try for Free' funnel into a customer account. No "
+        "consumer-facing people lookup exists to probe. Its consumer "
+        "surface is the opt-out form alone; see "
+        "optout_forms.OPTOUT_BLOCKED."
+    ),
+    "bdo-com": (
+        "Verified by browser render 2026-09-23: bdo.com's only forms are "
+        "two site-content search boxes (#search-form2 and #search-form4, "
+        "both unnamed inputs posting to the current page) and the "
+        "California opt-out form. BDO USA is an accounting, tax and "
+        "advisory firm; it holds personal data as an employer and service "
+        "provider, not as a searchable people directory, and there is no "
+        "consumer lookup of any kind on the site. Flagging the row itself "
+        "as a probable dataset scope artifact: a professional-services "
+        "firm is a different animal from the people-search and audience- "
+        "data businesses this pilot is built around."
+    ),
+    "bestpickreports-com": (
+        "Verified by browser render 2026-09-23: bestpickreports.com "
+        "publishes vetted home-services CONTRACTOR ratings -- the thing "
+        "you search for there is a plumber, not a person. The only other "
+        "form on its do-not-sell page is a newsletter subscribe box. "
+        "There is no consumer people-search to probe, which is worth "
+        "stating explicitly because the row's opt-out form asks for name, "
+        "address, phone and email and could easily be mistaken for a "
+        "people-search broker's."
+    ),
+    "biscred-com": (
+        "Verified by browser render 2026-09-23: Biscred sells commercial- "
+        "real-estate prospecting data to sales and marketing teams "
+        "('where sales and marketing professionals discover new prospects "
+        "in commercial real estate'), and its lookup sits entirely behind "
+        "Login / Set Up A Demo. Nothing on the public site accepts a "
+        "person's name. No consumer-visible search surface to detect."
+    ),
+    "blis-com": (
+        "Verified by browser render 2026-09-23: Blis is a B2B location- "
+        "based advertising platform -- its public site is marketing copy "
+        "plus a 'Book a demo' funnel, and the only form on the "
+        "California-rights page is a Zoho newsletter signup. There is no "
+        "consumer lookup of any kind. See optout_forms.OPTOUT_UNDECIDED "
+        "for the opt-out leg."
+    ),
+    "bombora-com": (
+        "Verified by browser render 2026-09-23: Bombora sells B2B intent "
+        "data to sales and marketing teams; its public site carries only "
+        "a site-content search box (GET bombora.com with name=s). There "
+        "is no consumer people-search to probe. Note the opt-out leg is a "
+        "separate problem -- the dataset's opt-out URL 404s; see "
+        "optout_forms.OPTOUT_UNDECIDED."
+    ),
+    "thebridgecorp-com": (
+        "Verified by browser render 2026-09-23: BRIDGE "
+        "(thebridgecorp.com) sells audience data and media activation to "
+        "advertisers -- the public site is marketing copy behind a 'Get a "
+        "Demo' funnel, and the only forms on it are the opt-out form and "
+        "a blog subscription. No consumer lookup exists to query. Its "
+        "opt-out form is transcribed in full; see "
+        "optout_forms.OPTOUT_UNDECIDED."
+    ),
+    "liftbasedata-com": (
+        "Verified by browser render 2026-09-23: LiftBase Data "
+        "(LiftEngine) is a postal and email LIST broker -- it rents "
+        "audience lists such as 'American WeddingBase' and 'American Pre- "
+        "Movers' to marketers, and its own rights pages are organised per "
+        "LIST rather than per person. There is no consumer-facing lookup "
+        "on the site at all. The consumer surface is a right-to-know hub "
+        "and a mail-in PDF; see optout_forms.NO_OPTOUT_SURFACE."
+    ),
+    "blackpearl-com": (
+        "Verified by browser render 2026-09-23: Blackpearl Group "
+        "(Wellington, NZ) sells website-visitor identification to B2B "
+        "marketers; its public site is investor and product marketing "
+        "with no consumer lookup, and the only form that actually "
+        "rendered on its opt-out page was a newsletter subscribe box. "
+        "Nothing to search. The opt-out leg is unresolved for a different "
+        "reason -- the real form is served from forms.blackpearl.com and "
+        "did not load; see optout_forms.OPTOUT_UNDECIDED."
+    ),
+    "audigent-com": (
+        "Verified by browser render 2026-09-23: Audigent is a data- "
+        "activation, curation and identity platform selling to publishers "
+        "and advertisers (Hadron ID, SmartPMP, ContextualPMP). Its "
+        "homepage renders no input of any kind, let alone a people "
+        "lookup. There is no consumer search surface to probe; see "
+        "optout_forms.OPTOUT_UNDECIDED for the opt-out leg, which is also "
+        "unresolved."
+    ),
+    "bidr-io": (
+        "Verified 2026-09-23: bidr.io is Beeswax's bidder infrastructure "
+        "-- a programmatic DSP endpoint, not a consumer-facing site. "
+        "There is no people-search surface, and the only consumer-facing "
+        "host on the domain is the opt-out one, which currently serves a "
+        "certificate that does not match its name; see "
+        "optout_forms.OPTOUT_UNDECIDED."
+    ),
 }
 
 
@@ -2571,6 +2694,30 @@ SEARCH_UNDECIDED = {
         "whether an unauthenticated result page reveals enough for a "
         "presence check is exactly the open question. The opt-out leg is "
         "transcribed and staged; see optout_forms.STAGED_RECIPES."
+    ),
+    "neighborwho-com": (
+        "NO VERDICT as of 2026-09-23, but the surface plainly exists. "
+        "Rendering the dataset's (dead, 404) removal URL still returned "
+        "the site chrome, which carries an ADDRESS search box -- form "
+        "class js-navbar-address-search, a single input name=address with "
+        "placeholder 'Enter an address', and a bare submit button -- "
+        "alongside Log In and Sign Up controls. So NeighborWho is an "
+        "address-keyed property/people lookup that is at least partly "
+        "account-gated. Undecided rather than transcribed because the box "
+        "was captured from a 404 page rather than from the real search "
+        "page, its form action was therefore not meaningful, and nothing "
+        "is known about what an unauthenticated result page shows. Next "
+        "pass: render the homepage properly and run a search."
+    ),
+    "nuwber-com": (
+        "NO VERDICT as of 2026-09-23 for a network reason, not a research "
+        "one: nuwber.com failed to RESOLVE (net::ERR_NAME_NOT_RESOLVED) "
+        "from a headless Chromium on this host, so no page was ever "
+        "reached. Nuwber is a well-known people-search site, so a single "
+        "DNS failure is not grounds for a no-surface call in either leg. "
+        "Next pass: resolve the name from a different network first. See "
+        "the opt-out leg's entry, which is unresolved for the same "
+        "reason."
     ),
 }
 
