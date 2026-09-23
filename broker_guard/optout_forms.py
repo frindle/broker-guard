@@ -1355,6 +1355,20 @@ OPTOUT_OUT_OF_SCOPE = {
         "spokeo.com/privacy/control/all-categories, and it warns that a "
         "confirmation email must be clicked before a request takes effect."
     ),
+    "whitepages-com": (
+        "Verified 2026-09-23. /suppression-requests is a FIVE-step wizard "
+        "whose first step is, in the page's own words, 'STEP 1 OF 5 ... You "
+        "can opt out and have your listing removed from the Whitepages "
+        "website. Copy and paste the URL of your profile.' The only field "
+        "on it is a single textbox with that sentence as its placeholder, "
+        "plus a Next button. Same shape as spokeo-com, and out of scope for "
+        "the same two reasons: FormRecipe carries one url and one flat list "
+        "of fields (not five session-gated pages), and the value it would "
+        "have to supply is the URL of ONE listing chosen out of a result "
+        "list -- a judgement call about which stranger is Penn. Nothing was "
+        "submitted; step 2 was never reached. Its SEARCH leg is a shipped, "
+        "working recipe; see search_forms.WHITEPAGES."
+    ),
     "peoplewhiz-com": (
         "Verified 2026-09-23. /remove-my-info is a search box, not a form: "
         "its own instructions say to search your name, select your record, "
@@ -1432,6 +1446,27 @@ OPTOUT_OUT_OF_SCOPE = {
     "publicrecords-info": (
         "Verified 2026-09-23: dashboard.publicrecords.info/opt-out is the "
         "same per-result wizard again. Same reason for a separate entry."
+    ),
+    "beenverified-com": (
+        "Verified 2026-09-23. The dataset's opt-out URL "
+        "(/app/optout/search) 302s to /svc/optout/search/optouts, which "
+        "renders a SEARCH box, not a removal form: its only inputs are "
+        "fname, ln and state, and the page's own instructions say what the "
+        "rest of the flow is -- 'Just search our database using the form "
+        "above and select the record you would like to opt-out. We will "
+        "then send you a verification email. Next you simply need to "
+        "confirm the request by clicking on the link in the verification "
+        "email.' That is the per-RESULT shape this bucket exists for: "
+        "FormRecipe describes a fixed form, and choosing which stranger's "
+        "record is Penn's is a judgement call whose failure mode is asking "
+        "a broker to delete somebody else. The email round-trip is a "
+        "second, independent blocker -- this codebase has no mailbox to "
+        "click the confirmation link from. Worth recording as well: the "
+        "first request to this path answers HTTP 403 with 'Just a moment...' "
+        "and the page that eventually renders still carries two "
+        "cf-turnstile-response inputs, so a Cloudflare challenge sits in "
+        "front of it -- but the per-result shape is the deciding fact, "
+        "which is why this is out-of-scope rather than OPTOUT_BLOCKED."
     ),
 }
 

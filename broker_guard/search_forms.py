@@ -632,9 +632,55 @@ SPOKEO = SearchRecipe(
     ),
 )
 
+WHITEPAGES = SearchRecipe(
+    broker_id="whitepages-com",
+    broker_name="Whitepages",
+    search_url="https://www.whitepages.com/",
+    fields=(
+        SearchField(selector="#search-name", source="full_name",
+                    label="Person name"),
+    ),
+    # The sibling "City, State, or ZIP" box (#search-location) is
+    # deliberately NOT filled -- see the module docstring on narrowing.
+    submit_selector="#wp-search",
+    results_host="whitepages.com",
+    no_results_markers=(
+        "didn't find any results for",
+    ),
+    hit_markers=("people found",),
+    # "John Smith 1000+ people found".
+    count_pattern=r"([\d,]+)\+?\s+people\s+found",
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. Submitting navigates the "
+        "same tab to /name/<First>-<Last> on the broker's own host. The "
+        "miss page reads 'Sorry, we didn't find any results for Zylphrenna "
+        "Quixbottom' (plain ASCII apostrophe, confirmed by reading the "
+        "character codes off the live page rather than assuming) and "
+        "contains the string 'people found' NOWHERE, which is what makes "
+        "that the safe hit marker. The hit page prints 'John Smith 1000+ "
+        "people found' over real listing rows carrying UNMASKED full names, "
+        "cities, aliases and relatives, so identity terms genuinely "
+        "corroborate the count.\n"
+        "\n"
+        "The one thing worth knowing before touching this recipe: the HIT "
+        "page (not the miss page) renders a consent gate -- 'Please accept "
+        "to view results ... I agree to the Terms of Service and Privacy "
+        "Policy / Continue to Results'. It is NOT clicked, and does not "
+        "need to be: the result rows are already in the DOM and in "
+        "inner_text('body') behind it, verified by counting 27 occurrences "
+        "of the searched name and reading four full listing rows without "
+        "touching the gate. That matters twice over -- accepting a "
+        "broker's terms is a state-changing act this leg has no licence "
+        "for, and a recipe that depended on clicking it would be one "
+        "redesign away from reporting a false absence."
+    ),
+)
+
 RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
     SPOKEO.broker_id: SPOKEO,
+    WHITEPAGES.broker_id: WHITEPAGES,
     SEARCHPEOPLEFREE.broker_id: SEARCHPEOPLEFREE,
     USPHONEBOOK.broker_id: USPHONEBOOK,
     ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
@@ -1052,6 +1098,33 @@ SEARCH_UNDECIDED = {
         "NO_SEARCH_SURFACE only because the dataset lists it as a broker "
         "and a future reader deserves the evidence that it is not one; if "
         "that reading holds, this broker could reasonably be dropped."
+    ),
+    "beenverified-com": (
+        "Verified live both ways on 2026-09-23, and the reason it cannot "
+        "ship is that the ANSWER IS ASYMMETRIC. The homepage form is a plain "
+        "GET (fn=, ln=) to https://www.beenverified.com/lp/a19763/2/loading "
+        "on the broker's own host, so getting a query in is easy. What "
+        "comes back is not one page but a funnel: 'Beginning Your Search!', "
+        "then 'Thank you. Where Do They Live?' (city + state, with an 'I'm "
+        "not sure.' button.js-skip), then 'Can you share the following "
+        "details to help narrow down our results?' (age + middle name, same "
+        "skip button). 'Zylphrenna Quixbottom' falls out of that funnel "
+        "after the FIRST skip with the heading 'Sorry, we have 0 results'. "
+        "'John Smith' does not: it walks the whole funnel and lands on "
+        "'Please confirm before we continue ... Please check the box below "
+        "to see the results of your search' (input#fcra-checkbox + an 'I "
+        "Agree' button), and step 4 of the same funnel id, "
+        "/lp/a19763/4/subscribe, is titled 'Final Step | BeenVerified.com' "
+        "and carries subscription_plan_name radios, 'Your membership "
+        "automatically renews' and a PayPal control. So a MISS is published "
+        "for free and a HIT is sold. A recipe here would print a confident "
+        "'not present' on exactly the queries the site has nothing for and "
+        "an unreadable paywall on the queries it does -- and this tool will "
+        "not check an FCRA use-restriction box or open a paid membership to "
+        "find out which. Independently of that, the answer is two "
+        "intermediate skip clicks deep and SearchRecipe carries one url, "
+        "one flat field list and one submit selector, so there is nothing "
+        "to point it at even if the paywall were not there."
     ),
 }
 
