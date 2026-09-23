@@ -1100,6 +1100,435 @@ NO_SEARCH_SURFACE = {
         "peoplefinder.com lists a person. Its opt-out link goes to "
         "Intelius's privacy centre for the same reason."
     ),
+    "easyoptouts-com": (
+        "Not a data broker at all -- the dataset's row name is literally "
+        "'Additional Options (Paid and Free)', a section heading from an "
+        "opt-out guide that got swept in as if it were a company. "
+        "Verified 2026-09-23: easyoptouts.com is a PAID REMOVAL SERVICE "
+        "($19.99/yr) that removes people FROM brokers; the page is sign- "
+        "up CTAs, a comparison table and press quotes, with no name box "
+        "anywhere. There is nothing here that could hold a record about "
+        "anyone, so there is nothing to search."
+    ),
+    "epic-org": (
+        "Not a data broker -- EPIC is the Electronic Privacy Information "
+        "Center, a Washington DC privacy-advocacy nonprofit, and the "
+        "dataset row is named 'Additional Resources' because a link to "
+        "one of EPIC's reports was scraped as though it were a broker "
+        "entry. Verified 2026-09-23: epic.org and "
+        "epic.org/issues/consumer-privacy/data-brokers/ carry issue "
+        "pages, litigation/amicus content, a surveillance campaign banner "
+        "and donation asks. No person-search input exists anywhere on the "
+        "site."
+    ),
+    "adelement-com": (
+        "AdElement Vast, LLC is a B2B programmatic DSP. Verified "
+        "2026-09-23: adelement.com fronts itself as an 'AI-Powered DSP "
+        "for Advertisers' and sells to advertisers and app developers -- "
+        "case studies, eCPM figures, publisher logos (Audiomack, "
+        "TrueCaller, Zynga). There is no individual-lookup input of any "
+        "kind, so no presence check is possible here."
+    ),
+    "adept-id-com": (
+        "AdeptID is a B2B talent-matching / workforce-hiring vendor, not "
+        "a people-search site. Verified 2026-09-23: www.adept-id.com is "
+        "an AI hiring-match platform page with SOC2/GDPR/CCPA compliance "
+        "messaging, 'Schedule a demo' CTAs and partner logos (UKG, Year "
+        "Up, Avionte). No name or person search input exists."
+    ),
+    "adikteev-com": (
+        "Adikteev is a B2B mobile-app retargeting/growth adtech vendor. "
+        "Verified 2026-09-23: adikteev.com sells churn-based bidding and "
+        "app retargeting to brands (McDonald's, Blizzard, Fanatics, King, "
+        "Playtika are named as clients) and its footer's only privacy "
+        "affordance is a generic 'Your personal data' link. No person- "
+        "lookup input exists."
+    ),
+    "adsquare-com": (
+        "Adsquare is a B2B 'real-world data intelligence' adtech "
+        "platform. Verified 2026-09-23: adsquare.com is organised around "
+        "an 'Outcomes Loop' marketing framework and names 2,500 "
+        "brand/agency/platform customers (IKEA, Coca-Cola, McDonald's, "
+        "WPP, Trade Desk, DV360). Nothing on it accepts a person's name; "
+        "the data it holds is reached by its buyers, not by the public."
+    ),
+    "4-eyes-ai": (
+        "Verified 2026-09-23, and the first thing to know is that the "
+        "domain moved: www.4-eyes.ai 301-redirects to delivr.ai, the B2B "
+        "intent-data / identity-resolution vendor that absorbed 4Eyes "
+        "after its 2025 acquisition. The only input on the landing page "
+        "is a 'Look up' box that takes the VISITOR'S OWN work email and "
+        "previews that visitor's own intent profile -- it cannot be "
+        "pointed at a third party's name, so it is not a people-search "
+        "surface. No name lookup exists on either domain."
+    ),
+    "4legalleads-com": (
+        "4LegalLeads is a B2B legal-lead-generation marketplace that "
+        "sells case leads to attorneys. Verified 2026-09-23: "
+        "www.4legalleads.com is organised by practice area (auto "
+        "accident, DUI, bankruptcy) and its only interactive elements are "
+        "attorney login/signup and quote-request buttons. There is no "
+        "search box of any kind, so there is no way to ask whether a "
+        "person is in its lead pool."
+    ),
+    "5x5data-com": (
+        "5X5 US, LLC runs a member-driven marketing data cooperative / "
+        "identity graph sold to marketing, sales, HR and fraud-detection "
+        "clients. Verified 2026-09-23: the only input on 5x5data.com is a "
+        "generic WordPress content search labelled 'Search for:', which "
+        "searches the company's own pages. No person lookup exists."
+    ),
+    "abovedata-io": (
+        "Above Data describes itself as a 'signal layer for consumer data "
+        "infrastructure' sold to enterprise data owners, platforms and "
+        "brands. Verified 2026-09-23: the only input on www.abovedata.io "
+        "is an email-capture box labelled 'Leave us your email' under a "
+        "'Get Access' heading. No person-name search exists."
+    ),
+    "accudata-com": (
+        "Verified 2026-09-23, and the domain has moved: accudata.com "
+        "301-redirects to deepsync.com/accudata/, a Deep Sync "
+        "product/leadership page selling identity resolution to brands, "
+        "agencies and platforms. The page carries nav menus, executive "
+        "LinkedIn links and 'Book a demo' / 'Talk with us' CTAs and no "
+        "input that takes a person's name. Its opt-out leg redirects into "
+        "Deep Sync's privacy portal for the same reason and is recorded "
+        "separately."
+    ),
+    "accurateappend-com": (
+        "Accurate Append is a B2B data-append and contact-verification "
+        "vendor. Verified 2026-09-23: accurateappend.com's only "
+        "interactive elements are Contact Us, Self-Service Sign Up, Self- "
+        "Service Login and an API Trial Key Request. There is no person- "
+        "name input anywhere on the page -- the data is reached through "
+        "the client API, not a public box."
+    ),
+    "activimpact-ai": (
+        "Activimpact is a B2B 'AI-enabled multi-channel performance "
+        "platform for independent agencies' -- adtech sold to agencies, "
+        "not a consumer site. Verified 2026-09-23: activimpact.ai's only "
+        "CTAs are 'Get started' and 'Book a Demo', both pointing at "
+        "/contact. No person-name search input exists."
+    ),
+    "idology-com": (
+        "Verified 2026-09-23, and the domain has moved: www.idology.com "
+        "301-redirects to www.gbg.com/en-us/?rd=ido, IDology having been "
+        "absorbed into GBG's brand. The landing page sells enterprise "
+        "identity verification, KYC and fraud prevention (IBM, Mastercard "
+        "and HSBC are named as customers) and carries only a generic "
+        "site-content search box. No person lookup exists on either "
+        "domain."
+    ),
+    "adadapted-com": (
+        "AdAdapted is a CPG shopper-marketing adtech platform ('The "
+        "Action Layer') selling to brands, agencies and retailers. "
+        "Verified 2026-09-23: the only form on www.adadapted.com is an "
+        "email newsletter signup. No person-name search input exists -- "
+        "and per its own opt-out page it does not even hold email "
+        "addresses, only mobile advertising identifiers, so a name could "
+        "never be the key here."
+    ),
+    "addefend-com": (
+        "AdDefend GmbH is a German (Hamburg) anti-adblock advertising "
+        "vendor, selling to publishers (Der Spiegel, Welt, Finanzen.net) "
+        "and advertisers (Panasonic, Babbel, A.T.U.). Verified "
+        "2026-09-23: www.addefend.com/en/ carries no search inputs or "
+        "lookup forms of any kind. Its business is served ads, not person "
+        "records, so there is nothing to look a person up in."
+    ),
+    "adstradata-com": (
+        "Adstra sells identity resolution and audience licensing to "
+        "agencies, brands and publishers -- 'Marketing solutions for "
+        "identity, activation, and everything in between', built on its "
+        "Conexa identity graph. Verified 2026-09-23: adstradata.com's "
+        "homepage carries no name-search or lookup input, only a 'Get "
+        "Started' CTA that leads to a B2B contact form."
+    ),
+    "advcredit-com": (
+        "Advantage Credit, Inc. is a B2B mortgage-credit-report and "
+        "verification vendor for lenders and loan officers. Verified "
+        "2026-09-23: www.advcredit.com carries no person-search input at "
+        "all -- the only paths off the homepage are a customer login and "
+        "credential-gated mortgage-credit / background-screening portals. "
+        "Nothing public can answer whether it holds a given person."
+    ),
+    "take5mg-com": (
+        "Verified 2026-09-23: the domain is effectively gone. "
+        "take5mg.com, www.take5mg.com and the plain-http form all fail "
+        "identically with an EXPIRED TLS CERTIFICATE, and a search result "
+        "for the domain is titled 'take5mg.com Domain for sale', so the "
+        "host is parked rather than serving Take 5 Media Group content "
+        "(Take 5 was acquired by Advantage Solutions in 2018, which is "
+        "why the dataset files it under Advantage Sales & Marketing LLC). "
+        "A dead, parked domain has no search surface."
+    ),
+    "smartsheet-com": (
+        "The dataset's domain is not this broker. Verified 2026-09-23: "
+        "smartsheet.com is Smartsheet, the SaaS work-management platform "
+        "(project management, workflow automation, dashboards, "
+        "Salesforce/Microsoft/Slack integrations) -- AdvisorTarget "
+        "appears nowhere on it. The row exists only because "
+        "AdvisorTarget's opt-out happens to be a Smartsheet-HOSTED form, "
+        "and that form is recorded on the opt-out leg. Smartsheet's own "
+        "site has no person lookup, and the search leg has to be decided "
+        "against the site the dataset actually points at."
+    ),
+    "finsum-com": (
+        "Verified 2026-09-23: www.finsum.com is a financial-news and "
+        "insights content site ('Your go-to source for the latest "
+        "insights and trends in finance' -- equities, bonds, wealth "
+        "management), which is AdvisorTarget's publishing front rather "
+        "than a lookup product. The only form on it is a newsletter "
+        "signup; the nav carries a search ICON but no rendered search "
+        "input, and in any case a content search of a news site cannot "
+        "answer whether a person is in AdvisorTarget's advisor data."
+    ),
+    "affinityanswers-com": (
+        "AffinityAnswers sells 'Affinity Verified Data' -- audience- "
+        "targeting segments built from social engagement signals across "
+        "Facebook, Reddit, X, YouTube, Instagram and TikTok -- to "
+        "programmatic, CTV, social and DOOH advertisers. Verified "
+        "2026-09-23: www.affinityanswers.com carries no person-search "
+        "input, only a 'Let's Chat' CTA and the address "
+        "cs@affinityanswers.com."
+    ),
+    "affinity-solutions": (
+        "Affinity Solutions sells consumer-purchase analytics (it claims "
+        "195M+ consumer transaction records used for marketing "
+        "measurement) to banks, brands, retailers and agencies. Verified "
+        "2026-09-23: www.affinity.solutions carries no person-lookup "
+        "input; its only form is B2B lead capture (name, email, company, "
+        "industry, job title). Its data is reached by its buyers, never "
+        "by the public."
+    ),
+    "agrmarketingsolutions-com": (
+        "AGR Marketing Solutions is a B2B intent-data and marketing "
+        "vendor -- its own products are named Digital Intent, Financial "
+        "Will & Means, SmartMailBox and data appending -- and it sells to "
+        "businesses, not consumers. Verified 2026-09-23: "
+        "agrmarketingsolutions.com carries no person-search or lookup "
+        "input. (The homepage DOES carry an opt-out form; that is a "
+        "separate finding on the opt-out leg.)"
+    ),
+    "aidentified-com": (
+        "Aidentified is a B2B sales-intelligence and prospecting platform "
+        "aimed at wealth managers and financial advisors. Verified "
+        "2026-09-23: www.aidentified.com advertises '300M+ profiles' but "
+        "every route to them is gated -- the homepage's only controls are "
+        "'Start your free trial', 'Request demo', 'Log in' and 'Start for "
+        "free'. There is no public name-search box, so no unauthenticated "
+        "presence check is possible."
+    ),
+    "arccorp-com": (
+        "Airlines Reporting Corporation is a B2B ticket-settlement and "
+        "distribution platform for airlines and travel agencies. Verified "
+        "2026-09-23: arccorp.com 302-redirects to www2.arccorp.com, an "
+        "industry site about NDC distribution and ticket settlement with "
+        "no people-search feature of any kind."
+    ),
+    "aisinfo-com": (
+        "AIS Portfolio Services is a B2B financial-services operations "
+        "vendor -- bankruptcy and deceased-data services, loan-servicing "
+        "operations, staffing and automation -- sold to banks and "
+        "lenders. Verified 2026-09-23: www.aisinfo.com carries no person "
+        "lookup; the only non-marketing route off it is a client-only "
+        "'AIS ONLINE LOGIN' and a general Contact Us link."
+    ),
+    "alikeaudience-com": (
+        "AlikeAudience is a B2B adtech vendor selling AI-driven audience "
+        "segmentation, onboarding and activation to agencies, brands, "
+        "marketers and platforms, with DSP integrations (The Trade Desk, "
+        "Amazon) as its distribution. Verified 2026-09-23: "
+        "alikeaudience.com carries no public person-lookup input."
+    ),
+    "agrgroupinc-com": (
+        "Verified 2026-09-23: the domain does not resolve. Both "
+        "agrgroupinc.com and www.agrgroupinc.com fail DNS with "
+        "getaddrinfo ENOTFOUND, so no page of this broker exists to carry "
+        "a search surface. The company is real -- CA data-broker "
+        "registration 186616, All Global Resources, LLC, Henderson NV, "
+        "privacy@agrgroupinc.com -- but it is a registration with no live "
+        "website, which is also why the dataset lists it as email-only. "
+        "If the domain ever comes back this call should be revisited."
+    ),
+    "termly-io": (
+        "The dataset files this row under the NAME '01Advertising Inc.' "
+        "but gives the url termly.io, and termly.io is not 01Advertising "
+        "-- it is the Termly SaaS consent-management vendor whose hosted "
+        "DSAR widget 01Advertising's opt-out link points at. Same shape "
+        "as the onetrust-com row. The search leg has to be decided "
+        "against the site the dataset actually points at, and verified "
+        "2026-09-23 that site is a B2B compliance suite (policy "
+        "generators, cookie banners, DSAR tooling sold to other "
+        "businesses) with no search bar or person-lookup input anywhere "
+        "in its nav or homepage. 01Advertising's own domain is a separate "
+        "row, 01advertising-com."
+    ),
+    "remodeling-com": (
+        "Verified 2026-09-23: remodeling.com is a contractor-matching and "
+        "lead-generation directory ('Find a Pro', cost guides, browse by "
+        "project category), and its only search surface matches "
+        "homeowners to CONTRACTORS by project type and location. There is "
+        "no name-based person input, so nothing here can answer whether a "
+        "given person is in 33 Mile Radius / EverCommerce's lead data. "
+        "Its opt-out leg is a real CCPA form and is recorded separately."
+    ),
+    "33mileradius-com": (
+        "Verified 2026-09-23: www.33mileradius.com is a contractor lead- "
+        "generation network that routes homeowner phone calls to "
+        "contractors, and its only form is a CONTRACTOR intake ('Start "
+        "Booking Jobs Today!' -- First/Last Name, Email, Phone Number, "
+        "Company Name, a consent checkbox). That form creates a business "
+        "account; it does not look anyone up. No person-search surface "
+        "exists."
+    ),
+    "attribits-com": (
+        "All Good Media's attribits.com is a B2B ad/data-services vendor "
+        "selling audience expansion, identity resolution and second-party "
+        "data to marketers. Verified 2026-09-23: the homepage's only call "
+        "to action is 'contact us'; there is no name-lookup or people- "
+        "search input of any kind."
+    ),
+    "allwebleads-com": (
+        "Verified 2026-09-23, and the domain has moved: allwebleads.com "
+        "301-redirects to awl.com, a B2B insurance lead-generation and "
+        "agent marketplace that connects consumers with licensed agents "
+        "and claims 15,000+ agents. No person-lookup form appears on the "
+        "homepage -- consumers arrive through quote funnels, they are not "
+        "searched for."
+    ),
+    "allantgroup-com": (
+        "Allant Group sells an enterprise 'audience management platform' "
+        "and advertises '11B+ composable consumer data points' to "
+        "marketers. Verified 2026-09-23: the only form on allantgroup.com "
+        "is a newsletter signup (First Name, Last Name, Work Email). "
+        "There is no person-search surface; the data is reached by its "
+        "enterprise buyers."
+    ),
+    "alliantinsight-com": (
+        "Alliant Cooperative Data Solutions sells marketing-data products "
+        "-- its own names for them are PeopleCore, PurchaseCore and "
+        "ProfessionalsCore -- to brands, agencies and publishers. "
+        "Verified 2026-09-23: alliantinsight.com has no consumer person- "
+        "lookup feature on its homepage. Note this is the same corporate "
+        "family as analytics-iq-com, whose opt-out routes to the same "
+        "OneTrust portal."
+    ),
+    "alphonso-tv": (
+        "Alphonso (now LG Ads) is a B2B adtech and CTV measurement "
+        "company built on automatic content recognition data from smart "
+        "TVs. Verified 2026-09-23: alphonso.tv carries no person-search "
+        "feature on its homepage. What it holds is keyed to TV devices, "
+        "not to names, which is also why its consumer privacy page offers "
+        "only device-scoped choices."
+    ),
+    "altairdata-com": (
+        "Altair Data Resources is a B2B credit and marketing-data company "
+        "-- tri-bureau credit data and a 'DataCloud' platform -- selling "
+        "to financial institutions and agencies. Verified 2026-09-23: "
+        "altairdata.com carries no person-lookup form on its homepage."
+    ),
+    "altisource-com": (
+        "Altisource is a B2B mortgage and real-estate services provider "
+        "(Hubzu auctions, Trelix fulfillment, Equator workflow, Premium "
+        "Title) serving institutional servicers, originators and "
+        "investors. Verified 2026-09-23: altisource.com carries no "
+        "person-search feature. Its consumer-facing obligations are "
+        "FCRA/GLBA-shaped affiliate-sharing choices, not a public lookup."
+    ),
+    "altrata-com": (
+        "Altrata (WealthEngine, Wealth-X, BoardEx) sells wealth "
+        "intelligence to fundraisers, banks and sales teams. Verified "
+        "2026-09-23: altrata.com is a B2B platform page with nav, 'Let's "
+        "connect' / 'Get started' demo CTAs and a generic site-search "
+        "icon. It advertises '100M+ people profiles' -- and every route "
+        "to them is gated behind a login or a demo request, with nothing "
+        "exposed to an anonymous visitor. No public presence check is "
+        "possible."
+    ),
+    "aspire-north-com": (
+        "American Spirit Data Solutions describes itself on www.aspire- "
+        "north.com as 'hybrid strategists, marketers, and experts' "
+        "running B2B audience and campaign services on licensed Experian "
+        "data. Verified 2026-09-23: the homepage carries no public search "
+        "box for an individual. Note the company's live privacy content "
+        "actually lives on americanspiritcorp.com, which is where its "
+        "opt-out leg had to be chased."
+    ),
+    "amerilist-com": (
+        "Amerilist is a mailing-list broker -- targeted mailing, "
+        "telemarketing and email lists, data processing, data "
+        "enhancement. Verified 2026-09-23: the one tool on "
+        "www.amerilist.com is '24/7 Interactive List Counts', which "
+        "builds BULK lists by selection criteria and returns counts. A "
+        "count tool cannot be asked about a named individual, so there is "
+        "no presence check here even though the site is plainly full of "
+        "people."
+    ),
+    "amplemarket-com": (
+        "Amplemarket is a B2B sales-intelligence 'AI Sales Copilot' for "
+        "sales teams. Verified 2026-09-23: prospect data is reachable "
+        "only behind a login or a business free-trial signup, and "
+        "www.amplemarket.com exposes no public person-lookup surface to a "
+        "consumer."
+    ),
+    "analytics-iq-com": (
+        "AnalyticsIQ (now part of Alliant) is a B2B people-based "
+        "marketing-data vendor whose flagship dataset, PeopleCore, it "
+        "advertises as covering 264M+ individuals, licensed to "
+        "enterprises through Snowflake and LiveRamp. Verified 2026-09-23: "
+        "analytics-iq.com has no public interface for looking up an "
+        "individual record. Same corporate family as alliantinsight-com."
+    ),
+    "anchorcomputer-com": (
+        "Anchor Computer is a B2B marketing-data-services provider -- "
+        "data validation and cleansing, customer profiling and "
+        "segmentation, enrichment, database design. Verified 2026-09-23: "
+        "anchorcomputer.com routes business clients to 'Contact Us' or a "
+        "client portal login and exposes no public person-name lookup. "
+        "(Its opt-out surface, by contrast, is a real and unusually "
+        "detailed form; see the opt-out leg.)"
+    ),
+    "01advertising-com": (
+        "Verified as far as this tool may go, 2026-09-23. Both https and "
+        "http fetches of www.01advertising.com failed outright with no "
+        "response, so the homepage was never rendered here -- but the "
+        "call is still no-surface rather than undecided for a reason the "
+        "search leg can stand on: every independent description of "
+        "01Advertising is of an AI-driven B2B audience builder that "
+        "constructs ad-targeting segments from CLIENTS' own "
+        "CRM/CDP/first-party data (it is on the Texas data-broker "
+        "registry on that basis). A vendor whose input is its customers' "
+        "data has nothing for a stranger to search, and no source "
+        "anywhere references a person-lookup feature. If a future pass "
+        "renders the site and finds a name box, overturn this. Its opt- "
+        "out leg is genuinely undecided and is recorded separately."
+    ),
+    "33across-com": (
+        "Verified as far as this tool may go, 2026-09-23: every 33Across "
+        "URL tried returned HTTP 403 to this fetcher, including the "
+        "homepage. The call rests on what 33Across unambiguously is -- a "
+        "supply-side programmatic advertising platform (an SSP, with "
+        "cookieless identity resolution branded 'Lexicon') selling to "
+        "publishers and DSPs -- a category that has no consumer lookup, "
+        "and no source references one. This is recorded as no-surface "
+        "rather than undecided because the business model settles it; the "
+        "opt-out leg, where the mechanics actually matter, is recorded as "
+        "undecided precisely because the 403 blocks what needs to be "
+        "seen."
+    ),
+    "180bytwo-com": (
+        "Verified 2026-09-23, and the domain has been absorbed: "
+        "180bytwo.com's root 302-redirects wholesale to anteriad.com, "
+        "180byTwo having been folded into Anteriad. anteriad.com is a B2B "
+        "marketing and demand-generation platform (the 'Anteriad "
+        "Marketing Cloud', BDR-as-a-service, audience identification sold "
+        "to marketers) whose only search affordance is a generic nav "
+        "placeholder -- no person lookup anywhere. Note for anyone re- "
+        "checking: the root redirects, but the dataset's deeper privacy "
+        "path still resolves on the old domain, which is how the opt-out "
+        "leg was read."
+    ),
 }
 
 
@@ -1479,6 +1908,205 @@ SEARCH_UNDECIDED = {
         "string-building the /results/ URL by hand is exactly what this "
         "module forbids. Its opt-out leg is separately out of scope; see "
         "optout_forms."
+    ),
+    "adform-com": (
+        "NO VERDICT as of 2026-09-23, and the reason is our fetcher, not "
+        "the site. Every attempt at adform.com, www.adform.com and "
+        "site.adform.com returned an empty response, so the homepage was "
+        "never actually read. Everything known about Adform from outside "
+        "-- a Danish DSP/SSP selling to advertisers -- points at "
+        "NO_SEARCH_SURFACE, but that call has to be made against a page "
+        "somebody has seen, and nobody here has. A future pass with a "
+        "real browser should load site.adform.com and check whether any "
+        "input on it takes a person's name."
+    ),
+    "adrearubin-com": (
+        "NO VERDICT as of 2026-09-23. adrearubin.com and "
+        "www.adrearubin.com/privacy-policy/ both failed with TLS "
+        "handshake errors on repeated attempts, so no page of this broker "
+        "was ever rendered. Search snippets describe Adrea Rubin "
+        "Marketing, Inc. (CA data-broker registration 186558, also "
+        "registered as 'Adrea Rubin Media, Inc. dba Calibrant Digital') "
+        "as a PR/marketing agency, which would ordinarily be a no-surface "
+        "shape, but a TLS failure is not evidence about a search box. "
+        "Next pass: retry with a browser that negotiates the site's TLS, "
+        "or check whether the domain has moved."
+    ),
+    "mediaocean-com": (
+        "NO VERDICT as of 2026-09-23, and the reason is transport, not "
+        "the site: every attempt at www.mediaocean.com over both https "
+        "and http failed with 'unable to verify the first certificate', "
+        "repeatably, so the homepage was never read. A site: search "
+        "returns only marketing and privacy-policy pages, consistent with "
+        "4C Insights / Mediaocean being an ad-tech and martech platform "
+        "rather than a consumer people-search brand -- but that is an "
+        "inference from result titles, not from a page anyone loaded. "
+        "Next pass needs a fetcher that tolerates this certificate chain."
+    ),
+    "6sense-com": (
+        "NO VERDICT as of 2026-09-23. 6sense is plainly a B2B revenue- "
+        "intelligence / ABM platform, and no public unauthenticated "
+        "person-search form appears on 6sense.com -- which would normally "
+        "settle it as no-surface. What holds the call is that its own "
+        "navigation advertises a 'Company and People Search' feature "
+        "under the Sales Intelligence product, and that tool is behind a "
+        "login, so it was never observed. Until someone can say whether "
+        "that gated search is a person lookup over 6sense's own contact "
+        "data, calling this no-surface would be asserting an absence "
+        "nobody checked."
+    ),
+    "bookyourdata-com": (
+        "NO VERDICT as of 2026-09-23. bookyourdata.com sells B2B contact "
+        "lists (verified business emails, decision-makers) and exposes "
+        "two tools -- a 'Prospector Tool' that filters by job title, "
+        "industry and company, and an 'Email Finder' that searches by "
+        "company, domain or contact details -- but both sit behind a 'Get "
+        "10 Free Leads' signup and were never exercised. Neither is "
+        "framed as a name-based people-search, yet an Email Finder that "
+        "takes contact details is close enough to a presence check that "
+        "no-surface cannot be asserted from outside the login. Next pass: "
+        "determine whether either tool answers 'is this named individual "
+        "in your database'."
+    ),
+    "degree-me": (
+        "NO VERDICT as of 2026-09-23: the domain serves nothing. "
+        "degree.me has NS delegation to AWS Route53 "
+        "(ns-1086.awsdns-07.org, ns-1685.awsdns-18.co.uk, "
+        "ns-236.awsdns-29.com, ns-918.awsdns-50.net) but NO A or AAAA "
+        "record resolves, confirmed by dig both ways, and curl returns "
+        "http_code 000. This looks like a dormant registration tied to "
+        "ACE Agents Inc. / academixdirect.com. It sits here rather than "
+        "under NO_SEARCH_SURFACE because a domain that does not resolve "
+        "today may resolve tomorrow; recheck resolution before deciding."
+    ),
+    "acronymix-com": (
+        "NO VERDICT as of 2026-09-23: the whole site answers HTTP 500. "
+        "acronymix.com returns a server error on both WebFetch and a "
+        "direct curl, which confirms it is the origin failing and not a "
+        "fetcher artifact, so no page was ever rendered and nothing can "
+        "be said about a search surface either way. Same shape as the "
+        "acxiom.com entry. Recheck when the site is back up."
+    ),
+    "acutraq-com": (
+        "NO VERDICT as of 2026-09-23. ACUTRAQ is primarily B2B background "
+        "screening sold to employers, landlords, nonprofits and "
+        "healthcare organisations, and its homepage carries no open name- "
+        "search box -- but it links to two places nobody walked through: "
+        "an 'Online Application' on a separate quickleasepro.com login "
+        "portal, and a 'Personal Background Check' self-request path. "
+        "Until someone establishes whether either exposes a lookup rather "
+        "than an authenticated intake, no-surface would be a guess. Note "
+        "the opt-out leg IS decided (mail/fax/email only) and is recorded "
+        "separately."
+    ),
+    "alabamacourtrecords-us": (
+        "A SEARCH SURFACE PLAINLY EXISTS, and that is exactly why this is "
+        "not no-surface -- but it is not a recipe yet either. Verified "
+        "2026-09-23: alabamacourtrecords.us serves a public person lookup "
+        "with fields labelled 'First Name:', 'Last Name:' and 'City:' "
+        "under 'Instant Access to Civil and Criminal Court Records', and "
+        "the site states it is 'a private entity independent of any state "
+        "government agency' and disclaims FCRA use. What is missing is "
+        "mechanical: the form's element names, its action/method and its "
+        "submit control did not render to the fetcher, and the sibling "
+        "site alaskacourtrecords.us warns that results are 'only a "
+        "preliminary people search' requiring registration and purchase "
+        "-- so whether a free response can even answer presence is "
+        "unsettled. Next pass needs a JS-capable browser on this "
+        "template."
+    ),
+    "alaskacourtrecords-us": (
+        "Same template and same open question as alabamacourtrecords-us; "
+        "both are the CourtRecords.us / StateRecords.org network. "
+        "Verified 2026-09-23: alaskacourtrecords.us serves a person "
+        "lookup with 'First Name', 'Last Name' and 'City' fields "
+        "promising civil and criminal record access, self-describes as "
+        "private and non-governmental, and disclaims FCRA use. It states "
+        "outright that results are 'only a preliminary people search' "
+        "requiring registration and purchase for a full report, and the "
+        "form's element names and submit control did not render to the "
+        "fetcher. Resolve the network's template once and both state "
+        "sites resolve together."
+    ),
+    "mydataprivacy-com": (
+        "NO VERDICT as of 2026-09-23, and this one is genuinely a hybrid. "
+        "mydataprivacy.com is Alesco Data's CCPA compliance PRODUCT, sold "
+        "to businesses and list owners, which would point at no-surface "
+        "-- except that it also exposes a public lookup: a form taking "
+        "either an 'Email Address' or a 'Name & Postal Address' with a "
+        "'Search' button, whose own copy says 'If your name is found in "
+        "the database, you will have the option to opt-out... and/or "
+        "deleting your name from national databases'. That is a database- "
+        "membership check rather than a dossier people-search, and it "
+        "answers for PARTICIPATING databases rather than for Alesco "
+        "itself, so what a HIT here would actually mean has to be settled "
+        "before a recipe can claim anything from it."
+    ),
+    "192-com": (
+        "A SEARCH SURFACE PLAINLY EXISTS -- this is the one broker in its "
+        "batch that is unambiguously a people-search site -- but it is "
+        "not a recipe yet. Verified 2026-09-23: www.192.com serves a "
+        "'Search People' form with a Name input and a Location input, "
+        "alongside promoted Electoral Roll 2026, background-check and "
+        "property-ownership lookups. Two things block a recipe. First, "
+        "mechanics: the form's element names, action and method were "
+        "never captured. Second, scope: 192.com's records are UK-only, "
+        "and the dataset's own notes record that 192.com replied to a "
+        "request from a non-UK address asking why it had been contacted "
+        "-- so a HIT or MISS here may mean nothing for a US profile. See "
+        "EU-NOTES.md before writing anything against this one."
+    ),
+    "411-com": (
+        "A SEARCH SURFACE PLAINLY EXISTS. Verified 2026-09-23: "
+        "www.411.com serves a genuine white-pages homepage -- a Name + "
+        "state/location 'Name Location Search' form under the tagline "
+        "'Find contact information on yourself or anyone else', plus a "
+        "separate reverse phone lookup. It is undecided only because the "
+        "form's element names, action and method were not captured, and "
+        "because 411.com is a Whitepages property (its opt-out is "
+        "Whitepages' own suppression flow), so a recipe-writer should "
+        "first check whether its results are served by whitepages.com "
+        "under the hood -- if so, the two rows share one surface and "
+        "should be resolved together rather than twice."
+    ),
+    "allpeople-com": (
+        "A SEARCH SURFACE PLAINLY EXISTS. Verified 2026-09-23: "
+        "allpeople.com calls itself the 'largest free directory of "
+        "business contacts for America' and its homepage carries a real "
+        "search form with four labelled fields -- Name, Email, Phone, "
+        "Industry -- plus browse-by-state links for all 50 states. "
+        "Undecided for the usual mechanical reason (no element names, "
+        "action or method captured) and one substantive one: this is a "
+        "BUSINESS-contact directory, so what a hit means for a private "
+        "individual needs deciding before a recipe reports presence or "
+        "absence."
+    ),
+    "acbj-com": (
+        "NO VERDICT as of 2026-09-23, and the reason is a fetch wall. "
+        "www.acbj.com, acbj.com and www.bizjournals.com all failed with a "
+        "host-level 'unable to fetch' -- not a 404, so the sites are up "
+        "and refusing this fetcher. What is known from outside: ACBJ is "
+        "the parent of bizjournals.com (business news across 44 local "
+        "markets), it is CA-registered as a data broker, and bizjournals' "
+        "article search can be 'refined by people' -- which is an "
+        "article-search FACET over news content, not a person-record "
+        "lookup, but that distinction was never confirmed against the "
+        "live page. Next pass needs a fetcher these hosts will serve."
+    ),
+    "ancestry-com": (
+        "NO VERDICT as of 2026-09-23, and the interesting question here "
+        "is what the surface MEANS, not whether it exists. "
+        "www.ancestry.com/search/ does expose an anonymous form -- First "
+        "& Middle Name(s), Last Name, 'Place your ancestor might have "
+        "lived', Birth Year, a Search button and 'Show more options' -- "
+        "but it is framed entirely around historical record collections "
+        "(birth/marriage/death, census, military, immigration, wills), "
+        "i.e. genealogy about the dead, not a lookup of living people. "
+        "Two things must be settled before any recipe: whether a non- "
+        "logged-in visitor sees result RECORDS at all or only a "
+        "paywall/signup gate, and whether a hit in a census index is even "
+        "the kind of presence this tool is meant to report. The homepage "
+        "itself shows no anonymous search box and pushes a 14-day trial."
     ),
 }
 

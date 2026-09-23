@@ -21,9 +21,9 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **35** / 969
-- Search leg mapped: 57 / 969
-- Opt-out leg mapped: 39 / 969
+- Fully mapped (both legs): **99** / 969
+- Search leg mapped: 121 / 969
+- Opt-out leg mapped: 103 / 969
 
 ## How to resume
 
@@ -38,74 +38,74 @@ of the three RECIPES/*_SURFACE/*_UNDECIDED dicts against source-brokers.json).
 
 ## Brokers
 
-- [ ] **01Advertising Inc.** (`termly-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **01Advertising Inc.** (`01advertising-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **180 By Two, LLC** (`180bytwo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **192.com** (`192-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **33 MILE RADIUS LLC** (`remodeling-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **33 Mile Radius LLC** (`33mileradius-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **33ACROSS Inc** (`33across-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **411.com** (`411-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **4C Insights Inc.** (`mediaocean-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **4Eyes.Ai, Inc.** (`4-eyes-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **4Legalleads** (`4legalleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **5X5 US, LLC** (`5x5data-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **6SENSE INSIGHTS Inc** (`6sense-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **A DIRECT MARKETING Inc** (`bookyourdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Above Data, Inc.** (`abovedata-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ACCUDATA INTEGRATED Marketing, Inc.** (`accudata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Accurate Append Inc.** (`accurateappend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ACE Agents Inc.** (`degree-me`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ACRONYMIX LLC** (`acronymix-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Activimpact, LLC** (`activimpact-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Acuant, Inc.** (`idology-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ACUTRAQ Background Screening, Inc.** (`acutraq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **01Advertising Inc.** (`termly-io`) -- search: no-surface, opt-out: undecided
+- [x] **01Advertising Inc.** (`01advertising-com`) -- search: no-surface, opt-out: undecided
+- [x] **180 By Two, LLC** (`180bytwo-com`) -- search: no-surface, opt-out: undecided
+- [x] **192.com** (`192-com`) -- search: undecided, opt-out: undecided
+- [x] **33 MILE RADIUS LLC** (`remodeling-com`) -- search: no-surface, opt-out: undecided
+- [x] **33 Mile Radius LLC** (`33mileradius-com`) -- search: no-surface, opt-out: undecided
+- [x] **33ACROSS Inc** (`33across-com`) -- search: no-surface, opt-out: undecided
+- [x] **411.com** (`411-com`) -- search: undecided, opt-out: undecided
+- [x] **4C Insights Inc.** (`mediaocean-com`) -- search: undecided, opt-out: undecided
+- [x] **4Eyes.Ai, Inc.** (`4-eyes-ai`) -- search: no-surface, opt-out: no-surface
+- [x] **4Legalleads** (`4legalleads-com`) -- search: no-surface, opt-out: undecided
+- [x] **5X5 US, LLC** (`5x5data-com`) -- search: no-surface, opt-out: undecided
+- [x] **6SENSE INSIGHTS Inc** (`6sense-com`) -- search: undecided, opt-out: undecided
+- [x] **A DIRECT MARKETING Inc** (`bookyourdata-com`) -- search: undecided, opt-out: undecided
+- [x] **Above Data, Inc.** (`abovedata-io`) -- search: no-surface, opt-out: undecided
+- [x] **ACCUDATA INTEGRATED Marketing, Inc.** (`accudata-com`) -- search: no-surface, opt-out: undecided
+- [x] **Accurate Append Inc.** (`accurateappend-com`) -- search: no-surface, opt-out: undecided
+- [x] **ACE Agents Inc.** (`degree-me`) -- search: undecided, opt-out: no-surface
+- [x] **ACRONYMIX LLC** (`acronymix-com`) -- search: undecided, opt-out: undecided
+- [x] **Activimpact, LLC** (`activimpact-ai`) -- search: no-surface, opt-out: undecided
+- [x] **Acuant, Inc.** (`idology-com`) -- search: no-surface, opt-out: undecided
+- [x] **ACUTRAQ Background Screening, Inc.** (`acutraq-com`) -- search: undecided, opt-out: no-surface
 - [x] **Acxiom** (`acxiom-com`) -- search: undecided, opt-out: undecided
-- [ ] **Adadapted Inc.** (`adadapted-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AdDefend GmbH** (`addefend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Additional Options (Paid and Free)** (`easyoptouts-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Additional Resources** (`epic-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Adadapted Inc.** (`adadapted-com`) -- search: no-surface, opt-out: no-surface
+- [x] **AdDefend GmbH** (`addefend-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Additional Options (Paid and Free)** (`easyoptouts-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Additional Resources** (`epic-org`) -- search: no-surface, opt-out: no-surface
 - [x] **Address Clearing House** (`achcoop-com`) -- search: no-surface, opt-out: recipe
 - [x] **Addresses.com** (`addresses-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **AdElement Vast, LLC** (`adelement-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Adept Id, Inc.** (`adept-id-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Adform A/S** (`adform-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Adikteev** (`adikteev-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Adrea Rubin Marketing, Inc.** (`adrearubin-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Adsquare GmbH** (`adsquare-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Adstra** (`adstradata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **AdElement Vast, LLC** (`adelement-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Adept Id, Inc.** (`adept-id-com`) -- search: no-surface, opt-out: undecided
+- [x] **Adform A/S** (`adform-com`) -- search: undecided, opt-out: no-surface
+- [x] **Adikteev** (`adikteev-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Adrea Rubin Marketing, Inc.** (`adrearubin-com`) -- search: undecided, opt-out: undecided
+- [x] **Adsquare GmbH** (`adsquare-com`) -- search: no-surface, opt-out: undecided
+- [x] **Adstra** (`adstradata-com`) -- search: no-surface, opt-out: undecided
 - [x] **AdvancedBackgroundChecks** (`advancedbackgroundchecks-com`) -- search: recipe, opt-out: recipe
-- [ ] **Advantage Credit, Inc.** (`advcredit-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Advantage Sales & Marketing LLC** (`take5mg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Advisortarget, LLC** (`smartsheet-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AdvisorTarget, LLC** (`finsum-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AFFINITY ANSWERS CORPORATION** (`affinityanswers-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Affinity Solutions** (`affinity-solutions`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AGR Marketing Solutions LLC** (`agrmarketingsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Aidentified, Inc.** (`aidentified-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Airlines Reporting Corporation** (`arccorp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AIS Portfolio Services LLC** (`aisinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Alabama Court Records (CourtRecords.us network)** (`alabamacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Alaska Court Records (CourtRecords.us network)** (`alaskacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Alesco Data** (`mydataprivacy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Alikeaudience, Inc.** (`alikeaudience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **All Global Resources, LLC** (`agrgroupinc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **All Good Media LLC** (`attribits-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **All Web Leads, Inc** (`allwebleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Allant Group, LLC** (`allantgroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Alliant Cooperative Data Solutions LLC** (`alliantinsight-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AllPeople** (`allpeople-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Alphonso Inc.** (`alphonso-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Altair Data Resources, Inc.** (`altairdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Altisource Holdings, LLC** (`altisource-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Altrata, Inc.** (`altrata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **American City Business Journals, Inc.** (`acbj-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AMERICAN SPIRIT DATA SOLUTIONS LLC** (`aspire-north-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Amerilist Inc** (`amerilist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Amplemarket** (`amplemarket-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AnalyticsIQ** (`analytics-iq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Ancestry.com** (`ancestry-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Anchor Computer** (`anchorcomputer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Advantage Credit, Inc.** (`advcredit-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Advantage Sales & Marketing LLC** (`take5mg-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Advisortarget, LLC** (`smartsheet-com`) -- search: no-surface, opt-out: undecided
+- [x] **AdvisorTarget, LLC** (`finsum-com`) -- search: no-surface, opt-out: undecided
+- [x] **AFFINITY ANSWERS CORPORATION** (`affinityanswers-com`) -- search: no-surface, opt-out: undecided
+- [x] **Affinity Solutions** (`affinity-solutions`) -- search: no-surface, opt-out: undecided
+- [x] **AGR Marketing Solutions LLC** (`agrmarketingsolutions-com`) -- search: no-surface, opt-out: undecided
+- [x] **Aidentified, Inc.** (`aidentified-com`) -- search: no-surface, opt-out: undecided
+- [x] **Airlines Reporting Corporation** (`arccorp-com`) -- search: no-surface, opt-out: undecided
+- [x] **AIS Portfolio Services LLC** (`aisinfo-com`) -- search: no-surface, opt-out: undecided
+- [x] **Alabama Court Records (CourtRecords.us network)** (`alabamacourtrecords-us`) -- search: undecided, opt-out: undecided
+- [x] **Alaska Court Records (CourtRecords.us network)** (`alaskacourtrecords-us`) -- search: undecided, opt-out: undecided
+- [x] **Alesco Data** (`mydataprivacy-com`) -- search: undecided, opt-out: undecided
+- [x] **Alikeaudience, Inc.** (`alikeaudience-com`) -- search: no-surface, opt-out: undecided
+- [x] **All Global Resources, LLC** (`agrgroupinc-com`) -- search: no-surface, opt-out: no-surface
+- [x] **All Good Media LLC** (`attribits-com`) -- search: no-surface, opt-out: undecided
+- [x] **All Web Leads, Inc** (`allwebleads-com`) -- search: no-surface, opt-out: undecided
+- [x] **Allant Group, LLC** (`allantgroup-com`) -- search: no-surface, opt-out: undecided
+- [x] **Alliant Cooperative Data Solutions LLC** (`alliantinsight-com`) -- search: no-surface, opt-out: undecided
+- [x] **AllPeople** (`allpeople-com`) -- search: undecided, opt-out: undecided
+- [x] **Alphonso Inc.** (`alphonso-tv`) -- search: no-surface, opt-out: undecided
+- [x] **Altair Data Resources, Inc.** (`altairdata-com`) -- search: no-surface, opt-out: undecided
+- [x] **Altisource Holdings, LLC** (`altisource-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Altrata, Inc.** (`altrata-com`) -- search: no-surface, opt-out: no-surface
+- [x] **American City Business Journals, Inc.** (`acbj-com`) -- search: undecided, opt-out: undecided
+- [x] **AMERICAN SPIRIT DATA SOLUTIONS LLC** (`aspire-north-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Amerilist Inc** (`amerilist-com`) -- search: no-surface, opt-out: undecided
+- [x] **Amplemarket** (`amplemarket-com`) -- search: no-surface, opt-out: no-surface
+- [x] **AnalyticsIQ** (`analytics-iq-com`) -- search: no-surface, opt-out: undecided
+- [x] **Ancestry.com** (`ancestry-com`) -- search: undecided, opt-out: undecided
+- [x] **Anchor Computer** (`anchorcomputer-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Andrews Wharton, Inc.** (`stirista-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Andrews Wharton, Inc.** (`andrewswharton-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Anexinet Corp.** (`verinext-com`) -- search: UNMAPPED, opt-out: UNMAPPED
