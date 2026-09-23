@@ -107,6 +107,21 @@ FLAVOR_BIGDBM_BESPOKE = "bigdbm_bespoke_form"
 # Email + a "State of origin" <select>, reCAPTCHA.
 FLAVOR_PDL_BESPOKE = "peopledatalabs_bespoke_form"
 
+# InfoPay's shared "Do Not Sell or Share My Personal Information" form, served
+# on several of its properties (courtrecords.us, staterecords.org,
+# recordsfinder.com) at ``/do-not-sell-share-my-personal-information``. The
+# giveaway is the field naming, which is the vendor's own PHP model path:
+# ``InfoPay_Core_Components_OptOuts_DataRemovalServiceModel[fname]``. Four
+# fields (First/Last/State/City), one ``button[type=submit].form-btn``, and --
+# unusually for this pilot -- NO bot check at all.
+#
+# "Same flavor" is a FINDING here, not an assumption: each of the three sites
+# was opened separately and its form enumerated element by element (identical
+# ids, identical field set, identical submit button, no honeypot), because
+# ``optout_forms``'s own docstring warns that a shared HOSTING shape is not a
+# shared SCHEMA.
+FLAVOR_INFOPAY_DNS = "infopay_do_not_sell_form"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -196,6 +211,14 @@ class FormRecipe:
     # Purely additive to optout_submit's generic detection -- a form-specific
     # widget that the generic sweep would miss goes here.
     captcha_selectors: tuple = ()
+    # Set ONLY when a human swept this form for a bot check and found none.
+    # It exists because "captcha_selectors is empty" is ambiguous -- it could
+    # mean "there is no captcha" or "nobody looked" -- and those two have
+    # opposite safety consequences: with submission enabled and dry-run off,
+    # a form with no bot check is one this tool really will submit
+    # unattended. Every recipe must say which it is (proven by
+    # ``tests/test_optout_submit.py``), and the reason belongs in ``notes``.
+    no_captcha_verified: bool = False
     # Text that appears on the page after a successful submission. Used only
     # to classify the result AFTER a real submit; never to decide whether to
     # submit.
@@ -801,6 +824,130 @@ PEOPLEDATALABS = FormRecipe(
 )
 
 
+# The vendor's own model-path prefix on every field id of the shared InfoPay
+# form. Written once rather than five times per recipe, because the string is
+# long enough that a typo in one copy would be invisible in review.
+_INFOPAY = "#InfoPay_Core_Components_OptOuts_DataRemovalServiceModel_"
+
+# Scoped to the FORM that carries the opt-out's own First Name box. The
+# button's bare class (``.form-btn``) is reused by every search form on some
+# of these sites -- recordsfinder.com's homepage alone has fourteen of them --
+# so an unscoped ``button.form-btn`` would be ambiguous the moment this form
+# moved onto a page that also carries a search box.
+_INFOPAY_SUBMIT = "form:has({}fname) button[type='submit']".format(_INFOPAY)
+
+
+def _infopay_steps() -> tuple:
+    """The four steps of InfoPay's shared opt-out form.
+
+    City is offered without the form's own ``*`` required marker, so it is
+    ``required=False``: a profile with no parseable city still produces a
+    submittable First/Last/State request rather than a refusal.
+    """
+    return (
+        Field(selector=_INFOPAY + "fname", source="first_name", label="First Name"),
+        Field(selector=_INFOPAY + "lname", source="last_name", label="Last Name"),
+        # Full state NAMES ("Illinois"), chosen by label, so source="state"
+        # rather than BigDBM's bare-code "state_code".
+        Field(selector=_INFOPAY + "state", source="state", label="State",
+              kind="select"),
+        Field(selector=_INFOPAY + "city", source="city", label="City",
+              required=False),
+    )
+
+
+_INFOPAY_SUCCESS = (
+    "thank you",
+    "your request has been received",
+    "request has been submitted",
+)
+
+COURTRECORDS_US = FormRecipe(
+    broker_id="courtrecords-us",
+    broker_name="CourtRecords.us",
+    url="https://courtrecords.us/do-not-sell-share-my-personal-information/",
+    flavor=FLAVOR_INFOPAY_DNS,
+    steps=_infopay_steps(),
+    submit_selector=_INFOPAY_SUBMIT,
+    # Swept and confirmed clean -- see the recipe's notes.
+    no_captcha_verified=True,
+    success_markers=_INFOPAY_SUCCESS,
+    notes=(
+        "Verified against the live page on 2026-09-22 (dry run, real "
+        "browser, synthetic identity): all four fields fill correctly and "
+        "the run stops before Submit, screenshot confirms it. The dataset's "
+        "recorded opt-out URL for this broker (courtrecords.us/optout) is "
+        "NOT this form -- it is a 'Your Privacy Choices' rights-explainer "
+        "page with zero inputs on it, which links on to this one; a recipe "
+        "written against the dataset URL would have filled nothing. "
+        "IMPORTANT, and unusual for this pilot: this form carries NO bot "
+        "check of any kind (no reCAPTCHA, hCaptcha, Turnstile, BotDetect or "
+        "honeypot -- swept for and confirmed absent on all three InfoPay "
+        "sites). Every other recipe in this module stops at 'needs manual "
+        "action' on a captcha; this one would NOT, so flipping "
+        "BG_OPTOUT_SUBMIT_ENABLED with dry-run off really would press "
+        "Submit here unattended. success_markers are a plausible guess at "
+        "the confirmation wording, NOT read off a real submitted page -- "
+        "same caveat as ACHCOOP's recipe, and the reason a run reporting "
+        "'submitted' via these markers should be spot-checked. SCOPE "
+        "CAVEAT, printed under the form itself on all three InfoPay sites "
+        "and confirmed in the dry-run screenshot: 'Submitting this form "
+        "will result in the removal of only the specific records you "
+        "select ... each record must be submitted separately.' So this "
+        "form is step 1 of a select-your-records flow, the same shape of "
+        "caveat as AdvancedBackgroundChecks' magic link: a completed "
+        "submission here is a request STARTED, not a person removed, and "
+        "somebody still has to pick their records on the page that "
+        "follows."
+    ),
+)
+
+STATERECORDS_ORG = FormRecipe(
+    broker_id="staterecords-org",
+    broker_name="StateRecords.org",
+    url="https://staterecords.org/do-not-sell-share-my-personal-information",
+    flavor=FLAVOR_INFOPAY_DNS,
+    steps=_infopay_steps(),
+    submit_selector=_INFOPAY_SUBMIT,
+    # Swept and confirmed clean -- see the recipe's notes.
+    no_captcha_verified=True,
+    success_markers=_INFOPAY_SUCCESS,
+    notes=(
+        "Verified against the live page on 2026-09-22 (dry run, real "
+        "browser, synthetic identity), and enumerated element by element "
+        "rather than assumed from the shared flavor: this site's markup is "
+        "Tailwind-themed where CourtRecords.us's is plain Bootstrap, but "
+        "the four field ids, the field set and the submit button are "
+        "identical. Same no-bot-check caveat as COURTRECORDS_US. Note the "
+        "URL has no trailing slash: with one, the site 301s, and the "
+        "settled form is recorded here so the driver does not depend on a "
+        "redirect staying in place."
+    ),
+)
+
+RECORDSFINDER = FormRecipe(
+    broker_id="recordsfinder-com",
+    broker_name="RecordsFinder",
+    url="https://recordsfinder.com/do-not-sell-share-my-personal-information/",
+    flavor=FLAVOR_INFOPAY_DNS,
+    steps=_infopay_steps(),
+    submit_selector=_INFOPAY_SUBMIT,
+    # Swept and confirmed clean -- see the recipe's notes.
+    no_captcha_verified=True,
+    success_markers=_INFOPAY_SUCCESS,
+    notes=(
+        "Verified against the live page on 2026-09-22 (dry run, real "
+        "browser, synthetic identity). Same InfoPay form as CourtRecords.us "
+        "and StateRecords.org, enumerated separately; the only difference "
+        "is that this site's State <select> carries an extra 'All States' "
+        "option above the real ones, which a label match on a real state "
+        "name cannot hit. The dataset's recorded opt-out URL "
+        "(recordsfinder.com/optout) is the rights-explainer page, not this "
+        "form -- see COURTRECORDS_US's note. Same no-bot-check caveat."
+    ),
+)
+
+
 RECIPES = {
     CONSUMER_CANVAS.broker_id: CONSUMER_CANVAS,
     NIELSEN.broker_id: NIELSEN,
@@ -812,6 +959,9 @@ RECIPES = {
     ACHCOOP.broker_id: ACHCOOP,
     BIGDBM.broker_id: BIGDBM,
     PEOPLEDATALABS.broker_id: PEOPLEDATALABS,
+    COURTRECORDS_US.broker_id: COURTRECORDS_US,
+    STATERECORDS_ORG.broker_id: STATERECORDS_ORG,
+    RECORDSFINDER.broker_id: RECORDSFINDER,
 }
 
 

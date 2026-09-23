@@ -333,9 +333,9 @@ def test_exactly_the_hand_verified_brokers_are_turned_on():
     """
     assert optout_forms.supported_broker_ids() == [
         "achcoop-com", "advancedbackgroundchecks-com", "bigdbm-com",
-        "bolttech", "consumer-canvas-llc", "credit-com",
-        "ls-mobile-apps-holdings-ltd", "nielsen",
-        "peopledatalabs-com", "searchpublicrecords-com",
+        "bolttech", "consumer-canvas-llc", "courtrecords-us", "credit-com",
+        "ls-mobile-apps-holdings-ltd", "nielsen", "peopledatalabs-com",
+        "recordsfinder-com", "searchpublicrecords-com", "staterecords-org",
     ]
     # In the dataset, but not hand-verified -> still unsubmittable.
     assert not optout_forms.is_supported("allant-group")
@@ -1175,13 +1175,32 @@ def test_an_unknown_step_type_is_a_loud_error_not_a_silent_skip(full_identity):
         optout_submit.apply_recipe(FakePage(), recipe, {"values": {}})
 
 
-def test_every_shipped_recipe_has_a_captcha_selector_set():
-    """All four new forms carry a bot check; none may be silently assumed clean."""
+def test_every_shipped_recipe_says_whether_it_has_a_bot_check():
+    """No recipe may leave "is there a captcha here?" unanswered.
+
+    Originally this asserted every form HAS a bot check, which was true of
+    the first batch and is not a law of nature: InfoPay's shared opt-out
+    form (courtrecords.us / staterecords.org / recordsfinder.com) carries
+    none at all. An empty ``captcha_selectors`` alone cannot distinguish
+    "there is no captcha" from "nobody looked", and the two have opposite
+    consequences once submission is enabled with dry-run off -- so a recipe
+    must state one or the other, and ``no_captcha_verified`` is the explicit
+    way to say "swept, genuinely clean".
+    """
     for broker_id in optout_forms.supported_broker_ids():
         recipe = optout_forms.recipe_for(broker_id)
-        assert recipe.captcha_selectors, broker_id
+        assert recipe.captcha_selectors or recipe.no_captcha_verified, broker_id
         assert recipe.success_markers, broker_id
         assert recipe.notes.strip(), broker_id
+
+
+def test_a_captcha_free_recipe_says_so_in_its_notes():
+    """A no-bot-check recipe is a loaded gun; the notes must warn about it."""
+    for broker_id in optout_forms.supported_broker_ids():
+        recipe = optout_forms.recipe_for(broker_id)
+        if not recipe.no_captcha_verified:
+            continue
+        assert "no bot check" in recipe.notes.lower().replace("-", " "), broker_id
 
 
 @pytest.mark.parametrize("addresses,expected", [
