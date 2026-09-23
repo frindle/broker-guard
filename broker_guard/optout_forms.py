@@ -1391,6 +1391,28 @@ OPTOUT_OUT_OF_SCOPE = {
         "problem, not a wall. Nothing was submitted. Its SEARCH leg is a "
         "shipped, working recipe; see search_forms.TRUEPEOPLESEARCH."
     ),
+    "usphonebook-com": (
+        "Verified 2026-09-23: the same emailed-link gate as "
+        "truepeoplesearch-com, and recorded separately because each "
+        "dataset broker gets its own verdict. The dataset's "
+        "/opt-out 301s to /removal, whose 'US Phone Book Opt-Out Form' is "
+        "a POST to /removal with a _token, user-type, subject-firstname/"
+        "middlename/lastname, subject-email, an agent block, an agreement "
+        "checkbox and reCAPTCHA -- and, in the page's own numbered steps, "
+        "'We will send a link to your email address that will take you to "
+        "the opt-out form', expiring after 24 hours, with the actual "
+        "record details entered only on THAT page. The two sites word "
+        "those four steps identically, which reads like one operator (both "
+        "also advertise the same EnformionGO partner API in the footer), "
+        "but the finding was taken off this site's own live page rather "
+        "than inferred from its sibling: different field names "
+        "(subject-firstname here vs FirstName there), different action "
+        "path, and reCAPTCHA here where TruePeopleSearch uses hCaptcha. "
+        "Out of scope for the same reason: the real form has no URL until "
+        "a one-time mail arrives, and this codebase has no mailbox. "
+        "Nothing was submitted. Its SEARCH leg is a shipped, working "
+        "recipe; see search_forms.USPHONEBOOK."
+    ),
     "peoplewhiz-com": (
         "Verified 2026-09-23. /remove-my-info is a search box, not a form: "
         "its own instructions say to search your name, select your record, "
