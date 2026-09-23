@@ -1261,6 +1261,29 @@ OPTOUT_OUT_OF_SCOPE = {
         "tool does not choose which stranger's record is Penn's, and it "
         "does not upload identity documents."
     ),
+    "privaterecords-net": (
+        "Verified 2026-09-23. The 'Do Not Sell Or Share My Personal Info' "
+        "link goes to /api/helper/optOutLight/search, whose own heading "
+        "states the shape: 'Enter the name and state in the form below to "
+        "locate the record you would like to remove'. The fields on it "
+        "(fname, lname, city, state, zip, phone, email) are SEARCH fields "
+        "for finding somebody's record, not a removal request -- so a "
+        "FormRecipe pointed at them would be filling in a lookup and "
+        "calling it a filed opt-out. There is a second problem on top of "
+        "the shape: submitting that search POSTs, answers 200, and "
+        "re-renders the same empty form with no result list, no 'nothing "
+        "found' copy and no error, which is the same never-settles "
+        "behaviour its SEARCH leg shows (see "
+        "search_forms.SEARCH_UNDECIDED)."
+    ),
+    "peoplesearcher-com": (
+        "Verified 2026-09-23: the same page, at the same path, on the same "
+        "codebase as privaterecords-net -- /api/helper/optOutLight/search, "
+        "same heading, same seven search fields, and the same 200-with-no-"
+        "result-list when submitted. Recorded separately because each "
+        "dataset broker gets its own verdict, and the finding is "
+        "identical."
+    ),
     "openpeoplesearch-com": (
         "Verified 2026-09-23, and this closes the question batch 1 left "
         "open: the START button on /Consumer IS locatable -- it is an "
