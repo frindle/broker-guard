@@ -2147,6 +2147,11 @@ def review_run(broker_id: str = Form(...), mode: str = Form("dry"),
     dry_run = True if mode != "live" else None   # None == use the configured setting
 
     try:
+        # No alert_sink argument here on purpose: run_attempt builds the
+        # standard one from cfg itself, so an attempt that fails because the
+        # broker REDESIGNED THEIR FORM raises a recipe_drift notification on
+        # the same two sinks the scan leg uses, without this route (or a
+        # test's stub of it) having to know about alerting at all.
         record = optout_submit.run_attempt(broker_id, identity, cfg, dry_run=dry_run)
     except optout_submit.SubmissionRefused as exc:
         raise HTTPException(status_code=409, detail=str(exc))

@@ -164,6 +164,11 @@ class Config:
 
     alert_webhook_url: str | None = None
     alert_log_path: str = "logs/alerts.jsonl"
+    # Bookkeeping for recipe-drift alerts: which (broker, leg) pairs have
+    # already been reported, so a recipe that has been broken for a week
+    # does not re-notify every cycle for a week. Not presence state -- see
+    # ``recipe_health.DriftLedger`` on why it is a plain file.
+    recipe_drift_path: str = "logs/recipe-drift.json"
 
     eraser_bin: str = "eraser"
     eraser_enabled: bool = False
@@ -265,6 +270,8 @@ def load_config(env=None) -> Config:
         log_pii=_env_bool(env, "BG_LOG_PII", False),
     )
     cfg.alert_log_path = _env_str(env, "BG_ALERT_LOG_PATH", os.path.join(cfg.log_dir, "alerts.jsonl"))
+    cfg.recipe_drift_path = _env_str(env, "BG_RECIPE_DRIFT_PATH",
+                                     os.path.join(cfg.log_dir, "recipe-drift.json"))
     _require_http_url("BG_SEARXNG_URL", cfg.searxng_url)
     _require_http_url("BG_ALERT_WEBHOOK_URL", cfg.alert_webhook_url)
 

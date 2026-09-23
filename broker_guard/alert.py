@@ -55,7 +55,20 @@ def format_notification(digest: dict) -> dict:
             else:
                 kind = "unknown"
                 broker_id = "unknown"
-            lines.append("- {} ({})".format(kind, broker_id))
+            line = "- {} ({})".format(kind, broker_id)
+            # A recipe_drift item is the one kind whose whole value is in the
+            # detail: "recipe_drift (spokeo-com)" tells a reader nothing they
+            # can act on, while "[search] could not fill 'Last Name'" names
+            # the selector to go and re-read. Kept to the same one-line shape
+            # so an existing consumer of this text is not reformatted.
+            if isinstance(item, dict) and kind == "recipe_drift":
+                extra = " ".join(part for part in (
+                    "[{}]".format(item.get("leg")) if item.get("leg") else "",
+                    str(item.get("detail") or "").strip(),
+                ) if part)
+                if extra:
+                    line = "{}: {}".format(line, extra)
+            lines.append(line)
         message = title + "\n\n" + "\n".join(lines)
 
     obsidian_md = "# {}\n\n{}".format(title, "".join(line + "\n" for line in lines))
@@ -77,9 +90,21 @@ def events_from_cycle(cycle_result: dict) -> list[dict]:
 
     Both ``new_appearances`` and ``resolved`` are emitted, so a digest can
     report removals landing as well as new listings appearing.
+
+    A third kind, ``recipe_drift``, is derived from the payload's ``errors``
+    -- but only from the ones ``recipe_health`` calls STRUCTURAL, i.e. "the
+    broker's page is not shaped the way our recipe says". The other error
+    classes (a timeout, a bot wall, a profile that cannot fill a required
+    field) are deliberately dropped here rather than filtered downstream, so
+    there is exactly one place that decides what an errored broker is worth
+    telling somebody about. A payload may also carry ready-made
+    ``recipe_drift`` events directly -- that is how the opt-out leg, which
+    never goes through ``run_cycle``, reaches the same sinks.
     """
     if not isinstance(cycle_result, dict):
         return []
+    from broker_guard import recipe_health
+
     now_iso = cycle_result.get("now_iso") or cycle_result.get("ran_at")
     identity_key = cycle_result.get("identity_key")
     events = []
@@ -93,4 +118,10 @@ def events_from_cycle(cycle_result: dict) -> list[dict]:
                     "at": now_iso,
                 }
             )
+    events.extend(recipe_health.drift_events_from_errors(
+        cycle_result.get("errors"), leg=recipe_health.LEG_SEARCH,
+        at=now_iso, identity_key=identity_key))
+    for event in cycle_result.get("recipe_drift") or []:
+        if isinstance(event, dict):
+            events.append(event)
     return events

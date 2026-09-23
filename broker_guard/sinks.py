@@ -95,12 +95,55 @@ class CompositeAlertSink:
     notification must not lose the state write that came before it.
     """
 
-    def __init__(self, sinks):
+    def __init__(self, sinks, drift_ledger=None):
         self.sinks = [s for s in sinks if s is not None]
         self.last_notification = None
+        # Optional ``recipe_health.DriftLedger``. Its only job is to keep a
+        # recipe that has been broken for a week from re-notifying every
+        # cycle for a week -- see that class's docstring.
+        self.drift_ledger = drift_ledger
+
+    def _apply_drift_ledger(self, payload: dict, events: list) -> list:
+        """Drop repeat ``recipe_drift`` events; forget brokers that recovered.
+
+        Order matters: brokers that were healthy THIS cycle are cleared
+        first, so a broker that broke, was fixed, and broke again alerts the
+        second time too. A broker that merely errored transiently is neither
+        cleared nor reported -- it is not in this cycle's drift events and
+        not in ``current`` either, so its ledger entry (if any) stands.
+        """
+        ledger = self.drift_ledger
+        if ledger is None:
+            return events
+        from broker_guard import recipe_health
+
+        drifted = {e.get("broker_id") for e in events
+                   if isinstance(e, dict) and e.get("kind") == recipe_health.KIND}
+        for broker_id in (payload.get("current") or []) if isinstance(payload, dict) else []:
+            if broker_id not in drifted:
+                ledger.clear(broker_id, recipe_health.LEG_SEARCH)
+
+        keep, drift = [], []
+        for event in events:
+            if isinstance(event, dict) and event.get("kind") == recipe_health.KIND:
+                drift.append(event)
+            else:
+                keep.append(event)
+        return keep + ledger.filter_new(drift)
 
     def __call__(self, cycle_payload: dict) -> dict:
-        digest = alert.batch_digest(alert.events_from_cycle(cycle_payload))
+        events = self._apply_drift_ledger(
+            cycle_payload if isinstance(cycle_payload, dict) else {},
+            alert.events_from_cycle(cycle_payload))
+        if not events:
+            # Nothing happened that anyone asked to hear about. Returning
+            # before delivery keeps "no new activity" out of the alert log:
+            # ``run_cycle`` now calls this whenever a broker ERRORED, and
+            # most errors are transient by design (see recipe_health), so
+            # without this a quiet night would write one empty notification
+            # per cycle forever.
+            return {"delivered": 0, "notification": None}
+        digest = alert.batch_digest(events)
         notification = alert.format_notification(digest)
         notification["counts"] = digest["counts"]
         notification["items"] = digest["items"]
@@ -122,7 +165,13 @@ class CompositeAlertSink:
 
 
 def build_alert_sink(cfg) -> CompositeAlertSink:
+    from broker_guard.recipe_health import DriftLedger
+
     sinks = [FileAlertSink(cfg.alert_log_path)]
     if cfg.alert_webhook_url:
         sinks.append(WebhookAlertSink(cfg.alert_webhook_url, attempts=cfg.max_retries or 1))
-    return CompositeAlertSink(sinks)
+    # No new destination: recipe-drift alerts ride the SAME two sinks (the
+    # JSON-lines alert log, and the operator's webhook if they set
+    # BG_ALERT_WEBHOOK_URL). The ledger only decides how OFTEN they are sent.
+    path = getattr(cfg, "recipe_drift_path", "") or ""
+    return CompositeAlertSink(sinks, drift_ledger=DriftLedger(path) if path else None)

@@ -43,14 +43,32 @@ def run_cycle(identity_key: str, brokers: list[dict], presence_checker, state_co
             resolved.append(seen_id)
 
     alerts_sent = False
-    if new_appearances or resolved:
+    if new_appearances or resolved or errors:
+        # ``errors`` is handed to the sink as well, and that is new: a
+        # recipe whose selectors have rotted fails ONLY into this bucket,
+        # and a bucket nobody is notified about is a recipe that can rot
+        # silently for months inside a green-looking sweep. The sink (via
+        # ``alert.events_from_cycle`` -> ``recipe_health``) keeps only the
+        # errors that look like the SITE CHANGED and drops the timeouts and
+        # bot walls, so this does not turn every blip into a notification;
+        # ``current`` rides along so a broker that checked cleanly can be
+        # forgiven a past drift report. Deciding that here would put the
+        # policy in the wrong module -- run_cycle reports, it does not
+        # triage.
         alert_sink({
             "identity_key": identity_key,
             "new_appearances": list(new_appearances),
             "resolved": list(resolved),
+            "errors": list(errors),
+            "current": list(current),
             "now_iso": now_iso,
         })
-        alerts_sent = True
+        # Unchanged meaning on purpose: "this cycle had something to report
+        # about the person's listings". An errors-only call reaches the sink
+        # (above) but does not set this, because a cycle that only hit
+        # timeouts did not report anything about a listing, and the
+        # dashboard/tests read this flag that way.
+        alerts_sent = bool(new_appearances or resolved)
 
     return {
         "identity_key": identity_key,

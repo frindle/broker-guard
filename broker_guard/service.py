@@ -532,6 +532,50 @@ def build_dependencies(cfg: Config) -> Dependencies:
     )
 
 
+def run_recipe_check(cfg) -> int:
+    """``--check-recipes``: probe every recipe's page, print, alert, exit code.
+
+    Exit code 1 when any recipe shows drift, so this is usable from cron or
+    a CI job as well as by hand. A blocked or unreachable page is NOT drift
+    and does not fail the run -- see ``recipe_check``'s docstring.
+    """
+    from broker_guard import recipe_check
+    from broker_guard.optout_submit import OptOutSubmitter
+    from broker_guard.sinks import build_alert_sink
+
+    submitter = OptOutSubmitter(timeout_ms=cfg.playwright_timeout_ms,
+                                headless=cfg.playwright_headless)
+    try:
+        submitter.start()
+    except Exception as exc:
+        print("cannot open a browser for the recipe check: {}: {}".format(
+            type(exc).__name__, exc), file=sys.stderr)
+        return 2
+
+    pages = []
+
+    def new_page():
+        _context, page = submitter.new_page()
+        pages.append(_context)
+        return page
+
+    try:
+        reports = recipe_check.check_all(new_page)
+    finally:
+        for context in pages:
+            try:
+                context.close()
+            except Exception:
+                pass
+        submitter.close()
+
+    print(recipe_check.format_report(reports))
+    events = recipe_check.drift_events(reports, at=utcnow_iso())
+    if events:
+        build_alert_sink(cfg)({"now_iso": utcnow_iso(), "recipe_drift": events})
+    return 1 if events else 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="broker-guard", description=__doc__.splitlines()[0])
     parser.add_argument("--once", action="store_true", help="run a single cycle and exit")
@@ -544,6 +588,13 @@ def main(argv=None) -> int:
                              "un-collapsed outcome including any exception the "
                              "sweep would have swallowed, and exit. Read-only: "
                              "nothing is written to the state db or the dashboard")
+    parser.add_argument("--check-recipes", action="store_true",
+                        help="open every hand-verified search and opt-out form "
+                             "recipe's page and report any selector that no "
+                             "longer matches (or now matches twice), then exit. "
+                             "Read-only: nothing is typed, clicked or submitted. "
+                             "Drift found here raises the same recipe_drift "
+                             "alert a scan would")
     parser.add_argument("--serve-web", action="store_true",
                         help="serve the web dashboard (FastAPI/uvicorn) instead of the "
                              "headless loop; the autopilot scan/confirmation loop still "
@@ -600,6 +651,12 @@ def main(argv=None) -> int:
         from broker_guard import diagnose as diagnose_mod
 
         return diagnose_mod.run(cfg, args.diagnose_broker)
+
+    if args.check_recipes:
+        # Active rot detection, one-shot and read-only. Placed beside
+        # --diagnose-broker for the same reason: it must never reach the scan
+        # loop or the web server.
+        return run_recipe_check(cfg)
 
     if args.serve_web or cfg.serve_web:
         from broker_guard.webapp import run_web_server

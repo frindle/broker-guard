@@ -342,6 +342,38 @@ class OptOutSubmitter:
         return context, context.new_page()
 
 
+def _notify_drift(alert_sink, record: dict, recipe) -> None:
+    """Tell the alert sink when THIS broker's form stopped matching its recipe.
+
+    The opt-out leg never goes through ``orchestrator.run_cycle``, so it
+    cannot reach the sinks the way the search leg does -- but the rot it can
+    suffer is identical (an input id renamed, a submit button that moved),
+    and it is just as invisible: today a drifted recipe produces one
+    ``failed`` row on the review page and nothing else. This sends the same
+    ``recipe_drift`` event the search leg sends, to the same sinks, using
+    the same classifier, so there is one notification path and not two.
+
+    Total and best effort: an alerting failure must never turn a recorded
+    attempt into a raised exception.
+    """
+    if alert_sink is None:
+        return
+    from broker_guard import recipe_health
+
+    reason = record.get("reason") or ""
+    if not recipe_health.is_recipe_drift(reason):
+        return
+    event = recipe_health.drift_event(
+        recipe.broker_id, recipe_health.LEG_OPTOUT, reason,
+        at=record.get("finished_at"), identity_key=record.get("identity_key"))
+    try:
+        alert_sink({"identity_key": record.get("identity_key"),
+                    "now_iso": record.get("finished_at"),
+                    "recipe_drift": [event]})
+    except Exception as exc:  # pragma: no cover - alerting is best effort
+        log.warning("recipe drift alert failed", extra={"error": _safe_error(exc)})
+
+
 def _record(recipe, identity_key, started_at, outcome, dry_run, **extra) -> dict:
     record_id = review.attempt_id(recipe.broker_id, identity_key, started_at.isoformat())
     base = {
@@ -358,11 +390,21 @@ def _record(recipe, identity_key, started_at, outcome, dry_run, **extra) -> dict
         "finished_at": _utcnow().isoformat(),
     }
     base.update(extra)
+    # What KIND of failure this was, in recipe_health's vocabulary, stored
+    # on the record itself so the review page (and anyone reading the JSON
+    # later) can tell "their form changed" from "the network hiccuped"
+    # without re-parsing free text. Successful outcomes carry None.
+    from broker_guard import recipe_health
+
+    reason = base.get("reason")
+    unhappy = outcome in (review.OUTCOME_FAILED, review.OUTCOME_NEEDS_MANUAL)
+    base["failure_class"] = (
+        recipe_health.classify_failure(reason) if (reason and unhappy) else None)
     return base
 
 
 def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
-                  dry_run=None, now=None) -> dict:
+                  dry_run=None, now=None, alert_sink=None) -> dict:
     """Run one opt-out submission attempt and persist its audit record.
 
     Returns the saved record dict. NEVER raises for an ordinary failure --
@@ -399,6 +441,18 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
     started_at = now or _utcnow()
     identity_key = getattr(identity, "identity_key", "") or ""
 
+    def _finish(record, screenshot=None):
+        """Persist the attempt, then notify if it looks like recipe rot.
+
+        One funnel for all six exit points below, so a new outcome branch
+        cannot forget the alert -- and so the SAVE always happens first:
+        the audit record is the legally interesting half, and an alerting
+        problem must never cost it.
+        """
+        saved = review.save_attempt(directory, record, screenshot)
+        _notify_drift(alert_sink, saved, recipe)
+        return saved
+
     resolved = optout_forms.resolve_fields(recipe, identity)
     if resolved["missing"]:
         # Refuse to send a half-filled DSAR under Penn's name: the broker
@@ -409,7 +463,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
             reason="missing required profile fields: " + ", ".join(resolved["missing"]),
             missing=resolved["missing"], fields={}, choices=[],
         )
-        return review.save_attempt(directory, record, None)
+        return _finish(record)
 
     if submitter is None or getattr(submitter, "_browser", None) is None:
         record = _record(
@@ -418,7 +472,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
                    "image built with INSTALL_BROWSERS=true?)",
             missing=[], fields={}, choices=[],
         )
-        return review.save_attempt(directory, record, None)
+        return _finish(record)
 
     context = page = None
     screenshot = None
@@ -454,7 +508,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
                 fields={}, choices=[], missing=[],
                 manual_action_source="captcha_fallback",
             )
-            return review.save_attempt(directory, record, screenshot)
+            return _finish(record, screenshot)
 
         applied = apply_recipe(page, recipe, resolved)
 
@@ -473,7 +527,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
                 detected=found, fields=applied["filled"], choices=applied["chosen"],
                 missing=[], manual_action_source="captcha_fallback",
             )
-            return review.save_attempt(directory, record, screenshot)
+            return _finish(record, screenshot)
 
         if effective_dry_run:
             record = _record(
@@ -481,7 +535,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
                 reason="dry run: form filled, Submit deliberately not pressed",
                 fields=applied["filled"], choices=applied["chosen"], missing=[],
             )
-            return review.save_attempt(directory, record, screenshot)
+            return _finish(record, screenshot)
 
         # --- the real thing ------------------------------------------------
         page.click(recipe.submit_selector)
@@ -502,7 +556,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
             fields=applied["filled"], choices=applied["chosen"], missing=[],
             confirmation_text=(result_text or "")[:_CONFIRMATION_CHARS],
         )
-        return review.save_attempt(directory, record, screenshot)
+        return _finish(record, screenshot)
 
     except Exception as exc:
         # Everything is an audited failure, never a crash: an attempt that
@@ -517,7 +571,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
             effective_dry_run, reason=_safe_error(exc),
             fields={}, choices=[], missing=[],
         )
-        return review.save_attempt(directory, record, screenshot)
+        return _finish(record, screenshot)
     finally:
         for obj in (page, context):
             if obj is not None:
@@ -527,15 +581,30 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
                     pass
 
 
-def run_attempt(broker_id: str, identity, cfg, dry_run=None) -> dict:
+def run_attempt(broker_id: str, identity, cfg, dry_run=None, alert_sink=None) -> dict:
     """Open a browser, run one attempt for *broker_id*, close it again.
 
     The convenience entry point the web UI button uses. Deliberately
     one-shot: it builds and tears down its own browser rather than holding
     one open, because submission is an occasional, human-initiated action,
     not a sweep.
+
+    *alert_sink* defaults to the standard one built from *cfg*, so the
+    caller (the web UI's run button) does not have to know that recipe-rot
+    alerting exists. A caller that passes one explicitly -- or a test with a
+    ``cfg`` that has no alerting settings on it at all -- is respected.
     """
     recipe = optout_forms.recipe_for(broker_id)
+    if alert_sink is None:
+        try:
+            from broker_guard.sinks import build_alert_sink
+
+            alert_sink = build_alert_sink(cfg)
+        except Exception as exc:
+            # Alerting must never be the reason an opt-out attempt does not
+            # happen; the attempt is the point, the notification is not.
+            log.warning("could not build the alert sink for this attempt",
+                        extra={"error": _safe_error(exc)})
     if not getattr(cfg, "optout_submit_enabled", False):
         raise SubmissionRefused(
             "automated opt-out submission is off (set BG_OPTOUT_SUBMIT_ENABLED, "
@@ -552,7 +621,8 @@ def run_attempt(broker_id: str, identity, cfg, dry_run=None) -> dict:
                     extra={"error": _safe_error(exc)})
         submitter = None
     try:
-        return submit_optout(recipe, identity, cfg, submitter=submitter, dry_run=dry_run)
+        return submit_optout(recipe, identity, cfg, submitter=submitter,
+                             dry_run=dry_run, alert_sink=alert_sink)
     finally:
         if submitter is not None:
             submitter.close()
