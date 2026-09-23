@@ -54,6 +54,14 @@ It also flags, explicitly:
                  ``opt_out_url`` is a rights EXPLAINER with no inputs on it,
                  or a consent-portal DSAR form that explicitly refuses
                  do-not-sell requests, and the real surface is a footer link.
+* ``frames``  -- the same description again, per CHILD FRAME, for any frame
+                 that holds controls or loads a captcha. Brokers routinely
+                 EMBED their request form (OneTrust, ServiceNow, a vendor
+                 portal) rather than serving it, and the main frame then
+                 reports zero forms on a page that visibly has one. A frame
+                 this browser may not read is still listed, marked
+                 ``unreadable``, because "there is a cross-origin form here"
+                 is a finding and silence is not.
 
 READ-ONLY, ALWAYS
 -----------------
@@ -159,6 +167,30 @@ def probe(targets, headed=False):
                 # before their form exists to be read.
                 page.wait_for_timeout(2500)
                 rec.update(page.evaluate(JS))
+                # Same-origin policy makes this the ONLY way to see a form
+                # that a broker embeds rather than serves. hireright.com's
+                # consumer-rights request page is the case that forced it:
+                # the page renders, is titled as the request form, and
+                # document.querySelectorAll('form') on the main frame
+                # returns NOTHING, because the form is in a child frame.
+                # Reported separately from `forms` so that "the page has no
+                # form" and "the page's form is embedded" never read alike.
+                frames = []
+                for fr in page.frames:
+                    if fr is page.main_frame:
+                        continue
+                    try:
+                        got = fr.evaluate(JS)
+                    except Exception:  # cross-origin, or the frame went away
+                        frames.append({"url": fr.url, "unreadable": True})
+                        continue
+                    # An ad iframe or a tracking pixel has no controls and
+                    # is only noise in the output.
+                    if got["forms"] or got["loose"] or got["cap"]:
+                        got["url"] = fr.url
+                        frames.append(got)
+                if frames:
+                    rec["frames"] = frames
             except Exception as exc:  # noqa: BLE001 -- the failure IS the finding
                 rec["error"] = "%s: %s" % (type(exc).__name__, str(exc)[:200])
             page.close()

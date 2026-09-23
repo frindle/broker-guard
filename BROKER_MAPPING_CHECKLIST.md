@@ -230,7 +230,7 @@ of those dicts against source-brokers.json).
 - [x] **Collateral Analytics, LLC** (`ice-com`) -- search: no-surface, opt-out: undecided
 - [x] **Collective Data Solutions, LLC** (`collectivedata-io`) -- search: no-surface, opt-out: blocked
 - [ ] **Colorado Court Records (CourtRecords.us network)** (`coloradocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [x] **Command Precision Inc.** (`intentwave-com`) -- search: no-surface, opt-out: undecided
+- [x] **Command Precision Inc.** (`intentwave-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Command Precision, Inc.** (`persistent-id`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **COMMERCIAL REAL ESTATE EXCHANGE Inc** (`bigidprivacy-cloud`) -- search: no-surface, opt-out: blocked
 - [ ] **Commercial Real Estate Exchange, Inc.** (`crexi-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -446,7 +446,7 @@ of those dicts against source-brokers.json).
 - [ ] **Helix Campaigns LLC** (`helixcampaigns-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **HERE North America LLC** (`here-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Hexasoft Development Sdn. Bhd.** (`ip2location-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [x] **HireRight** (`hireright-com`) -- search: no-surface, opt-out: undecided
+- [x] **HireRight** (`hireright-com`) -- search: no-surface, opt-out: blocked
 - [ ] **HIRETEAMMATE Inc** (`hireez-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Hivestack Inc.** (`perion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Hivestack, Inc.** (`hivestack-com`) -- search: UNMAPPED, opt-out: UNMAPPED
