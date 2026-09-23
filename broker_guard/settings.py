@@ -178,6 +178,23 @@ SETTING_SPECS = (
              "Turning it off sends REAL opt-out requests.",
     ),
     SettingSpec(
+        key="optout_submit_enabled", env="BG_OPTOUT_SUBMIT_ENABLED", kind="bool",
+        label="Automated opt-out submission",
+        help="Let broker-guard fill in and send opt-out webforms for you, using "
+             "your profile's real name, email and state. OFF by default, and "
+             "only ever runs for brokers with a hand-verified form recipe. "
+             "Turning this on does NOT by itself send anything -- see DRY RUN "
+             "below.",
+    ),
+    SettingSpec(
+        key="optout_submit_dry_run", env="BG_OPTOUT_SUBMIT_DRY_RUN", kind="bool",
+        label="Opt-out submission DRY RUN",
+        help="Keep this ON until you have opened the review folder and checked "
+             "that a filled-in form screenshot looks right. ON means the form is "
+             "filled and photographed but Submit is never pressed. Turning it "
+             "OFF sends REAL opt-out requests in your name.",
+    ),
+    SettingSpec(
         key="captcha_api_key", env="BG_CAPTCHA_API_KEY", kind="str", secret=True,
         label="CAPTCHA solver API key",
         help="Third-party CAPTCHA solving service credential. Optional.",
