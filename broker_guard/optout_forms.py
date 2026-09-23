@@ -1809,6 +1809,26 @@ OPTOUT_OUT_OF_SCOPE = {
         "recipes. The mailbox is. Nothing was submitted. Its SEARCH leg is "
         "a shipped, working recipe."
     ),
+    "truthfinder-com": (
+        "Verified 2026-09-23: the same PeopleConnect wizard already "
+        "recorded for intelius-com, served under TruthFinder's own "
+        "branding. truthfinder.com/privacy-center/ 302s to "
+        "app.truthfinder.com/privacy-center/, whose single plain form "
+        "(firstName, middleInitial, lastName, month/day/year, city, state, "
+        "email) is again only the relative/associate suppression under "
+        "'Right to Opt Out', not the listing removal. The listing removal "
+        "is 'Suppress your Background Report', its only control is 'Manage "
+        "My Suppression Rules', and pressing it opens a new tab at "
+        "https://suppression.peopleconnect.us/login -- the identical "
+        "email-token wizard on the identical third-party domain. "
+        "TruthFinder's own copy carries the identity bar too: 'You will "
+        "need to confirm your identity by providing your full name, date "
+        "of birth, and a phone or email address that you can verify.' "
+        "Recorded separately rather than as 'see intelius-com' because "
+        "each dataset broker gets its own verdict, and because the two "
+        "pages were opened separately rather than assumed identical from "
+        "a shared parent company. Nothing was submitted."
+    ),
 }
 
 
