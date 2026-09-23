@@ -1418,6 +1418,23 @@ NO_OPTOUT_SURFACE = {
         "notifications. Its 'privacy' tab under members."
         "freebackgroundcheck.org redirects to that same policy page."
     ),
+    "addresses-com": (
+        "Verified 2026-09-23. The dataset's opt-out URL for this broker, "
+        "https://www.addresses.com/optout.php, is DEAD: it answers HTTP "
+        "404 titled '404 Sorry, not found | Addresses.com' with the site's "
+        "own 'Oops! NOT FOUND / This page may have been moved or doesn't "
+        "exist.' copy. What replaced it is not on this domain. Every "
+        "privacy link in the live footer -- 'Privacy Policy' and 'Exercise "
+        "My Data Privacy Rights' alike -- points at intelius.com "
+        "(/privacy-policy/ and /privacy-center/ respectively), and its "
+        "search form hands off to intelius.com/results/ with an ADDRS "
+        "affiliate tag. Same affiliate-front finding as peoplefinder-com: "
+        "there is no independent removal surface here, and filing through "
+        "Intelius's wizard under this broker's name would be filing with a "
+        "different company -- one whose own opt-out leg is separately "
+        "recorded as out of scope. Worth flagging to whoever maintains the "
+        "public dataset: that optout_url is stale."
+    ),
     "phonenumbers-org": (
         "Verified 2026-09-23: the dataset's opt-out URL for this broker is "
         "infotracer.com/optout/ -- another company's site -- and "

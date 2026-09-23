@@ -1039,6 +1039,20 @@ NO_SEARCH_SURFACE = {
         "with 200 and the Windows one with 403, i.e. the current UA is the "
         "better of the two."
     ),
+    "addresses-com": (
+        "Verified 2026-09-23: an Intelius front, on both legs, and it does "
+        "not even pretend otherwise once you press the button. Its "
+        "<form name='people-search'> (firstName, lastName, an optional "
+        "state <select>) carries no action attribute -- the handler is "
+        "JavaScript -- and submitting it navigates the tab straight off "
+        "the domain to https://www.intelius.com/results/?utm_source=ADDRS&"
+        "traffic[source]=ADDRS&...&traffic[funnel]=bg&firstName=zylphrenna&"
+        "lastName=quixbottom. The affiliate tag (ADDRS) is baked into the "
+        "destination. Nothing on addresses.com answers whether "
+        "addresses.com lists anyone, and Intelius's own search leg is "
+        "separately undecided above. Its footer agrees about ownership: "
+        "every privacy link on the page points at intelius.com."
+    ),
     "pipl-com": (
         "Verified 2026-09-23: Pipl no longer sells a consumer people "
         "search, and its own homepage says so -- it is titled 'Fraud "
