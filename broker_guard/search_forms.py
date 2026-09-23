@@ -677,8 +677,57 @@ WHITEPAGES = SearchRecipe(
     ),
 )
 
+TRUEPEOPLESEARCH = SearchRecipe(
+    broker_id="truepeoplesearch-com",
+    broker_name="TruePeopleSearch",
+    search_url="https://www.truepeoplesearch.com/",
+    fields=(
+        # The homepage carries five tabbed search forms (Name / Phone /
+        # Address / Email / Neighbors) plus a mobile duplicate of each
+        # ("id-m-*"), so the selector has to name the desktop NAME box
+        # specifically rather than "the first text input".
+        SearchField(selector="#id-d-n", source="full_name",
+                    label="Enter name, phone or address"),
+    ),
+    # The sibling "City, State or Zip" box (#id-d-loc-name) is left empty.
+    submit_selector="#btnSubmit-d-n",
+    results_host="truepeoplesearch.com",
+    no_results_markers=(
+        "could not find any records for that search criteria",
+    ),
+    hit_markers=("records found for",),
+    # "247 records found for John Smith".
+    count_pattern=r"([\d,]+)\s+records\s+found\s+for",
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. Submitting navigates the "
+        "same tab to /results?name=... on the broker's own host, with no "
+        "interstitial and no bot wall on either outcome. The miss page "
+        "prints 'We could not find any records for that search criteria.' "
+        "and is titled with the bare searched name; the hit page is titled "
+        "'John Smith - Records Found' and prints '247 records found for "
+        "John Smith' above ten free, UNMASKED rows (full name, age, city, "
+        "previous cities, relatives).\n"
+        "\n"
+        "The two markers were chosen to be disjoint on purpose, because "
+        "they are one word apart: the MISS page contains 'any records for' "
+        "and the HIT page contains 'records found for', so a lazier hit "
+        "marker of 'records for' would fire on both. Checked against the "
+        "real text of both pages rather than reasoned about.\n"
+        "\n"
+        "Both result pages carry BeenVerified and InstantCheckmate "
+        "'Sponsored Links' tables that repeat the searched name -- on the "
+        "MISS page too ('Search current phone of Zylphrenna Quixbottom'). "
+        "That is rule (1) in a new costume: the identity terms are present "
+        "on a page that means 'not listed', which is why no-results markers "
+        "are consulted before terms and why a term match alone can never "
+        "produce a found."
+    ),
+)
+
 RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
+    TRUEPEOPLESEARCH.broker_id: TRUEPEOPLESEARCH,
     SPOKEO.broker_id: SPOKEO,
     WHITEPAGES.broker_id: WHITEPAGES,
     SEARCHPEOPLEFREE.broker_id: SEARCHPEOPLEFREE,

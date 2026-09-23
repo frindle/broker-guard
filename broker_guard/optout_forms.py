@@ -1369,6 +1369,28 @@ OPTOUT_OUT_OF_SCOPE = {
         "submitted; step 2 was never reached. Its SEARCH leg is a shipped, "
         "working recipe; see search_forms.WHITEPAGES."
     ),
+    "truepeoplesearch-com": (
+        "Verified 2026-09-23, and it is a THIRD shape of out-of-scope: an "
+        "emailed-link gate. /removal renders fine and unwalled, and the "
+        "form on it is real -- POST to /removal/beginremovalidv with "
+        "RightsExerciseType, FirstName, MiddleName, LastName, Email, an "
+        "agent block, an AuthorizeContact checkbox and hCaptcha -- but "
+        "that form is not the opt-out. The page's own numbered directions "
+        "say so: 'Enter your email address and name and complete the "
+        "captcha below. We will send a link to your email address that "
+        "will take you to the opt-out form', then 'Click the link sent to "
+        "your email ... If you wait more than 24 hours to click this link "
+        "you will need to request a new one', and only then 'Enter your "
+        "information on the form.' So the real removal form has no URL "
+        "until a one-time link arrives in a mailbox this codebase does not "
+        "have and cannot read, and it expires in 24 hours. FormRecipe "
+        "carries one url and one flat field list; there is nothing here "
+        "for it to point at. The hCaptcha on stage one is almost beside "
+        "the point -- a captcha alone would only mean 'needs you', which "
+        "this tool already handles -- so it is recorded as a shape "
+        "problem, not a wall. Nothing was submitted. Its SEARCH leg is a "
+        "shipped, working recipe; see search_forms.TRUEPEOPLESEARCH."
+    ),
     "peoplewhiz-com": (
         "Verified 2026-09-23. /remove-my-info is a search box, not a form: "
         "its own instructions say to search your name, select your record, "
