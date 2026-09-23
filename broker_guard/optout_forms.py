@@ -1130,6 +1130,30 @@ NO_OPTOUT_SURFACE = {
         "this broker's name would be filing a request with the wrong "
         "company."
     ),
+    "arrestwarrant-org": (
+        "Verified 2026-09-23: the only removal channel is a PRINTABLE PDF. "
+        "arrestwarrant.org/privacy.html links 'our data removal policy' to "
+        "a javascript popup of '/InfoPay Opt-Out New.pdf' (200, 198 KB), a "
+        "fill-in form asking for full legal name, aliases, date of birth, "
+        "current address and a reason drawn from a fixed list (law "
+        "enforcement officer at risk, identity-theft victim, at risk of "
+        "physical harm, record demonstrably incorrect), to be sent to "
+        "support@verifyrecords.com. There is no web form to fill, this "
+        "codebase cannot send mail, and the reason list is a claim about "
+        "Penn's circumstances that no tool should make on his behalf. "
+        "The site's /do-not-sell-share-my-personal-information/ path 404s."
+    ),
+    "freebackgroundcheck-org": (
+        "Verified 2026-09-23: nothing to opt out OF, and the site says so. "
+        "It publishes no records of its own -- it is a directory of links "
+        "to other people-search sites (see the same finding in "
+        "search_forms.SEARCH_UNDECIDED) -- and its privacy policy states "
+        "'If you want to correct or remove your original public record ... "
+        "you will need to contact the custodian of that information.' The "
+        "only opt-outs it offers are for marketing email and browser push "
+        "notifications. Its 'privacy' tab under members."
+        "freebackgroundcheck.org redirects to that same policy page."
+    ),
     "phonenumbers-org": (
         "Verified 2026-09-23: the dataset's opt-out URL for this broker is "
         "infotracer.com/optout/ -- another company's site -- and "
