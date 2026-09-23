@@ -141,6 +141,15 @@ class SearchRecipe:
     # Extra wording that means "the results page has settled". Defaults to
     # hit_markers + no_results_markers, which is usually exactly right.
     ready_markers: tuple = ()
+    # How long THIS broker may churn before printing an answer, in ms. 0
+    # means "use search_probe's default". Set it only with a measurement to
+    # point at: RevealPhoneOwner runs a ~26-second staged progress animation
+    # ("Initiating phone lookup...", "Finding social profiles...") before
+    # every HIT, while its misses answer instantly -- so the default 20s
+    # deadline would time out on precisely the pages that contain a person
+    # and never on the pages that do not. That is not a slow broker, it is a
+    # recipe that reports "unknown" for every hit.
+    ready_timeout_ms: int = 0
     verified_on: str = ""
     notes: str = ""
 
@@ -385,6 +394,48 @@ CYBERBACKGROUNDCHECKS = SearchRecipe(
     ),
 )
 
+REVEALPHONEOWNER = SearchRecipe(
+    broker_id="revealphoneowner-com",
+    broker_name="RevealPhoneOwner",
+    search_url="https://www.revealphoneowner.com/",
+    fields=(
+        # The only search this site has. It is a reverse-phone directory:
+        # there is no name box anywhere on it, so presence here is a
+        # question about the profile's PHONE NUMBER, and a profile with no
+        # phone gets "unknown" rather than a guess (resolve_search_fields
+        # reports the missing field and the check never runs).
+        SearchField(selector="#phone-query", source="phone",
+                    label="Phone Number"),
+    ),
+    submit_selector="#query-form button[type='submit']",
+    results_host="revealphoneowner.com",
+    no_results_markers=("no result found",),
+    hit_markers=("data result found for",),
+    # See the field comment on SearchRecipe.ready_timeout_ms: measured, and
+    # the measurement is the whole reason this field exists.
+    ready_timeout_ms=45000,
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. Submitting navigates to "
+        "/search/<dashed-number>/ on the broker's own host. A number it has "
+        "nothing for answers instantly with 'No Result found!'. A number it "
+        "DOES have runs a staged progress animation ('Initiating phone "
+        "lookup ...', then 'Finding social profiles ...') for about 26 "
+        "seconds and then prints 'Data result found for (312) 222-3232' "
+        "over a teaser card (Owner Name: Available, Address, Zip Code, "
+        "Phone Type) behind a 'Get Full Report' paywall. The teaser is "
+        "enough: it states that a record for that number exists, which is "
+        "the only question this tool asks, and the searched number is "
+        "printed on the page so the identity-term check corroborates it "
+        "(detection matches phone terms on digits, so formatting does not "
+        "matter). The 26-second animation is why this recipe carries its "
+        "own ready_timeout_ms -- under the shared 20s default every HIT "
+        "would time out into 'unknown' while every MISS answered "
+        "instantly, which is the most misleading failure mode available. "
+        "Its opt-out leg is a working recipe too; see optout_forms."
+    ),
+)
+
 RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
     SEARCHPEOPLEFREE.broker_id: SEARCHPEOPLEFREE,
@@ -392,6 +443,7 @@ RECIPES = {
     ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
     SEARCHPUBLICRECORDS.broker_id: SEARCHPUBLICRECORDS,
     CYBERBACKGROUNDCHECKS.broker_id: CYBERBACKGROUNDCHECKS,
+    REVEALPHONEOWNER.broker_id: REVEALPHONEOWNER,
 }
 
 

@@ -285,7 +285,12 @@ class SearchChecker(PlaywrightChecker):
             return run_search(context, page, recipe,
                               search.get("values") or {},
                               check.get("terms") or [],
-                              timeout_ms=self.timeout_ms)
+                              timeout_ms=self.timeout_ms,
+                              # A recipe may say its broker is slower than
+                              # the shared default; see SearchRecipe's field
+                              # comment for the one measured case.
+                              ready_timeout_ms=(recipe.ready_timeout_ms
+                                                or _READY_TIMEOUT_MS))
         except Exception as exc:
             return {"error": _safe_error(exc)}
         finally:

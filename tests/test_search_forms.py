@@ -470,6 +470,55 @@ def test_search_checker_is_todays_checker_for_a_broker_without_a_recipe():
     assert homepage.filled == {} and homepage.clicked == []
 
 
+def test_a_slow_brokers_own_deadline_reaches_the_driver(monkeypatch):
+    """A recipe can say its broker is slower than the shared default.
+
+    RevealPhoneOwner prints a HIT only after a ~26-second progress
+    animation while printing a MISS instantly, so a 20-second deadline
+    would time out on exactly the pages that contain a person. The field is
+    worthless if the checker does not pass it on, so that is what is
+    asserted here rather than the constant's value.
+    """
+    seen = {}
+
+    def fake_run_search(context, page, recipe, values, terms, **kwargs):
+        seen.update(broker=recipe.broker_id, **kwargs)
+        return {"found": False}
+
+    monkeypatch.setattr(search_probe, "run_search", fake_run_search)
+
+    class FakeCtx:
+        pages = []
+
+        def set_default_timeout(self, ms):
+            pass
+
+        def close(self):
+            pass
+
+    class FakePageStub:
+        def close(self):
+            pass
+
+    checker = search_probe.SearchChecker()
+    checker._browser = object()
+    monkeypatch.setattr(checker, "new_page", lambda: (FakeCtx(), FakePageStub()))
+
+    slow = "revealphoneowner-com"
+    checker({"broker_id": slow, "url": "https://x.invalid", "terms": TERMS,
+             "search": {"broker_id": slow, "values": {}}})
+    assert seen["ready_timeout_ms"] == search_forms.recipe_for(slow).ready_timeout_ms
+
+    fast = "thatsthem-com"
+    seen.clear()
+    checker({"broker_id": fast, "url": "https://x.invalid", "terms": TERMS,
+             "search": {"broker_id": fast, "values": {}}})
+    # A recipe that sets nothing gets the shared default, not 0 (which would
+    # mean "deadline already passed" to await_results).
+    assert seen["ready_timeout_ms"] == search_probe._READY_TIMEOUT_MS
+    assert search_forms.recipe_for(fast).ready_timeout_ms == 0
+
+
 def test_recipes_are_keyed_by_real_dataset_broker_ids():
     """Recipe keys must match the ids broker_normalize actually produces
     (``<domain-with-dashes>``), or the recipe silently never fires.
