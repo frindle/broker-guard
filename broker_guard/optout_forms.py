@@ -1117,6 +1117,27 @@ NO_OPTOUT_SURFACE = {
         "under no-surface rather than blocked: nothing is standing between "
         "us and the form, the form is gone."
     ),
+    "peoplefinder-com": (
+        "Verified 2026-09-23: peoplefinder.com's 'Do Not Sell Or Share My "
+        "Personal Information' link points at "
+        "https://www.intelius.com/privacy-center/ -- Intelius's own page, "
+        "on Intelius's own domain -- and the site describes itself as "
+        "'PeopleFinder.com powered by Intelius'. Its search form posts to "
+        "tracking.intelius.com with affiliate codes, so this is a front "
+        "rather than a broker with records of its own. Same finding as "
+        "publicrecordsnow-com: there is no independent removal surface "
+        "here to build a recipe against, and submitting to Intelius under "
+        "this broker's name would be filing a request with the wrong "
+        "company."
+    ),
+    "phonenumbers-org": (
+        "Verified 2026-09-23: the dataset's opt-out URL for this broker is "
+        "infotracer.com/optout/ -- another company's site -- and "
+        "phonenumbers.org's own footer carries only a privacy policy, no "
+        "removal page of its own. Recorded as no independent surface. Note "
+        "this is a different finding from the search leg's, which failed "
+        "for its own reason; see search_forms.SEARCH_UNDECIDED."
+    ),
 }
 
 
@@ -1134,6 +1155,40 @@ NO_OPTOUT_SURFACE = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually stops a submission.
 OPTOUT_BLOCKED = {
+    "nationalpublicdata-com": (
+        "Verified 2026-09-23: /optout.html serves a Cloudflare Turnstile "
+        "challenge page ('Performing security verification') and nothing "
+        "else -- the form behind it never renders, so there is nothing to "
+        "transcribe. The contrast is inside one broker again: its SEARCH "
+        "side is not challenged at all and ships as a working recipe in "
+        "search_forms."
+    ),
+    "privatenumberchecker-com": (
+        "Verified 2026-09-23: /removalrequest/ is behind a Cloudflare "
+        "Turnstile challenge on every visit, while the rest of the site "
+        "(including the reverse-phone search this pilot DOES automate) "
+        "serves normally. Worth noting as a pattern rather than a "
+        "one-off: three brokers in this batch wall their removal page "
+        "specifically, which is a choice about who is allowed to leave."
+    ),
+    "voterrecords-com": (
+        "Verified 2026-09-23: the whole site, homepage included, is behind "
+        "a Cloudflare Turnstile challenge, so the opt-out page cannot be "
+        "reached to be read. Recorded as blocked rather than absent "
+        "because nothing here says the surface does not exist -- only that "
+        "an automated visitor never gets to see it. Same for its search "
+        "leg; see search_forms.SEARCH_BLOCKED."
+    ),
+    "uspeoplesearch-com": (
+        "Verified 2026-09-23: same as voterrecords-com -- a Cloudflare "
+        "Turnstile challenge stands in front of the whole site, including "
+        "the /purge-my-data/ page the dataset records as its opt-out."
+    ),
+    "freepeoplesearch-com": (
+        "Verified 2026-09-23: Cloudflare's terminal block page ('Sorry, "
+        "you have been blocked'), not a solvable challenge, on the domain "
+        "as a whole. Nothing of this broker's own content renders."
+    ),
     "cyberbackgroundchecks-com": (
         "Verified 2026-09-22 across repeated visits, including with the "
         "production browser user-agent: the opt-out page is served behind a "
@@ -1144,6 +1199,67 @@ OPTOUT_BLOCKED = {
         "check is a full stop, never something to solve. Note the contrast "
         "with the SEARCH leg, which is not challenged at all and ships as a "
         "working recipe in search_forms."
+    ),
+}
+
+
+# A THIRD kind of no, and the one most likely to be mistaken for laziness.
+#
+# These brokers host a real, reachable, unwalled self-service removal page.
+# What they ask for is outside what this codebase may or can do:
+#
+#   * a government ID or driver's licence upload, which this tool will not
+#     send anywhere on anyone's behalf -- a DSAR is worth less than a scan of
+#     Penn's passport sitting in a broker's ticket queue; or
+#   * a per-RESULT removal flow: search yourself, pick your record out of the
+#     list, then confirm. ``FormRecipe`` describes a fixed form, and picking
+#     the right stranger out of a result list is a judgement call, not a
+#     recipe. Getting it wrong means asking a broker to delete somebody else.
+#
+# Both are decided "no"s rather than open questions, which is why they are
+# not in a pending list -- but they are decided for a REASON THAT COULD
+# CHANGE (a broker adds a plain form; this codebase grows a result-picking
+# model with a human in the loop), and that is why they are not filed under
+# "no surface" either.
+#
+# Notes, not behaviour: nothing reads this at runtime.
+OPTOUT_OUT_OF_SCOPE = {
+    "peoplewhiz-com": (
+        "Verified 2026-09-23. /remove-my-info is a search box, not a form: "
+        "its own instructions say to search your name, select your record, "
+        "confirm, and then -- in the page's own words -- 'IMPORTANT: ID "
+        "required. You'll need to provide proof of your identity before we "
+        "can complete your request.' Both halves are out of scope: this "
+        "tool does not choose which stranger's record is Penn's, and it "
+        "does not upload identity documents."
+    ),
+    "searchbug-com": (
+        "Verified 2026-09-23. Searchbug's CCPA page has no removal form of "
+        "its own; it instructs consumers to use the generic Contact Us "
+        "form with 'CCPA Request' as the reason and, in its own numbered "
+        "steps, to \"Click 'Attach files' to upload an image of your "
+        "Driver's License, or Government ID and/or legal document "
+        "(Required)\". A free-text support ticket carrying a scan of "
+        "Penn's ID is not something this codebase will submit unattended."
+    ),
+    "courtrec-com": (
+        "Verified 2026-09-23. dashboard.courtrec.com/opt-out is a "
+        "per-result wizard: search by name, address or phone, pick your "
+        "record from the results, then type 'I AGREE' into a confirmation "
+        "box. There is no fixed form to fill -- the fields on the page are "
+        "SEARCH fields -- so a FormRecipe cannot express it, and the "
+        "record-picking step is exactly the judgement call this tool must "
+        "not make on its own."
+    ),
+    "publicrecords-us": (
+        "Verified 2026-09-23: dashboard.publicrecords.us/opt-out is the "
+        "same per-result wizard as courtrec.com's, down to the 'Type I "
+        "AGREE to confirm' box. Recorded separately rather than by "
+        "reference because each dataset broker gets its own verdict."
+    ),
+    "publicrecords-info": (
+        "Verified 2026-09-23: dashboard.publicrecords.info/opt-out is the "
+        "same per-result wizard again. Same reason for a separate entry."
     ),
 }
 

@@ -708,6 +708,50 @@ NO_SEARCH_SURFACE = {
         "TruthFinder's paywall) as CocoFinder's, which is exactly the "
         "mistake the allow-list exists to prevent."
     ),
+    "peoplefinder-com": (
+        "Verified 2026-09-23: PeopleFinder.com is an Intelius front, and "
+        "its own page says so ('PeopleFinder.com powered by Intelius'). "
+        "Its search form's action is https://tracking.intelius.com/ with "
+        "affiliate codes baked in as hidden inputs, and submitting it "
+        "(after the FCRA modal that otherwise blocks the button) lands on "
+        "intelius.com/search/?affid=1117...&s1=www.peoplefinder.com, "
+        "titled 'Searching for Michael Thompson in ALL - Intelius'. "
+        "Nothing on peoplefinder.com itself can answer whether "
+        "peoplefinder.com lists a person. Its opt-out link goes to "
+        "Intelius's privacy centre for the same reason."
+    ),
+}
+
+
+# Brokers whose SEARCH exists and is fine -- and sits behind an anti-bot wall
+# on every visit. The search-leg twin of ``optout_forms.OPTOUT_BLOCKED``, and
+# a different finding from both of the maps above: there is a surface, it is
+# not an affiliate's, and the only thing between us and it is a challenge this
+# tool will not solve. Kept apart so that "walled today" is never read as
+# "hopeless forever" -- and so nobody writes a recipe here and then wonders why
+# it reports a bot wall for eternity.
+#
+# Notes, not behaviour: nothing reads this at runtime.
+SEARCH_BLOCKED = {
+    "voterrecords-com": (
+        "Verified 2026-09-23: the site's own HOMEPAGE is a Cloudflare "
+        "Turnstile interstitial ('Performing security verification', a "
+        "cf-turnstile-response input and nothing else). There is no search "
+        "form to read, let alone submit, so both legs of this broker are "
+        "walled rather than absent."
+    ),
+    "uspeoplesearch-com": (
+        "Verified 2026-09-23: same shape as voterrecords-com -- the "
+        "homepage itself serves a Cloudflare Turnstile challenge, so the "
+        "search form never renders for an automated visitor."
+    ),
+    "freepeoplesearch-com": (
+        "Verified 2026-09-23, and one step harder than the two above: this "
+        "domain does not serve a solvable challenge at all but Cloudflare's "
+        "terminal block page ('Sorry, you have been blocked. You are unable "
+        "to access FreePeopleSearch.com'). Nothing renders, nothing is "
+        "offered to solve, and no recipe can change that."
+    ),
 }
 
 
@@ -753,6 +797,80 @@ SEARCH_UNDECIDED = {
         "because they are separate dataset brokers and each leg gets its "
         "own independent verdict, but the finding and the condition for "
         "revisiting it are identical."
+    ),
+    "courtrecords-us": (
+        "Verified end to end on 2026-09-23, and it WORKS -- which is why "
+        "this sits here rather than under NO_SEARCH_SURFACE. Fill "
+        "first/last, choose the required State, press Submit, click the "
+        "FCRA 'I Agree' in the notice that appears (that link IS the "
+        "submit: its onclick calls the form's own submitForm()), wait "
+        "about 25 seconds, and the site prints either '100 RESULTS FOUND "
+        "IN ILLINOIS' or, on /search/results/?noHit=1, 'Although we didn't "
+        "find an exact match in our preliminary database'. The blocker is "
+        "what those pages SAY: every name on them is masked to its first "
+        "letter ('M****** T*******', 'Search Completed for Z********* "
+        "Q*********'), so not one identity term ever appears. "
+        "classify_search_page would read the miss correctly and then "
+        "refuse the hit -- a printed count with no corroborating term is "
+        "an error by design -- which means shipping this recipe would "
+        "report 'unknown' for every person the site actually lists, and "
+        "recipe_health would classify each of those as structural drift "
+        "and raise an alert about a recipe that is working exactly as "
+        "written. Deciding otherwise needs a model for masked results, "
+        "not a recipe. Its OPT-OUT leg is a shipped, working recipe -- "
+        "see optout_forms.COURTRECORDS_US."
+    ),
+    "peoplewhiz-com": (
+        "Verified 2026-09-23. Its search does submit (after dismissing an "
+        "FCRA warning dialog that otherwise intercepts the click) and, "
+        "about sixty seconds later, lands on /hflow/<id>/<uuid> -- but "
+        "that page contains no names at all. Searching a common real name "
+        "and a nonsense name produced the SAME page: eight 'Get Report' "
+        "rows, no person named anywhere in the rendered text or the HTML "
+        "(checked by counting the searched terms in the page source: "
+        "zero). There is no state on that page from which presence or "
+        "absence could be read, by this tool or by a human."
+    ),
+    "courtrec-com": (
+        "Verified 2026-09-23, and the failure is a strange one worth "
+        "writing down rather than re-deriving. The homepage search box "
+        "(#peopleSearch-input) cannot be driven at all: a page heading "
+        "sits over the input so a real click is intercepted, typing after "
+        "focusing leaves input_value() EMPTY, a page.fill() that does set "
+        "the value is ignored by the app, and the 'SEARCH COURT RECORDS' "
+        "button is a no-op in every combination -- including a forced "
+        "click and pressing Enter. Whether that is deliberate hardening or "
+        "simply broken, there is no answer to read. publicrecords-us and "
+        "publicrecords-info serve the same template (same furniture, same "
+        "dashboard.<domain>/opt-out wizard) and are recorded with it."
+    ),
+    "publicrecords-us": (
+        "Same template and same finding as courtrec-com, recorded "
+        "separately because each dataset broker gets its own verdict: the "
+        "search box cannot be driven and the search button does nothing. "
+        "Confirmed as one family by its own live pages -- identical "
+        "layout, identical 404 page, and a REMOVE MY INFO link to the same "
+        "dashboard.<domain>/opt-out wizard -- rather than assumed from a "
+        "shared look."
+    ),
+    "publicrecords-info": (
+        "Same template and same finding as courtrec-com and "
+        "publicrecords-us, and recorded separately for the same reason. "
+        "Its own live pages carry the same layout and the same "
+        "dashboard.publicrecords.info/opt-out removal wizard."
+    ),
+    "phonenumbers-org": (
+        "Verified 2026-09-23: the site's only search is a phone box whose "
+        "SEARCH control does nothing. Its React onClick handler is bound "
+        "and does run -- it reads the number straight out of the DOM, so a "
+        "typed value reaches it -- and then awaits an internal call that "
+        "produces no navigation and no network request beyond an analytics "
+        "beacon. Reproduced with a typed (not just filled) value, on the "
+        "state subdomains as well as the apex, and in a HEADED browser as "
+        "well as headless, so this is the site's behaviour rather than an "
+        "artefact of automation. Nothing to classify means no recipe. Its "
+        "opt-out is handled on infotracer.com, a different company's "
+        "site -- see optout_forms."
     ),
 }
 

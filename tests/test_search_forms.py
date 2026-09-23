@@ -560,4 +560,20 @@ def test_undecided_searches_are_neither_supported_nor_called_surfaceless():
     for broker_id, reason in search_forms.SEARCH_UNDECIDED.items():
         assert not search_forms.is_supported(broker_id)
         assert broker_id not in search_forms.NO_SEARCH_SURFACE
+        assert broker_id not in search_forms.SEARCH_BLOCKED
+        assert len(reason) > 80
+
+
+def test_a_walled_search_form_is_not_filed_as_a_missing_one():
+    """The search-leg twin of optout_forms's OPTOUT_BLOCKED test.
+
+    'Cloudflare/PerimeterX would not let us reach the form' and 'this site
+    has no search of its own' are different facts with different futures:
+    only the first can come back. Keeping them apart is also what stops a
+    wall from quietly becoming evidence that a broker holds no record.
+    """
+    for broker_id, reason in search_forms.SEARCH_BLOCKED.items():
+        assert not search_forms.is_supported(broker_id)
+        assert broker_id not in search_forms.NO_SEARCH_SURFACE
+        assert broker_id not in search_forms.SEARCH_UNDECIDED
         assert len(reason) > 80

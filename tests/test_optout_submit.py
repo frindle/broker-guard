@@ -374,6 +374,22 @@ def test_a_walled_opt_out_form_is_not_filed_as_a_missing_one():
     assert "cyberbackgroundchecks-com" in optout_forms.OPTOUT_BLOCKED
 
 
+def test_out_of_scope_opt_outs_are_kept_apart_from_the_other_two_nos():
+    """A third kind of no, and the one most likely to be mistaken for laziness.
+
+    These brokers have a real, reachable, unwalled removal page -- it just
+    asks for something a recipe must not supply on its own: a government-ID
+    upload, or a judgement call about which stranger in a result list is
+    actually Penn. Recording them as blocked would suggest waiting for a
+    wall to fall, and recording them as surfaceless would be false.
+    """
+    for broker_id, reason in optout_forms.OPTOUT_OUT_OF_SCOPE.items():
+        assert not optout_forms.is_supported(broker_id)
+        assert broker_id not in optout_forms.NO_OPTOUT_SURFACE
+        assert broker_id not in optout_forms.OPTOUT_BLOCKED
+        assert len(reason) > 80
+
+
 # --- the driver: interlocks --------------------------------------------------
 
 def test_refuses_when_the_feature_is_off(identity, tmp_path):
