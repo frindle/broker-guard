@@ -1239,8 +1239,12 @@ OPTOUT_BLOCKED = {
 #     list, then confirm. ``FormRecipe`` describes a fixed form, and picking
 #     the right stranger out of a result list is a judgement call, not a
 #     recipe. Getting it wrong means asking a broker to delete somebody else.
+#   * a multi-PAGE, modal-driven wizard, where the form is not at a URL at
+#     all: it is reached by walking several session-gated pages, and each
+#     datum is added through its own dialog. ``FormRecipe`` carries one url
+#     and one flat list of fields, so there is nothing to point it at.
 #
-# Both are decided "no"s rather than open questions, which is why they are
+# All three are decided "no"s rather than open questions, which is why they are
 # not in a pending list -- but they are decided for a REASON THAT COULD
 # CHANGE (a broker adds a plain form; this codebase grows a result-picking
 # model with a human in the loop), and that is why they are not filed under
@@ -1256,6 +1260,24 @@ OPTOUT_OUT_OF_SCOPE = {
         "can complete your request.' Both halves are out of scope: this "
         "tool does not choose which stranger's record is Penn's, and it "
         "does not upload identity documents."
+    ),
+    "openpeoplesearch-com": (
+        "Verified 2026-09-23, and this closes the question batch 1 left "
+        "open: the START button on /Consumer IS locatable -- it is an "
+        "anchor, a.btn-bigger, not a button, which is why a button-shaped "
+        "search for it failed twice. The blocker is what it starts. The "
+        "removal form lives at /Consumer/OptOut behind a three-page "
+        "session-gated wizard (START, then 'what state do you live in', "
+        "then a state-privacy-law notice with GOT IT, CONTINUE); "
+        "navigating straight to /Consumer/OptOut or /Consumer/Privacy in a "
+        "fresh session redirects back to /Consumer. And the form itself is "
+        "not a form: it is four ADD buttons (ADD NAME, ADD ADDRESS, ADD "
+        "PHONE NUMBER, ADD EMAIL ADDRESS), each opening a modal with its "
+        "own Add/Cancel, and opening one blocks the others. FormRecipe "
+        "carries one url and one flat field list, so there is nothing here "
+        "for it to point at. Recorded as a shape problem rather than a "
+        "wall: the page is reachable, unauthenticated and, checked "
+        "explicitly, carries no captcha of any kind."
     ),
     "searchbug-com": (
         "Verified 2026-09-23. Searchbug's CCPA page has no removal form of "

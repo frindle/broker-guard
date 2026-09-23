@@ -936,6 +936,21 @@ SEARCH_UNDECIDED = {
         "does serve its own branded search and its own loader before "
         "handing the visitor off; what it never serves is a result."
     ),
+    "searchbug-com": (
+        "Verified 2026-09-23: the search runs and then stops at a "
+        "registration wall. #quick takes a NAME and, as its own hint "
+        "insists ('When searching by name, please also specify some "
+        "Location'), a location; supply both and SEARCH lands on "
+        "/services/pay.aspx?TYPE=ppl2&FNAME=..&LNAME=..&STATE=IL titled "
+        "'People Search John Smith in IL | Order on Searchbug', whose "
+        "whole content is 'Please Login or Create New Account to "
+        "Continue' and 'Credit card is needed to create an account'. "
+        "'Zylphrenna Quixbottom' produces the identical page, so there is "
+        "no signal in it at all. Worth distinguishing from the entries in "
+        "SEARCH_BLOCKED: nothing here is fighting automation -- the answer "
+        "is simply sold rather than shown, and this tool will not open an "
+        "account or enter a card to read it."
+    ),
     "freebackgroundcheck-org": (
         "Verified 2026-09-23: this broker has no search form anywhere -- "
         "the homepage and every category and state subdomain render zero "
