@@ -63,11 +63,26 @@ It also flags, explicitly:
                  ``unreadable``, because "there is a cross-origin form here"
                  is a finding and silence is not.
 
-READ-ONLY, ALWAYS
------------------
+READ-ONLY, WITH ONE HONEST CAVEAT
+---------------------------------
 Nothing is ever typed, clicked or submitted. The browser navigates, waits for
 the page to settle, reads the DOM and closes. A broker's opt-out form must
 never be submitted by a reconnaissance pass.
+
+The caveat, found on 2026-09-23 and recorded because "read-only" was being
+claimed more strongly than the code can deliver: SOME OPT-OUTS ARE ACTUATED BY
+THE NAVIGATION ITSELF. Requesting ``dstillery.com/optout`` -- no form on it,
+nothing clicked -- redirected straight to an ``?success=1`` page reading "You
+will no longer receive targeted advertisements from Dstillery on this
+browser". The opt-out was a bare GET, and merely looking performed it.
+
+Not typing and not clicking is therefore not the same as not acting. The
+consequence here was harmless (a throwaway browser profile was opted out of ad
+targeting), but the shape generalises: any URL with "optout", "unsubscribe",
+"remove" or "confirm" in it may be a one-click action link rather than a page,
+and a confirmation link mailed to a real person is the case where this would
+do genuine damage. Probe such URLs deliberately, one at a time, knowing they
+may fire -- never in a bulk sweep.
 
 USAGE
 -----

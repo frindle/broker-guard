@@ -2686,6 +2686,152 @@ NO_SEARCH_SURFACE = {
         "parent named on its request endpoint, DHI Group, which may "
         "appear as its own row."
     ),
+    "dmsunsub-io": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. dmsunsub.io is a single-purpose "
+        "privacy request host for Digital Media Solutions -- it serves a "
+        "OneTrust DSAR webform and nothing else, with no product behind "
+        "it. The search leg exists to describe where a person can look "
+        "themselves up in a broker's product; this broker sells to "
+        "businesses and exposes no such surface, so the leg is closed "
+        "rather than left open for a recipe that could never be written."
+    ),
+    "digitalsegment-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. digitalsegment.com markets database- "
+        "marketing services to brands; its only input box is a WordPress "
+        "site search. The search leg exists to describe where a person "
+        "can look themselves up in a broker's product; this broker sells "
+        "to businesses and exposes no such surface, so the leg is closed "
+        "rather than left open for a recipe that could never be written."
+    ),
+    "digitalvikingmedia-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. digitalvikingmedia.com is a five-page "
+        "agency brochure site (Home, About Us, Our Team, Contact, Privacy "
+        "Policy) with no inputs of any kind. The search leg exists to "
+        "describe where a person can look themselves up in a broker's "
+        "product; this broker sells to businesses and exposes no such "
+        "surface, so the leg is closed rather than left open for a recipe "
+        "that could never be written."
+    ),
+    "teamdms-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. teamdms.com sells direct-marketing "
+        "services; its only form is the opt-out form itself. The search "
+        "leg exists to describe where a person can look themselves up in "
+        "a broker's product; this broker sells to businesses and exposes "
+        "no such surface, so the leg is closed rather than left open for "
+        "a recipe that could never be written."
+    ),
+    "disconetwork-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. Disco is a transactional-advertising "
+        "network reached through a Zendesk help centre; the only search "
+        "box indexes help articles. The search leg exists to describe "
+        "where a person can look themselves up in a broker's product; "
+        "this broker sells to businesses and exposes no such surface, so "
+        "the leg is closed rather than left open for a recipe that could "
+        "never be written."
+    ),
+    "dpcoptout-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. dpcoptout.com exists solely to host "
+        "Distribution Processing Center's do-not-mail form; the site has "
+        "no lookup of any kind. The search leg exists to describe where a "
+        "person can look themselves up in a broker's product; this broker "
+        "sells to businesses and exposes no such surface, so the leg is "
+        "closed rather than left open for a recipe that could never be "
+        "written."
+    ),
+    "dresdendirect-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. dresdendirect.com is a direct-mail "
+        "agency site whose only forms are a post search and an 'Ask a "
+        "Question' contact form. The search leg exists to describe where "
+        "a person can look themselves up in a broker's product; this "
+        "broker sells to businesses and exposes no such surface, so the "
+        "leg is closed rather than left open for a recipe that could "
+        "never be written."
+    ),
+    "driveniq-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. driveniq.com redirects to visitiq.io, "
+        "an identity-resolution product sold to advertisers, and never "
+        "reaches a page with a lookup. The search leg exists to describe "
+        "where a person can look themselves up in a broker's product; "
+        "this broker sells to businesses and exposes no such surface, so "
+        "the leg is closed rather than left open for a recipe that could "
+        "never be written."
+    ),
+    "drobu-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. drobu.com is a lead-generation agency "
+        "brochure site with no forms at all on the homepage. The search "
+        "leg exists to describe where a person can look themselves up in "
+        "a broker's product; this broker sells to businesses and exposes "
+        "no such surface, so the leg is closed rather than left open for "
+        "a recipe that could never be written."
+    ),
+    "winwithoptimal-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. winwithoptimal.com is a political- "
+        "advertising agency site; it carries no lookup, and its privacy "
+        "policy now redirects to onemagnify.com. The search leg exists to "
+        "describe where a person can look themselves up in a broker's "
+        "product; this broker sells to businesses and exposes no such "
+        "surface, so the leg is closed rather than left open for a recipe "
+        "that could never be written."
+    ),
+    "dstillery-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. Dstillery sells AI audience targeting "
+        "to advertisers; its only input is the WordPress site search. The "
+        "search leg exists to describe where a person can look themselves "
+        "up in a broker's product; this broker sells to businesses and "
+        "exposes no such surface, so the leg is closed rather than left "
+        "open for a recipe that could never be written."
+    ),
+    "thedatatrust-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. The Data Trust is a political data "
+        "co-operative that sells to campaigns; no public lookup is "
+        "offered. The search leg exists to describe where a person can "
+        "look themselves up in a broker's product; this broker sells to "
+        "businesses and exposes no such surface, so the leg is closed "
+        "rather than left open for a recipe that could never be written."
+    ),
+    "dtn-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. DTN sells agriculture, energy and "
+        "weather analytics to businesses; its inputs are a site search "
+        "and the rights-request form. The search leg exists to describe "
+        "where a person can look themselves up in a broker's product; "
+        "this broker sells to businesses and exposes no such surface, so "
+        "the leg is closed rather than left open for a recipe that could "
+        "never be written."
+    ),
+    "dynata-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. Dynata is a survey-panel operator; a "
+        "person meets it as a respondent, not through a lookup, and the "
+        "site offers none. The search leg exists to describe where a "
+        "person can look themselves up in a broker's product; this broker "
+        "sells to businesses and exposes no such surface, so the leg is "
+        "closed rather than left open for a recipe that could never be "
+        "written."
+    ),
+    "earlywarning-com": (
+        "Verified 2026-09-23 by rendering the site: there is no consumer- "
+        "facing lookup here at all. Early Warning Services runs bank- "
+        "industry reporting products; consumers reach their own file "
+        "through a mailed disclosure request, not a lookup, and the only "
+        "input is a site search. The search leg exists to describe where "
+        "a person can look themselves up in a broker's product; this "
+        "broker sells to businesses and exposes no such surface, so the "
+        "leg is closed rather than left open for a recipe that could "
+        "never be written."
+    ),
 }
 
 
@@ -2740,6 +2886,24 @@ SEARCH_BLOCKED = {
         "consumer search surface anyway -- commercial real-estate data "
         "sold by subscription -- but the wall is why this is recorded as "
         "blocked rather than absent."
+    ),
+    "spyfly-com": (
+        "Verified 2026-09-23 by running the search twice, once with a "
+        "name that should hit and once with invented nonsense. SpyFly IS "
+        "a people-search and its homepage carries three working search "
+        "forms -- name (input[name='search-name']), address "
+        "(input[name='search-address']) and phone (input[name='search- "
+        "phone-number']), each with a 'Search Now' submit. Submitting any "
+        "of them lands on /people/ei, an animated progress interstitial "
+        "counting National, State and County records, and that page ends "
+        "at 'Please verify you are human to continue.'  The reason this "
+        "is BLOCKED and not UNDECIDED is that both runs ended "
+        "identically. 'Michael Smith' and 'Qzxjv Wrrblfnd' produced the "
+        "same interstitial, the same percentages and the same human- "
+        "verification prompt, so there is no hit marker and no no-results "
+        "marker to tell apart -- the wall arrives before the result does. "
+        "A future recipe-writer would need to clear that check first; "
+        "there is nothing behind it to transcribe until they do."
     ),
 }
 

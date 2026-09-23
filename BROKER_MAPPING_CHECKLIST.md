@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **272** / 969
-- Search leg mapped: 274 / 969
-- Opt-out leg mapped: 276 / 969
+- Fully mapped (both legs): **288** / 969
+- Search leg mapped: 290 / 969
+- Opt-out leg mapped: 292 / 969
 
 ## How to resume
 
@@ -314,31 +314,31 @@ of those dicts against source-brokers.json).
 - [x] **Diablo Media** (`diablomedia-com`) -- search: no-surface, opt-out: undecided
 - [x] **Dice Career Solutions, Inc.** (`dice-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Digital Advertising Alliance WebChoices (AboutAds)** (`optout-aboutads-info`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Digital Media Solutions, LLC** (`dmsunsub-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Digital Safety Products, LLC** (`spyfly-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DIGITAL SEGMENT LLC** (`digitalsegment-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DIGITAL VIKING MEDIA Inc** (`digitalvikingmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DIRECT MARKETING SOLUTIONS Inc** (`teamdms-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Disco Technology Inc.** (`disconetwork-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Digital Media Solutions, LLC** (`dmsunsub-io`) -- search: no-surface, opt-out: blocked
+- [x] **Digital Safety Products, LLC** (`spyfly-com`) -- search: blocked, opt-out: blocked
+- [x] **DIGITAL SEGMENT LLC** (`digitalsegment-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **DIGITAL VIKING MEDIA Inc** (`digitalvikingmedia-com`) -- search: no-surface, opt-out: no-surface
+- [x] **DIRECT MARKETING SOLUTIONS Inc** (`teamdms-com`) -- search: no-surface, opt-out: blocked
+- [x] **Disco Technology Inc.** (`disconetwork-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Disqus, Inc.** (`disqus-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Distribution Processing Center LLC** (`dpcoptout-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Distribution Processing Center LLC** (`dpcoptout-com`) -- search: no-surface, opt-out: blocked
 - [ ] **DMAchoice (Data & Marketing Association)** (`dmachoice-org`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Do Not Call Registry** (`donotcall-gov`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **DomainTools** (`domaintools-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Dresdendirect** (`dresdendirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Driveniq Corporation** (`driveniq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Drobu Media LLC** (`drobu-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Dspolitical, LLC** (`winwithoptimal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Dstillery, Inc** (`dstillery-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DT Client Services, LLC** (`thedatatrust-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DTN LLC** (`dtn-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Dresdendirect** (`dresdendirect-com`) -- search: no-surface, opt-out: undecided
+- [x] **Driveniq Corporation** (`driveniq-com`) -- search: no-surface, opt-out: blocked
+- [x] **Drobu Media LLC** (`drobu-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Dspolitical, LLC** (`winwithoptimal-com`) -- search: no-surface, opt-out: undecided
+- [x] **Dstillery, Inc** (`dstillery-com`) -- search: no-surface, opt-out: undecided
+- [x] **DT Client Services, LLC** (`thedatatrust-com`) -- search: no-surface, opt-out: undecided
+- [x] **DTN LLC** (`dtn-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Dun & Bradstreet (EU, incl. former Bisnode entities)** (`dnb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **DUN & BRADSTREET Inc** (`netwisedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Dun & Bradstreet, Inc.** (`trustarc-eu`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Dynata, LLC** (`dynata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Dynata, LLC** (`dynata-com`) -- search: no-surface, opt-out: blocked
 - [ ] **e.Republic, LLC** (`erepublic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **EAB Global, Inc.** (`box-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Early Warning Services, LLC** (`earlywarning-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Early Warning Services, LLC** (`earlywarning-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **ECONOMIC MODELING LLC** (`lightcast-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Edvisors Network, Inc.** (`edvisors-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Effyis, Inc.** (`socialgist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
