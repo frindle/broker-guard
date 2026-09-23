@@ -122,6 +122,12 @@ FLAVOR_PDL_BESPOKE = "peopledatalabs_bespoke_form"
 # shared SCHEMA.
 FLAVOR_INFOPAY_DNS = "infopay_do_not_sell_form"
 
+# RevealPhoneOwner's own /data-removal/ page. The plainest form in this
+# pilot: a server-rendered Bootstrap POST form with five visible inputs
+# (name, last name, phone, e-mail, free-text reason), a hidden form-name
+# marker, no JavaScript widget of any kind, no honeypot -- and no bot check.
+FLAVOR_REVEALPHONEOWNER_BESPOKE = "revealphoneowner_bespoke_form"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -948,6 +954,53 @@ RECORDSFINDER = FormRecipe(
 )
 
 
+REVEALPHONEOWNER = FormRecipe(
+    broker_id="revealphoneowner-com",
+    broker_name="RevealPhoneOwner",
+    url="https://www.revealphoneowner.com/data-removal/",
+    flavor=FLAVOR_REVEALPHONEOWNER_BESPOKE,
+    fields=(
+        # Selected by NAME, not by the ids the page also carries. Its ids are
+        # positional and generated ("removal-element-1".."-6"), so inserting
+        # one field anywhere above would silently renumber every selector
+        # below it and this recipe would quietly type the last name into the
+        # phone box. The name attributes say what the field IS.
+        Field(selector="#removal input[name='first_name']",
+              source="first_name", label="Name"),
+        Field(selector="#removal input[name='last_name']",
+              source="last_name", label="Last Name"),
+        # Required by the form and genuinely required by the broker: this is
+        # a reverse-phone directory, so the phone number IS the listing key.
+        Field(selector="#removal input[name='phone_number']",
+              source="phone", label="Phone Number"),
+        # The page warns in its own help text that a request with no valid
+        # e-mail address is rejected.
+        Field(selector="#removal input[name='email']",
+              source="email", label="Email"),
+        Field(selector="#removal textarea[name='message']", source="literal",
+              label="Removal reason", value=_OPT_OUT_DETAILS),
+    ),
+    submit_selector="#removal input[type='submit']",
+    # Swept and confirmed clean -- see the recipe's notes.
+    no_captcha_verified=True,
+    success_markers=("thank you", "request has been received",
+                     "your request has been submitted"),
+    notes=(
+        "Verified against the live page on 2026-09-22 (dry run, real "
+        "browser, synthetic identity): fills correctly and stops before "
+        "Submit, screenshot confirms it. A plain server-rendered POST form "
+        "-- no JavaScript widgets, no honeypot input, and NO BOT CHECK of "
+        "any kind: the whole form was enumerated element by element and it "
+        "is five visible inputs, one hidden form-name marker (form=removal, "
+        "not a honeypot: it carries a value the server expects and is left "
+        "untouched), and a submit. Treat that the way the other no-bot-check "
+        "recipes are treated -- with submission enabled and dry-run off, "
+        "this one really will send. success_markers are a plausible guess, "
+        "NOT read off a real submitted page."
+    ),
+)
+
+
 RECIPES = {
     CONSUMER_CANVAS.broker_id: CONSUMER_CANVAS,
     NIELSEN.broker_id: NIELSEN,
@@ -962,6 +1015,7 @@ RECIPES = {
     COURTRECORDS_US.broker_id: COURTRECORDS_US,
     STATERECORDS_ORG.broker_id: STATERECORDS_ORG,
     RECORDSFINDER.broker_id: RECORDSFINDER,
+    REVEALPHONEOWNER.broker_id: REVEALPHONEOWNER,
 }
 
 

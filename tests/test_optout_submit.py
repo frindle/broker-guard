@@ -335,7 +335,8 @@ def test_exactly_the_hand_verified_brokers_are_turned_on():
         "achcoop-com", "advancedbackgroundchecks-com", "bigdbm-com",
         "bolttech", "consumer-canvas-llc", "courtrecords-us", "credit-com",
         "ls-mobile-apps-holdings-ltd", "nielsen", "peopledatalabs-com",
-        "recordsfinder-com", "searchpublicrecords-com", "staterecords-org",
+        "recordsfinder-com", "revealphoneowner-com",
+        "searchpublicrecords-com", "staterecords-org",
     ]
     # In the dataset, but not hand-verified -> still unsubmittable.
     assert not optout_forms.is_supported("allant-group")
