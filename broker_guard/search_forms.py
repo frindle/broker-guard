@@ -150,6 +150,24 @@ class SearchRecipe:
     # and never on the pages that do not. That is not a slow broker, it is a
     # recipe that reports "unknown" for every hit.
     ready_timeout_ms: int = 0
+    # A consent interstitial that must be dismissed before the search form
+    # can be used at all. Four brokers in this pilot put one in front of
+    # their own search box -- an FCRA "this is not a consumer report"
+    # attestation (peoplewhiz.com, peoplefinder.com, courtrecords.us) or a
+    # cookie/consent overlay -- and they are not subtle failures: the modal
+    # sits over the page and Playwright's click reports the OVERLAY as
+    # intercepting the pointer, which is how each one was found.
+    #
+    # Clicking it is still reading. The button attests to how the visitor
+    # will use public data; it submits no profile data, creates nothing, and
+    # changes nothing on the broker's side. ``assert_read_only`` checks this
+    # selector along with all the others, so a recipe cannot smuggle a
+    # "remove" or "unsubscribe" button in here.
+    #
+    # Optional by design: the driver clicks it if it is there and shrugs if
+    # it is not, because these modals are cookie-gated and simply do not
+    # render on every visit.
+    consent_selector: str = ""
     verified_on: str = ""
     notes: str = ""
 
@@ -394,6 +412,68 @@ CYBERBACKGROUNDCHECKS = SearchRecipe(
     ),
 )
 
+UNITEDSTATESPHONEBOOK = SearchRecipe(
+    broker_id="unitedstatesphonebook-com",
+    broker_name="UnitedStatesPhoneBook",
+    search_url="https://www.unitedstatesphonebook.com/",
+    fields=(
+        SearchField(selector="input[name='first']", source="first_name",
+                    label="First name"),
+        SearchField(selector="input[name='last']", source="last_name",
+                    label="Surname"),
+    ),
+    submit_selector="input[name='Search']",
+    results_host="unitedstatesphonebook.com",
+    no_results_markers=("there is no match in our free white pages database",),
+    hit_markers=("results from our white pages database",),
+    count_pattern=r"here are your ([\d,]+) results",
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. A plain POST to search.php: "
+        "a hit prints 'Here are your 200 results from our White Pages "
+        "database: (200 is the max)' over name/address/phone rows, a "
+        "nonsense name prints 'There is no match in our free White Pages "
+        "database.'. Read that printed count as a CEILING, not a census -- "
+        "the site caps at 200 and says so -- which costs nothing here, "
+        "because the only question asked is whether the count is zero. The "
+        "optional City and State boxes are left empty, per this module's "
+        "rule about narrowing fields. This broker's OPT-OUT leg remains "
+        "deliberately undecided (removal is a per-result 'Remove' button "
+        "next to each listing rather than a form, which FormRecipe cannot "
+        "express) -- see the note in optout_forms."
+    ),
+)
+
+JUDYRECORDS = SearchRecipe(
+    broker_id="judyrecords-com",
+    broker_name="judyrecords",
+    search_url="https://www.judyrecords.com/",
+    fields=(
+        SearchField(selector="input[name='search']", source="full_name",
+                    label="Search"),
+    ),
+    submit_selector="form button[type='submit']",
+    results_host="judyrecords.com",
+    no_results_markers=("did not match any records",),
+    hit_markers=("total cases for",),
+    count_pattern=r"page 1 of ([\d,]+) total cases",
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. One search box over 770m "
+        "US court cases: a hit prints 'Page 1 of 558,065 total cases for: "
+        "michael thompson' above case extracts, a nonsense name prints "
+        "'Your search - <name> - did not match any records.'. Note what "
+        "the count counts: CASES mentioning the name, not people, and the "
+        "extracts are court filings rather than a broker's own profile of "
+        "a person. That is still the right answer to this tool's question "
+        "-- is this person's name published on this site -- but a nonzero "
+        "count here means 'a court record naming them is indexed', not "
+        "'this broker sells a dossier on them'. Its opt-out leg is "
+        "recorded as infeasible: removal is court-order-only and by "
+        "e-mail, see optout_forms.NO_OPTOUT_SURFACE."
+    ),
+)
+
 PRIVATENUMBERCHECKER = SearchRecipe(
     broker_id="privatenumberchecker-com",
     broker_name="PrivateNumberChecker",
@@ -517,9 +597,11 @@ RECIPES = {
     ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
     SEARCHPUBLICRECORDS.broker_id: SEARCHPUBLICRECORDS,
     CYBERBACKGROUNDCHECKS.broker_id: CYBERBACKGROUNDCHECKS,
+    JUDYRECORDS.broker_id: JUDYRECORDS,
     NATIONALPUBLICDATA.broker_id: NATIONALPUBLICDATA,
     PRIVATENUMBERCHECKER.broker_id: PRIVATENUMBERCHECKER,
     REVEALPHONEOWNER.broker_id: REVEALPHONEOWNER,
+    UNITEDSTATESPHONEBOOK.broker_id: UNITEDSTATESPHONEBOOK,
 }
 
 
@@ -746,7 +828,8 @@ def assert_read_only(recipe: SearchRecipe) -> None:
     -looking recipe.
     """
     haystack = " ".join(
-        [recipe.search_url or "", recipe.submit_selector or ""]
+        [recipe.search_url or "", recipe.submit_selector or "",
+         recipe.consent_selector or ""]
         + [f.selector for f in recipe.fields]
     ).lower()
     hits = sorted({w for w in _STATE_CHANGING_WORDS if w in haystack})
