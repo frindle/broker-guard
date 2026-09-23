@@ -11063,15 +11063,15 @@
     "name": "Compact Information Systems, LLC",
     "domain": "deepsync.com",
     "category": "marketing",
-    "opt_out_url": "https://deepsync.com/privacy-policy/",
+    "opt_out_url": "https://privacy.deepsync.com/request/opt-out",
     "opt_out_method": "web-form",
-    "opt_out_email": null,
-    "required_fields": "full legal name, email address on file with the broker",
-    "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
+    "opt_out_email": "legal@deepsync.com",
+    "required_fields": "full legal name, email address, phone number, and up to five residential addresses",
+    "verification_step": "identity verified after submission via dynamically-generated knowledge questions (no CAPTCHA on the form itself)",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry",
-    "last_verified": null,
-    "notes": "CCPA/CA DROP-style registered data broker; opt_out_url here is the company's general privacy-policy page (not necessarily a dedicated consumer opt-out form) \u2014 verify before relying on it. California residents can use the CA DROP portal (consumer.drop.privacy.ca.gov) to request deletion from all CA-registered brokers with one form."
+    "source": "incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Deep Sync's own consumer opt-out portal, verified live 200 on 2026-09-22 (same portal the sibling ASL Marketing / HomeData entries resolve to) \u2014 replaces the prior generic privacy-policy-page URL from the CA DROP registry pass. Mail requests go to Deep Sync, Kirkland WA."
   },
   {
     "name": "Clickagy LLC",
