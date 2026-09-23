@@ -534,6 +534,13 @@ def main(argv=None) -> int:
     parser.add_argument("--once", action="store_true", help="run a single cycle and exit")
     parser.add_argument("--check-config", action="store_true",
                         help="validate config and inputs, then exit")
+    parser.add_argument("--diagnose-broker", metavar="NAME",
+                        help="run the REAL detection legs against ONE broker "
+                             "(matched by id, name, or unambiguous substring) for "
+                             "every identity a scan would cover, print the full "
+                             "un-collapsed outcome including any exception the "
+                             "sweep would have swallowed, and exit. Read-only: "
+                             "nothing is written to the state db or the dashboard")
     parser.add_argument("--serve-web", action="store_true",
                         help="serve the web dashboard (FastAPI/uvicorn) instead of the "
                              "headless loop; the autopilot scan/confirmation loop still "
@@ -580,6 +587,16 @@ def main(argv=None) -> int:
     if args.check_config:
         logger.info("config ok")
         return 0
+
+    if args.diagnose_broker:
+        # One-shot, read-only live diagnosis of a single broker. Placed after
+        # path validation (it needs brokers.json) and before every long-running
+        # branch below, because it must never start the scan loop or the web
+        # server -- see broker_guard/diagnose.py for why it bypasses
+        # sweep._check_pair (and therefore progress/state.sqlite) entirely.
+        from broker_guard import diagnose as diagnose_mod
+
+        return diagnose_mod.run(cfg, args.diagnose_broker)
 
     if args.serve_web or cfg.serve_web:
         from broker_guard.webapp import run_web_server

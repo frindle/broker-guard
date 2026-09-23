@@ -57,7 +57,36 @@ python -m broker_guard --check-config        # validate env + inputs, exit
 python -m broker_guard --once                # one cycle, then exit
 python -m broker_guard                       # loop on BG_INTERVAL_SECONDS
 python -m broker_guard --serve-web           # web dashboard + autopilot loop, one process
+python -m broker_guard --diagnose-broker "Chex Systems"   # live-check ONE broker, verbosely
 pytest tests/ -q                             # run the test suite
+```
+
+### Diagnosing one broker
+
+`--diagnose-broker NAME` answers "what actually happens when broker-guard
+checks this one site, right now?" without waiting hours for a full sweep or
+trusting possibly-stale dashboard state. It runs the *same* SERP and browser
+legs the production sweep runs (`sweep._check_serp` / `sweep._check_browser`)
+for every identity a real scan would cover, and prints the full,
+un-collapsed result — including the exception + traceback that the sweep
+deliberately swallows into a generic `error` counter. See
+`broker_guard/diagnose.py` for why that swallowing exists and why this tool
+undoes it.
+
+It is **read-only**: no state store is opened, `progress.record_outcome` is
+never called, and running it cannot change what the dashboard shows.
+
+- `NAME` matches on exact broker id, exact name, then case-insensitive
+  substring; an ambiguous substring lists the candidates and refuses
+  (exit `2`) rather than guessing.
+- Exit `0` = both legs completed for every identity, `1` = something errored
+  (the detail is printed), `2` = the broker could not be resolved.
+
+In Docker (including Unraid's container console), run it against the
+already-configured container:
+
+```bash
+docker exec broker-guard python -m broker_guard --diagnose-broker "Chex Systems"
 ```
 
 If `BG_BROKERS_PATH` doesn't exist yet, every mode above generates it
