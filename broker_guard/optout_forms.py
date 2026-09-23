@@ -892,6 +892,16 @@ NO_OPTOUT_SURFACE = {
         "independent removal surface on freepeopledirectory.com itself to "
         "build a recipe against."
     ),
+    "judyrecords-com": (
+        "Verified 2026-09-22: judyrecords.com has no opt-out webform "
+        "anywhere (/privacy 404s and its footer links to only 'terms', "
+        "'info', and 'API'). Its /info page states the only removal "
+        "channel is a plain mailto to removal@judyrecords.com, which this "
+        "codebase has no mail-sending capability for -- and that page also "
+        "states requests are honored only 'if the record has been sealed "
+        "or expunged by a court order', not on request, which is a "
+        "different thing from a discretionary consumer opt-out anyway."
+    ),
 }
 
 
