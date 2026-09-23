@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **240** / 969
-- Search leg mapped: 242 / 969
-- Opt-out leg mapped: 244 / 969
+- Fully mapped (both legs): **256** / 969
+- Search leg mapped: 258 / 969
+- Opt-out leg mapped: 260 / 969
 
 ## How to resume
 
@@ -254,38 +254,38 @@ of those dicts against source-brokers.json).
 - [x] **CONVEX LABS LLC** (`convex-com`) -- search: no-surface, opt-out: staged
 - [x] **CoreLogic** (`corelogic-com`) -- search: undecided, opt-out: undecided
 - [ ] **Cortera, Inc.** (`cortera-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Costar Group** (`costar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Costar Group** (`costar-com`) -- search: blocked, opt-out: blocked
 - [x] **CourtCaseFinder.com** (`courtcasefinder-com`) -- search: undecided, opt-out: staged
 - [x] **CourtRec.com** (`courtrec-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **CourtRecords.us** (`courtrecords-us`) -- search: undecided, opt-out: recipe
-- [ ] **Crawlbee Corp** (`crawlbee-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Credit Bureau Of Council Bluffs, Inc** (`creditinfosystems-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Crawlbee Corp** (`crawlbee-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Credit Bureau Of Council Bluffs, Inc** (`creditinfosystems-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Credit.com** (`credit-com`) -- search: UNMAPPED, opt-out: recipe
 - [ ] **Creditreform** (`creditreform-de`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Creditsafe** (`creditsafe-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **CRIF S.p.A.** (`crif-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Crimson Hexagon** (`brandwatch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CRISIL Irevna US LLC** (`crisil-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **CRISIL Irevna US LLC** (`crisil-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Criteo SA** (`criteo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Cross Pixel Media, Inc.** (`crsspxl-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Crunchbase Inc** (`crunchbase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CTAM Leadshare Corp.** (`smartmove-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Cuebiq Group, LLC** (`cuebiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Cross Pixel Media, Inc.** (`crsspxl-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Crunchbase Inc** (`crunchbase-com`) -- search: no-surface, opt-out: undecided
+- [x] **CTAM Leadshare Corp.** (`smartmove-us`) -- search: no-surface, opt-out: blocked
+- [x] **Cuebiq Group, LLC** (`cuebiq-com`) -- search: no-surface, opt-out: undecided
 - [x] **Cybba Inc.** (`cybba-com`) -- search: no-surface, opt-out: blocked
 - [x] **Cyber Background Checks** (`cyberbackgroundchecks-com`) -- search: recipe, opt-out: blocked
-- [ ] **Cyndx Networks LLC** (`cyndx-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Cyndx Networks LLC** (`cyndx-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Círculo de Crédito S.A. de C.V. S.I.C.** (`circulodecredito-com-mx`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Data Axle, Inc.** (`data-axle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Data Axle, Inc.** (`data-axle-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Data Axle, Inc.** (`dataaxle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Data Decisions Group, LLC** (`datadecisionsgroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Data Facts, Inc.** (`datafacts-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Data Marketing Solutions, Inc.** (`businesswatchnetwork-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Data Decisions Group, LLC** (`datadecisionsgroup-com`) -- search: no-surface, opt-out: undecided
+- [x] **Data Facts, Inc.** (`datafacts-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Data Marketing Solutions, Inc.** (`businesswatchnetwork-com`) -- search: no-surface, opt-out: undecided
 - [ ] **DATA PARTNERS Inc** (`datapartners-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **DataCrédito Experian Colombia** (`com-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Datadelivers LLC** (`datadelivers-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Datadelivers LLC** (`datadelivers-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Datadojo CDP Inc.** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Datafy LLC** (`datafy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DATALINE Inc** (`datalinedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Datafy LLC** (`datafy-com`) -- search: no-surface, opt-out: blocked
+- [x] **DATALINE Inc** (`datalinedata-com`) -- search: no-surface, opt-out: undecided
 - [ ] **DATAMENTORS LLC** (`porchgroupmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **DATANYZE LLC** (`datanyze-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Dataskip** (`dataskip-io`) -- search: UNMAPPED, opt-out: UNMAPPED

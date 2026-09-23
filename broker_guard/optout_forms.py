@@ -1607,6 +1607,57 @@ STAGED_RECIPES: dict = {
 }
 
 
+# --- category note: FCRA-regulated background screening ----------------------
+#
+# A whole class of rows in the dataset are consumer reporting agencies doing
+# employment, tenant or mortgage screening. They keep turning up and they all
+# end the same way, so the reasoning is written ONCE here and referenced from
+# the individual entries instead of being re-derived per broker.
+#
+# THE FINDING, in the brokers' own words rather than ours. GoodHire's policy
+# says, in capitals: "PLEASE NOTE THAT ANY BACKGROUND CHECK DATA REGULATED BY
+# THE FAIR CREDIT REPORTING ACT IS EXEMPT FROM CCPA DATA RIGHTS REQUESTS."
+# Checkr spells the same thing out with a worked example: "if you sent us a
+# CCPA request asking us to delete personal information from your background
+# check -- such as criminal history or motor vehicle records -- the CCPA would
+# not require us to do so." HireRight's request form opens with "IMPORTANT -
+# READ BEFORE SUBMITTING" and argues that "our background screening business
+# falls within those exceptions".
+#
+# WHY THAT MATTERS TO A FORM-FILLING TOOL. These companies DO publish
+# "Do Not Sell or Share My Personal Information" links. Those links are
+# scoped to the WEBSITE -- cookies, cross-context advertising, a consent
+# widget -- and do not touch the report database, which is the only thing a
+# person cares about here. Automating one would be automating something that
+# accomplishes nothing real, while telling the user their data was suppressed.
+# That is worse than doing nothing, so no recipe ships for this class.
+#
+# WHAT ACTUALLY HELPS, for anyone writing user-facing copy: the recourse is
+# the FCRA itself -- a file disclosure, a dispute of inaccurate entries, and
+# a security freeze where the agency offers one -- exercised through the
+# agency's identity-verified consumer channel, not through a privacy opt-out.
+#
+# SCOPE, deliberately narrow. This note covers agencies whose business IS
+# FCRA-regulated screening. It does NOT cover the marketing arms of the credit
+# bureaus, which is why ``experian-com`` and ``transunion-com`` are mapped
+# individually and stay that way: the dataset names those rows "Experian
+# Marketing Services" and "TransUnion Marketing", and a marketing identity
+# graph is exactly the non-exempt side of those companies. A broker is only
+# put in this class after its own pages have been read; when in doubt it gets
+# an ordinary entry.
+FCRA_SCREENING_NOTE = (
+    "FCRA-regulated background screening -- see the category note above "
+    "NO_OPTOUT_SURFACE in this module. The report database is exempt from "
+    "state privacy-rights requests by the broker's own account of it, and "
+    "any 'do not sell' control offered is scoped to website cookies and "
+    "advertising rather than to the reports. No recipe is written for this "
+    "class, because automating the cookie control would tell a user their "
+    "records were suppressed when nothing about them changed. The real "
+    "recourse is an FCRA file disclosure, dispute or freeze through the "
+    "agency's identity-verified consumer channel."
+)
+
+
 # Brokers investigated for this pilot and found to have NO self-service
 # consumer opt-out surface at all -- the opt-out-leg twin of
 # ``search_forms.NO_SEARCH_SURFACE``. Recorded as data, with the reason, so
@@ -2168,6 +2219,66 @@ NO_OPTOUT_SURFACE = {
         "LENDERS, so a consumer's route to the data is an FCRA dispute "
         "through the lender or the underlying bureau, not a suppression "
         "request here. Mailbox-only, no surface."
+    ),
+    "datafacts-com": (
+        "FCRA-REGULATED BACKGROUND SCREENING -- see the category note "
+        "above NO_OPTOUT_SURFACE in this module for why this whole class "
+        "gets no recipe. Verified by browser render 2026-09-23: Data "
+        "Facts is a background- and tenant-screening CRA plus mortgage "
+        "verification, sold to employers, landlords and lenders. Its site "
+        "offers no rights-request form; the consumer entrances are "
+        "'Applicant Support' and 'Client Login', both authenticated FCRA "
+        "channels, which is precisely the recourse the category note "
+        "describes. Dataset contact for a human: "
+        "compliance@datafacts.com."
+    ),
+    "creditinfosystems-com": (
+        "FCRA-REGULATED BACKGROUND SCREENING -- see the category note "
+        "above NO_OPTOUT_SURFACE in this module for why this whole class "
+        "gets no recipe. Verified by browser render 2026-09-23: Credit "
+        "Information Systems resells tri-merge credit reports and "
+        "verification products to LENDERS. creditinfosystems.com carries "
+        "no form at all and no privacy or opt-out link -- its only "
+        "entrance is CLIENT LOGIN -- and a consumer's route to the "
+        "underlying data is an FCRA dispute through the lender or the "
+        "bureau that supplied it. Note the dataset names this row 'Credit "
+        "Bureau Of Council Bluffs, Inc', an older corporate name for the "
+        "same operation. Dataset contact: heather@creditinfosystems.com, "
+        "a personal address."
+    ),
+    "crsspxl-com": (
+        "Verified by browser render 2026-09-23: Cross Pixel's opt-out is "
+        "a COOKIE control and says so plainly. privacy.crsspxl.com/optout "
+        "is titled 'Behavioral Targeting Opt Out (Do Not Sell My "
+        "Information)' and its entire content is a report on the "
+        "visitor's own browser -- 'You can view the status of Behavioral "
+        "Targeting against your browser below', which for this visit read "
+        "'No Cross Pixel cookie found. You have not visited any Cross "
+        "Pixel partner sites, or you currently have cookies disabled.' "
+        "There is no form, no field, and nothing keyed to a person: the "
+        "opt-out is a cookie set in whichever browser visits. Nothing a "
+        "form-filling recipe can do, and nothing a named-person request "
+        "would attach to. Dataset contact: privacy@crosspixel.net."
+    ),
+    "crawlbee-com": (
+        "Verified 2026-09-23: crawlbee.com no longer belongs to a "
+        "company. It redirects to forsale.godaddy.com -- the domain is "
+        "parked for sale -- and that in turn serves an Akamai 'Access "
+        "Denied' page. There is no opt-out page, no privacy notice and no "
+        "operator to address, and the dataset records no email for this "
+        "row. Distinct from the DNS failures recorded elsewhere in this "
+        "sweep: the redirect target positively identifies the domain as "
+        "retired rather than merely unreachable."
+    ),
+    "cyndx-com": (
+        "Verified 2026-09-23: the company is dissolving. The recorded URL "
+        "(/california-do-not-track/) now serves a letter from the founder "
+        "in place of any content -- 'After careful consideration, we have "
+        "made the difficult decision to wind down and dissolve Cyndx' -- "
+        "and no form, policy or rights channel remains on the site. There "
+        "is no surface and, shortly, no company. Dataset contact "
+        "privacy@cyndx.com may still be read during the wind-down but is "
+        "mailbox-only regardless."
     ),
 }
 
@@ -3951,6 +4062,96 @@ OPTOUT_UNDECIDED = {
         "the surface did once exist. The dataset records no email for "
         "this row, so it has no working channel at all."
     ),
+    "crunchbase-com": (
+        "Verified by browser render 2026-09-23: "
+        "preferences.crunchbase.com/form/opt_out is a DataGrail Privacy "
+        "Request Center that REFUSED this visitor before showing a form: "
+        "'Unsupported Location Detected -- The location we have detected "
+        "does not support the current legislative right you are trying to "
+        "submit a request for.' So the surface exists, is correctly typed "
+        "(the URL is /form/opt_out), and is gated on geolocated "
+        "jurisdiction. Undecided rather than blocked because this is a "
+        "policy gate, not an anti-bot wall, and it may simply open for a "
+        "supported state. What a future researcher needs: return the "
+        "location picker to a supported jurisdiction, record the field "
+        "set and request types behind it, and re-check for a captcha at "
+        "that stage -- DataGrail portals elsewhere in this dataset load "
+        "one only after the gate. Dataset contact: "
+        "privacy@crunchbase.com."
+    ),
+    "cuebiq-com": (
+        "Verified by browser render 2026-09-23: the dataset URL "
+        "(cuebiq.com/privacypolicy/) redirects to /privacy-policy/ and "
+        "carries NO rights-request form -- the only Gravity Form on the "
+        "page, #gform_6, is a 'Request Live Demo' sales form (email, "
+        "first, last, title, phone, company), which would be easy to "
+        "mistake for a request form and is not one. An invisible "
+        "reCAPTCHA v3 is live on the page (the "
+        ".gf_invisible.ginput_recaptchav3 wrapper and a "
+        "#gfield_recaptcha_response input), attached to that demo form. "
+        "Cuebiq sells mobile LOCATION data keyed to device advertising "
+        "ids, so the likely shape of any real surface is a MAID-based "
+        "opt-out like complementics and datafy in this same sweep -- "
+        "which this codebase could not fill anyway -- but that has not "
+        "been established. Next step: read the policy's rights section "
+        "for the actual channel. Dataset contact: privacy@cuebiq.com."
+    ),
+    "datadecisionsgroup-com": (
+        "Verified by browser render 2026-09-23: "
+        "datadecisionsgroup.com/privacy-policy/ carries two Gravity Forms "
+        "and NEITHER is a rights request: #gform_3 is a newsletter "
+        "subscribe (first, last, email, submit labelled 'Subscribe') and "
+        "#gform_7 is a lead form (phone, first, last, email, submit "
+        "labelled 'Talk to an Expert'). Recording them explicitly because "
+        "a careless reader would see 'Gravity Form on the privacy policy "
+        "page' and write a recipe against a marketing signup. No captcha "
+        "was loaded on the page. The only other privacy affordance is a "
+        "cookie-settings widget. Next step: find whether the policy names "
+        "a separate request URL or is mailbox-only. Dataset contact: "
+        "privacy@datadecisionsgroup.com."
+    ),
+    "datadelivers-com": (
+        "DATASET DEFECT, verified 2026-09-23: the row's opt_out_url "
+        "https://datadelivers.com/unsubscribe/ returns HTTP 404 ('Page "
+        "not found'), leaving only the site's WordPress search form. Not "
+        "fixed in data/source-brokers.json. Worth noting the URL shape: "
+        "/unsubscribe/ suggests the recorded surface was an email "
+        "unsubscribe rather than a data suppression, so even if it were "
+        "restored it may be the wrong request type -- the trap already "
+        "documented on several consent-portal rows. Next step: look for a "
+        "privacy or do-not-sell page under datadelivers.com and establish "
+        "which request types it accepts. Dataset contact: "
+        "supplier@datadelivers.com, which is addressed to data SUPPLIERS "
+        "rather than consumers and is itself suspect."
+    ),
+    "datalinedata-com": (
+        "DATASET DEFECT, verified 2026-09-23: the row's opt_out_url "
+        "https://datalinedata.com/privacy-portal/ returns HTTP 404, so "
+        "the recorded surface is gone. One genuinely useful detail came "
+        "out of the render anyway: the site's reCAPTCHA Enterprise is "
+        "BROKEN -- its challenge frame reports 'This site is exceeding "
+        "reCAPTCHA Enterprise free quota' -- which means any form on this "
+        "domain may be unsubmittable for everyone right now, not just for "
+        "this tool. Anyone returning here should check that before "
+        "concluding a form is walled against them specifically. Next "
+        "step: find the live privacy portal (the footer offers only "
+        "'Request a Demo'). Dataset contact: psobel@datalinedata.com, a "
+        "personal address."
+    ),
+    "businesswatchnetwork-com": (
+        "Verified by browser render 2026-09-23: businesswatchnetwork.com "
+        "exposes no privacy or opt-out page from its homepage and carries "
+        "no rights form -- its forms are a site search, a newsletter "
+        "subscribe (user[email] -> /user/new) and an off-layout Yotpo "
+        "review widget. The business is a B2B webinar and whitepaper "
+        "publisher that collects registrant details for sponsors, so the "
+        "plausible channel is an email unsubscribe rather than a data "
+        "suppression, but nothing was established. Next step: look for "
+        "/privacy or a footer legal page. Note the dataset's contact for "
+        "this row is support@bizwatchnetwork.com -- a DIFFERENT domain "
+        "from the row's own businesswatchnetwork.com, which is worth "
+        "verifying before relying on it."
+    ),
 }
 
 
@@ -4613,6 +4814,99 @@ OPTOUT_BLOCKED = {
         "vendor again and can reuse the shape. Dataset contact: "
         "info@persistent.id, which is the sibling brand's address and "
         "consistent with the two domains serving one surface."
+    ),
+    "smartmove-us": (
+        "FCRA-REGULATED BACKGROUND SCREENING -- see the category note "
+        "above NO_OPTOUT_SURFACE in this module for why this whole class "
+        "gets no recipe. Verified 2026-09-23: the recorded do-not-sell "
+        "URL never renders -- smartmove.us serves a Cloudflare "
+        "interstitial ('Performing security verification ... This page is "
+        "displayed while the website verifies you are not a bot', Ray ID "
+        "a3fd3ab4892b31a9) and redirects with a __cf_chl_rt_tk challenge "
+        "token. So the page is walled as well as being in the exempt "
+        "class. SmartMove is TransUnion's landlord-facing tenant- "
+        "screening product; a report is pulled by a landlord with the "
+        "applicant's consent, and the consumer's recourse is the FCRA "
+        "channel rather than this link. DATASET NOTE: the row is named "
+        "'CTAM Leadshare Corp.' with contact zell@ctam.com, which matches "
+        "neither TransUnion nor SmartMove -- flagged, not fixed."
+    ),
+    "crisil-com": (
+        "Verified by browser render 2026-09-23: a real, correctly typed "
+        "do-not-sell form behind a visible captcha. The recorded URL "
+        "redirects to /en/home/crisil-privacy-notice/do-not-sell-my- "
+        "personal-information.html, which carries form#do-not-sell-my- "
+        "personal-info with input[name=email], [name=firstname], "
+        "[name=lastname], [name=companyname] (all required), "
+        "[name=designation], [name=streetaddress], [name=city] "
+        "(required), [name=country] (required, a text input driving a "
+        "picker rather than a select), [name=state] (required), "
+        "[name=postalcode], and an input[type=button][name=submit]. "
+        "Blocked by reCAPTCHA with a VISIBLE 'I'm not a robot' checkbox "
+        "-- api.js loaded, a .g-recaptcha element, and the anchor and "
+        "bframe challenge frames both present in child frames. Two "
+        "further notes for whoever revisits: the page also carries three "
+        "UNRELATED and computed-invisible forms (#loginForm, "
+        "#forgotPassword, #registration_form_step1) whose fields would be "
+        "easy to mistake for the request form's, so any recipe must scope "
+        "to #do-not-sell-my-personal-info; and the required 'company "
+        "name' field suggests this surface is aimed at business contacts, "
+        "which is consistent with Crisil being an S&P Global ratings and "
+        "research firm. Dataset contact: privacy1@crisil.com."
+    ),
+    "data-axle-com": (
+        "Verified by browser render 2026-09-23: the single best-specified "
+        "opt-out form in this batch, and walled. The recorded /do-not- "
+        "sell-my-data/ leads to /privacy-rights-request/, whose Gravity "
+        "Form #gform_4 carries input_1 First Name, input_3 Last Name, an "
+        "address group (input_14.1 Street, 14.2 Line 2, 14.3 City, 14.4 a "
+        "full 50-state-plus-territories select, 14.5 ZIP), input_9 Email, "
+        "input_10 Phone -- all required -- a required 'Privacy Choice' "
+        "select whose first option is 'Request to opt out of sale', a "
+        "free-text detail box, an acknowledgement checkbox (input_13.1) "
+        "and #gform_submit_button_4. It also carries a HONEYPOT: "
+        "input_19, labelled 'Instagram', off-layout, which would have to "
+        "go in forbidden_selectors. What blocks it is a CLOUDFLARE "
+        "TURNSTILE (challenges.cloudflare.com plus a live .cf-turnstile "
+        "element). Note the Gravity Forms input_NN names are per-form- "
+        "build identifiers, so a recipe would be pinned to this revision "
+        "even if the wall came down. DATASET NOTE: the row's "
+        "opt_out_email is doba_privacy@donorbase.com, a different brand, "
+        "which may mean several Data Axle brands were collapsed into one "
+        "row."
+    ),
+    "datafy-com": (
+        "Verified by browser render 2026-09-23: a complete and unusually "
+        "thorough rights form, blocked twice over. datafy.com/opt-out "
+        "carries #first-name, #last-name, #primary-email-address (all "
+        "required), an add-a-secondary-email checkbox, a Myself/Another "
+        "Individual radio pair (name=requester), required #country and "
+        "#state selects, a five-way action radio group (name=action) "
+        "whose first option is 'Opt-out of the sale and use of...', an "
+        "#additional-request-notes textarea and a required #signature "
+        "field. FIRST BLOCKER: a Cloudflare Turnstile "
+        "(challenges.cloudflare.com, and a .cf-turnstile element inside "
+        "the form's own styled wrapper). SECOND BLOCKER, and the more "
+        "fundamental one: #mobile-device-advertising-id is REQUIRED. "
+        "Datafy's records are keyed to device advertising ids rather than "
+        "names, so this is the complementics/collectivedata pattern again "
+        "-- a codebase gap, since no identity record here holds a MAID, "
+        "and filling it would mean inventing one. Note also the controls "
+        "carry ids but no name attributes, and the form's action resolves "
+        "to DOM node references rather than a URL, so it submits through "
+        "JavaScript. Dataset contact: support@datafy.com."
+    ),
+    "costar-com": (
+        "Verified 2026-09-23: privacy.costar.com/DSAR-submission returns "
+        "HTTP 403 from Akamai ('Access Denied ... You don't have "
+        "permission to access ... Reference "
+        "#18.46a7cb17.1790205071.37940b1a'), so the DSAR form never "
+        "renders for an automated visitor. Same edge-wall shape as "
+        "optoutprescreen-com. The URL naming suggests a genuine request "
+        "surface is behind it, which is why this is blocked rather than "
+        "absent -- a human on an ordinary connection should try it "
+        "directly. The dataset records no email for this row, so the wall "
+        "currently leaves no channel at all."
     ),
 }
 

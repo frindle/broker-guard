@@ -2446,6 +2446,127 @@ NO_SEARCH_SURFACE = {
         "lookup; its only forms are the privacy-request form and a "
         "newsletter signup."
     ),
+    "crawlbee-com": (
+        "Verified 2026-09-23: crawlbee.com is no longer a company site. "
+        "It redirects to forsale.godaddy.com -- the domain is parked for "
+        "sale -- and even that lands on an Akamai 'Access Denied' page. "
+        "There is nothing to search and nobody to ask. Recorded as a "
+        "retired domain rather than a reachability failure, because the "
+        "redirect target identifies what happened."
+    ),
+    "creditinfosystems-com": (
+        "Verified by browser render 2026-09-23: Credit Information "
+        "Systems sells tri-merge credit reports and verification services "
+        "to LENDERS; the consumer's route to that data is an FCRA dispute "
+        "through the lender or the underlying bureau. "
+        "creditinfosystems.com is a marketing site whose only entrance is "
+        "CLIENT LOGIN, with no form and no lookup of any kind."
+    ),
+    "crisil-com": (
+        "Verified by browser render 2026-09-23: Crisil is an S&P Global "
+        "ratings, research and analytics firm; its subjects are companies "
+        "and securities, not consumers. The site's only person-shaped "
+        "forms are a login, a password reset and a user registration. No "
+        "public people search exists."
+    ),
+    "crsspxl-com": (
+        "Verified by browser render 2026-09-23: Cross Pixel deals in "
+        "browser COOKIES for behavioural ad targeting, not named people "
+        "-- its own opt-out page reports on 'the status of Behavioral "
+        "Targeting against your browser' and told this visitor 'No Cross "
+        "Pixel cookie found.' There is no name-keyed record and nothing "
+        "to look up."
+    ),
+    "crunchbase-com": (
+        "Verified by browser render 2026-09-23: Crunchbase's database is "
+        "about COMPANIES, funding rounds and the executives attached to "
+        "them, and querying it is a paid, logged-in product. There is no "
+        "free page that takes a person's name and returns a personal "
+        "record. No search surface for this tool to read."
+    ),
+    "smartmove-us": (
+        "Verified 2026-09-23: smartmove.us serves a Cloudflare "
+        "interstitial ('Performing security verification ... This page is "
+        "displayed while the website verifies you are not a bot', Ray ID "
+        "logged) on the recorded URL, so nothing renders for an automated "
+        "visitor on either leg. SmartMove is TransUnion's landlord-facing "
+        "tenant-screening product -- reports are pulled by a landlord "
+        "with the applicant's consent, so a public lookup is implausible "
+        "anyway -- but the wall is what was actually observed. Note the "
+        "dataset's contact for this row, zell@ctam.com, matches neither "
+        "TransUnion nor SmartMove and should be doubted."
+    ),
+    "cuebiq-com": (
+        "Verified by browser render 2026-09-23: Cuebiq sells mobile "
+        "LOCATION data keyed to device advertising ids, sold to brands "
+        "and researchers as aggregated audiences. There is no named- "
+        "person record and no public lookup; the only forms on the site "
+        "are a content search and a 'Request Live Demo' marketing form."
+    ),
+    "cyndx-com": (
+        "Verified 2026-09-23: Cyndx is winding down. Its california-do- "
+        "not-track page now serves a founder's letter -- 'After careful "
+        "consideration, we have made the difficult decision to wind down "
+        "and dissolve Cyndx' -- in place of any content, and no product "
+        "remains. Cyndx searched COMPANIES and capital markets rather "
+        "than consumers in any case, so no search surface existed to read "
+        "even before the dissolution."
+    ),
+    "data-axle-com": (
+        "Verified by browser render 2026-09-23: Data Axle sells consumer "
+        "and business marketing lists and data hygiene to businesses; "
+        "delivery is by file, feed or platform under contract. Its public "
+        "site has no lookup -- the only name-taking form is the privacy "
+        "rights request itself. Note the dataset's opt_out_email for this "
+        "row is doba_privacy@donorbase.com, a different brand "
+        "(DonorBase), which may indicate several Data Axle brands "
+        "collapsed into one row."
+    ),
+    "datadecisionsgroup-com": (
+        "Verified by browser render 2026-09-23: Data Decisions Group "
+        "sells B2B and consumer marketing data and appending services to "
+        "businesses. The public site has no lookup of any kind; the only "
+        "forms on its privacy page are a newsletter subscribe and a 'Talk "
+        "to an Expert' contact form."
+    ),
+    "datadelivers-com": (
+        "Verified by browser render 2026-09-23: DataDelivers is a "
+        "customer-data platform selling audience data to marketers -- "
+        "delivery is by integration, not by a public query. No lookup "
+        "exists; the only form on the domain is the WordPress site "
+        "search. Recorded alongside a DATASET DEFECT on the opt-out leg: "
+        "the row's opt_out_url (/unsubscribe/) 404s."
+    ),
+    "datafacts-com": (
+        "Verified by browser render 2026-09-23: Data Facts is a "
+        "background- and tenant-screening CRA plus mortgage verification "
+        "services, sold to employers, landlords and lenders. Its consumer "
+        "entrances are 'Applicant Support' and 'Client Login', both "
+        "authenticated; no public page takes a name and returns a person."
+    ),
+    "datafy-com": (
+        "Verified by browser render 2026-09-23: Datafy sells location- "
+        "based attendance and visitation analytics built on mobile device "
+        "advertising ids -- its own rights form asks for a Mobile Device "
+        "Advertising ID as a REQUIRED field, which is the clearest "
+        "possible statement that its records are keyed to devices rather "
+        "than names. No public person lookup."
+    ),
+    "datalinedata-com": (
+        "Verified by browser render 2026-09-23: Dataline sells targeted "
+        "consumer marketing data to brands and agencies; the site is "
+        "marketing plus 'Request a Demo' and exposes no lookup. Recorded "
+        "alongside a DATASET DEFECT on the opt-out leg: the row's "
+        "opt_out_url (/privacy-portal/) 404s."
+    ),
+    "businesswatchnetwork-com": (
+        "Verified by browser render 2026-09-23: Business Watch Network "
+        "publishes B2B webinars, articles and whitepapers and collects "
+        "registrant details for its sponsors -- a lead-generation "
+        "publisher rather than a records broker. Its forms are a site "
+        "search, a newsletter subscribe (user[email]) and a Yotpo review "
+        "widget. No person lookup exists."
+    ),
 }
 
 
@@ -2490,6 +2611,16 @@ SEARCH_BLOCKED = {
         "and sells B2B audience targeting and data enhancement, so a "
         "search surface is unlikely -- but unlikely is not verified, and "
         "this wall is why."
+    ),
+    "costar-com": (
+        "Verified 2026-09-23: privacy.costar.com/DSAR-submission returns "
+        "HTTP 403 from Akamai ('Access Denied ... Reference "
+        "#18.46a7cb17...'), the same edge wall already recorded for "
+        "optoutprescreen-com. Nothing renders on the recorded host, so "
+        "neither leg could be read there. What CoStar is argues against a "
+        "consumer search surface anyway -- commercial real-estate data "
+        "sold by subscription -- but the wall is why this is recorded as "
+        "blocked rather than absent."
     ),
 }
 
