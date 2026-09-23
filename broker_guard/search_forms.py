@@ -857,6 +857,18 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    "epsilon-com": (
+        "Epsilon Data Management is a B2B marketing-services and "
+        "consumer-data licensing business, not a consumer people-search "
+        "site. Verified 2026-09-23: epsilon.com/us carries 19 form inputs "
+        "and not one of them is a people lookup -- they are a 'Contact us' "
+        "lead form (firstName, lastName, emailAddress, title, company, "
+        "comments, a marketing opt-in and reCAPTCHA) plus OneTrust cookie-"
+        "consent checkboxes and that widget's own vendor-search box. There "
+        "is no name/email/phone lookup anywhere on the domain to build a "
+        "recipe against. Its opt-out leg is a real DSAR form and is "
+        "recorded separately."
+    ),
     "gladiknow-com": (
         "Glad I Know is not a search engine over its own records -- it is an "
         "affiliate front. Verified 2026-09-22: filling its first/last/city/"
