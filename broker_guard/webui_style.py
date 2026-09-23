@@ -76,6 +76,12 @@ NAV_ITEMS = (
     # there is no single "your profile" to point at.
     ("identity", "/identity", "Profiles"),
     ("exposure", "/exposure", "Exposure"),
+    # The audit trail for automated opt-out form submissions -- every attempt
+    # this tool made on the person's behalf against a third party's form.
+    # Its own page rather than a section of /brokers: "what did you send in
+    # my name, and what did it look like when you sent it" is a question
+    # that deserves to be one click away, not buried in a broker row.
+    ("review", "/review", "Opt-out review"),
     ("freeze", "/freeze", "Credit freeze"),
     # The runtime knobs that used to be editable ONLY as env vars in the
     # tracked docker-compose.yml -- and therefore silently reverted by every
@@ -242,6 +248,15 @@ textarea.inp { height: auto; padding: 10px 12px; line-height: 1.5; resize: verti
 .btn.small { height: 32px; padding: 0 12px; font-size: 12px; border-radius: 8px; }
 .btn.danger:hover { background: var(--escalated-fill); border-color: #e3b6b4; color: var(--escalated-ink); }
 .btn:disabled, .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+/* /review -- the opt-out submission audit trail */
+.attempt { margin-bottom: 14px; }
+.attempt-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.kvs { margin-top: 12px; display: grid; gap: 4px; }
+.kv { display: flex; justify-content: space-between; gap: 16px; font-size: 13px;
+      border-bottom: 1px dashed var(--border); padding-bottom: 4px; }
+.kv span { color: var(--muted); }
+.shot { display: inline-block; margin-top: 12px; font-size: 13px; color: var(--teal-ink); }
+.row.gap { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 .btn:disabled:hover, .btn[disabled]:hover { background: var(--teal); }
 .btn.secondary:disabled:hover, .btn.secondary[disabled]:hover { background: #fff; border-color: var(--input-border); color: var(--ink); }
 /* Button groups (profile row actions, form save/cancel): the forms that

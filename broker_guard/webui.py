@@ -30,7 +30,7 @@ import urllib.parse
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from broker_guard import brokers as brokers_mod
@@ -38,9 +38,12 @@ from broker_guard import eraser as eraser_mod
 from broker_guard import eraser_config as eraser_config_mod
 from broker_guard import exposure as exposure_mod
 from broker_guard import freeze as freeze_mod
+from broker_guard import optout_forms
+from broker_guard import optout_submit
 from broker_guard import profile as profile_mod
 from broker_guard import progress as progress_mod
 from broker_guard import profiles as profiles_mod
+from broker_guard import review as review_mod
 from broker_guard import service as service_mod
 from broker_guard import settings as settings_mod
 from broker_guard import state as state_mod
@@ -1867,6 +1870,8 @@ def settings_post(
     alert_webhook_url: str = Form(""),
     eraser_enabled: str = Form(""),
     eraser_dry_run: str = Form(""),
+    optout_submit_enabled: str = Form(""),
+    optout_submit_dry_run: str = Form(""),
     captcha_api_key: str = Form(""),
     interval_seconds: str = Form(""),
     reset: list[str] = Form([]),
@@ -1894,6 +1899,8 @@ def settings_post(
         "alert_webhook_url": alert_webhook_url,
         "eraser_enabled": eraser_enabled,
         "eraser_dry_run": eraser_dry_run,
+        "optout_submit_enabled": optout_submit_enabled,
+        "optout_submit_dry_run": optout_submit_dry_run,
         "captcha_api_key": captcha_api_key,
         "interval_seconds": interval_seconds,
     }
@@ -1929,3 +1936,231 @@ def settings_post(
         "reset": sorted(to_reset),
     })
     return RedirectResponse(url="/settings?saved=1", status_code=303)
+
+
+# --- /review : the opt-out submission audit trail -----------------------------
+#
+# The one place the dashboard answers "what did this tool send in my name, to
+# whom, and what did the page look like when it did". Every record here was
+# written by broker_guard.optout_submit -- the only code path in this project
+# with real third-party side effects (see its module docstring for the four
+# interlocks that gate it).
+
+_OUTCOME_TONE = {
+    review_mod.OUTCOME_SUBMITTED: "success",
+    review_mod.OUTCOME_DRY_RUN: "progress",
+    review_mod.OUTCOME_NEEDS_MANUAL: "action",
+    review_mod.OUTCOME_FAILED: "escalated",
+}
+
+_OUTCOME_LABEL = {
+    review_mod.OUTCOME_SUBMITTED: "submitted",
+    review_mod.OUTCOME_DRY_RUN: "dry run",
+    review_mod.OUTCOME_NEEDS_MANUAL: "needs you",
+    review_mod.OUTCOME_FAILED: "failed",
+}
+
+
+def _attempt_identity(cfg: Config, identity_key: str):
+    """The Identity an attempt should run as.
+
+    Same resolution order as ``remove_broker``: the named profile when the
+    posting row knows one, else the legacy single-identity file. With every
+    profile scanned every cycle, submitting Ann's opt-out under Bob's
+    identity_key would corrupt both people's history.
+    """
+    if identity_key:
+        for p in profiles_mod.load_profiles(cfg.profiles_path):
+            if profiles_mod.identity_key(p) == identity_key:
+                return profile_mod.Identity(**profiles_mod.to_legacy_profile_dict(p))
+    try:
+        return profile_mod.load_profile(cfg.profile_path)
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=f"cannot load profile: {exc}")
+
+
+def _attempt_row_html(record: dict) -> str:
+    outcome = record.get("outcome") or ""
+    fields = record.get("fields") or {}
+    field_rows = "".join(
+        "<div class='kv'><span>{}</span><strong>{}</strong></div>".format(
+            html.escape(str(label)), html.escape(str(value)))
+        for label, value in fields.items()
+    ) or "<div class='muted'>nothing was filled in</div>"
+
+    shot = ""
+    if record.get("screenshot"):
+        shot = (
+            "<a class='shot' href='/review/{rid}/screenshot' target='_blank'>"
+            "view the page as it was at the time of the attempt</a>"
+        ).format(rid=html.escape(str(record.get("id", ""))))
+
+    reason = record.get("reason")
+    reason_html = (
+        "<p class='muted'>{}</p>".format(html.escape(str(reason))) if reason else ""
+    )
+
+    return """
+<div class="card attempt">
+  <div class="attempt-head">
+    <div>
+      <strong>{broker}</strong>
+      <div class="muted">{when}{dry}</div>
+    </div>
+    {badge}
+  </div>
+  {reason}
+  <div class="kvs">{fields}</div>
+  {shot}
+</div>
+""".format(
+        broker=html.escape(str(record.get("broker_name") or record.get("broker_id") or "?")),
+        when=html.escape(format_scan_timestamp(record.get("started_at")) or ""),
+        dry=" · dry run" if record.get("dry_run") else "",
+        badge=style.badge(_OUTCOME_LABEL.get(outcome, outcome),
+                          _OUTCOME_TONE.get(outcome, "neutral")),
+        reason=reason_html,
+        fields=field_rows,
+        shot=shot,
+    )
+
+
+@app.get("/review", response_class=HTMLResponse)
+def review_page(cfg: Config = Depends(get_config)):
+    """Every automated opt-out submission attempt, newest first."""
+    directory = review_mod.review_dir(cfg)
+    records = review_mod.load_attempts(directory)
+    counts = review_mod.attempt_counts(records)
+
+    live_cfg = cfg
+    enabled = bool(getattr(live_cfg, "optout_submit_enabled", False))
+    dry_default = bool(getattr(live_cfg, "optout_submit_dry_run", True))
+
+    if enabled and dry_default:
+        state_note = ("Automated submission is <strong>on, in DRY RUN</strong>: forms are "
+                      "filled and photographed, but Submit is never pressed.")
+    elif enabled:
+        state_note = ("Automated submission is <strong>on and LIVE</strong>: a run will "
+                      "really send the request in your name.")
+    else:
+        state_note = ("Automated submission is <strong>off</strong>. Turn it on in "
+                      "<a href='/settings'>Settings</a> to enable the buttons below.")
+
+    buttons = []
+    for broker_id in optout_forms.supported_broker_ids():
+        recipe = optout_forms.recipe_for(broker_id)
+        disabled = "" if enabled else " disabled"
+        buttons.append("""
+<div class="card">
+  <strong>{name}</strong>
+  <div class="muted">{url}</div>
+  <div class="row gap">
+    <form method="post" action="/review/run">
+      <input type="hidden" name="broker_id" value="{bid}">
+      <input type="hidden" name="mode" value="dry">
+      <button class="btn secondary" type="submit"{disabled}>Dry run (fill only)</button>
+    </form>
+    <form method="post" action="/review/run"
+          onsubmit="return confirm('This really submits an opt-out request to {name_js} using your real name, email and state. Continue?');">
+      <input type="hidden" name="broker_id" value="{bid}">
+      <input type="hidden" name="mode" value="live">
+      <button class="btn danger" type="submit"{disabled}>Submit for real</button>
+    </form>
+  </div>
+</div>
+""".format(
+            name=html.escape(recipe.broker_name),
+            name_js=html.escape(recipe.broker_name).replace("'", "\\'"),
+            url=html.escape(recipe.url),
+            bid=html.escape(broker_id),
+            disabled=disabled,
+        ))
+
+    rows = "".join(_attempt_row_html(r) for r in records) or (
+        "<div class='card muted'>No opt-out submission has been attempted yet.</div>")
+
+    body = """
+<div class="page-head"><h1>Opt-out review</h1></div>
+<p class="muted">{state_note}</p>
+<div class="chips">{chips}</div>
+<h2>Run an opt-out</h2>
+{buttons}
+<h2>Attempts</h2>
+<p class="muted">Records and screenshots are kept in <code>{dir}</code>.</p>
+{rows}
+""".format(
+        state_note=state_note,
+        chips="".join([
+            style.stat_chip(counts[review_mod.OUTCOME_SUBMITTED], "submitted", "success"),
+            style.stat_chip(counts[review_mod.OUTCOME_DRY_RUN], "dry runs", "progress"),
+            style.stat_chip(counts[review_mod.OUTCOME_NEEDS_MANUAL], "need you", "action"),
+            style.stat_chip(counts[review_mod.OUTCOME_FAILED], "failed", "escalated"),
+        ]),
+        buttons="".join(buttons),
+        dir=html.escape(directory),
+        rows=rows,
+    )
+    return style.render_page("Opt-out review", "review", body)
+
+
+@app.get("/review/{record_id}/screenshot")
+def review_screenshot(record_id: str, cfg: Config = Depends(get_config)):
+    """Serve one attempt's screenshot.
+
+    The filename is looked up from the RECORD rather than built from
+    *record_id*, so a crafted id cannot walk out of the review folder.
+    """
+    directory = review_mod.review_dir(cfg)
+    record = review_mod.get_attempt(directory, record_id)
+    if record is None or not record.get("screenshot"):
+        raise HTTPException(status_code=404, detail="no screenshot for that attempt")
+
+    name = os.path.basename(str(record["screenshot"]))
+    path = os.path.join(directory, name)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="screenshot file is missing")
+    with open(path, "rb") as fh:
+        return Response(content=fh.read(), media_type="image/png")
+
+
+@app.post("/review/run")
+def review_run(broker_id: str = Form(...), mode: str = Form("dry"),
+               identity_key: str = Form(""), cfg: Config = Depends(get_config)):
+    """Run one opt-out attempt now, on demand.
+
+    Synchronous, like ``remove_broker``: this is an occasional human-initiated
+    action, and running it inline keeps it inside the one-process/one-writer
+    model rather than spawning a second thread with its own DB handle.
+
+    ``mode`` is ``dry`` (fill + screenshot, never submit) or ``live`` (respect
+    the configured dry-run setting, i.e. actually submit when it is off).
+    ``dry`` is the default and any unrecognized value falls back to it -- the
+    safe direction.
+    """
+    try:
+        optout_forms.recipe_for(broker_id)
+    except optout_forms.RecipeNotFound:
+        raise HTTPException(status_code=404,
+                            detail="no verified opt-out form recipe for that broker")
+
+    identity = _attempt_identity(cfg, identity_key)
+    dry_run = True if mode != "live" else None   # None == use the configured setting
+
+    try:
+        record = optout_submit.run_attempt(broker_id, identity, cfg, dry_run=dry_run)
+    except optout_submit.SubmissionRefused as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+
+    # Surface an attempt that needs a human the SAME way every other
+    # manual-action item already surfaces: as a needs_review broker_status,
+    # which webui._action_needed_count already counts into the nav badge.
+    status = review_mod.status_for_outcome(record.get("outcome"))
+    if status:
+        conn = state_mod.init_db(cfg.state_path)
+        try:
+            state_mod.StateStore(conn).set_status(
+                identity.identity_key, broker_id, status, _utcnow_iso())
+        finally:
+            conn.close()
+
+    return RedirectResponse(url="/review", status_code=303)

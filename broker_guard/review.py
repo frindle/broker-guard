@@ -248,6 +248,29 @@ def get_attempt(directory: str, record_id: str) -> dict | None:
     return None
 
 
+def status_for_outcome(outcome: str) -> str | None:
+    """The ``broker_status.status`` an attempt's *outcome* implies, or ``None``.
+
+    This is the "surface it the same way other manual-action items surface
+    today" seam, and it deliberately adds NO new vocabulary: an attempt that
+    stopped at a bot check, or broke, becomes ``needs_review`` -- the exact
+    status ``autopilot.STATUS_NEEDS_REVIEW`` already writes and that
+    ``webui._action_needed_count`` already counts into the nav's "Action
+    needed" badge. So a CAPTCHA bail-out lights up the existing badge with
+    no change to the broker-status model at all.
+
+    ``dry_run`` returns ``None`` -- a rehearsal must not move a broker's real
+    status. ``submitted`` also returns ``None``: what a broker does with a
+    filed request is the removal pipeline's business (``eraser``'s
+    pending/confirmed ladder), and stamping a status here would fight it.
+
+    Pure, so the mapping is testable without a database.
+    """
+    if outcome in (OUTCOME_NEEDS_MANUAL, OUTCOME_FAILED):
+        return "needs_review"
+    return None
+
+
 def attempt_counts(records: list[dict]) -> dict:
     """``{outcome: n}`` over *records*, every known outcome present (0 if none).
 
