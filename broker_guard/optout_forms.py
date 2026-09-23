@@ -1603,6 +1603,27 @@ OPTOUT_OUT_OF_SCOPE = {
         "records peoplefinder-com as pointing its opt-out here, so this "
         "single wizard is the terminus for more than one dataset broker."
     ),
+    "fastpeoplesearch-com": (
+        "Verified 2026-09-23. /removal 302s to /optout, which is reachable "
+        "and renders a real form -- but that form is only STEP ONE of four, "
+        "and the page numbers the steps itself: 'Enter your email address "
+        "and name and complete the captcha below. We will send a link to "
+        "your email address that will take you to the opt-out form.' -> "
+        "'Click the link sent to your email ... If you wait more than 24 "
+        "hours to click this link you will need to request a new one.' -> "
+        "'Enter your information on the form.' -> a confirmation page. So "
+        "the actual removal form is not at a URL at all: it is behind a "
+        "one-time token mailed to an address this codebase cannot read, "
+        "which is the multi-page/session-gated shape this bucket names. The "
+        "step-one form itself (action=/optout-start-submitted, method=post, "
+        "fields am, agentFirstname, agentLastname, agentEmail, firstname, "
+        "middlename, lastname, email, a 'legal' checkbox) also carries a "
+        "cf-turnstile-response input, i.e. a Cloudflare Turnstile captcha -- "
+        "but the captcha is not the deciding fact here, since this tool "
+        "already screenshots-and-stops on captchas for five shipped "
+        "recipes. The mailbox is. Nothing was submitted. Its SEARCH leg is "
+        "a shipped, working recipe."
+    ),
 }
 
 
