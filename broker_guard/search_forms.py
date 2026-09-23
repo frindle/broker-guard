@@ -83,8 +83,13 @@ import re
 from broker_guard.detection import is_people_search_hit
 
 # Fields a search recipe may ask for. Deliberately a short list: everything
-# here comes straight off ``profile.Identity`` with no inference.
-FIELD_SOURCES = ("first_name", "last_name", "full_name", "email", "phone")
+# here comes straight off ``profile.Identity`` with no inference. "state" is
+# the one exception -- it is derived the same way
+# ``optout_forms.state_from_addresses`` derives it, and belongs here only
+# because a broker's search form can make it flatly REQUIRED to search at
+# all (a disabled Search button with no state chosen), not a narrowing
+# field this tool is choosing to fill. See ``resolve_search_fields``.
+FIELD_SOURCES = ("first_name", "last_name", "full_name", "email", "phone", "state")
 
 
 @dataclass(frozen=True)
@@ -96,12 +101,15 @@ class SearchField:
     submits without it. No recipe currently fills an optional NARROWING
     field -- see the module docstring on why that is a false-negative
     factory -- so ``required=False`` is for genuinely alternative inputs.
+    ``kind`` says how to apply the value: ``text`` (default) is a plain
+    fill; ``select`` is a real ``<select>`` element chosen by label.
     """
 
     selector: str
     source: str
     label: str
     required: bool = True
+    kind: str = "text"
 
 
 @dataclass(frozen=True)
@@ -261,10 +269,86 @@ USPHONEBOOK = SearchRecipe(
 )
 
 
+ADVANCEDBACKGROUNDCHECKS = SearchRecipe(
+    broker_id="advancedbackgroundchecks-com",
+    broker_name="AdvancedBackgroundChecks",
+    search_url="https://www.advancedbackgroundchecks.com/",
+    fields=(
+        SearchField(selector="input[placeholder='First Name']", source="first_name",
+                    label="First Name"),
+        SearchField(selector="input[placeholder='Last Name']", source="last_name",
+                    label="Last Name"),
+    ),
+    # The only element on the page with type=submit; the optional
+    # City/State inputs are deliberately not filled.
+    submit_selector="button[type='submit']",
+    results_host="advancedbackgroundchecks.com",
+    no_results_markers=(
+        "didn't find an exact match",
+    ),
+    # Only present on a card-bearing results page; the miss page (which also
+    # echoes the searched name repeatedly, in the same style as
+    # SearchPeopleFree) never renders one.
+    hit_markers=("view details",),
+    verified_on="2026-09-22",
+    notes=(
+        "Verified live both ways: a real name navigates to "
+        "/find/name/<slug> with result cards and 'View Details' links; a "
+        "nonsense name lands on the SAME url shape but says 'We searched our "
+        "public records database ... but didn't find an exact match', while "
+        "still echoing the searched name a dozen times in the FAQ boilerplate "
+        "-- the no-results marker is checked first for exactly that reason. "
+        "No usable printed count: the site prints an approximate '260+ "
+        "people with a similar name', which is not a precise 'this person' "
+        "count, so no count_pattern is set and the markers alone decide it."
+    ),
+)
+
+SEARCHPUBLICRECORDS = SearchRecipe(
+    broker_id="searchpublicrecords-com",
+    broker_name="Search Public Records (Civil Data Research, LLC)",
+    search_url="https://www.searchpublicrecords.com/",
+    fields=(
+        SearchField(selector="#search-name", source="full_name", label="Full Name"),
+    ),
+    submit_selector=".people__search__btn",
+    results_host="searchpublicrecords.com",
+    # Deliberately empty: every attempt (2026-09-22, both a common and a
+    # nonsense name, waited out to 15s) reaches a "Search Complete!" results
+    # page that ALSO always says "Please verify you are human to continue." -
+    # a bot wall this codebase's own bot_wall_reason recognizes (the strong
+    # marker "verify you are human"), so run_search reports {"error": ...}
+    # before classify_search_page ever runs. No hand-verified hit/no-results
+    # wording exists because the real results page has never been seen --
+    # writing markers now would be inventing prose, which this module's own
+    # docstring forbids. See notes.
+    no_results_markers=(),
+    hit_markers=(),
+    verified_on="2026-09-22",
+    notes=(
+        "Verified live both ways (2026-09-22): the form page itself is "
+        "clean (no wall text on /), filling #search-name and clicking "
+        "Search navigates to /people/<token> which runs a 'Searching for "
+        "<name> ... National/State/County Records' progress animation to "
+        "100% and then shows 'Search Complete!' -- but the results "
+        "themselves are always behind 'Please verify you are human to "
+        "continue.', for a common name (Michael Thompson) exactly as much "
+        "as a nonsense one. This recipe is kept anyway, same reasoning as "
+        "ThatsThem's: with NO recipe, this broker gets the homepage check, "
+        "which is a near-guaranteed confident 'not found' on a page that "
+        "never even asked the question. With this recipe, every run is an "
+        "honest {'error': 'bot wall: ...'} -> PresenceUnknown -> excluded "
+        "from resolved. Do not fill in no_results_markers/hit_markers from "
+        "guesswork if the wall ever lifts; read them off a real page first."
+    ),
+)
+
 RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
     SEARCHPEOPLEFREE.broker_id: SEARCHPEOPLEFREE,
     USPHONEBOOK.broker_id: USPHONEBOOK,
+    ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
+    SEARCHPUBLICRECORDS.broker_id: SEARCHPUBLICRECORDS,
 }
 
 
@@ -389,6 +473,13 @@ def resolve_search_fields(recipe: SearchRecipe, identity) -> dict:
         elif f.source == "phone":
             phones = list(getattr(identity, "phones", None) or [])
             text = phones[0].strip() if phones else ""
+        elif f.source == "state":
+            # Local import: this is the only search field source that needs
+            # optout_forms's address parsing, and importing it at module
+            # level would be an unused coupling for every broker that does
+            # not need it.
+            from broker_guard.optout_forms import state_from_addresses
+            text = state_from_addresses(getattr(identity, "addresses", None))
         else:
             raise ValueError("unknown search field source: {!r}".format(f.source))
         if text:

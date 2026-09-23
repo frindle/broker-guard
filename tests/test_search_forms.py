@@ -472,10 +472,16 @@ def test_search_checker_is_todays_checker_for_a_broker_without_a_recipe():
 
 def test_recipes_are_keyed_by_real_dataset_broker_ids():
     """Recipe keys must match the ids broker_normalize actually produces
-    (``<domain-with-dashes>``), or the recipe silently never fires."""
+    (``<domain-with-dashes>``), or the recipe silently never fires.
+
+    Most brokers in the dataset are ``.com`` domains, but not all
+    (``phonenumbers-org``, ``facecheck-id``, ...) -- the real invariant from
+    ``broker_normalize._domain_id`` is "lowercase, dots become hyphens, no
+    other punctuation", not "ends in -com"."""
+    import re
     for broker_id in search_forms.supported_broker_ids():
         assert broker_id == broker_id.lower()
-        assert broker_id.endswith("-com")
+        assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)+", broker_id), broker_id
 
 
 def test_unsupported_broker_lookup_raises_rather_than_returning_none():
@@ -484,9 +490,11 @@ def test_unsupported_broker_lookup_raises_rather_than_returning_none():
 
 
 def test_brokers_with_no_public_search_surface_are_recorded_with_reasons():
-    """gladiknow.com and chexsystems.com were investigated live and have no
-    surface to search; the finding is kept so it is not re-investigated."""
-    assert set(search_forms.NO_SEARCH_SURFACE) == {"gladiknow-com", "chexsystems-com"}
+    """Each of these was investigated live and has no independent surface to
+    search (affiliate front, seized/repurposed domain, or a search-only
+    redirect to another company's site); the finding is kept so it is not
+    re-investigated."""
     for broker_id, reason in search_forms.NO_SEARCH_SURFACE.items():
         assert not search_forms.is_supported(broker_id)
         assert len(reason) > 80
+    assert {"gladiknow-com", "chexsystems-com"} <= set(search_forms.NO_SEARCH_SURFACE)

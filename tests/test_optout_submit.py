@@ -332,8 +332,10 @@ def test_exactly_the_hand_verified_brokers_are_turned_on():
     saying so -- which is the failure mode the allow-list exists to prevent.
     """
     assert optout_forms.supported_broker_ids() == [
+        "advancedbackgroundchecks-com",
         "bolttech", "consumer-canvas-llc", "credit-com",
         "ls-mobile-apps-holdings-ltd", "nielsen",
+        "searchpublicrecords-com",
     ]
     # In the dataset, but not hand-verified -> still unsubmittable.
     assert not optout_forms.is_supported("allant-group")

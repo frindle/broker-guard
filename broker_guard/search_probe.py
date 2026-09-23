@@ -214,7 +214,10 @@ def run_search(context, page, recipe, values: dict, terms: list,
                     field.label)}
             continue
         try:
-            page.fill(field.selector, value)
+            if field.kind == "select":
+                page.select_option(field.selector, label=value)
+            else:
+                page.fill(field.selector, value)
         except Exception as exc:
             # Selector drift after a redesign. Unknown, emphatically not
             # "this broker has no record of them".

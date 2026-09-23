@@ -194,6 +194,18 @@ def _select_option(page, select) -> None:
     page.select_option(select.container, label=select.option_label)
 
 
+def _select_field(page, selector: str, value: str) -> None:
+    """Pick an option in a real ``<select>`` by a PROFILE-derived value.
+
+    The ``Field(kind="select")`` counterpart to ``_select_option``: that
+    function is for a fixed literal written into the recipe (L.S Mobile's
+    Territory); this is for a plain HTML state dropdown whose correct
+    choice varies with the identity being run, the same way a ``combo``
+    field's typed text does. Matched by label, same reasoning as above.
+    """
+    page.select_option(selector, label=value)
+
+
 def apply_recipe(page, recipe, resolved: dict) -> dict:
     """Run every step of *recipe* on *page*, in order.
 
@@ -229,6 +241,8 @@ def apply_recipe(page, recipe, resolved: dict) -> dict:
                 continue
             if step.kind == "combo":
                 _fill_combo(page, step.selector, value)
+            elif step.kind == "select":
+                _select_field(page, step.selector, value)
             else:
                 _fill_text(page, step.selector, value)
             filled[step.label] = value

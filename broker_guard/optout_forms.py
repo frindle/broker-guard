@@ -85,6 +85,12 @@ FLAVOR_ONETRUST_DSAR = "onetrust_dsar_webform"
 #   * a canvas-drawn security code (``<canvas id=canv>`` + ``#captcha``)
 FLAVOR_LSM_BESPOKE = "lsmapps_bespoke_form"
 
+# AdvancedBackgroundChecks' own opt-out page (``/opt-out``). A React SPA form
+# with no ``<form>`` element at all -- the submit button is wired up in JS --
+# plain inputs by id, a ``mode`` <select> ("subject" vs "authorized agent"),
+# a ``company`` honeypot, and invisible reCAPTCHA.
+FLAVOR_ABGC_BESPOKE = "advancedbackgroundchecks_bespoke_form"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -116,7 +122,10 @@ class Field:
 
     ``kind`` says HOW to type it: ``text`` is a plain fill; ``combo`` is the
     type-then-pick-from-the-popup dance the country/state autocompletes
-    require.
+    require; ``select`` is a real ``<select>`` element chosen by the
+    resolved value as the option's visible LABEL -- for a plain HTML state
+    dropdown that (unlike L.S Mobile's ``Select``/``Choice`` steps, which
+    always pick a FIXED literal) has to vary with the profile.
     """
 
     selector: str
@@ -461,18 +470,146 @@ LS_MOBILE_APPS = FormRecipe(
 )
 
 
+ADVANCEDBACKGROUNDCHECKS = FormRecipe(
+    broker_id="advancedbackgroundchecks-com",
+    broker_name="AdvancedBackgroundChecks",
+    url="https://www.advancedbackgroundchecks.com/opt-out",
+    flavor=FLAVOR_ABGC_BESPOKE,
+    steps=(
+        # Already the default option, but chosen explicitly rather than
+        # relied upon -- the same reasoning as L.S Mobile's territory pick.
+        Select(container="#mode", option_label="The subject of the request",
+               label="I am"),
+        Field(selector="#sfn", source="first_name", label="First name"),
+        Field(selector="#sln", source="last_name", label="Last name"),
+        Field(selector="#semail", source="email", label="Email address"),
+    ),
+    forbidden_selectors=(
+        # A honeypot: offscreen (-left-[9999px], height/width 0, opacity 0),
+        # named "company" the way a lead-gen form would to bait a scraper
+        # into filling in an organization name.
+        "input[name='company']",
+    ),
+    submit_selector="button:has-text('Submit')",
+    captcha_selectors=(
+        # Invisible reCAPTCHA v3: no visible widget to solve, scored
+        # silently. The iframe/response-textarea are injected by Google's
+        # async script and were NOT yet in the DOM at the point
+        # optout_submit.detect_captcha runs in a real dry-run attempt (see
+        # notes) -- named here anyway, belt and braces, for whenever the
+        # script does win the race.
+        "textarea[name='g-recaptcha-response']",
+    ),
+    success_markers=(
+        "we have received your request",
+        "check your email",
+    ),
+    notes=(
+        "Verified against the live page on 2026-09-22 (dry run, real "
+        "browser, synthetic identity): the form fills correctly and stops "
+        "before Submit, screenshot confirms it. NOT a OneTrust form: a "
+        "React SPA with no <form> element at all, plain input ids, one "
+        "real <select> ('I am' -- subject vs. authorized agent), and a "
+        "'company' honeypot. TWO surprises versus the OneTrust family: (1) "
+        "this page is only step 1 of a two-step MAGIC-LINK flow -- its own "
+        "copy says submitting here only emails a link to a SECOND page "
+        "that carries the actual opt-out form, which nothing in this "
+        "codebase can click through unattended, so success_markers "
+        "describes 'the link request was accepted', not 'the opt-out is "
+        "complete'; (2) the reCAPTCHA here is invisible v3 (no widget to "
+        "solve), and in the dry-run verification run its iframe/response "
+        "textarea had not yet been injected by Google's async script at "
+        "the point optout_submit.detect_captcha runs, so THIS FORM CAN "
+        "REACH A REAL, UNATTENDED SUBMIT without ever tripping the "
+        "captcha-stop safety net -- worth Penn's attention before ever "
+        "flipping BG_OPTOUT_SUBMIT_ENABLED for this broker, since 'stop and "
+        "ask a human' is the intended behavior for any bot check, visible "
+        "or not. Middle name (#smn) is optional and is not filled -- "
+        "profile.Identity carries one, but no existing Field source "
+        "resolves it and this form does not require it."
+    ),
+)
+
+
 # Keyed by the broker id. Every entry here has been opened, read and
 # transcribed by hand; see each recipe's ``notes`` for the date and the
 # surprises. Being listed here is necessary but NOT sufficient for a real
 # submission -- the enabled flag, the dry-run flag and Playwright are three
-# further interlocks, and as it happens all four of these forms carry a
+# further interlocks, and as it happens most of these forms carry a
 # CAPTCHA, so a live run stops at "needs manual action" by design.
+SEARCHPUBLICRECORDS = FormRecipe(
+    broker_id="searchpublicrecords-com",
+    broker_name="Search Public Records (Civil Data Research, LLC)",
+    url="https://www.searchpublicrecords.com/help-center/privacy-requests",
+    flavor="searchpublicrecords_bespoke_form",
+    steps=(
+        Select(container="#requestType", option_label="Do Not Sell My Info",
+               label="Request Type"),
+        Field(selector="#firstName", source="first_name", label="First Name"),
+        # The real "Last Name" input -- confirmed via its <label for=...>,
+        # not a honeypot -- but this form builder gave it a randomized id
+        # and name attribute instead of "lastName".
+        Field(selector="#Eeb8d156aa7a02436", source="last_name", label="Last Name"),
+        Field(selector="#city", source="city", label="City"),
+        # A real <select> whose correct choice varies with the profile
+        # (unlike L.S Mobile's fixed-literal Select/Choice steps), hence
+        # kind="select" rather than a Choice.
+        Field(selector="#states", source="state", label="State", kind="select"),
+        Field(selector="#zip", source="zip", label="ZIP"),
+        # Required by the form and NOT resolvable: this codebase collects no
+        # age/date-of-birth anywhere on Identity, and will not start
+        # fabricating one to hand to a data broker under Penn's name (the
+        # same refusal Credit.com's recipe makes for SSN/DOB, just for a
+        # field this form does not let us skip). A literal empty value
+        # means resolve_fields always reports "Age" missing and
+        # submit_optout refuses BEFORE opening a browser -- see notes.
+        Field(selector="#age", source="literal", label="Age", value="",
+              required=True),
+        Field(selector="#email", source="email", label="Confirmation Email"),
+    ),
+    submit_selector="#submit-button",
+    captcha_selectors=(
+        # Cloudflare Turnstile, explicit data-sitekey. The generic sweep's
+        # .cf-turnstile / iframe[src*='turnstile'] already catch it.
+        ".cf-turnstile",
+    ),
+    success_markers=(
+        "your request has been received",
+        "thank you",
+    ),
+    notes=(
+        "Verified against the live page on 2026-09-22 (page structure read "
+        "by hand; NOT dry-run-verified end to end, because the form's own "
+        "Age select is REQUIRED and this codebase has nowhere to source an "
+        "age or date of birth from -- the literal empty value on #age makes "
+        "resolve_fields report it missing for every identity, which is "
+        "confirmed by test, and submit_optout's own missing-field guard "
+        "(proven for Credit.com's zip) stops the attempt before a browser "
+        "ever opens. Also carries a mandatory Cloudflare Turnstile, so even "
+        "a hypothetical future run (Identity extended with an age) would "
+        "still stop at 'needs manual action'. The State <select> lists full "
+        "state names matching US_STATES's values exactly, chosen by a new "
+        "Field(kind='select') (added for this recipe -- see optout_submit's "
+        "_select_field) rather than a fixed-literal Select/Choice, because "
+        "the correct state varies with the profile the way a combo field's "
+        "typed text does. The 'Last Name' input's id/name is a form-"
+        "builder-randomized string, confirmed real via its own <label for>, "
+        "not a honeypot. #email's container is hidden at page load and may "
+        "only "
+        "become visible after the required fields above it validate -- "
+        "moot in practice since Age is always missing first."
+    ),
+)
+
+
 RECIPES = {
     CONSUMER_CANVAS.broker_id: CONSUMER_CANVAS,
     NIELSEN.broker_id: NIELSEN,
     BOLTTECH.broker_id: BOLTTECH,
     CREDIT_COM.broker_id: CREDIT_COM,
     LS_MOBILE_APPS.broker_id: LS_MOBILE_APPS,
+    ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
+    SEARCHPUBLICRECORDS.broker_id: SEARCHPUBLICRECORDS,
 }
 
 
@@ -480,6 +617,27 @@ RECIPES = {
 # Empty today; it exists so that "we transcribed the form" and "we are willing
 # to submit to it" stay two separate decisions.
 STAGED_RECIPES: dict = {}
+
+
+# Brokers investigated for this pilot and found to have NO self-service
+# consumer opt-out surface at all -- the opt-out-leg twin of
+# ``search_forms.NO_SEARCH_SURFACE``. Recorded as data, with the reason, so
+# the gap is not silently re-investigated or "fixed" by writing a recipe
+# against a page that cannot actually honor a removal request (an
+# authenticated portal requiring SSN/DOB, a mailbox-only channel with no
+# webform, etc). These are notes, not behaviour: nothing reads this at
+# runtime.
+NO_OPTOUT_SURFACE = {
+    "chexsystems-com": (
+        "ChexSystems is a nationwide specialty CRA under the FCRA. Verified "
+        "2026-09-22: there is no self-service opt-out webform at all -- "
+        "every consumer path (security freeze, dispute, disclosure) requires "
+        "logging into the authenticated Consumer Portal at "
+        "chexsystems-ds.fiscloudservices.com with identity-verified "
+        "credentials (which can require SSN + DOB), which this tool must "
+        "not automate."
+    ),
+}
 
 
 class RecipeNotFound(KeyError):
@@ -636,6 +794,37 @@ def state_from_addresses(addresses) -> str:
     return ""
 
 
+def city_from_addresses(addresses) -> str:
+    """The city named in a profile's address lines, or "".
+
+    Looks for the same ``"..., City, ST"`` / ``"..., City, ST ZIP"`` shape
+    ``state_from_addresses`` reads, and returns the token immediately before
+    the recognized state -- ``"123 Main St, Springfield, IL 62704"`` ->
+    ``"Springfield"``. Returns "" rather than guessing when no line has a
+    recognizable state token to anchor on, for the same reason
+    ``state_from_addresses`` does: a wrong city is sent to a third party
+    under the person's name, and a missing-field refusal is the safe
+    direction.
+    """
+    by_name = {name.lower(): name for name in US_STATES.values()}
+    for line in reversed(list(addresses or [])):
+        if not isinstance(line, str):
+            continue
+        tokens = [t.strip() for t in line.split(",") if t.strip()]
+        for idx in range(len(tokens) - 1, -1, -1):
+            token = tokens[idx]
+            code = token.upper()
+            is_state = code in US_STATES or token.lower() in by_name
+            if not is_state:
+                with_zip = re.match(r"^(.*?)\s+\d{5}(?:-\d{4})?$", token)
+                if with_zip:
+                    head = with_zip.group(1).strip()
+                    is_state = head.upper() in US_STATES or head.lower() in by_name
+            if is_state and idx > 0:
+                return tokens[idx - 1]
+    return ""
+
+
 _ZIP_RE = re.compile(r"\b(\d{5})(?:-\d{4})?\b")
 
 
@@ -722,6 +911,8 @@ def resolve_fields(recipe: FormRecipe, identity) -> dict:
             text = zip_from_addresses(getattr(identity, "addresses", None))
         elif f.source == "address":
             text = street_from_addresses(getattr(identity, "addresses", None))
+        elif f.source == "city":
+            text = city_from_addresses(getattr(identity, "addresses", None))
         elif f.source == "phone":
             text = phone_for_form(getattr(identity, "phones", None))
         elif f.source == "first_name":
