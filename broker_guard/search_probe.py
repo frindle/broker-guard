@@ -118,45 +118,6 @@ def _pages_of(context, fallback):
     return list(pages)
 
 
-# How long to wait for a consent modal that may simply not be there. Short
-# on purpose: its absence is the common case and must not cost a broker's
-# whole check, while its presence is instant (it is already rendered by the
-# time the form settles).
-_CONSENT_TIMEOUT_MS = 4000
-
-
-def _dismiss_consent(page, recipe, settle_ms: int) -> bool:
-    """Click this broker's consent interstitial, if the recipe names one.
-
-    Returns True when something was clicked. Never raises and never fails
-    the search: these modals are cookie-gated, so "not there" is a normal
-    visit, not a broken recipe. If one IS there and the click fails, the
-    fill that follows reports the overlay intercepting the pointer -- which
-    is a far more legible error than anything invented here, and is exactly
-    how each of these modals was discovered in the first place.
-    """
-    selector = getattr(recipe, "consent_selector", "")
-    if not selector:
-        return False
-    try:
-        try:
-            page.click(selector, timeout=_CONSENT_TIMEOUT_MS)
-        except TypeError:
-            # The test suite's fake pages take a selector and nothing else.
-            # Falling back keeps the fakes honest about the real code path
-            # rather than having this whole branch swallowed as a failure.
-            page.click(selector)
-    except Exception as exc:
-        log.debug("no consent interstitial to dismiss",
-                  extra={"broker_id": recipe.broker_id,
-                         "reason": _safe_error(exc)})
-        return False
-    log.info("dismissed consent interstitial",
-             extra={"broker_id": recipe.broker_id})
-    _settle(page, settle_ms)
-    return True
-
-
 def _read(page):
     """(text, title) for *page*, best effort and never raising."""
     try:
@@ -244,8 +205,6 @@ def run_search(context, page, recipe, values: dict, terms: list,
         log.warning("bot wall on broker search form",
                     extra={"broker_id": recipe.broker_id, "reason": wall})
         return {"error": wall}
-
-    _dismiss_consent(page, recipe, settle_ms)
 
     for field in recipe.fields:
         value = values.get(field.selector)

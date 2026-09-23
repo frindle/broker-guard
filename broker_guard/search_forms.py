@@ -150,24 +150,6 @@ class SearchRecipe:
     # and never on the pages that do not. That is not a slow broker, it is a
     # recipe that reports "unknown" for every hit.
     ready_timeout_ms: int = 0
-    # A consent interstitial that must be dismissed before the search form
-    # can be used at all. Four brokers in this pilot put one in front of
-    # their own search box -- an FCRA "this is not a consumer report"
-    # attestation (peoplewhiz.com, peoplefinder.com, courtrecords.us) or a
-    # cookie/consent overlay -- and they are not subtle failures: the modal
-    # sits over the page and Playwright's click reports the OVERLAY as
-    # intercepting the pointer, which is how each one was found.
-    #
-    # Clicking it is still reading. The button attests to how the visitor
-    # will use public data; it submits no profile data, creates nothing, and
-    # changes nothing on the broker's side. ``assert_read_only`` checks this
-    # selector along with all the others, so a recipe cannot smuggle a
-    # "remove" or "unsubscribe" button in here.
-    #
-    # Optional by design: the driver clicks it if it is there and shrugs if
-    # it is not, because these modals are cookie-gated and simply do not
-    # render on every visit.
-    consent_selector: str = ""
     verified_on: str = ""
     notes: str = ""
 
@@ -828,8 +810,7 @@ def assert_read_only(recipe: SearchRecipe) -> None:
     -looking recipe.
     """
     haystack = " ".join(
-        [recipe.search_url or "", recipe.submit_selector or "",
-         recipe.consent_selector or ""]
+        [recipe.search_url or "", recipe.submit_selector or ""]
         + [f.selector for f in recipe.fields]
     ).lower()
     hits = sorted({w for w in _STATE_CHANGING_WORDS if w in haystack})
