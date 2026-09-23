@@ -1495,13 +1495,7 @@ OPTOUT_OUT_OF_SCOPE = {
         "same reason as those two -- the form that names a person has no "
         "URL until a one-time mail arrives, and this codebase has no "
         "mailbox. Nothing was submitted. Its SEARCH leg is a shipped, "
-        "working recipe; see search_forms.SEARCHPEOPLEFREE.\n"
-        "\n"
-        "Unrelated but worth a line for whoever drives this domain next: "
-        "loading /opt-out in a real browser spawned an unsolicited pop-up "
-        "tab at an identity.walmart.com sign-in URL. It is an ad "
-        "pop-under, not part of the opt-out flow, and it was closed "
-        "without interaction."
+        "working recipe; see search_forms.SEARCHPEOPLEFREE."
     ),
     "peoplewhiz-com": (
         "Verified 2026-09-23. /remove-my-info is a search box, not a form: "
