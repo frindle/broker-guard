@@ -232,11 +232,13 @@ def test_ensure_brokers_file_generates_from_bundled_source_when_missing(tmp_path
     assert target.exists()
 
     loaded = brokers_mod.load_brokers(str(target))
-    # 970 source records (853 original + 15 manually-researched additions + 102
+    # 969 source records (853 original + 15 manually-researched additions + 102
     # from the Incogni-gap pass: 50 CourtRecords.us state sites, 37 people-search
-    # brands, 15 B2B marketing-data companies -- see data/source-brokers.json),
-    # 26 dropped for no actionable channel -> 944.
-    assert len(loaded) == 944
+    # brands, 15 B2B marketing-data companies -- see data/source-brokers.json;
+    # then the incogni-b2b-research pass added ASL Marketing and merged away two
+    # duplicate pairs, Clay Labs and Ekata: 970 + 1 - 2 = 969),
+    # 26 dropped for no actionable channel -> 943.
+    assert len(loaded) == 943
 
 
 def test_ensure_brokers_file_never_touches_an_existing_file(tmp_path):

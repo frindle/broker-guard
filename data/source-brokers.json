@@ -927,15 +927,15 @@
     "name": "Altair Data Resources, Inc.",
     "domain": "altairdata.com",
     "category": "marketing",
-    "opt_out_url": "https://www.altairdata.com/altair-consumer-info/",
+    "opt_out_url": "https://altairdata.com/consumer-info/",
     "opt_out_method": "web-form",
-    "opt_out_email": "privacy@altairdata.com",
+    "opt_out_email": "connect@altairci.com",
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser",
-    "last_verified": "2026-08-20",
-    "notes": "The email on file (privacy@altairci.com) is the wrong domain - altairdata.com is Altair's actual domain (matches their website) and privacy@altairdata.com is where their real auto-reply came from. They also mentioned updating their opt-out automation; a manual-request portal is available at https://datacloudhome.atlassian.net/servicedesk/customer/portal/12 if this address doesn't get a response (reply received 2026-08-20)."
+    "source": "aidr-ca-drop-registry+eraser+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "The previously recorded opt-out URL https://www.altairdata.com/altair-consumer-info/ is DEAD (404 on 2026-09-22); the live consumer-rights page is https://altairdata.com/consumer-info/ (200), which is also the rights URL on Altair's own CPPA data-broker registry filing. That page designates the Atlassian service-desk form at https://datacloudhome.atlassian.net/servicedesk/customer/portal/12 as the request mechanism, and lists connect@altairci.com, phone 615-468-6800 / 1-800-241-6631, and postal mail to 1749 Mallory Lane Ste 201, Brentwood TN 37027. privacy@altairdata.com previously auto-replied (2026-08-20) and is kept as a known-good alternate."
   },
   {
     "name": "Altisource Holdings, LLC",
@@ -1946,8 +1946,8 @@
     "notes": ""
   },
   {
-    "name": "Clay Labs LLC",
-    "domain": "google.com",
+    "name": "Clay Labs, Inc.",
+    "domain": "clay.com",
     "category": "marketing",
     "opt_out_url": "https://docs.google.com/forms/d/e/1FAIpQLSeAsU1U-AJfhqzDx6-6eVcyQ_kBD1J9cw1y0huQiS-HCkRf0Q/viewform?usp=send_form",
     "opt_out_method": "web-form",
@@ -1955,9 +1955,9 @@
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "aidr-ca-drop-registry+eraser+incogni-b2b-research+aidr-ca-drop-registry",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only by Incogni. Two entries (Clay Labs LLC / Clay Labs, Inc) were merged into this one on 2026-09-22 - same company. The opt_out_url is Clay's own Google Form, confirmed on 2026-09-22 to be titled 'Do Not Sell or Share My Personal Information', described as 'Fill out this form if you'd like to exercise your rights under CCPA to stop the sale of your personal information' and marked 'created inside of Clay Labs Inc.' - it asks for name and email only. Corroborated by the CPPA data-broker registry ('Clay Labs, Inc.', clay.com, privacy@clay.com, rights page https://privacy.clay.com/policies, verified live 200 on 2026-09-22). The previously recorded domain 'google.com' was the form host, not the company."
   },
   {
     "name": "Clearview Ai, Inc.",
@@ -2109,9 +2109,9 @@
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "aidr-ca-drop-registry+eraser+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only by Incogni. Verified 2026-09-22: the Data Subject Rights page at https://www.comscore.com/About/Privacy/Data-Subject-Rights is live (200), and Comscore's CPPA data-broker registry filing confirms privacy@comscore.com as its contact (phone 703-438-2000) with comscore.com/About/Privacy-Policy as the rights page. Note Comscore is one of the few brokers in this list whose registry filing answers YES to 'collects personal information of minors'."
   },
   {
     "name": "Connect Computer LLC",
@@ -2749,13 +2749,13 @@
     "category": "marketing",
     "opt_out_url": "https://dmsunsub.io/",
     "opt_out_method": "web-form",
-    "opt_out_email": "tax@dmsgroup.com",
+    "opt_out_email": "ComplianceDept@dmsgroup.com",
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "eraser+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by Incogni as 'Digital Media Solutions (DMS)'. The email previously on file, tax@dmsgroup.com, was wrong - DMS's CPPA data-broker registry filing lists ComplianceDept@dmsgroup.com as the contact and designates dmsunsub.io as its consumer-rights site (phone 877-236-8632). dmsunsub.io returns 403 to non-browser clients (checked 2026-09-22 with browser headers), so it must be opened in a real browser; it is still the company-designated channel."
   },
   {
     "name": "Digital Safety Products, LLC",
@@ -2949,9 +2949,9 @@
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 some brokers reply requesting further proof before acting",
     "opt_out": "known",
-    "source": "eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "eraser+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only by Incogni. Verified 2026-09-22: Dynata's published privacy policy at https://www.dynataprivacy.com/privacy/en-us/General/Privacy-Policy/index.html (live 200) names privacy@dynata.com and toll-free (833) 909-1804 / 833-681-0436 as the channels for right-to-know / correct / delete / opt-out requests. There is deliberately NO stable opt-out URL to record: the 'Do Not Sell My Information' control on dynata.com is a Usercentrics-rendered JavaScript pop-up with no linkable address (confirmed by parsing dynata.com and dynata.com/privacy - neither exposes a request-form href), so email is the only automatable channel. The pop-up form, if used manually, asks for first name, last name, email and a CAPTCHA, then requires clicking a 'Confirm Data Request' link emailed back."
   },
   {
     "name": "Early Warning Services, LLC",
@@ -3024,7 +3024,7 @@
     "notes": ""
   },
   {
-    "name": "Ekata, Inc.",
+    "name": "Ekata, Inc. (Mastercard)",
     "domain": "mastercard.us",
     "category": "marketing",
     "opt_out_url": "https://www.mastercard.us/public/my-data/dgr-public/personal-data-request.html?locale=en-us&region=NAM#/ekata/request/personalinfo",
@@ -3033,9 +3033,9 @@
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "eraser+incogni-b2b-research+aidr-ca-drop-registry",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by Incogni as 'Ekata (US)' with no domain. A duplicate stub entry (domain ekata.com, pointing only at a generic privacy policy) was merged into this one on 2026-09-22 - same company. Ekata has been fully absorbed into Mastercard: https://ekata.com/privacy-policy/ now 301-redirects to mastercard.com/global/en/identity-privacy-policy.html (verified 2026-09-22), and Ekata no longer appears in the CPPA data-broker registry under its own name. The live channel is Mastercard's Data Governance & Rights portal, which has a dedicated Ekata request path (.../personal-data-request.html#/ekata/request/personalinfo); the portal blocks non-browser clients (403 to curl), so open it in a real browser. privacysupport@ekata.com remains the published Ekata privacy contact."
   },
   {
     "name": "Electronic Commerce A To Z",
@@ -3323,13 +3323,13 @@
     "category": "marketing",
     "opt_out_url": "https://app.fideo.ai/your-privacy-choices/",
     "opt_out_method": "web-form",
-    "opt_out_email": "privacy@fideo.ai",
+    "opt_out_email": "dpo@fideo.ai",
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser+scrubbr",
-    "last_verified": null,
-    "notes": ""
+    "source": "aidr-ca-drop-registry+eraser+scrubbr+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only by Incogni. Fideo's CPPA data-broker registry filing lists dpo@fideo.ai as its contact (replacing the unverified privacy@fideo.ai previously on file) and designates https://app.fideo.ai/your-privacy-choices as the rights page, matching the URL already recorded here. Phone 888-330-6943."
   },
   {
     "name": "Fifty Technology Ltd",
@@ -3433,15 +3433,15 @@
     "name": "Focus USA, Inc.",
     "domain": "focus-usa.com",
     "category": "marketing",
-    "opt_out_url": "https://www.focus-usa.com/optout-form/",
+    "opt_out_url": "https://www.focus-usa.com/your-privacy-choices/",
     "opt_out_method": "web-form",
     "opt_out_email": "privacy@focus-usa.com",
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "aidr-ca-drop-registry+eraser+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only by Incogni. The old /optout-form/ URL now 301-redirects to https://www.focus-usa.com/your-privacy-choices/ (verified 2026-09-22), which is also the rights URL on Focus USA's CPPA data-broker registry filing ('Focus USA, Inc.', DBA Focus USA, focus-usa.com). Canonical URL recorded so the automation does not depend on the redirect. Registry contact is michaelu@focus-usa.com; privacy@focus-usa.com kept as the role address."
   },
   {
     "name": "FOO MONK LLC",
@@ -4116,8 +4116,8 @@
     "notes": "Email chad@idengine.ai hard-bounced (2026-08-23) - domain has no working mail server (DNS MX lookup failed)."
   },
   {
-    "name": "Idm, Inc.",
-    "domain": "us.com",
+    "name": "Integrated Direct Marketing, LLC (IDM)",
+    "domain": "idm.us.com",
     "category": "marketing",
     "opt_out_url": "https://www.idm.us.com/do-not-sell-my-personal-information/",
     "opt_out_method": "web-form",
@@ -4125,9 +4125,9 @@
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "aidr-ca-drop-registry+eraser+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Incogni lists this as 'IDM' - already covered here, not a separate company. Verified 2026-09-22: https://www.idm.us.com/do-not-sell-my-personal-information/ is live (200 with browser headers; 403 to bare curl) and is the rights URL on the CPPA data-broker registry filing, which is under the legal name 'Integrated Direct Marketing, LLC' with DBA 'IDM, LLC', website idm.us.com, contact ccpa@idm.us.com, phone 703-547-4961. The domain field previously read 'us.com', which is a public suffix rather than this company's domain; corrected to idm.us.com."
   },
   {
     "name": "Ileads.Com, LLC",
@@ -4354,18 +4354,18 @@
     "notes": "security@infutor.com replied that this mailbox can't process DSRs at all; use the form or call 1-866-207-1399 (reply received 2026-08-20)."
   },
   {
-    "name": "Inmarket Media LLC",
+    "name": "InMarket Media, LLC",
     "domain": "inmarket.com",
     "category": "marketing",
-    "opt_out_url": "https://www.inmarket.com/opt-out/",
+    "opt_out_url": "https://preferences.inmarket.com/",
     "opt_out_method": "web-form",
     "opt_out_email": "privacy@inmarket.com",
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser+scrubbr",
-    "last_verified": null,
-    "notes": "Doesn't process removal requests via email - use the opt-out form at the opt_out_url."
+    "source": "aidr-ca-drop-registry+eraser+scrubbr+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only by Incogni. The old https://www.inmarket.com/opt-out/ URL now 301-redirects to https://preferences.inmarket.com/ (verified 200 on 2026-09-22), which is the rights URL on InMarket's CPPA data-broker registry filing ('InMarket Media, LLC', DBA InMarket). Canonical preference-centre URL recorded so the automation does not depend on the redirect. Doesn't process removal requests by email - use the form. Registry contact jknapp@inmarket.com, phone 310-392-0500."
   },
   {
     "name": "Inmobi",
@@ -5311,13 +5311,13 @@
     "category": "marketing",
     "opt_out_url": "https://m1-data.com/unsubscribe/",
     "opt_out_method": "web-form",
-    "opt_out_email": "gashe@m1-data.com",
+    "opt_out_email": "service@m1-data.com",
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "aidr-ca-drop-registry+eraser+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only by Incogni. The email previously on file, gashe@m1-data.com, was an individual employee address; M1's CPPA data-broker registry filing lists the role address service@m1-data.com and designates https://m1-data.com/unsubscribe/ (verified live 200 on 2026-09-22) as its consumer-rights page. Phone 954-776-1197."
   },
   {
     "name": "Machintel Inc.",
@@ -8596,7 +8596,7 @@
     "notes": ""
   },
   {
-    "name": "Valassis Direct Mail, Inc.",
+    "name": "Valassis Communications, Inc. (an RRD company)",
     "domain": "rrd.com",
     "category": "marketing",
     "opt_out_url": "https://www.rrd.com/do-not-sell",
@@ -8605,9 +8605,9 @@
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser",
-    "last_verified": null,
-    "notes": ""
+    "source": "aidr-ca-drop-registry+eraser+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by Incogni as 'Valassis'. Verified 2026-09-22: Valassis is an RRD company, which is why the opt-out lives on rrd.com - https://www.rrd.com/do-not-sell is live (200), as is the Valassis-specific notice at https://www.rrd.com/privacy-policy/valassis (the rights URL on the CPPA registry filing, which is under the legal name 'Valassis Communications, Inc.', DBA 'Valassis Communications, Inc., an RRD Company'). The registry confirms valassisprivacy.request@rrd.com and phone 630-322-6000. Entry renamed from 'Valassis Direct Mail, Inc.' to the registered legal name."
   },
   {
     "name": "Veeva Systems Inc.",
@@ -9030,7 +9030,7 @@
     "notes": "Email admin@yobi.ventures hard-bounced (2026-08-21) - address/domain invalid."
   },
   {
-    "name": "Zenleads Inc.",
+    "name": "Apollo.io (Zenleads Inc.)",
     "domain": "apollo.io",
     "category": "marketing",
     "opt_out_url": "https://www.apollo.io/privacy-policy/remove",
@@ -9039,9 +9039,9 @@
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry+eraser+scrubbr",
-    "last_verified": null,
-    "notes": "Zenleads was folded into/rebranded as Apollo.io - its own contact and opt-out URL already route there directly (confirmed via Apollo.io's privacy-removal page)."
+    "source": "aidr-ca-drop-registry+eraser+scrubbr+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by Incogni as 'Apollo'. Verified 2026-09-22: https://www.apollo.io/privacy-policy/remove is live (200). Zenleads was folded into / rebranded as Apollo.io; the CPPA data-broker registry filing is under 'Zenleads, Inc.' with DBA 'Apollo.io', website www.apollo.io, contact dpo@apollo.io (kept as an alternate to the privacy@apollo.io role address already on file) and phone 347-523-9985. Disambiguated from the unrelated 'Apollo Interactive, LLC' (apollointeractive.com), a lead-generation broker listed separately in this dataset."
   },
   {
     "name": "Zipstorm LLC",
@@ -10542,20 +10542,6 @@
     "notes": "CCPA/CA DROP-style registered data broker; opt_out_url here is the company's general privacy-policy page (not necessarily a dedicated consumer opt-out form) \u2014 verify before relying on it. California residents can use the CA DROP portal (consumer.drop.privacy.ca.gov) to request deletion from all CA-registered brokers with one form."
   },
   {
-    "name": "Clay Labs, Inc",
-    "domain": "clay.com",
-    "category": "marketing",
-    "opt_out_url": "https://privacy.clay.com/policies",
-    "opt_out_method": "web-form",
-    "opt_out_email": null,
-    "required_fields": "full legal name, email address on file with the broker",
-    "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
-    "opt_out": "known",
-    "source": "aidr-ca-drop-registry",
-    "last_verified": null,
-    "notes": "CCPA/CA DROP-style registered data broker; opt_out_url here is the company's general privacy-policy page (not necessarily a dedicated consumer opt-out form) \u2014 verify before relying on it. California residents can use the CA DROP portal (consumer.drop.privacy.ca.gov) to request deletion from all CA-registered brokers with one form."
-  },
-  {
     "name": "Quad/Graphics, Inc.",
     "domain": "quad.com",
     "category": "marketing",
@@ -11270,20 +11256,6 @@
     "notes": "CCPA/CA DROP-style registered data broker; opt_out_url here is the company's general privacy-policy page (not necessarily a dedicated consumer opt-out form) \u2014 verify before relying on it. California residents can use the CA DROP portal (consumer.drop.privacy.ca.gov) to request deletion from all CA-registered brokers with one form."
   },
   {
-    "name": "Ekata, Inc.",
-    "domain": "ekata.com",
-    "category": "marketing",
-    "opt_out_url": "https://ekata.com/privacy-policy/",
-    "opt_out_method": "web-form",
-    "opt_out_email": null,
-    "required_fields": "full legal name, email address on file with the broker",
-    "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
-    "opt_out": "known",
-    "source": "aidr-ca-drop-registry",
-    "last_verified": null,
-    "notes": "CCPA/CA DROP-style registered data broker; opt_out_url here is the company's general privacy-policy page (not necessarily a dedicated consumer opt-out form) \u2014 verify before relying on it. California residents can use the CA DROP portal (consumer.drop.privacy.ca.gov) to request deletion from all CA-registered brokers with one form."
-  },
-  {
     "name": "i360, LLC",
     "domain": "i-360.com",
     "category": "marketing",
@@ -11429,13 +11401,13 @@
     "category": "marketing",
     "opt_out_url": "https://swordfish.ai/policy-ccpa",
     "opt_out_method": "web-form",
-    "opt_out_email": null,
+    "opt_out_email": "contact@swordfish.ai",
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "aidr-ca-drop-registry",
-    "last_verified": null,
-    "notes": "CCPA/CA DROP-style registered data broker; opt_out_url here is the company's general privacy-policy page (not necessarily a dedicated consumer opt-out form) \u2014 verify before relying on it. California residents can use the CA DROP portal (consumer.drop.privacy.ca.gov) to request deletion from all CA-registered brokers with one form."
+    "source": "aidr-ca-drop-registry+incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only by Incogni. Verified 2026-09-22: https://swordfish.ai/policy-ccpa is live (200) and is one of the two rights URLs on Swordfish's CPPA data-broker registry filing ('Swordfish AI Inc', DBA Swordfish AI, www.swordfish.ai), which also supplies the contact address contact@swordfish.ai (previously null here) and phone (855) 512-9715. The page is a CCPA notice containing the request instructions rather than a standalone webform."
   },
   {
     "name": "Cengage Learning, Inc.",
@@ -13443,15 +13415,15 @@
     "name": "Lighthouse List Company",
     "domain": "lighthouselist.com",
     "category": "marketing",
-    "opt_out_url": null,
-    "opt_out_method": "email",
-    "opt_out_email": "privacy@lighthouselist.com",
+    "opt_out_url": "https://unsubscribe.stirista.com/",
+    "opt_out_method": "web-form",
+    "opt_out_email": "info@stirista.com",
     "required_fields": "full legal name, email address on file with the broker",
-    "verification_step": "not individually confirmed \u2014 some brokers reply requesting further proof before acting",
+    "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "manual-research",
+    "source": "manual-research+incogni-b2b-research",
     "last_verified": "2026-09-22",
-    "notes": "Listed by name only by Incogni; confirmed via the California AG data-broker registry (registration #554570, Pompano Beach, FL). Domain verified live 200 on 2026-09-22, but the site's own /privacy-policy and /opt-out paths 404 and its footer points at Stirista's privacy policy and unsubscribe portal (a data partnership; Stirista also operates LBDigital, listed separately here). The email channel from Lighthouse List's own CA AG filing is used instead."
+    "notes": "Listed by name only by Incogni. The CPPA data-broker registry confirms this brand is a DBA of Stirista, LLC (registered DBAs include Stirista, LBDigital, Lighthouse Lists, Media Source Solutions, Ameribase Digital and others), and designates https://unsubscribe.stirista.com/ as the consumer-rights channel alongside stirista.com/privacy-policy. That portal was verified live 200 on 2026-09-22 (a JavaScript 'Stirista Unsubscribe' app; not OneTrust). This replaces the brand-level address previously on file, which is not corroborated by any registry filing. Stirista's registry contact is info@stirista.com, phone 888-320-6083. Lighthouse List's own site (lighthouselist.com) is up but its /privacy-policy and /opt-out paths 404, and its footer already points at Stirista - consistent with this routing."
   },
   {
     "name": "HomeData (a DeepSync brand)",
@@ -13468,18 +13440,32 @@
     "notes": "Listed by name only by Incogni; confirmed via the California AG data-broker registry (registration #561731). HomeData has been consolidated into parent DeepSync's brand family (homedata.com itself now serves generic deepsync.com content), but the dedicated privacy.homedata.com opt-out subdomain still works and forwards to DeepSync's own portal (privacy.deepsync.com); verified live 200 on 2026-09-22. Not OneTrust \u2014 a custom DeepSync privacy app."
   },
   {
+    "name": "ASL Marketing (Deep Sync)",
+    "domain": "aslmarketing.com",
+    "category": "marketing",
+    "opt_out_url": "https://privacy.deepsync.com/request/opt-out",
+    "opt_out_method": "web-form",
+    "opt_out_email": "legal@deepsync.com",
+    "required_fields": "full legal name, email address, phone number, and up to five residential addresses",
+    "verification_step": "identity verified after submission via dynamically-generated knowledge questions (no CAPTCHA on the form itself)",
+    "opt_out": "known",
+    "source": "incogni-b2b-research",
+    "last_verified": "2026-09-22",
+    "notes": "Listed by name only (no domain) by Incogni. ASL Marketing was the long-running Farmingdale, NY compiler of student/youth marketing data (ages 13-34); it has been absorbed into Deep Sync - aslmarketing.com and its old /opt-out/ and /ccpa/ pages now 301 to deepsync.com/asl-marketing (which itself 404s), verified 2026-09-22. The brand domain aslmarketing.com is kept here so ASL is tracked as its own broker (the parent Deep Sync entity is listed separately under its legal name 'Compact Information Systems, LLC' at deepsync.com). Its current CPPA data-broker registry filing lists website https://deepsync.com and contact legal@deepsync.com, phone (888) 970-7248 (source: cppa.ca.gov/data_broker_registry/registry.csv, row 'ASL Marketing'). The working opt-out is Deep Sync's own portal at privacy.deepsync.com/request/opt-out, verified live 200 on 2026-09-22 - the same portal the sibling HomeData entry resolves to. Mail requests go to Deep Sync, Kirkland WA. Not OneTrust - a custom Deep Sync privacy app."
+  },
+  {
     "name": "LB Digital Data (LBDigital)",
     "domain": "lbdigitaldata.com",
     "category": "marketing",
-    "opt_out_url": null,
-    "opt_out_method": "email",
-    "opt_out_email": "privacy@lbdigitaldata.com",
+    "opt_out_url": "https://unsubscribe.stirista.com/",
+    "opt_out_method": "web-form",
+    "opt_out_email": "info@stirista.com",
     "required_fields": "full legal name, email address on file with the broker",
-    "verification_step": "not individually confirmed \u2014 some brokers reply requesting further proof before acting",
+    "verification_step": "not individually confirmed \u2014 check the form for CAPTCHA/ID/email-confirmation requirements",
     "opt_out": "known",
-    "source": "manual-research",
+    "source": "manual-research+incogni-b2b-research",
     "last_verified": "2026-09-22",
-    "notes": "Listed by name only by Incogni; the real company is LB Digital Data, a B2B/consumer marketing-data provider operating as 'A Stirista Solution' \u2014 disambiguated from an unrelated Nigeria-based web-design firm using a near-identical name at mylbdigital.com. Its own /opt-out webform link 404s as of 2026-09-22, so the email address on its live privacy-policy page (verified 200 that day) is used instead."
+    "notes": "Listed by name only by Incogni. The CPPA data-broker registry confirms this brand is a DBA of Stirista, LLC (registered DBAs include Stirista, LBDigital, Lighthouse Lists, Media Source Solutions, Ameribase Digital and others), and designates https://unsubscribe.stirista.com/ as the consumer-rights channel alongside stirista.com/privacy-policy. That portal was verified live 200 on 2026-09-22 (a JavaScript 'Stirista Unsubscribe' app; not OneTrust). This replaces the brand-level address previously on file, which is not corroborated by any registry filing. Stirista's registry contact is info@stirista.com, phone 888-320-6083. LBDigital's own /opt-out webform link 404s, which is why the parent portal is used. Not to be confused with an unrelated Nigeria-based web-design firm at mylbdigital.com."
   },
   {
     "name": "Electronic Voice Services, Inc. (TelephoneLists.biz)",
