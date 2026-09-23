@@ -76,6 +76,12 @@ DEFAULT_RETRY_PASSES = 2
 #: Injectable via ``run_sweep(sleep=...)`` so tests never really wait.
 DEFAULT_RETRY_BACKOFF_S = 60
 
+#: How many brokers between "still alive, N/total done" progress lines in
+#: the main pass. A full sweep is hours long and otherwise logs nothing
+#: between "sweep starting" and "sweep complete" -- this is the liveness
+#: signal for anyone tailing the container's logs mid-cycle.
+PROGRESS_LOG_EVERY = 25
+
 
 @dataclass
 class PairResult:
@@ -313,11 +319,16 @@ def run_sweep(identities: list, brokers: list, deps, cfg=None, progress=None,
                         total=len(broker_list) * len(identities))
     progress.start(progress_mod.PHASE_SWEEP, len(broker_list) * len(identities))
 
+    total_brokers = len(broker_list)
+    log.info("sweep starting", extra={
+        "brokers": total_brokers, "profiles": len(identities),
+    })
+
     # (broker, [identity, ...]) -- only the profiles this broker left
     # unknown, never the ones that already answered.
     retry_queue = []
     try:
-        for broker in broker_list:
+        for i, broker in enumerate(broker_list, start=1):
             if progress.should_stop():
                 result.stopped = True
                 break
@@ -330,6 +341,11 @@ def run_sweep(identities: list, brokers: list, deps, cfg=None, progress=None,
                     incomplete.append(identity)
             if incomplete:
                 retry_queue.append((broker, incomplete))
+            if i % PROGRESS_LOG_EVERY == 0 or i == total_brokers:
+                log.info("sweep progress", extra={
+                    "checked": i, "total": total_brokers,
+                    "broker": broker.get("name") or broker.get("domain"),
+                })
 
         delay = backoff_s
         for attempt in range(1, retry_passes + 1):
