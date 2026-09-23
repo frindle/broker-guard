@@ -168,6 +168,13 @@ FLAVOR_PROPERTYCHECKER_YII = "propertychecker_yii_optout_form"
 # opening a modal rather than by navigating.
 FLAVOR_CAREERBUILDER_JSON_DSR = "careerbuilder_formless_json_privacy_request"
 
+# Convex's privacy-request page, built as a HubSpot embedded form. Named
+# separately because of the trap it carries: the ``<form>`` element's id is
+# minted per page load (``hsform-53822860`` one visit, ``hsform-41419905``
+# the next), so every selector must key on the field ``name`` and the form
+# must be reached through ``form:has(...)`` rather than by its id.
+FLAVOR_CONVEX_HUBSPOT = "convex_hubspot_privacy_request_form"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -1514,6 +1521,79 @@ CAREERBUILDER = FormRecipe(
 )
 
 
+_CONVEX_FORM = "form:has(select[name='request_type'])"
+
+CONVEX = FormRecipe(
+    broker_id="convex-com",
+    broker_name="Convex",
+    url="https://www.convex.com/request-removal",
+    flavor=FLAVOR_CONVEX_HUBSPOT,
+    fields=(
+        # Every selector is scoped through _CONVEX_FORM, and that scoping is
+        # load-bearing rather than tidy: the page carries a SECOND HubSpot
+        # form (a newsletter signup) whose email input is also
+        # input[name='email'], so an unscoped "#email" is ambiguous and
+        # would be a coin flip between filing the request and subscribing
+        # to a mailing list.
+        Field(selector=_CONVEX_FORM + " select[name='request_type']",
+              source="literal", value="Opt-out Request",
+              label="Request Type", kind="select"),
+        Field(selector=_CONVEX_FORM + " select[name='convex_user_type']",
+              source="literal", value="Customer",
+              label="User Type", kind="select"),
+        Field(selector=_CONVEX_FORM + " input[name='firstname']",
+              source="first_name", label="First Name"),
+        Field(selector=_CONVEX_FORM + " input[name='lastname']",
+              source="last_name", label="Last Name"),
+        Field(selector=_CONVEX_FORM + " input[name='email']",
+              source="email", label="Email Address"),
+        # 52 options whose labels ARE the two-letter codes ("AK", "AL"),
+        # so source="state_code" and not "state".
+        Field(selector=_CONVEX_FORM + " select[name='state_helper']",
+              source="state_code", label="State", kind="select"),
+    ),
+    submit_selector=_CONVEX_FORM + " button",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23. The page states "
+        "the right in its own words -- 'you may have the right to opt-out "
+        "of the sale of personal information' -- and the form is the "
+        "surface it offers for it.\n"
+        "\n"
+        "THE FORM ID IS PER-RENDER. Loaded twice in the same session it "
+        "came back as #hsform-53822860 and then #hsform-41419905, which is "
+        "ordinary HubSpot behaviour and fatal to any recipe written "
+        "against the id. Everything here keys on field names instead, and "
+        "the form is reached with form:has(select[name='request_type']) -- "
+        "the one selector on the page that identifies it by what it "
+        "CONTAINS rather than by what it was called this time.\n"
+        "\n"
+        "Field notes. Nothing is marked required in the DOM (HubSpot "
+        "validates client-side), so absence of a required flag here is not "
+        "evidence a field is optional. The submit control is a <button> "
+        "with no type attribute, so button[type='submit'] does NOT match "
+        "it -- the same trap already recorded for checkpeople-com -- hence "
+        "the bare 'button' at the end of the submit selector. No captcha "
+        "script and no captcha widget were loaded; no_captcha_verified "
+        "stays False because no human has swept it and no dry run was "
+        "performed. No honeypot: every control computes visible.\n"
+        "\n"
+        "ONE HONEST WART, for whoever turns this on. convex_user_type "
+        "offers only 'Customer' or 'Authorized Agent'. A consumer who has "
+        "never dealt with Convex is neither, and 'Customer' is chosen here "
+        "because it is the only self-referring option -- filing as an "
+        "Authorized Agent would be a false statement about acting for "
+        "someone else. The other request types available, for reference, "
+        "are Access / Correction / Deletion.\n"
+        "\n"
+        "No success marker recorded because nothing was submitted; a "
+        "future reader should capture one before this leaves "
+        "STAGED_RECIPES. Note also that Convex is now part of "
+        "ServiceTitan, so this surface may migrate. Second channel for a "
+        "human, named on the page itself: support@convexlabs.io."
+    ),
+)
+
+
 # Brokers whose form has been WRITTEN DOWN but which are not yet turned on.
 # It exists so that "we transcribed the form" and "we are willing to submit
 # to it" stay two separate decisions. Nothing reads this at runtime: a broker
@@ -1523,6 +1603,7 @@ STAGED_RECIPES: dict = {
     COURTCASEFINDER.broker_id: COURTCASEFINDER,
     PROPERTYCHECKER.broker_id: PROPERTYCHECKER,
     CAREERBUILDER.broker_id: CAREERBUILDER,
+    CONVEX.broker_id: CONVEX,
 }
 
 
@@ -3755,6 +3836,163 @@ OPTOUT_UNDECIDED = {
         "The dataset records no email for this row, so it presently has "
         "no working channel of any kind."
     ),
+    "complementics-com": (
+        "Verified by browser render 2026-09-23: a complete, captcha-free "
+        "form that this codebase still cannot honestly fill -- a CODEBASE "
+        "gap, not a research gap, the same distinction already recorded "
+        "for buxtonco-com. complementics.com/opt-out is form#opt-out-form "
+        "with exactly two required fields, input#MAID ('Device ID "
+        "(MAID)') and input#email, plus a submit input. No captcha "
+        "script, no captcha widget, no honeypot. But the identity record "
+        "in this repo has no Mobile Advertising ID and never will from a "
+        "name and address, so filling it would mean inventing a device "
+        "id. Second finding: the dataset's opt_out_url for this row "
+        "(/optout-donotsell) is the CCPA policy ADDENDUM, a prose page "
+        "with no inputs, and the real form is one link further on at "
+        "/opt-out -- the rights-explainer trap again. Note there are two "
+        "distinct surfaces here, a device opt-out (this one) and a 'Do "
+        "Not Sell My Information' notice; a human would want both. "
+        "Contact: hello@complementics.com."
+    ),
+    "intentwave-com": (
+        "Verified by browser render 2026-09-23: intentwave.com/opt-out "
+        "renders 'Your Privacy Options' with two choices -- 'Limit the "
+        "use of my sensitive personal information.' and 'Do not sell or "
+        "share my personal information.' -- and BOTH are anchors pointing "
+        "back at the page itself, with no form, no inputs and no loose "
+        "controls anywhere in the DOM. Following the sibling link to "
+        "persistent.id/opt-out gives exactly the same page under the "
+        "other brand: same two options, same self-referential hrefs, no "
+        "form. So either the choices are JavaScript-driven and had not "
+        "attached by the time the page settled, or the surface is broken. "
+        "That is the single thing to settle next, ideally with a click "
+        "rather than a read. Note the brand structure while you are "
+        "there: IntentWave and Persistent.id are the same company's two "
+        "product names, and the dataset's contact for this row "
+        "(info@persistent.id) is the sibling's address, which is "
+        "consistent."
+    ),
+    "comscore-com": (
+        "Verified by browser render 2026-09-23: the dataset URL is the "
+        "right page and carries no form. /About/Privacy/Data-Subject- "
+        "Rights explains rights and offers a 'Do not sell my personal "
+        "information' link that points back at the same page -- a "
+        "JavaScript-driven widget that never rendered a control -- while "
+        "the only actual form on the page is the site content search "
+        "(input[name=keyword]). The other route the page offers is a "
+        "popup 'Contact Us' at /layout/set/popup/Request/Contact/Contact- "
+        "Us, which was not opened. Two things left to establish: whether "
+        "that popup is a real DSR intake, and whether the do-not-sell "
+        "control appears after interaction. Note Comscore also operates "
+        "PROXIMIC, advertised in its own navigation, which may be a "
+        "separate row for the same data. Dataset contact: "
+        "privacy@comscore.com."
+    ),
+    "convergemarketing-com": (
+        "Verified by browser render 2026-09-23: the dataset URL "
+        "(convergemarketing.com/infoform/?rpgn=&rpurl=) redirects to a "
+        "hosted privacy portal at my.datasubject.com/FMy59nP1cQ/53694 "
+        "titled 'Data Access Request', which gates on jurisdiction before "
+        "showing a form: it auto-detects location ('We've automatically "
+        "detected your jurisdiction ... please verify that this is "
+        "accurate', showing Nevada, US) and then offers request types, of "
+        "which the visible one is 'Don't use my personal information for "
+        "advertising'. No form controls existed at that first stage, and "
+        "no captcha was loaded yet -- which per the standing rule says "
+        "nothing about the stage after it. What a future recipe-writer "
+        "needs: confirm the jurisdiction, record the full request-type "
+        "list and the field set behind it, and re-check for a captcha "
+        "THEN. Note the dataset's contact for this row is "
+        "contracts@convergedirect.com, a different brand name (Converge "
+        "Direct) for the same company."
+    ),
+    "cicreports-com": (
+        "Verified by browser render 2026-09-23: cicreports.com has no "
+        "reachable privacy or opt-out page -- /privacy-policy/ 404s and "
+        "the homepage exposes no opt-out link at all, only 'MY REPORT' "
+        "and 'CONSUMER ASSISTANCE' entrances that lead to authenticated "
+        "FCRA channels. The site is mid-acquisition ('Asurint Enhances "
+        "Powerful Data Asset with AMCP's Acquisition of CIC'), which is "
+        "the likely reason the legal pages are missing. Two things to do "
+        "next: find the live privacy notice under cicreports.com or "
+        "asurint.com, and decide whether this row and an Asurint row are "
+        "the same company. As a tenant- and employment-screening CRA the "
+        "answer may well end up being an FCRA dispute channel rather than "
+        "a suppression form, but that has not been established. Dataset "
+        "contact: compliance@cicreports.com."
+    ),
+    "universalcis-com": (
+        "Verified by browser render 2026-09-23: universalcis.com no "
+        "longer exists as its own site: the domain redirects wholesale to "
+        "xactus.com, the brand it was folded into. Nothing resembling an "
+        "opt-out is linked from that homepage -- the only links are "
+        "'Contact Us', 'Request a Demo' and a customer sign-in. So this "
+        "row currently has no surface, but it is undecided rather than "
+        "absent because the successor brand's privacy pages were not "
+        "enumerated. Next step: look for a consumer request surface under "
+        "xactus.com and decide whether this row should be merged into an "
+        "Xactus row. Dataset contact ccasey@universalcredit.com is on the "
+        "retired brand's domain and should be doubted."
+    ),
+    "contentgine-com": (
+        "Verified by browser render 2026-09-23: contentgine.com now "
+        "serves nothing but a rebrand splash -- 'CONTENTgine is now "
+        "pharosIQ', a CONTINUE button and marketing@pharosiq.com -- so "
+        "there is no opt-out page on the recorded domain at all. "
+        "Undecided rather than absent because the successor, "
+        "pharosiq.com, was not checked, and a B2B lead-generation company "
+        "of this kind usually does publish a do-not-sell page. Next step: "
+        "enumerate pharosiq.com and re-key this row. Dataset contact "
+        "paul@contentgine.com is a personal address on the retired "
+        "domain."
+    ),
+    "completemailinglists-com": (
+        "DATASET DEFECT, verified 2026-09-23: the row's opt_out_url "
+        "https://www.completemailinglists.com/node/3697 returns HTTP 404. "
+        "What is behind it is worth recording: the 404 page is a half- "
+        "finished template whose navigation still reads 'Menu Item One / "
+        "Menu Item Two / Menu Item Three', so the site appears to have "
+        "been rebuilt without its rights pages being carried across. Its "
+        "sibling completemedicallists.com DOES publish a working CCPA "
+        "form at /ccpa.php, so the obvious next step is to check whether "
+        "completemailinglists.com serves the same /ccpa.php form -- if it "
+        "does, this row resolves immediately. Not fixed in data/source- "
+        "brokers.json. Dataset contact: ewoolf@completemailinglists.com."
+    ),
+    "connextdigital-com": (
+        "Verified 2026-09-23: the recorded opt_out_url 404s and the "
+        "domain itself answers 'This site is currently unavailable' -- "
+        "the company's web presence is down rather than merely missing a "
+        "page. Undecided rather than no-surface because an unavailable "
+        "site is not an established absence; recheck later. Note a "
+        "curiosity worth not misreading: reCAPTCHA scripts load even on "
+        "the unavailable page, which is a leftover of the site's "
+        "WordPress stack and not a bot wall in front of an opt-out. The "
+        "dataset records no email for this row, so it has no working "
+        "channel at present."
+    ),
+    "consider-com": (
+        "Verified by browser render 2026-09-23: consider.com is a "
+        "marketing site with no form of any kind on it and no privacy or "
+        "opt-out link in its navigation or footer. Undecided rather than "
+        "no-surface because nothing was established about where its "
+        "rights requests go -- a talent-intelligence platform holding "
+        "candidate profiles almost certainly publishes a privacy policy "
+        "somewhere, and it was not found from the homepage. Next step: "
+        "locate the policy (try /privacy, /legal, or the Help section) "
+        "and read its rights channel. Dataset contact ralph@consider.com "
+        "is a personal address rather than a privacy alias and is worth "
+        "doubting."
+    ),
+    "calltruth-com": (
+        "Reachability failure, 2026-09-23 -- same finding as the search "
+        "leg. https://www.calltruth.com/opt_out.php does not resolve "
+        "(net::ERR_NAME_NOT_RESOLVED), so no opt-out page could be "
+        "reached. Recheck from another network before concluding the "
+        "domain is retired; note the URL shape (/opt_out.php) suggests "
+        "the surface did once exist. The dataset records no email for "
+        "this row, so it has no working channel at all."
+    ),
 }
 
 
@@ -4287,6 +4525,67 @@ OPTOUT_BLOCKED = {
         "identity record has no MAID field and could not honestly fill "
         "this form even unwalled. Recording it so nobody writes a recipe "
         "for a form that has nothing to say to a named person."
+    ),
+    "completemedicallists-com": (
+        "Verified by browser render 2026-09-23: this is the most "
+        "completely transcribed form in the batch and it is still walled. "
+        "/ccpa.php ('Remove My Information') posts to /backend/send_ccpa "
+        "and is built to defeat scrapers twice over. FIRST, FIVE "
+        "HONEYPOTS: input[name=ERA], [name=FIP], [name=BABIP], [name=OPS] "
+        "and [name=SLG] -- baseball statistics, all computed-invisible, "
+        "all of which must go in forbidden_selectors. SECOND, the real "
+        "fields are BASE64-NAMED: Rmlyc3ROYW1l = FirstName, TGFzdE5hbWU= "
+        "= LastName, QmlydGhZZWFy = BirthYear, QWRkcmVzczE= = Address1, "
+        "QWRkcmVzczI= = Address2, Q2l0eQ== = City, U3RhdGU= = State, Wmlw "
+        "= Zip, plus a five-way radio group named ins (unlabelled in the "
+        "DOM; a human must read what it selects before anything is "
+        "filled). That is all readable. What stops a recipe is a visible "
+        "reCAPTCHA -- api.js loaded and a live .g-recaptcha element on "
+        "the page. Note the rights notice covers a long list of states, "
+        "not just California, so the surface is broader than the file "
+        "name suggests. Dataset contact: "
+        "tburnell@completemedicallists.com."
+    ),
+    "contactout-com": (
+        "Verified by browser render 2026-09-23: contactout.com/optout "
+        "carries a clean one-field first step -- form posting to "
+        "/optout/verify/send with input#email (required) and a 'Send "
+        "verification link' button -- and it is behind a CLOUDFLARE "
+        "TURNSTILE (challenges.cloudflare.com/turnstile script plus a "
+        "live .cf-turnstile element). Two separate reasons no recipe "
+        "ships: the Turnstile, and the fact that the real removal form is "
+        "behind a one-time emailed verification link, the same shape as "
+        "checkpeople-com and fastpeoplesearch-com. Second channel for a "
+        "human: support@contactout.com."
+    ),
+    "service-now-com": (
+        "Verified by browser render 2026-09-23: the form is real, "
+        "correctly typed and captcha-walled. The dataset URL opens a "
+        "ServiceNow-hosted page on firstam.service-now.com titled "
+        "'Consumer Opt-Out Request Form / Do Not Sell or Share My "
+        "Personal Information', explicitly on behalf of Connected "
+        "Investors, Inc. -- so for once the recorded URL is exactly the "
+        "right request type. It is behind reCAPTCHA ENTERPRISE "
+        "(google.com/recaptcha/enterprise loaded, badge and g-recaptcha- "
+        "response present). Even unwalled a recipe here would be awkward: "
+        "every control is a ServiceNow catalog variable carrying "
+        "generated sys-id names (log_variable_actions, "
+        "jvar_nested_form_evaluation and friends), so the selectors would "
+        "be tied to one form build. Recorded as miskeyed on the search "
+        "leg too: the broker is Connected Investors, not ServiceNow. "
+        "Dataset contact: support@connectedinvestors.com."
+    ),
+    "bigidprivacy-cloud": (
+        "Verified by browser render 2026-09-23: "
+        "crexi.bigidprivacy.cloud/consumer/#/o2TCsG9LJ7 renders a BigID- "
+        "hosted 'Crexi Privacy Center' that gates everything behind a "
+        "country picker (#userCountry, a MUI autocomplete) before 'Select "
+        "an action' and 'Tell us who you are' become reachable -- and "
+        "reCAPTCHA is already loaded at that first step (api.js, "
+        ".grecaptcha-badge, a g-recaptcha-response textarea). Blocked at "
+        "the door, so the request-type list and field set behind it were "
+        "never seen. Recorded as probably miskeyed: the broker is Crexi, "
+        "bigidprivacy.cloud is BigID's hosting."
     ),
 }
 

@@ -2319,6 +2319,133 @@ NO_SEARCH_SURFACE = {
         "There is no name-keyed record to look up and no public search "
         "surface of any kind."
     ),
+    "intentwave-com": (
+        "Verified by browser render 2026-09-23: IntentWave sells B2B "
+        "intent data and identity resolution to marketers; the public "
+        "site is products and a contact form. Its consumer page (/opt- "
+        "out) offers only two privacy choices and no lookup, and even "
+        "those hand off to its sibling brand persistent.id. No public "
+        "person search."
+    ),
+    "bigidprivacy-cloud": (
+        "Verified 2026-09-23: this row is keyed on a PRIVACY-SERVICE "
+        "domain, not a broker. bigidprivacy.cloud is BigID's hosted "
+        "privacy-centre product, and the dataset URL "
+        "crexi.bigidprivacy.cloud is the tenant belonging to CREXI, a "
+        "commercial-real-estate marketplace, which is the actual company. "
+        "Flagged as a probable dataset miskeying (compare saymine-io in "
+        "the same sweep). Neither BigID nor the privacy centre publishes "
+        "a people search, and Crexi's own product searches PROPERTIES "
+        "rather than people."
+    ),
+    "complementics-com": (
+        "Verified by browser render 2026-09-23: Complementics deals in "
+        "mobile device identifiers and app audiences, not named people -- "
+        "its own opt-out asks for a Device ID (MAID). There is no name- "
+        "keyed record and no public lookup of any kind."
+    ),
+    "completemailinglists-com": (
+        "Verified by browser render 2026-09-23: Complete Mailing Lists "
+        "sells direct-mail list rentals to marketers by segment, not per- "
+        "person lookups; the public site is a list catalogue and a quote "
+        "request. No consumer-facing search. Recorded alongside a DATASET "
+        "DEFECT on the opt-out leg: the row's opt_out_url (/node/3697) "
+        "404s, and the site it lands on is a half-built template still "
+        "carrying 'Menu Item One/Two/Three' placeholders in its "
+        "navigation."
+    ),
+    "completemedicallists-com": (
+        "Verified by browser render 2026-09-23: Same business as its "
+        "sibling completemailinglists-com: rented direct-mail lists of "
+        "healthcare professionals, sold by segment. The only form "
+        "resembling a search is a mailing-LIST search (input[name=search] "
+        "-> /mailing_lists_search) that looks up products, not people. No "
+        "person lookup."
+    ),
+    "comscore-com": (
+        "Verified by browser render 2026-09-23: Comscore does cross- "
+        "platform audience MEASUREMENT -- panels and census tags "
+        "producing aggregate ratings -- and publishes no per-person "
+        "records. www.comscore.com's only form is the site content search "
+        "(input[name=keyword]). No search surface."
+    ),
+    "service-now-com": (
+        "Verified 2026-09-23, and this row is keyed on the wrong thing: "
+        "service-now.com is ServiceNow, a workflow-software vendor, while "
+        "the dataset URL firstam.service-now.com/... is a ServiceNow- "
+        "hosted form belonging to FIRST AMERICAN and serving CONNECTED "
+        "INVESTORS (the page is titled 'Consumer Opt-Out Request Form' "
+        "and names 'Connected Investors, Inc.'). Flagged as a probable "
+        "miskeying -- the broker is Connected Investors, the host is "
+        "incidental. Neither ServiceNow nor the form offers a people "
+        "search."
+    ),
+    "connextdigital-com": (
+        "Verified by browser render 2026-09-23: Connext Digital is a "
+        "BPO/outsourced-staffing provider rather than a records "
+        "publisher, and its site is down regardless -- "
+        "connextdigital.com/opt-out/ 404s and the domain serves 'This "
+        "site is currently unavailable'. No search surface exists to "
+        "read, and none is plausible for the business."
+    ),
+    "consider-com": (
+        "Verified by browser render 2026-09-23: Consider sells a talent- "
+        "intelligence platform to VCs, hiring companies and staffing "
+        "agencies; candidate data is reached inside a paid, logged-in "
+        "workspace. consider.com is pure marketing with no form on it at "
+        "all. No public lookup."
+    ),
+    "universalcis-com": (
+        "Verified by browser render 2026-09-23: universalcis.com now "
+        "redirects wholesale to xactus.com -- Universal Credit Services "
+        "was folded into the Xactus brand, so this row is a retired brand "
+        "of a mortgage-verification provider. Its data reaches consumers "
+        "only through a lender, and the site publishes no lookup. "
+        "Probable duplicate of any Xactus row. Dataset contact "
+        "ccasey@universalcredit.com belongs to the retired brand."
+    ),
+    "contactout-com": (
+        "Verified by browser render 2026-09-23: ContactOut sells "
+        "recruiter-facing contact data ('Find Anyone's Email & Phone') "
+        "but only through an authenticated Search Portal and a Chrome "
+        "extension sold by seat -- there is no public page that takes a "
+        "name and returns a person. The only form on the public opt-out "
+        "page is the email-verification step. No free search surface to "
+        "read."
+    ),
+    "cicreports-com": (
+        "Verified by browser render 2026-09-23: CIC (cicreports.com) is a "
+        "tenant- and employment-screening CRA, now announcing its "
+        "acquisition by Asurint via AMCP. Reports are ordered by "
+        "landlords and employers with FCRA authorization; the consumer "
+        "entrance is 'MY REPORT' / 'CONSUMER ASSISTANCE', both "
+        "authenticated. No public lookup. Note the likely duplicate: an "
+        "Asurint row would be the same data."
+    ),
+    "contentgine-com": (
+        "Verified by browser render 2026-09-23: contentgine.com now "
+        "serves only a rebrand splash -- 'CONTENTgine is now pharosIQ' "
+        "with a CONTINUE button and marketing@pharosiq.com. The business "
+        "is B2B content-syndication lead generation, which publishes no "
+        "consumer lookup, and the domain no longer hosts a product site "
+        "at all. Probable rename to be re-keyed on pharosiq.com; dataset "
+        "contact paul@contentgine.com is a personal address on the "
+        "retired domain."
+    ),
+    "convergemarketing-com": (
+        "Verified by browser render 2026-09-23: Converge Direct is a "
+        "media-buying agency; its consumer-facing surface is a hosted "
+        "privacy portal (my.datasubject.com) rather than any directory. "
+        "No public person lookup exists."
+    ),
+    "convex-com": (
+        "Verified by browser render 2026-09-23: Convex sells a "
+        "commercial-services sales-intelligence platform (now part of "
+        "ServiceTitan) whose records are about BUSINESSES and properties, "
+        "reached inside a paid login. www.convex.com publishes no person "
+        "lookup; its only forms are the privacy-request form and a "
+        "newsletter signup."
+    ),
 }
 
 
@@ -3190,6 +3317,15 @@ SEARCH_UNDECIDED = {
         "rows in this batch: something answers DNS here, so this is more "
         "likely a hung or firewalled host than a retired domain. Recheck "
         "later and from another network. The dataset holds no email for "
+        "this row, so it currently has no working channel at all."
+    ),
+    "calltruth-com": (
+        "Reachability failure, 2026-09-23: "
+        "https://www.calltruth.com/opt_out.php does not resolve "
+        "(net::ERR_NAME_NOT_RESOLVED from a real browser). Same treatment "
+        "as the bridgevine/brightswipe rows -- a DNS failure on one "
+        "network is not proof the domain is retired, so this is undecided "
+        "pending a recheck from elsewhere. The dataset holds no email for "
         "this row, so it currently has no working channel at all."
     ),
 }

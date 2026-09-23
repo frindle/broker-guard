@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **224** / 969
-- Search leg mapped: 226 / 969
-- Opt-out leg mapped: 228 / 969
+- Fully mapped (both legs): **240** / 969
+- Search leg mapped: 242 / 969
+- Opt-out leg mapped: 244 / 969
 
 ## How to resume
 
@@ -230,28 +230,28 @@ of those dicts against source-brokers.json).
 - [x] **Collateral Analytics, LLC** (`ice-com`) -- search: no-surface, opt-out: undecided
 - [x] **Collective Data Solutions, LLC** (`collectivedata-io`) -- search: no-surface, opt-out: blocked
 - [ ] **Colorado Court Records (CourtRecords.us network)** (`coloradocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Command Precision Inc.** (`intentwave-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Command Precision Inc.** (`intentwave-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Command Precision, Inc.** (`persistent-id`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **COMMERCIAL REAL ESTATE EXCHANGE Inc** (`bigidprivacy-cloud`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **COMMERCIAL REAL ESTATE EXCHANGE Inc** (`bigidprivacy-cloud`) -- search: no-surface, opt-out: blocked
 - [ ] **Commercial Real Estate Exchange, Inc.** (`crexi-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Compact Information Systems, LLC** (`deepsync-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Complementics** (`complementics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Complete Mailing Lists** (`completemailinglists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **COMPLETE MEDICAL LISTS Inc** (`completemedicallists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Comscore, Inc.** (`comscore-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Connect Computer LLC** (`calltruth-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Connected Investors LLC** (`service-now-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Complementics** (`complementics-com`) -- search: no-surface, opt-out: undecided
+- [x] **Complete Mailing Lists** (`completemailinglists-com`) -- search: no-surface, opt-out: undecided
+- [x] **COMPLETE MEDICAL LISTS Inc** (`completemedicallists-com`) -- search: no-surface, opt-out: blocked
+- [x] **Comscore, Inc.** (`comscore-com`) -- search: no-surface, opt-out: undecided
+- [x] **Connect Computer LLC** (`calltruth-com`) -- search: undecided, opt-out: undecided
+- [x] **Connected Investors LLC** (`service-now-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Connected Investors, LLC** (`connectedinvestors-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Connecticut Court Records (CourtRecords.us network)** (`connecticutcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Connext Digital, LLC** (`connextdigital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Consider, Inc.** (`consider-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Consolidated Information Services Solutions LLC** (`universalcis-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Connext Digital, LLC** (`connextdigital-com`) -- search: no-surface, opt-out: undecided
+- [x] **Consider, Inc.** (`consider-com`) -- search: no-surface, opt-out: undecided
+- [x] **Consolidated Information Services Solutions LLC** (`universalcis-com`) -- search: no-surface, opt-out: undecided
 - [ ] **CONSUMER CANVAS LLC** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Contactout** (`contactout-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CONTEMPORARY INFORMATION CORP.** (`cicreports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Contentgine Inc.** (`contentgine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Converge Direct, LLC.** (`convergemarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **CONVEX LABS LLC** (`convex-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Contactout** (`contactout-com`) -- search: no-surface, opt-out: blocked
+- [x] **CONTEMPORARY INFORMATION CORP.** (`cicreports-com`) -- search: no-surface, opt-out: undecided
+- [x] **Contentgine Inc.** (`contentgine-com`) -- search: no-surface, opt-out: undecided
+- [x] **Converge Direct, LLC.** (`convergemarketing-com`) -- search: no-surface, opt-out: undecided
+- [x] **CONVEX LABS LLC** (`convex-com`) -- search: no-surface, opt-out: staged
 - [x] **CoreLogic** (`corelogic-com`) -- search: undecided, opt-out: undecided
 - [ ] **Cortera, Inc.** (`cortera-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Costar Group** (`costar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
