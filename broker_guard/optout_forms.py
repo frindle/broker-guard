@@ -1210,6 +1210,23 @@ NO_OPTOUT_SURFACE = {
 #
 # Notes, not behaviour: nothing reads this at runtime.
 OPTOUT_UNDECIDED = {
+    "unitedstatesphonebook-com": (
+        "Left undecided on purpose, and carried forward from batch 1 "
+        "rather than re-opened: removal there is a per-search-result "
+        "'Remove' button, not a fixed form, so there is nothing for a "
+        "FormRecipe to point at without first running a search and "
+        "choosing a row. Confirmed first-hand on 2026-09-23 that the "
+        "SECOND channel is a mailbox: its privacy policy says 'We will "
+        "remove your data from this site upon your request, please use "
+        "the e-mail below to request including what SPECIFIC data to "
+        "remove, and from which site', and there is no removal form "
+        "linked anywhere on the site. Both shapes are outside a recipe, "
+        "but the entry stays here rather than moving to out-of-scope or "
+        "no-surface because leaving this leg alone was an explicit "
+        "instruction, and quietly converting somebody's 'don't decide "
+        "this' into a decision is how a note becomes a fact. Its SEARCH "
+        "leg is a shipped, working recipe."
+    ),
     "infotracer-com": (
         "No verdict as of 2026-09-23, and deliberately not guessed. "
         "infotracer.com/optout/ answers HTTP 200 with the body 'Sorry this "
