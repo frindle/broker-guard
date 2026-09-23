@@ -55,7 +55,8 @@ services:
       # =====================================================================
       # BG_PLAYWRIGHT_ENABLED, BG_SEARXNG_URL, BG_SEARXNG_MIN_INTERVAL_S,
       # BG_SEARXNG_JITTER_S, BG_ALERT_WEBHOOK_URL, BG_ERASER_ENABLED,
-      # BG_ERASER_DRY_RUN, BG_CAPTCHA_API_KEY and BG_INTERVAL_SECONDS are all
+      # BG_ERASER_DRY_RUN, BG_OPTOUT_SUBMIT_ENABLED, BG_OPTOUT_SUBMIT_DRY_RUN,
+      # BG_CAPTCHA_API_KEY and BG_INTERVAL_SECONDS are all
       # still read from here -- but only as the FALLBACK tier. Precedence is:
       #
       #     saved in /data/settings.json  >  the variable below  >  the
@@ -95,6 +96,11 @@ services:
       # redeploy cannot touch it. This path itself is env-only: a store cannot
       # relocate itself from inside its own UI.
       BG_SETTINGS_PATH: /data/settings.json
+      # The opt-out SUBMISSION audit trail (broker_guard/review.py): one JSON
+      # record + one screenshot per attempt. On /data so it survives the
+      # `git reset --hard` redeploy -- an audit trail that evaporates is not
+      # an audit trail. Env-only, like every other path here.
+      BG_REVIEW_DIR: /data/review
 
       # --- web dashboard (off by default -- headless loop only) ---
       # Set true to serve broker_guard/webui.py + run the autopilot loop as
@@ -156,6 +162,27 @@ services:
       BG_ERASER_DRY_RUN: "${BG_ERASER_DRY_RUN:-true}"
       BG_ERASER_BIN: /opt/eraser/bin/eraser
       BG_ERASER_TIMEOUT_S: "300"
+
+      # --- automated opt-out form submission (broker_guard/optout_submit.py) ---
+      # THE one feature here with real third-party side effects: it fills in
+      # your actual name, email and state on a broker's webform and, fully
+      # switched on, presses Submit unattended.
+      #
+      # Both UI-editable (/settings), both defaulting to the safe end, and
+      # they are two separate switches on purpose -- neither one alone can
+      # cause a real submission:
+      #
+      #   BG_OPTOUT_SUBMIT_ENABLED=false -> the feature does not run at all.
+      #     It is deliberately NOT part of the autopilot scan loop; a scan
+      #     never submits anything. Runs are started by hand from /review.
+      #   BG_OPTOUT_SUBMIT_DRY_RUN=true  -> even once enabled, the form is
+      #     filled and screenshotted but Submit is never pressed.
+      #
+      # Also requires BG_PLAYWRIGHT_ENABLED and a browser in the image
+      # (INSTALL_BROWSERS=true, the default). Only brokers with a
+      # hand-verified recipe in broker_guard/optout_forms.py are eligible.
+      BG_OPTOUT_SUBMIT_ENABLED: "${BG_OPTOUT_SUBMIT_ENABLED:-false}"
+      BG_OPTOUT_SUBMIT_DRY_RUN: "${BG_OPTOUT_SUBMIT_DRY_RUN:-true}"
 
       # --- alerting ---
       # UI-editable (/settings); live from the next autopilot cycle.

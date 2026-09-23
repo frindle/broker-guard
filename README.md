@@ -133,6 +133,8 @@ cause of the recurring "Playwright detection turned itself off again" reports.
 | `BG_SEARXNG_JITTER_S` | next autopilot scan cycle |
 | `BG_ERASER_ENABLED` | next removal (re-resolved per call) |
 | `BG_ERASER_DRY_RUN` | next removal |
+| `BG_OPTOUT_SUBMIT_ENABLED` | next run started from /review |
+| `BG_OPTOUT_SUBMIT_DRY_RUN` | next run started from /review |
 | `BG_ALERT_WEBHOOK_URL` | next alert |
 | `BG_CAPTCHA_API_KEY` | immediately (write-only — never rendered back into the page) |
 | `BG_INTERVAL_SECONDS` | next loop tick — it does not interrupt a sleep already running, so worst case is one confirmation interval (6h by default) |
@@ -162,6 +164,7 @@ for a setting that `/settings` can override (see above).
 | `BG_ID_DOCUMENTS_DIR` | `data/id_documents` | encrypted ID-document uploads (web UI only) |
 | `BG_FREEZE_STATE_PATH` | `data/freeze_state.json` | credit-freeze tracker state (web UI only) |
 | `BG_SETTINGS_PATH` | `data/settings.json` | UI-editable settings store (see above); env-only, a store cannot relocate itself |
+| `BG_REVIEW_DIR` | `data/review` | opt-out submission audit trail (JSON record + screenshot per attempt); env-only |
 | `BG_SERVE_WEB` | `false` | serve the web dashboard + autopilot loop instead of the headless loop |
 | `BG_WEB_PORT` | `8000` | port for the web dashboard (only meaningful with `BG_SERVE_WEB=true`) |
 | `BG_CRYPTO_KEY` | *(unset)* | Fernet key encrypting ID documents + freeze PINs at rest; required only for those two features |
@@ -182,6 +185,8 @@ for a setting that `/settings` can override (see above).
 | `BG_ERASER_TIMEOUT_S` | `300` | subprocess timeout |
 | `BG_ALERT_WEBHOOK_URL` | *(unset)* | **UI** your own webhook (HA, ntfy…); unset = file sink only |
 | `BG_ALERT_LOG_PATH` | `$BG_LOG_DIR/alerts.jsonl` | append-only digest file |
+| `BG_OPTOUT_SUBMIT_ENABLED` | `false` | **UI** enable automated opt-out form submission (see below) |
+| `BG_OPTOUT_SUBMIT_DRY_RUN` | `true` | **UI** — **keep true until you have checked a screenshot**; Submit is never pressed while set |
 | `BG_CAPTCHA_API_KEY` | *(unset)* | **UI** third-party captcha solver key |
 | `BG_MAX_RETRIES` | `3` | attempts per network call |
 | `BG_LOG_LEVEL` | `INFO` | log level |
@@ -189,7 +194,50 @@ for a setting that `/settings` can override (see above).
 
 Two safety interlocks are on by default: `BG_ERASER_ENABLED=false` and
 `BG_ERASER_DRY_RUN=true`, so no opt-out request is ever transmitted until both
-are deliberately changed.
+are deliberately changed. The same pattern guards automated form submission:
+`BG_OPTOUT_SUBMIT_ENABLED=false` and `BG_OPTOUT_SUBMIT_DRY_RUN=true`.
+
+### Automated opt-out submission
+
+Everything else in this project only ever *reads* a broker's site. This is the
+one feature that acts: it opens the broker's opt-out webform in a real browser,
+fills in your actual name, email and state from your profile, and — fully
+switched on — presses Submit on your behalf.
+
+Because of that, four things must all be true before anything is sent:
+
+1. `BG_OPTOUT_SUBMIT_ENABLED=true` (default `false`). This is **not** wired
+   into the autopilot scan loop — a scan never submits anything. Runs are
+   started by hand from the **Opt-out review** page.
+2. `BG_OPTOUT_SUBMIT_DRY_RUN=false` (default `true`). While true, the form is
+   filled and photographed but Submit is never pressed.
+3. The broker has a hand-verified recipe in `broker_guard/optout_forms.py`.
+   That allow-list is the safety boundary: there is no "guess the form from
+   the URL" fallback. Currently: **CONSUMER CANVAS LLC** only.
+4. `BG_PLAYWRIGHT_ENABLED=true` and the image was built with
+   `INSTALL_BROWSERS=true` (the default).
+
+**CAPTCHAs are never solved.** If a bot check is detected, the run stops,
+screenshots the filled-in form, and records the attempt as *needs you* — which
+shows up in the existing **Action needed** badge. It is not bypassed, not
+out-sourced to a solver, not retried.
+
+That is the normal outcome for the first supported broker: Consumer Canvas's
+OneTrust form carries a mandatory BotDetect image CAPTCHA, so an automated run
+will always stop there. What you get is a screenshot of the completely
+filled-in form plus the audit record — open the form, type the six characters,
+press Submit yourself.
+
+**Every attempt is audited.** Success, failure and bail-out alike write a JSON
+record (timestamp, broker, form URL, the exact fields submitted) plus a
+screenshot into `BG_REVIEW_DIR`, viewable on **Opt-out review**. Those records
+deliberately contain your unredacted PII — that is the point of an audit trail
+you own — so they are written `0600` inside a `0700` directory, and nothing is
+ever logged to stdout.
+
+Suggested first run: turn the feature on, leave DRY RUN on, press **Dry run
+(fill only)** on `/review`, and look at the screenshot. Only turn DRY RUN off
+once the mapping looks right.
 
 ### SearXNG pacing — do not turn this down
 

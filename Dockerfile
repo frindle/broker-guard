@@ -91,6 +91,7 @@ ENV BG_PROFILE_PATH=/data/profile.local.json \
     BG_LOG_DIR=/logs \
     BG_ID_DOCUMENTS_DIR=/data/id_documents \
     BG_FREEZE_STATE_PATH=/data/freeze_state.json \
+    BG_REVIEW_DIR=/data/review \
     BG_ERASER_BIN=/opt/eraser/bin/eraser
 
 # Documentation only -- does not publish/bind anything by itself. Actually
