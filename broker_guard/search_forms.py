@@ -378,6 +378,92 @@ NO_SEARCH_SURFACE = {
         "by requesting your own consumer disclosure with SSN + DOB, which is "
         "an identity-verified request this tool must not automate."
     ),
+    "achcoop-com": (
+        "ACH, Address Clearing House is a B2B address-hygiene/ACH-clearing "
+        "data vendor, not a consumer people-search site. Verified "
+        "2026-09-22: its homepage carries zero <input>/<select>/<textarea> "
+        "elements anywhere -- no search box exists on this domain at all, "
+        "only a DNSMPI (opt-out) page."
+    ),
+    "bigdbm-com": (
+        "BIGDBM is a B2B identity-data vendor, not a consumer people-search "
+        "site. Verified 2026-09-22: its homepage carries zero form inputs "
+        "anywhere -- no search box exists on this domain at all, only its "
+        "opt-out subdomain."
+    ),
+    "peopledatalabs-com": (
+        "People Data Labs is a B2B people-data API vendor, not a consumer "
+        "people-search site. Verified 2026-09-22: its homepage carries no "
+        "name-search UI anywhere, only a marketing email-capture box and a "
+        "Do Not Sell or Share page."
+    ),
+    "locateplus-com": (
+        "LocatePLUS is a skip-tracing/investigative-data platform sold to "
+        "licensed businesses through a closed, login-gated customer portal. "
+        "Verified 2026-09-22: the public marketing domain carries no "
+        "consumer search UI of any kind -- no inputs anywhere on the "
+        "homepage -- and no opt-out webform either, only a "
+        "customerservice@locateplus.com mailbox referenced in the privacy "
+        "policy."
+    ),
+    "locatesmarter-com": (
+        "LocateSmarter's homepage (www.locatesmarter.com) redirects "
+        "straight to portal.locatesmarter.com, a login-gated ASP.NET "
+        "customer portal (the only inputs on the landing page are "
+        "__EVENTTARGET/__VIEWSTATE-style hidden ASP.NET fields, no visible "
+        "search box). Verified 2026-09-22: there is no public, "
+        "unauthenticated consumer search surface anywhere on this domain."
+    ),
+    "openpeoplesearch-com": (
+        "Open People Search's own homepage is API/developer marketing copy "
+        "(\"The Official Open People Search API\") with zero consumer-"
+        "facing search inputs anywhere on the page. Verified 2026-09-22: "
+        "there is no name-search box on this domain at all, only a "
+        "'Remove My Info' consumer opt-out flow."
+    ),
+    "golookup-com": (
+        "golookup.com no longer belongs to the original broker at all. "
+        "Verified 2026-09-22: the homepage itself now reads 'This Domain "
+        "Has Been Transferred by Court Order' and serves press coverage of "
+        "the Atlas Data Privacy Corp / Daniel's Law litigation against data "
+        "brokers (Radaris et al.) -- there is no search box, no broker "
+        "content, and nothing to build a recipe against."
+    ),
+    "arrestfacts-com": (
+        "arrestfacts.com no longer serves its own site. Verified "
+        "2026-09-22: the domain now redirects entirely to a different, "
+        "unrelated third party (nkreeger.com), which happens to run a "
+        "copy of the same arrest-records search template under its own "
+        "branding ('US Official Arrest & Criminal Records ... | "
+        "nkreeger.com'). A recipe here would be searching someone else's "
+        "site and reporting it as arrestfacts.com's answer."
+    ),
+    "facecheck-id": (
+        "FaceCheck is a reverse FACE-IMAGE search engine, not a name-based "
+        "people-search site -- verified 2026-09-22, its only search input "
+        "anywhere on the domain is a photo file-upload control. This tool "
+        "has no photo of the person to search with, and would not use one "
+        "without separate, explicit consent even if it did; there is no "
+        "name/email/phone search surface to build a recipe against."
+    ),
+    "publicrecords360-com": (
+        "publicrecords360.com no longer serves its own content. Verified "
+        "2026-09-22: even the bare homepage 302-redirects straight to "
+        "https://www.ussearch.com/?feeder=publicrecords360 -- it is purely "
+        "an affiliate feeder for US Search, with nothing of its own to "
+        "search."
+    ),
+    "publicrecordsnow-com": (
+        "PublicRecordsNow's homepage is independently served, but its "
+        "search action is not: verified 2026-09-22, filling the name box "
+        "and pressing Search navigates the tab to https://www.peoplefinders."
+        "com/ (PeopleFinders' own homepage, not a results page on either "
+        "site), and its own 'Do Not Sell' link on the same page points to "
+        "peoplefinders.com/do-not-sell, not to anything on publicrecordsnow."
+        "com. This is an affiliate front for PeopleFinders; there is "
+        "nothing on publicrecordsnow.com itself that can answer whether it "
+        "lists a person."
+    ),
 }
 
 

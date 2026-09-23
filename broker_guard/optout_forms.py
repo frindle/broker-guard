@@ -839,6 +839,59 @@ NO_OPTOUT_SURFACE = {
         "credentials (which can require SSN + DOB), which this tool must "
         "not automate."
     ),
+    "locateplus-com": (
+        "LocatePLUS sells skip-tracing data to licensed businesses through "
+        "a closed customer portal. Verified 2026-09-22: the public "
+        "marketing domain has no opt-out webform anywhere -- the only "
+        "removal channel referenced in the privacy policy is a plain "
+        "mailto to customerservice@locateplus.com, which this codebase has "
+        "no mail-sending capability for (and mailbox-only channels are "
+        "outside what a form-filling recipe can represent)."
+    ),
+    "golookup-com": (
+        "Same finding as search_forms.NO_SEARCH_SURFACE: this domain no "
+        "longer belongs to the original broker (transferred by court "
+        "order) and serves no broker content, including no opt-out page."
+    ),
+    "arrestfacts-com": (
+        "Same finding as search_forms.NO_SEARCH_SURFACE: arrestfacts.com "
+        "redirects entirely to an unrelated third party (nkreeger.com); "
+        "there is no page on the original domain to open an opt-out form "
+        "against."
+    ),
+    "publicrecords360-com": (
+        "Same finding as search_forms.NO_SEARCH_SURFACE: the domain "
+        "302-redirects entirely to ussearch.com; it serves no page of its "
+        "own, including no opt-out page."
+    ),
+    "publicrecordsnow-com": (
+        "Verified 2026-09-22: the 'Do Not Sell' link on publicrecordsnow."
+        "com's own homepage points to https://www.peoplefinders.com/"
+        "do-not-sell, PeopleFinders' own opt-out page, not anything hosted "
+        "on publicrecordsnow.com. Same affiliate-front finding as this "
+        "broker's search_forms.NO_SEARCH_SURFACE entry: submitting a "
+        "removal request through PeopleFinders' form would be recorded "
+        "under the wrong broker's name."
+    ),
+    "facecheck-id": (
+        "FaceCheck's 'Removal Request' page (/en/RemoveMyPhotos) renders "
+        "no form of any kind -- verified 2026-09-22, the only inputs "
+        "anywhere on that page are dark-mode toggle checkboxes. Removing a "
+        "face match appears to require a separate, unautomated channel "
+        "(uploading or referencing the specific photo/URL to take down), "
+        "which is also not a request this tool should make on Penn's "
+        "behalf without a specific photo of him to identify."
+    ),
+    "freepeopledirectory-com": (
+        "Free People Directory has its own name-search UI (see "
+        "search_forms), but its 'Do Not Sell My Info' link, verified "
+        "2026-09-22, points straight to https://www.spokeo.com/privacy/"
+        "control/ -- Spokeo's OWN privacy-control page, not anything "
+        "hosted on freepeopledirectory.com. That confirms this is a "
+        "Spokeo-network property for opt-out purposes; there is no "
+        "independent removal surface on freepeopledirectory.com itself to "
+        "build a recipe against."
+    ),
 }
 
 

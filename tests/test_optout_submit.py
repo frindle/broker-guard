@@ -342,6 +342,22 @@ def test_exactly_the_hand_verified_brokers_are_turned_on():
     assert not optout_forms.is_supported("cybba")
 
 
+def test_brokers_with_no_opt_out_surface_are_recorded_with_reasons():
+    """The opt-out-leg twin of search_forms's NO_SEARCH_SURFACE test.
+
+    Each of these was investigated live and has no self-service consumer
+    removal surface to submit to (authenticated portal, mailbox-only
+    channel, or an affiliate front whose 'opt out' link actually points at
+    a different company's own page); the finding is kept so it is not
+    re-investigated, and so nobody accidentally builds a recipe that would
+    submit a request under the wrong broker's name.
+    """
+    for broker_id, reason in optout_forms.NO_OPTOUT_SURFACE.items():
+        assert not optout_forms.is_supported(broker_id)
+        assert len(reason) > 80
+    assert "chexsystems-com" in optout_forms.NO_OPTOUT_SURFACE
+
+
 # --- the driver: interlocks --------------------------------------------------
 
 def test_refuses_when_the_feature_is_off(identity, tmp_path):
