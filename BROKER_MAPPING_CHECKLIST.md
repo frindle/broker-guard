@@ -25,9 +25,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **148** / 969
-- Search leg mapped: 150 / 969
-- Opt-out leg mapped: 152 / 969
+- Fully mapped (both legs): **158** / 969
+- Search leg mapped: 160 / 969
+- Opt-out leg mapped: 162 / 969
 
 ## How to resume
 
@@ -138,16 +138,16 @@ of those dicts against source-brokers.json).
 - [x] **Atlantic Fox Technologies, Inc.** (`atlanticfox-com`) -- search: no-surface, opt-out: no-surface
 - [x] **ATTOM Data Solutions LLC** (`attomdata-com`) -- search: no-surface, opt-out: undecided
 - [x] **Audience Acuity LLC** (`audienceacuity-com`) -- search: no-surface, opt-out: undecided
-- [ ] **AudiencePoint Inc.** (`audiencepoint-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Audiencerate Ltd** (`audiencerate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Automotive Mastermind** (`automotivemastermind-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AutoWeb, Inc.** (`autoweb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AWL Holdings, LLC** (`awl-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AZ Direct GmbH** (`az-direct-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Azerion US Inc.** (`hybridtheory-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Azira** (`azira-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **AZIRA LLC** (`trustarc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **B.I Science (2009) Ltd** (`biscience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **AudiencePoint Inc.** (`audiencepoint-com`) -- search: no-surface, opt-out: undecided
+- [x] **Audiencerate Ltd** (`audiencerate-com`) -- search: no-surface, opt-out: undecided
+- [x] **Automotive Mastermind** (`automotivemastermind-com`) -- search: no-surface, opt-out: undecided
+- [x] **AutoWeb, Inc.** (`autoweb-com`) -- search: no-surface, opt-out: undecided
+- [x] **AWL Holdings, LLC** (`awl-com`) -- search: no-surface, opt-out: undecided
+- [x] **AZ Direct GmbH** (`az-direct-com`) -- search: no-surface, opt-out: undecided
+- [x] **Azerion US Inc.** (`hybridtheory-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Azira** (`azira-com`) -- search: no-surface, opt-out: undecided
+- [x] **AZIRA LLC** (`trustarc-com`) -- search: no-surface, opt-out: undecided
+- [x] **B.I Science (2009) Ltd** (`biscience-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Background Information Services, Inc.** (`bisi-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **BackgroundCheckers** (`backgroundcheckers-net`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **BB Direct, Inc** (`bbdirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED

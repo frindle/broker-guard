@@ -1693,6 +1693,107 @@ NO_SEARCH_SURFACE = {
         "element on the page is a first-party cookie notice with an "
         "Accept button."
     ),
+    "audiencepoint-com": (
+        "AudiencePoint sells email-engagement intelligence that sits on "
+        "top of a marketer's existing systems -- its three capabilities "
+        "are Data Health (real people vs bots, deliverability), Audience "
+        "Clarity (segments from engagement signals) and Activation "
+        "Intelligence (who receives mail vs spam). Verified 2026-09-23: "
+        "audiencepoint.com carries no person-lookup input; everything it "
+        "does is audience-level analysis over a CUSTOMER'S own list, not "
+        "a record anyone can query."
+    ),
+    "audiencerate-com": (
+        "Audiencerate Ltd sells a 'Marketing Data Platform' in four "
+        "modules -- unified customer profiles and segmentation, Google "
+        "DV360 activation, omnichannel email/SMS/WhatsApp campaigns, and "
+        "AI market analysis. Verified 2026-09-23: www.audiencerate.com "
+        "carries no person-lookup input. It aggregates a customer's own "
+        "CRM, CSV, web and app data rather than exposing anything to "
+        "search, and the site is plainly live (ISO 27001:2022, 2026 "
+        "copyright, client testimonials)."
+    ),
+    "automotivemastermind-com": (
+        "automotiveMastermind sells analytics and customer-engagement "
+        "software to car dealers and OEMs -- loyalty and retention, "
+        "service-drive sales, customer acquisition, dealer-group "
+        "management, and a Recall Connect product. Verified 2026-09-23: "
+        "nothing on the site offers a person lookup; its audience is "
+        "dealerships, and the consumer-facing page it does publish is a "
+        "request page, not a search. Caveat for the record: this was read "
+        "off the do-not-sell request page and its navigation rather than "
+        "the homepage."
+    ),
+    "autoweb-com": (
+        "AutoWeb sells performance-based marketing to the automotive "
+        "industry -- it connects car shoppers with dealers rather than "
+        "selling cars. Verified 2026-09-23: every input on "
+        "www.autoweb.com is about VEHICLES, not people -- Make and Model "
+        "dropdowns, a Year dropdown, body-type and brand filters, and a "
+        "Zip Code field for local pricing. There is no name box and no "
+        "person lookup of any kind."
+    ),
+    "awl-com": (
+        "AWL Holdings runs an insurance lead-generation marketplace "
+        "connecting consumers with licensed agents. Verified 2026-09-23: "
+        "there is no person-lookup tool on the site -- consumers arrive "
+        "through quote funnels and are sold onward as leads, never "
+        "searched for. Note this is the same company as the allwebleads- "
+        "com row, whose domain 301-redirects here; the two rows are one "
+        "business and their opt-out legs point at different URLs, which "
+        "is worth reconciling in the dataset."
+    ),
+    "az-direct-com": (
+        "AZ Direct GmbH (a Bertelsmann company) sells cross-channel "
+        "marketing in the German-speaking market -- direct mail, email, "
+        "digital advertising and analytics over a database it advertises "
+        "as ~70 million consumers and 40 million households in Germany. "
+        "Verified 2026-09-23: www.az-direct.com carries no person-lookup "
+        "input. See EU-NOTES.md: this is a German GDPR-governed broker "
+        "whose data is about German residents, so a US subject's presence "
+        "here is unlikely to be the question anyway."
+    ),
+    "hybridtheory-com": (
+        "Hybrid Theory (Azerion US Inc.) is an advertising network -- its "
+        "own opt-out page describes its business as delivering 'ads "
+        "tailored to your interests'. Verified 2026-09-23: no person- "
+        "lookup surface exists; what it holds is keyed to cookies and "
+        "devices, which is exactly why the only control it offers is a "
+        "cookie toggle. Caveat: this was read off /opt-out/ rather than "
+        "the homepage."
+    ),
+    "azira-com": (
+        "Azira sells location and mobility audiences, and its own privacy "
+        "policy settles this leg better than any homepage could: it "
+        "states Azira 'does not maintain direct identifiers of consumers. "
+        "It only maintains indirect identifiers, in the form of unique "
+        "codes assigned to mobile devices (MAIDs) plus location data.' "
+        "Verified 2026-09-23. A company that holds no names cannot offer "
+        "a name lookup, and there is nothing on www.azira.com that takes "
+        "one."
+    ),
+    "trustarc-com": (
+        "The dataset files this row under the NAME 'AZIRA LLC' but gives "
+        "the url trustarc.com, and TrustArc is not Azira -- it is the "
+        "privacy-compliance vendor whose submit-irm.trustarc.com webform "
+        "hosts Azira's opt-out (and, as it happens, the CourtRecords.us "
+        "network's too). Same shape as the termly-io, smartsheet-com, "
+        "hubspot-com and networkadvertising-org rows. Azira has its own "
+        "row at azira-com, where the substantive finding lives -- that it "
+        "holds only MAIDs and location, never names. There is no people- "
+        "search surface on either company's site, and this row should be "
+        "folded into azira-com rather than mapped as a broker in its own "
+        "right."
+    ),
+    "biscience-com": (
+        "B.I Science (2009) Ltd sells identifiers and internet-activity "
+        "data to third-party ad networks and analytics partners, and "
+        "insights containing unique identifiers to marketing and data- "
+        "analytics companies -- its own CCPA notice calls both a 'sale' "
+        "and a 'share'. Verified 2026-09-23: there is no person-lookup "
+        "surface; its data is keyed to device and app identifiers "
+        "collected through its and its affiliates' apps, not to names."
+    ),
 }
 
 

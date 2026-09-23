@@ -1630,6 +1630,17 @@ NO_OPTOUT_SURFACE = {
         "number -- a sales channel, not a data-rights one. A mailbox-only "
         "channel is outside what a form-filling recipe can represent."
     ),
+    "hybridtheory-com": (
+        "Verified 2026-09-23: www.hybridtheory.com/opt-out/ is a COOKIE "
+        "opt-out, not a record removal. The page offers an opt-out button "
+        "that stops ad personalisation, and otherwise points at the "
+        "browser's own privacy settings and at the industry portal "
+        "youronlinechoices.com. Nothing on it accepts an identity or asks "
+        "the company to delete anything, and a browser-local flag is not "
+        "a removal request -- the same finding as adelement-com and "
+        "addefend-com. The dataset carries no opt_out_email for this row "
+        "either."
+    ),
 }
 
 
@@ -2730,6 +2741,127 @@ OPTOUT_UNDECIDED = {
         "render arkeero.com's privacy policy and read its rights section; "
         "see EU-NOTES.md on whether a US subject can use a Spanish DPO "
         "channel at all."
+    ),
+    "audiencepoint-com": (
+        "NO VERDICT as of 2026-09-23, and the dataset's URL is simply "
+        "dead: audiencepoint.com/cpra/ returns HTTP 404. The homepage's "
+        "footer carries only a Privacy Policy (/privacy-policy) and an "
+        "End-User License Agreement -- no privacy portal and no 'Do Not "
+        "Sell' link surfaced, and the dataset records no opt_out_email "
+        "either, so there is currently no known channel at all. It sits "
+        "here rather than under NO_OPTOUT_SURFACE because the privacy "
+        "policy itself was never read, and that is where a CPRA rights "
+        "section would be. Next pass: read audiencepoint.com/privacy- "
+        "policy and decide the leg from its rights section."
+    ),
+    "audiencerate-com": (
+        "NO VERDICT as of 2026-09-23, and the dataset's URL is dead: "
+        "www.audiencerate.com/optout returns HTTP 404. The live site "
+        "carries three policy pages instead -- privacy-policy.html, "
+        "cookie-policy.html and data-regulation.html -- none of which was "
+        "read, and the dataset's fallback is gl@audiencerate.com, which "
+        "looks like an individual's initials rather than a privacy alias. "
+        "The company is plainly still trading, so a rights channel should "
+        "exist. Next pass: read data-regulation.html first, then the "
+        "privacy policy, and correct the dead opt_out_url."
+    ),
+    "automotivemastermind-com": (
+        "NO VERDICT as of 2026-09-23. The dataset's URL is live and is "
+        "the right page by name, but it embeds no form: it offers a phone "
+        "number (1-800-447-2273) and a footer 'Your Privacy Choices' link "
+        "into a OneTrust privacy-management portal. The real mechanism is "
+        "therefore the OneTrust webform, which was not followed and did "
+        "not render. Next pass: capture the OneTrust webform URL from "
+        "that footer link and attack it with a JS-capable browser -- and "
+        "note that whoever solves the OneTrust family closes a dozen rows "
+        "in this dataset at once."
+    ),
+    "autoweb-com": (
+        "NO VERDICT as of 2026-09-23. www.autoweb.com/privacy embeds no "
+        "form; it carries a 'Do Not Sell or Share My Personal "
+        "Information' link into a OneTrust privacy portal, which was not "
+        "followed and whose fields are unknown. Worth recording that the "
+        "privacy page itself does not disclose AutoWeb's data-sale "
+        "practices in any detail, so what an opt-out here covers is also "
+        "unclear. Next pass: capture the OneTrust webform URL and "
+        "transcribe it."
+    ),
+    "awl-com": (
+        "NO VERDICT as of 2026-09-23, and this row's research produced "
+        "the most concrete URL of the batch. awl.com/privacy/ states "
+        "plainly that 'we may share or sell your personal information "
+        "with third parties that may not be insurance-related', naming "
+        "names, addresses, phone numbers, email addresses and MEDICAL "
+        "information among the categories -- and it gives two channels: a "
+        "OneTrust webform for California, Nevada and Virginia residents "
+        "at privacyportal- "
+        "eu.onetrust.com/webform/031dc37f-2093-4055-9d04-22f83329fe9f/a4fb8ed6-8389-4a17-a3be- "
+        "ca808c6b300e, and a general unsubscribe at "
+        "dnc.allwebleads.com/Unsubscribe. That second URL is the surface "
+        "already recorded under the allwebleads-com row, which reinforces "
+        "that these two rows are one company: the unsubscribe is do-not- "
+        "CONTACT, and this OneTrust webform is the actual rights channel. "
+        "Undecided because the OneTrust form was not rendered. Next pass: "
+        "that exact URL, JS-capable browser, and fold allwebleads-com in."
+    ),
+    "az-direct-com": (
+        "NO VERDICT as of 2026-09-23. The dataset gives no opt_out_url "
+        "and declares the channel email-only (datenschutz@az-direct.com), "
+        "and no request form is visible on www.az-direct.com -- but the "
+        "footer links two German data-protection pages, /site/datenschutz "
+        "and /site/datenschutz-website, neither of which was read, and a "
+        "German broker of this size is obliged to publish an "
+        "Auskunft/Widerspruch route. It sits here rather than under "
+        "NO_OPTOUT_SURFACE precisely because the two pages that would "
+        "settle it were not opened. Note the site also publishes country- "
+        "specific DPO addresses (datenschutz@bertelsmann.at for Austria, "
+        "datenschutzbeauftragter@az-direct.ch for Switzerland). Next "
+        "pass: read /site/datenschutz, and see EU-NOTES.md on whether a "
+        "US subject has standing here at all."
+    ),
+    "azira-com": (
+        "NO VERDICT as of 2026-09-23, and the two Azira rows in this "
+        "dataset point at the two halves of one answer. "
+        "www.azira.com/privacy-policy/ embeds no form; it offers a 'Do "
+        "Not Sell or Share My Personal Information' homepage button, "
+        "privacy@azira.com, and a direct 'Opt-Out & Data Rights Form' on "
+        "TrustArc at submit-irm.trustarc.com -- the same host the "
+        "trustarc-com row points at, and the same host the "
+        "CourtRecords.us network delegates to. The TrustArc widget was "
+        "not rendered, so no field is known. One substantive caution for "
+        "the recipe-writer: Azira states it holds only MAIDs and "
+        "location, no direct identifiers, so an opt-out submitted with a "
+        "name may have nothing to match against. Next pass: render the "
+        "TrustArc form once and close azira-com, trustarc-com and the "
+        "four CourtRecords.us rows together."
+    ),
+    "trustarc-com": (
+        "NO VERDICT as of 2026-09-23, and see the search leg: this row's "
+        "domain is TrustArc, the privacy vendor, not Azira. The dataset's "
+        "URL is a specific TrustArc webform instance (submit- "
+        "irm.trustarc.com/services/validation/0a80503b-1d56-4d50-a898-4377a0227dab) "
+        "which is presumably Azira's, and it was not rendered -- "
+        "TrustArc's forms are JS-rendered like every other consent portal "
+        "in this dataset. The dataset's opt_out_email for the row, "
+        "sonal@azira.com, is an individual's personal address. Next pass: "
+        "render that webform id; if it is Azira's, fold this row into "
+        "azira-com rather than maintaining it separately."
+    ),
+    "biscience-com": (
+        "NO VERDICT as of 2026-09-23, and the reason is an unusual one "
+        "worth recording. www.biscience.com/ccpa/ embeds no form and "
+        "offers three routes, none of which is a web form: a cookie "
+        "manager in the page footer, a per-app 'opt out from sharing Raw "
+        "Data' toggle inside each of its and its affiliates' products, "
+        "and -- the only record-level channel -- a Data Subject Request "
+        "Form that must be DOWNLOADED and then emailed to "
+        "privacy@biscience.com. A downloaded document emailed to a "
+        "mailbox is the same shape as adform-com's identity-verification "
+        "PDF and would normally be a no-surface call; it is held here "
+        "only because the form itself was never opened, so whether it "
+        "demands an ID or a device identifier is unknown. Next pass: "
+        "download that form and decide. Note the dataset records no "
+        "opt_out_email for this row even though the page names one."
     ),
 }
 
