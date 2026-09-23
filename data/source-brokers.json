@@ -2187,15 +2187,15 @@
     "name": "CONSUMER CANVAS LLC",
     "domain": null,
     "category": "marketing",
-    "opt_out_url": null,
-    "opt_out_method": "email",
+    "opt_out_url": "https://privacyportal-eu.onetrust.com/webform/07a2e8c2-346a-4f58-865f-0d56c9baaff5/e6013ecc-3719-4f58-adb1-5121ea4797f8",
+    "opt_out_method": "web-form",
     "opt_out_email": "privacy@consumercanvas.net",
     "required_fields": "full legal name, email address on file with the broker",
     "verification_step": "not individually confirmed \u2014 some brokers reply requesting further proof before acting",
     "opt_out": "known",
     "source": "eraser",
-    "last_verified": null,
-    "notes": ""
+    "last_verified": "2026-09-22",
+    "notes": "OneTrust DSAR webform confirmed live 2026-09-22; first target for automated opt-out submission (Playwright form-fill+submit, screenshot+JSON audit trail)."
   },
   {
     "name": "Contactout",
