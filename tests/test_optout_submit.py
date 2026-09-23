@@ -62,6 +62,8 @@ class FakePage:
         self.filled = {}
         self.typed = {}
         self.clicked = []
+        self.selected = {}
+        self.checked = []
         self.pressed = []
         self.screenshots = 0
         self.submitted = False
@@ -94,6 +96,22 @@ class FakePage:
         self.clicked.append(selector)
         if selector == RECIPE.submit_selector:
             self.submitted = True
+
+    def select_option(self, selector, label=None, value=None):
+        self.selected[selector] = label if label is not None else value
+        self.clicked.append(selector)
+
+    def check(self, selector):
+        self.checked.append(selector)
+        self.clicked.append(selector)
+
+    # The one thing a fake page must NEVER be asked to do: a honeypot is
+    # only filled through fill/type, and both record into self.filled, so
+    # "was the honeypot touched?" is answerable as `"#website" in
+    # page.filled` in any test below.
+    @property
+    def touched(self):
+        return set(self.filled) | set(self.typed) | set(self.selected) | set(self.checked)
 
     def wait_for_selector(self, selector, timeout=None):
         if selector in self.present:
@@ -306,10 +324,20 @@ def test_recipe_for_unknown_broker_raises(identity):
         optout_forms.recipe_for("some-other-broker")
 
 
-def test_only_consumer_canvas_is_turned_on():
-    """The other OneTrust brokers are a deliberate follow-up, not an oversight."""
-    assert optout_forms.supported_broker_ids() == ["consumer-canvas-llc"]
-    assert not optout_forms.is_supported("nielsen")
+def test_exactly_the_hand_verified_brokers_are_turned_on():
+    """The allow-list is a hand-written list, and this is the whole of it.
+
+    A broker gets in here only because a person opened its form and read the
+    fields off the page. This test failing means someone added one without
+    saying so -- which is the failure mode the allow-list exists to prevent.
+    """
+    assert optout_forms.supported_broker_ids() == [
+        "bolttech", "consumer-canvas-llc", "credit-com",
+        "ls-mobile-apps-holdings-ltd", "nielsen",
+    ]
+    # In the dataset, but not hand-verified -> still unsubmittable.
+    assert not optout_forms.is_supported("allant-group")
+    assert not optout_forms.is_supported("cybba")
 
 
 # --- the driver: interlocks --------------------------------------------------
@@ -637,3 +665,516 @@ def test_review_dir_is_not_ui_editable():
     from broker_guard import settings as settings_mod
 
     assert "review_dir" not in settings_mod.SPEC_BY_KEY
+
+
+# =============================================================================
+# The 2026-09-22 additions: Nielsen, bolttech, Credit.com and L.S Mobile Apps.
+#
+# Every recipe below was written by opening the live form and reading its
+# fields; these tests pin down what was read, and -- for the two guards that
+# matter (step ORDER and the honeypot) -- prove the guard bites by showing
+# the same test failing when the guard is reverted.
+# =============================================================================
+
+NIELSEN = optout_forms.NIELSEN
+BOLTTECH = optout_forms.BOLTTECH
+CREDIT_COM = optout_forms.CREDIT_COM
+LSM = optout_forms.LS_MOBILE_APPS
+
+
+@pytest.fixture
+def full_identity():
+    """A profile with everything the new forms ask for."""
+    return Identity(
+        first_name=FAKE_FIRST,
+        last_name=FAKE_LAST,
+        emails=[FAKE_EMAIL],
+        phones=["555-123-4567"],
+        addresses=["742 Evergreen Terrace, Springfield, IL 62704"],
+    )
+
+
+class GatedPage(FakePage):
+    """A fake page that reproduces the live forms' CONDITIONAL rendering.
+
+    This is the point of the class: on Nielsen's real form the request-type
+    listbox and the State field do not exist in the DOM until Country has
+    been filled, and on L.S Mobile's the rights dropdown holds nothing but a
+    "Select your territory first" placeholder until Territory is chosen.
+    Touching a not-yet-rendered element raises here exactly as Playwright
+    would time out there, so a recipe whose steps are in the wrong order
+    FAILS this test suite instead of only failing in production.
+
+    ``gates`` maps a selector fragment that is gated -> the selector that
+    must have been filled/selected first.
+    """
+
+    def __init__(self, gates, **kw):
+        super().__init__(**kw)
+        self.gates = dict(gates)
+
+    def _guard(self, selector):
+        for gated, required in self.gates.items():
+            if gated in selector and required not in self.touched:
+                raise RuntimeError(
+                    "element {} is not rendered yet: {} comes first".format(
+                        gated, required))
+
+    def click(self, selector):
+        self._guard(selector)
+        return super().click(selector)
+
+    def fill(self, selector, value):
+        self._guard(selector)
+        return super().fill(selector, value)
+
+    def type(self, selector, value, delay=0):
+        self._guard(selector)
+        return super().type(selector, value, delay=delay)
+
+    def select_option(self, selector, label=None, value=None):
+        self._guard(selector)
+        return super().select_option(selector, label=label, value=value)
+
+
+def nielsen_page(**kw):
+    """A Nielsen form: request type and State appear only after Country."""
+    present = set(kw.pop("present", ()))
+    present |= {"[role='option'][aria-label='United States']",
+                "[role='option'][aria-label='Illinois']"}
+    return GatedPage({"#requestTypesDSARElement": "#countryDSARElement",
+                      "#stateDSARElement": "#countryDSARElement"},
+                     present=present, **kw)
+
+
+def lsm_page(**kw):
+    """An L.S Mobile form: the rights dropdown fills in after Territory."""
+    return GatedPage({"#privacyRight": "#territory"}, **kw)
+
+
+# --- Nielsen -----------------------------------------------------------------
+
+def test_nielsen_fills_country_before_touching_the_gated_request_type(
+        full_identity, cfg):
+    """The ordering that the live form actually requires."""
+    page = nielsen_page()
+
+    saved = optout_submit.submit_optout(NIELSEN, full_identity, cfg,
+                                        submitter=FakeSubmitter(page))
+
+    assert saved["outcome"] == review.OUTCOME_DRY_RUN
+    country = page.clicked.index("[role='option'][aria-label='United States']")
+    request = next(i for i, s in enumerate(page.clicked) if "requestTypes" in s)
+    subject = next(i for i, s in enumerate(page.clicked) if "subjectTypes" in s)
+    assert subject < country < request
+
+
+def test_the_old_choices_then_fields_order_would_fail_nielsen(full_identity, cfg):
+    """The revert test: prove the ordering guard bites.
+
+    Same recipe, same page, but written the pre-2026-09-22 way (all choices
+    first, then all fields). If ``ordered_steps`` did not honour an explicit
+    ``steps`` tuple, THIS is what Nielsen would do against the live form --
+    click a listbox that has not been rendered.
+    """
+    reverted = optout_forms.FormRecipe(
+        broker_id=NIELSEN.broker_id, broker_name=NIELSEN.broker_name,
+        url=NIELSEN.url, flavor=NIELSEN.flavor,
+        choices=tuple(s for s in NIELSEN.steps
+                      if isinstance(s, optout_forms.Choice)),
+        fields=optout_forms.recipe_fields(NIELSEN),
+        submit_selector=NIELSEN.submit_selector,
+    )
+    page = nielsen_page()
+
+    saved = optout_submit.submit_optout(reverted, full_identity, cfg,
+                                        submitter=FakeSubmitter(page))
+
+    assert saved["outcome"] == review.OUTCOME_FAILED
+    assert "not rendered yet" in saved["reason"]
+
+
+def test_nielsen_has_no_us_consumer_subject_type_and_says_so():
+    """The live form's vocabulary is panel/employee, not consumer."""
+    subject = NIELSEN.steps[0]
+    assert subject.option_label == "Other (see description)"
+    assert "no consumer option" in NIELSEN.notes.lower()
+
+
+def test_nielsen_request_type_keeps_the_forms_own_typo():
+    """'of of' is Nielsen's aria-label; correcting it would miss the option."""
+    request = next(s for s in NIELSEN.steps
+                   if isinstance(s, optout_forms.Choice)
+                   and s.label == "Request type")
+    assert request.option_label == "Right to Opt Out of of Sale or Sharing"
+
+
+def test_nielsen_sends_no_request_details_because_the_form_has_no_box():
+    labels = {f.label for f in optout_forms.recipe_fields(NIELSEN)}
+    assert "Request Details" not in labels
+
+
+def test_nielsen_zip_comes_from_the_profile_address(full_identity):
+    resolved = optout_forms.resolve_fields(NIELSEN, full_identity)
+    assert resolved["values"]["#zipDSARElement"] == "62704"
+
+
+def test_nielsen_zip_is_optional_so_a_zipless_profile_still_runs(cfg):
+    thin = Identity(first_name="A", last_name="B", emails=[FAKE_EMAIL],
+                    addresses=["Springfield, IL"])
+    resolved = optout_forms.resolve_fields(NIELSEN, thin)
+    assert resolved["missing"] == []
+
+
+def test_nielsens_botdetect_captcha_stops_a_live_run(full_identity, tmp_path):
+    live = Config(review_dir=str(tmp_path / "r"), optout_submit_enabled=True,
+                  optout_submit_dry_run=False)
+    page = nielsen_page(present={"#captchaCode"})
+
+    saved = optout_submit.submit_optout(NIELSEN, full_identity, live,
+                                        submitter=FakeSubmitter(page))
+
+    assert saved["outcome"] == review.OUTCOME_NEEDS_MANUAL
+    assert saved["manual_action_source"] == "captcha_fallback"
+    assert page.submitted is False
+
+
+# --- bolttech ----------------------------------------------------------------
+
+def test_bolttech_uses_its_own_option_labels_not_consumer_canvass(
+        full_identity, cfg):
+    page = combo_ready()
+
+    saved = optout_submit.submit_optout(BOLTTECH, full_identity, cfg,
+                                        submitter=FakeSubmitter(page))
+
+    values = [c["value"] for c in saved["choices"]]
+    assert values == [
+        "Consumer",
+        "Request to Opt-Out (Do Not Sell or Share My Personal Information)",
+    ]
+    # ...and they are NOT Consumer Canvas's, which is the whole reason each
+    # form was opened rather than copied.
+    canvas = [c.option_label for c in RECIPE.choices]
+    assert values != canvas
+
+
+def test_bolttech_fills_country_before_state(full_identity, cfg):
+    """State's autocomplete is populated from Country."""
+    page = combo_ready()
+    optout_submit.submit_optout(BOLTTECH, full_identity, cfg,
+                                submitter=FakeSubmitter(page))
+
+    order = list(page.typed)
+    assert order.index("#countryDSARElement") < order.index("#stateDSARElement")
+
+
+def test_bolttech_does_not_fill_the_optional_phone_field(full_identity):
+    """It sits behind a separate country-code combobox; left alone on purpose."""
+    resolved = optout_forms.resolve_fields(BOLTTECH, full_identity)
+    assert "#phoneNumberDSARElement" not in resolved["values"]
+
+
+def test_bolttechs_recaptcha_stops_a_live_run(full_identity, tmp_path):
+    """Different vendor from the other three: reCAPTCHA v2, not BotDetect."""
+    live = Config(review_dir=str(tmp_path / "r"), optout_submit_enabled=True,
+                  optout_submit_dry_run=False)
+    page = combo_ready(present={"iframe[src*='recaptcha']"})
+
+    saved = optout_submit.submit_optout(BOLTTECH, full_identity, live,
+                                        submitter=FakeSubmitter(page))
+
+    assert saved["outcome"] == review.OUTCOME_NEEDS_MANUAL
+    assert page.submitted is False
+
+
+# --- Credit.com --------------------------------------------------------------
+
+def test_credit_com_is_the_same_widget_despite_the_cdn_url():
+    """The finding, pinned: CDN hosting, identical DOM."""
+    assert CREDIT_COM.url.startswith("https://privacyportal-cdn.onetrust.com/dsarwebform/")
+    assert CREDIT_COM.flavor == optout_forms.FLAVOR_ONETRUST_DSAR
+    assert CREDIT_COM.submit_selector == RECIPE.submit_selector
+
+
+def test_credit_com_asks_for_an_address_not_a_country(full_identity):
+    resolved = optout_forms.resolve_fields(CREDIT_COM, full_identity)
+    assert resolved["values"]["#addressDSARElement"] == \
+        "742 Evergreen Terrace, Springfield, IL 62704"
+    assert resolved["values"]["#zipDSARElement"] == "62704"
+    assert "#countryDSARElement" not in resolved["values"]
+    assert "#stateDSARElement" not in resolved["values"]
+
+
+def test_credit_com_without_a_zip_is_a_missing_field_not_a_guess(cfg):
+    """Zip is REQUIRED on this form; a half-filled DSAR is worse than none."""
+    no_zip = Identity(first_name="A", last_name="B", emails=[FAKE_EMAIL],
+                      addresses=["Springfield, IL"])
+    page = combo_ready()
+
+    saved = optout_submit.submit_optout(CREDIT_COM, no_zip, cfg,
+                                        submitter=FakeSubmitter(page))
+
+    assert saved["outcome"] == review.OUTCOME_FAILED
+    assert "Zip" in saved["reason"]
+    assert page.filled == {}
+
+
+def test_credit_com_never_offers_an_ssn_or_a_date_of_birth(full_identity, cfg):
+    """Both fields exist on the live form, both optional, both declined."""
+    page = combo_ready()
+    optout_submit.submit_optout(CREDIT_COM, full_identity, cfg,
+                                submitter=FakeSubmitter(page))
+
+    assert "#nationalIdDSARElement" not in page.touched
+    assert "#dateOfBirthDSARElement" not in page.touched
+
+
+# --- L.S Mobile Apps: the bespoke flavor ------------------------------------
+
+def test_lsm_is_not_onetrust_and_does_not_claim_to_be():
+    assert LSM.flavor == optout_forms.FLAVOR_LSM_BESPOKE
+    assert LSM.flavor != optout_forms.FLAVOR_ONETRUST_DSAR
+    assert "onetrust" not in LSM.url
+
+
+def test_lsm_drives_real_selects_by_label_and_ticks_the_confirmation(
+        full_identity, cfg):
+    page = lsm_page()
+
+    saved = optout_submit.submit_optout(LSM, full_identity, cfg,
+                                        submitter=FakeSubmitter(page))
+
+    assert saved["outcome"] == review.OUTCOME_DRY_RUN
+    assert page.selected == {
+        "#appUser": "No",
+        "#territory": "US",
+        "#privacyRight": "Right to Opt-Out of Sale of Personal Information",
+    }
+    assert page.checked == ["#confirmation"]
+
+
+def test_lsm_chooses_territory_before_the_rights_dropdown(full_identity, cfg):
+    """Until Territory is set, #privacyRight says 'Select your territory first'."""
+    page = lsm_page()
+    optout_submit.submit_optout(LSM, full_identity, cfg,
+                                submitter=FakeSubmitter(page))
+
+    order = list(page.selected)
+    assert order.index("#territory") < order.index("#privacyRight")
+
+
+def test_the_unordered_lsm_recipe_would_hit_the_empty_rights_dropdown(
+        full_identity, cfg):
+    """Revert test for the ordering guard on this flavor too."""
+    steps = list(LSM.steps)
+    territory = next(s for s in steps if getattr(s, "container", "") == "#territory")
+    rights = next(s for s in steps if getattr(s, "container", "") == "#privacyRight")
+    steps.remove(rights)
+    steps.insert(steps.index(territory), rights)      # rights BEFORE territory
+    scrambled = optout_forms.FormRecipe(
+        broker_id=LSM.broker_id, broker_name=LSM.broker_name, url=LSM.url,
+        flavor=LSM.flavor, steps=tuple(steps),
+        submit_selector=LSM.submit_selector)
+    page = lsm_page()
+
+    saved = optout_submit.submit_optout(scrambled, full_identity, cfg,
+                                        submitter=FakeSubmitter(page))
+
+    assert saved["outcome"] == review.OUTCOME_FAILED
+    assert "not rendered yet" in saved["reason"]
+
+
+def test_lsm_phone_is_sent_in_the_international_format_the_form_demands(
+        full_identity):
+    resolved = optout_forms.resolve_fields(LSM, full_identity)
+    assert resolved["values"]["#phoneNumber"] == "+15551234567"
+
+
+def test_lsm_without_a_phone_number_is_a_missing_field(cfg):
+    """'We cannot process a request without a country code' -- their words."""
+    no_phone = Identity(first_name="A", last_name="B", emails=[FAKE_EMAIL])
+    resolved = optout_forms.resolve_fields(LSM, no_phone)
+    assert "Phone number" in resolved["missing"]
+
+
+def test_lsm_sends_one_full_name_not_two_name_fields(full_identity):
+    resolved = optout_forms.resolve_fields(LSM, full_identity)
+    assert resolved["values"]["#fullName"] == full_identity.full_name
+
+
+def test_lsms_canvas_captcha_stops_a_live_run(full_identity, tmp_path):
+    """Not flagged in the brief; found on the live page and handled."""
+    live = Config(review_dir=str(tmp_path / "r"), optout_submit_enabled=True,
+                  optout_submit_dry_run=False)
+    page = lsm_page(present={"#captcha"})
+
+    saved = optout_submit.submit_optout(LSM, full_identity, live,
+                                        submitter=FakeSubmitter(page))
+
+    assert saved["outcome"] == review.OUTCOME_NEEDS_MANUAL
+    assert LSM.submit_selector not in page.clicked
+
+
+# --- the honeypot guard, and proof that it bites -----------------------------
+
+def test_the_lsm_honeypot_is_never_touched(full_identity, cfg):
+    page = lsm_page()
+    optout_submit.submit_optout(LSM, full_identity, cfg,
+                                submitter=FakeSubmitter(page))
+    assert "#website" not in page.touched
+
+
+def _honeypot_recipe():
+    """LSM's recipe as it would look if someone 'helpfully' filled #website."""
+    return optout_forms.FormRecipe(
+        broker_id=LSM.broker_id, broker_name=LSM.broker_name, url=LSM.url,
+        flavor=LSM.flavor,
+        steps=tuple(LSM.steps) + (
+            optout_forms.Field(selector="#website", source="literal",
+                               label="Website", value="example.com"),
+        ),
+        forbidden_selectors=LSM.forbidden_selectors,
+        submit_selector=LSM.submit_selector)
+
+
+def test_a_recipe_that_targets_the_honeypot_is_refused_before_any_browser(
+        full_identity, cfg):
+    """Guard 1: the interlock, checked before a browser is ever opened."""
+    with pytest.raises(optout_submit.SubmissionRefused) as exc:
+        optout_submit.submit_optout(_honeypot_recipe(), full_identity, cfg,
+                                    submitter=FakeSubmitter(lsm_page()))
+    assert "#website" in str(exc.value)
+
+
+def test_the_honeypot_guard_also_bites_inside_apply_recipe(full_identity):
+    """Guard 2, independently: the function that can actually type refuses too.
+
+    Proven separately from guard 1 on purpose -- a single check that a
+    refactor could route around is not a guard, and this is the one that
+    holds if a future caller reaches apply_recipe another way.
+    """
+    recipe = _honeypot_recipe()
+    resolved = optout_forms.resolve_fields(recipe, full_identity)
+    page = lsm_page()
+
+    with pytest.raises(optout_forms.ForbiddenFieldError):
+        optout_submit.apply_recipe(page, recipe, resolved)
+
+    assert "#website" not in page.touched
+
+
+def test_without_the_forbidden_list_the_same_recipe_would_fill_the_honeypot(
+        full_identity, cfg):
+    """The revert test: the guard is load-bearing, not decorative.
+
+    Identical recipe with ``forbidden_selectors`` emptied -- i.e. the guard
+    reverted -- and the honeypot IS filled. That is what the guard prevents.
+    """
+    unguarded = optout_forms.FormRecipe(
+        broker_id="consumer-canvas-llc",     # allow-listed, so it gets that far
+        broker_name=LSM.broker_name, url=LSM.url, flavor=LSM.flavor,
+        steps=_honeypot_recipe().steps,
+        forbidden_selectors=(),              # <-- the guard, reverted
+        submit_selector=LSM.submit_selector)
+    page = lsm_page()
+
+    optout_submit.submit_optout(unguarded, full_identity, cfg,
+                                submitter=FakeSubmitter(page))
+
+    assert page.filled["#website"] == "example.com"
+
+
+def test_credit_coms_forbidden_list_bites_the_same_way(full_identity, cfg):
+    """The same guard, protecting an SSN box rather than a honeypot."""
+    leaky = optout_forms.FormRecipe(
+        broker_id=CREDIT_COM.broker_id, broker_name=CREDIT_COM.broker_name,
+        url=CREDIT_COM.url, flavor=CREDIT_COM.flavor,
+        choices=CREDIT_COM.choices,
+        fields=CREDIT_COM.fields + (
+            optout_forms.Field(selector="#nationalIdDSARElement",
+                               source="literal", label="SSN", value="1234"),
+        ),
+        forbidden_selectors=CREDIT_COM.forbidden_selectors,
+        submit_selector=CREDIT_COM.submit_selector)
+
+    with pytest.raises(optout_submit.SubmissionRefused) as exc:
+        optout_submit.submit_optout(leaky, full_identity, cfg,
+                                    submitter=FakeSubmitter(combo_ready()))
+    assert "nationalId" in str(exc.value)
+
+
+def test_every_shipped_recipe_passes_its_own_forbidden_check():
+    for broker_id in optout_forms.supported_broker_ids():
+        optout_forms.assert_no_forbidden(optout_forms.recipe_for(broker_id))
+
+
+# --- the shared plumbing the new recipes lean on -----------------------------
+
+@pytest.mark.parametrize("addresses,expected", [
+    (["742 Evergreen Terrace, Springfield, IL 62704"], "62704"),
+    (["Springfield, IL 62704-1234"], "62704"),
+    (["Springfield, IL"], ""),
+    ([], ""),
+    (None, ""),
+])
+def test_zip_is_read_off_the_address_lines(addresses, expected):
+    assert optout_forms.zip_from_addresses(addresses) == expected
+
+
+@pytest.mark.parametrize("phones,expected", [
+    (["555-123-4567"], "+15551234567"),
+    (["(555) 123 4567"], "+15551234567"),
+    (["15551234567"], "+15551234567"),
+    (["+44 20 7123 4567"], "+44 20 7123 4567"),
+    ([], ""),
+    (None, ""),
+])
+def test_phone_is_normalized_to_international_format(phones, expected):
+    assert optout_forms.phone_for_form(phones) == expected
+
+
+def test_a_four_digit_extension_is_not_mangled_into_a_phone_number():
+    """Unrecognized shapes are passed through, never invented."""
+    assert optout_forms.phone_for_form(["ext 4567"]) == "ext 4567"
+
+
+def test_ordered_steps_preserves_the_old_behaviour_for_old_recipes():
+    """Consumer Canvas is untouched by the steps mechanism."""
+    assert optout_forms.ordered_steps(RECIPE) == \
+        tuple(RECIPE.choices) + tuple(RECIPE.fields)
+
+
+def test_an_unknown_step_type_is_a_loud_error_not_a_silent_skip(full_identity):
+    class Weird:
+        pass
+
+    recipe = optout_forms.FormRecipe(
+        broker_id="x", broker_name="x", url="https://x.invalid/",
+        flavor=optout_forms.FLAVOR_LSM_BESPOKE, steps=(Weird(),))
+
+    with pytest.raises(TypeError):
+        optout_submit.apply_recipe(FakePage(), recipe, {"values": {}})
+
+
+def test_every_shipped_recipe_has_a_captcha_selector_set():
+    """All four new forms carry a bot check; none may be silently assumed clean."""
+    for broker_id in optout_forms.supported_broker_ids():
+        recipe = optout_forms.recipe_for(broker_id)
+        assert recipe.captcha_selectors, broker_id
+        assert recipe.success_markers, broker_id
+        assert recipe.notes.strip(), broker_id
+
+
+@pytest.mark.parametrize("addresses,expected", [
+    (["742 Evergreen Terrace, Springfield, IL 62704"], "Illinois"),
+    (["Springfield, Illinois 62704-1234"], "Illinois"),
+    (["Springfield, IL"], "Illinois"),
+    # A two-letter word inside a street name is NOT a state: sending a
+    # request to the wrong state's regulator-facing form is worse than
+    # reporting a missing field.
+    (["12 IN Street, Nowhere"], ""),
+    (["Springfield, XX 62704"], ""),
+])
+def test_a_state_is_read_through_a_trailing_zip(addresses, expected):
+    assert optout_forms.state_from_addresses(addresses) == expected

@@ -177,31 +177,63 @@ def _fill_combo(page, selector: str, value: str) -> None:
         pass
 
 
+def _click_listbox_option(page, choice) -> None:
+    """Click one option in a OneTrust ``role=listbox`` group."""
+    page.click("{} [role='option'][aria-label=\"{}\"]".format(
+        choice.container, choice.option_label))
+
+
+def _select_option(page, select) -> None:
+    """Pick an option in a real ``<select>`` (L.S Mobile's form).
+
+    By LABEL, not by value: the label is what a human read off the page and
+    wrote into the recipe, and it is what a diff of the recipe can be
+    reviewed against. L.S Mobile happens to use the label as the value too,
+    but relying on that would be relying on a coincidence.
+    """
+    page.select_option(select.container, label=select.option_label)
+
+
 def apply_recipe(page, recipe, resolved: dict) -> dict:
-    """Click the recipe's choices and fill its fields on *page*.
+    """Run every step of *recipe* on *page*, in order.
 
     Returns ``{"filled": {label: value}, "chosen": [label, ...]}`` -- the
     record of what was actually put on the form, which becomes the audit
-    record's ``fields``. Choices run before fields because a OneTrust
-    request-type listbox is not rendered until a subject type is chosen.
-    """
-    chosen = []
-    for choice in recipe.choices:
-        selector = "{} [role='option'][aria-label=\"{}\"]".format(
-            choice.container, choice.option_label)
-        page.click(selector)
-        chosen.append({"label": choice.label, "value": choice.option_label})
+    record's ``fields``.
 
-    filled = {}
-    for f in recipe.fields:
-        value = resolved["values"].get(f.selector)
-        if not value:
-            continue
-        if f.kind == "combo":
-            _fill_combo(page, f.selector, value)
+    The order comes from ``optout_forms.ordered_steps``: choices-then-fields
+    for a form like Consumer Canvas's, or the recipe's own explicit ``steps``
+    for one like Nielsen's, where the request-type listbox does not exist in
+    the DOM until Country has been filled.
+
+    Re-checks the forbidden-selector rule here, in the one function that can
+    actually type into a page, rather than trusting the caller. A honeypot
+    that gets filled is not recoverable after the fact.
+    """
+    optout_forms.assert_no_forbidden(recipe)
+
+    chosen, filled = [], {}
+    for step in optout_forms.ordered_steps(recipe):
+        if isinstance(step, optout_forms.Select):
+            _select_option(page, step)
+            chosen.append({"label": step.label, "value": step.option_label})
+        elif isinstance(step, optout_forms.Choice):
+            _click_listbox_option(page, step)
+            chosen.append({"label": step.label, "value": step.option_label})
+        elif isinstance(step, optout_forms.Check):
+            page.check(step.selector)
+            chosen.append({"label": step.label, "value": "checked"})
+        elif isinstance(step, optout_forms.Field):
+            value = resolved["values"].get(step.selector)
+            if not value:
+                continue
+            if step.kind == "combo":
+                _fill_combo(page, step.selector, value)
+            else:
+                _fill_text(page, step.selector, value)
+            filled[step.label] = value
         else:
-            _fill_text(page, f.selector, value)
-        filled[f.label] = value
+            raise TypeError("unknown recipe step: {!r}".format(type(step).__name__))
     return {"filled": filled, "chosen": chosen}
 
 
@@ -311,6 +343,12 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
             "no verified form recipe for {!r}".format(recipe.broker_id))
     if not is_safe_url(recipe.url):
         raise SubmissionRefused("refusing a non-http(s) form url")
+    try:
+        # A honeypot (or an SSN box) that a recipe edit accidentally started
+        # targeting is caught here, before a browser is ever opened.
+        optout_forms.assert_no_forbidden(recipe)
+    except optout_forms.ForbiddenFieldError as exc:
+        raise SubmissionRefused(str(exc))
 
     effective_dry_run = (
         bool(getattr(cfg, "optout_submit_dry_run", True)) if dry_run is None else bool(dry_run)

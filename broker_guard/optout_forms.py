@@ -26,18 +26,42 @@ carries several OneTrust-flavored URLs and they are NOT interchangeable:
   "DSAR webform" this module's ``FLAVOR_ONETRUST_DSAR`` describes. Consumer
   Canvas, Nielsen and bolttech are all this shape.
 * ``privacyportal-cdn.onetrust.com/dsarwebform/<org>/<form>.html`` --
-  Credit.com. A *statically hosted* variant of the same widget; the field
-  ids are the same family but it is served from the CDN host and has to be
-  eyeballed before being trusted, not assumed.
-* ``https://www.lsmapps.com/onetrust-opt-out`` -- L.S Mobile Apps. This is
-  the broker's OWN page that presumably embeds or links to a OneTrust
-  widget. It is NOT a raw OneTrust webform URL and must not be assumed to
-  share this flavor at all.
+  Credit.com. A *statically hosted* variant of the same widget. Opened and
+  checked on 2026-09-22: the DOM really is the same Angular widget, same
+  element ids, same submit button, same BotDetect CAPTCHA, so it needs no
+  flavor of its own. What it does NOT have is country/state -- it asks for
+  Address/City/Zip instead. The hosting shape was the red herring; the
+  FIELD SET is what differs.
+* ``https://www.lsmapps.com/onetrust-opt-out`` -- L.S Mobile Apps. Despite
+  the "onetrust" in the path this is not a OneTrust form at all: it
+  redirects to ``https://lsmapps.com/opt-out``, a bespoke page with real
+  ``<select>`` elements, a confirmation checkbox and a honeypot. It gets
+  its own flavor, ``FLAVOR_LSM_BESPOKE``.
 
 So flavor is recorded per recipe, and a recipe is only ever written after
 someone has looked at that specific URL.
+
+Order is part of the form
+----------------------------
+Two of these forms render fields only once an earlier answer is given --
+Nielsen's request-type listbox and State field do not exist until Country
+is filled, and L.S Mobile's rights dropdown is empty until Territory is
+chosen. "All choices, then all fields" cannot express that, so a recipe may
+instead give an explicit ordered ``steps`` tuple mixing every step type.
+``ordered_steps`` is the single place that decides what runs when.
+
+Some fields must never be filled
+-----------------------------------
+``forbidden_selectors`` names inputs on a form that this codebase refuses
+to touch: L.S Mobile's ``#website`` honeypot (filling it marks the request
+as a bot), and Credit.com's SSN and date-of-birth boxes (optional fields
+that a "do not sell my data" request has no business volunteering). The
+rule is enforced, not documented -- ``assert_no_forbidden`` raises, the
+driver calls it before it opens a browser AND again before it types, and
+``tests/test_optout_submit.py`` proves both guards bite.
 """
 from dataclasses import dataclass, field
+import re
 
 # --- flavors -----------------------------------------------------------------
 
@@ -51,6 +75,15 @@ from dataclasses import dataclass, field
 #     the model empty, the matching option has to be picked from the popup
 #   * a submit button that starts ``disabled`` until the form validates
 FLAVOR_ONETRUST_DSAR = "onetrust_dsar_webform"
+
+# L.S Mobile Apps' own page (``lsmapps.com/opt-out``). Nothing OneTrust about
+# it, verified against the live page:
+#   * plain ``<input id=...>``/``<textarea>``, no Angular listboxes
+#   * real ``<select>`` elements, chosen by OPTION LABEL
+#   * a required confirmation ``<input type=checkbox>``
+#   * a ``#website`` honeypot that must stay empty
+#   * a canvas-drawn security code (``<canvas id=canv>`` + ``#captcha``)
+FLAVOR_LSM_BESPOKE = "lsmapps_bespoke_form"
 
 
 # --- step types --------------------------------------------------------------
@@ -95,6 +128,26 @@ class Field:
 
 
 @dataclass(frozen=True)
+class Select(Choice):
+    """Choose an option in a REAL ``<select>`` element.
+
+    Separate from ``Choice`` because the page action is different: a
+    ``<select>`` is driven by ``select_option``, not by clicking a div.
+    Inherits ``Choice``'s ``container``/``option_label``/``label`` shape --
+    ``container`` is the select's own selector -- so a recipe reads the same
+    way whichever widget the broker happened to use.
+    """
+
+
+@dataclass(frozen=True)
+class Check:
+    """Tick a checkbox (L.S Mobile's required "this is accurate" box)."""
+
+    selector: str
+    label: str
+
+
+@dataclass(frozen=True)
 class FormRecipe:
     """Everything needed to drive one broker's opt-out form."""
 
@@ -104,6 +157,13 @@ class FormRecipe:
     flavor: str
     choices: tuple = ()
     fields: tuple = ()
+    # An explicit ordered run of steps, for forms where a later field does
+    # not EXIST until an earlier one is answered. When set it replaces
+    # choices+fields entirely; see ``ordered_steps``.
+    steps: tuple = ()
+    # Inputs on this form that must never be touched: honeypots, and
+    # optional fields we decline to volunteer (SSN, date of birth).
+    forbidden_selectors: tuple = ()
     submit_selector: str = ""
     # Selectors whose PRESENCE means "there is a bot check on this page".
     # Purely additive to optout_submit's generic detection -- a form-specific
@@ -181,13 +241,238 @@ CONSUMER_CANVAS = FormRecipe(
 )
 
 
-# Keyed by the broker id as it appears in the broker dataset. ONE entry today,
-# on purpose: Consumer Canvas ships working end to end first (see this task's
-# brief). The other OneTrust-hosted brokers in the dataset -- Nielsen,
-# Credit.com, bolttech, L.S Mobile Apps -- are a follow-up, and each needs its
-# own verified FormRecipe here before it can ever be submitted to.
+# A BotDetect image CAPTCHA, the OneTrust default. Same widget on Consumer
+# Canvas, Nielsen and Credit.com, so the selectors are named once.
+_BOTDETECT_SELECTORS = (
+    "#captchaCode",
+    "input[name^='BDC_VCID']",
+    "img[src*='botdetectcaptcha']",
+)
+
+# Every OneTrust DSAR webform confirms with the same wording.
+_ONETRUST_SUCCESS = (
+    "your request has been submitted",
+    "thank you for submitting",
+    "request id",
+)
+
+NIELSEN = FormRecipe(
+    broker_id="nielsen",
+    broker_name="Nielsen",
+    url=(
+        "https://privacyportal-de.onetrust.com/webform/"
+        "70b0083d-d519-4ad2-84ca-96b7c5f8e1a9/9810a8bc-e54d-4d70-bac0-5e4d781ef5b9"
+    ),
+    flavor=FLAVOR_ONETRUST_DSAR,
+    # ORDERED, and the order is load-bearing: on the live form the
+    # request-type listbox and the State field do not exist in the DOM at
+    # all until Country has been filled. Running Consumer Canvas's
+    # choices-then-fields order here clicks a selector that is not there.
+    steps=(
+        Choice(container="#subjectTypesDSARElement",
+               option_label="Other (see description)",
+               label="I am a (an)"),
+        Field(selector="#countryDSARElement", source="country",
+              label="Country", kind="combo"),
+        Choice(container="#requestTypesDSARElement",
+               # Nielsen's own typo ("of of"). Matched verbatim on purpose:
+               # this is an aria-label lookup, not prose.
+               option_label="Right to Opt Out of of Sale or Sharing",
+               label="Request type"),
+        Field(selector="#stateDSARElement", source="state", label="State", kind="combo"),
+        Field(selector="#firstNameDSARElement", source="first_name", label="First Name"),
+        Field(selector="#lastNameDSARElement", source="last_name", label="Last Name"),
+        Field(selector="#emailDSARElement", source="email", label="Email"),
+        Field(selector="#zipDSARElement", source="zip", label="Zip", required=False),
+    ),
+    submit_selector="#dsar-webform-submit-button",
+    captcha_selectors=_BOTDETECT_SELECTORS,
+    success_markers=_ONETRUST_SUCCESS,
+    notes=(
+        "Verified against the live form on 2026-09-22. Two surprises versus "
+        "Consumer Canvas: (1) the subject-type labels are Nielsen's own "
+        "panel/employee vocabulary and there is NO consumer option at all -- "
+        "'Other (see description)' is the only honest pick for someone who is "
+        "just a US resident; (2) the request-type listbox and the State field "
+        "are rendered only after Country is filled, which is why this recipe "
+        "is ordered. There is no Request Details box on this form, so the "
+        "standing request text has nowhere to go. Carries the BotDetect image "
+        "CAPTCHA, so a real run always stops at 'needs manual action'."
+    ),
+)
+
+BOLTTECH = FormRecipe(
+    broker_id="bolttech",
+    broker_name="bolttech (Boltech)",
+    url=(
+        "https://privacyportal-de.onetrust.com/webform/"
+        "644d2a38-e3d6-43db-99be-9b758a433b86/64d8a391-f017-4626-bc66-17101e4eeb49"
+    ),
+    flavor=FLAVOR_ONETRUST_DSAR,
+    choices=(
+        Choice(container="#subjectTypesDSARElement",
+               option_label="Consumer",
+               label="I am a (an)"),
+        Choice(container="#requestTypesDSARElement",
+               option_label="Request to Opt-Out (Do Not Sell or Share My Personal "
+                            "Information)",
+               label="Request type"),
+    ),
+    fields=(
+        Field(selector="#firstNameDSARElement", source="first_name", label="First name"),
+        Field(selector="#lastNameDSARElement", source="last_name", label="Last name"),
+        Field(selector="#emailDSARElement", source="email", label="Email"),
+        # Country before State: the State autocomplete is populated from it.
+        Field(selector="#countryDSARElement", source="country",
+              label="Country or Location of Residence", kind="combo"),
+        Field(selector="#stateDSARElement", source="state", label="State", kind="combo"),
+    ),
+    submit_selector="#dsar-webform-submit-button",
+    captcha_selectors=(
+        # reCAPTCHA v2, NOT BotDetect -- the generic sweep in optout_submit
+        # already catches the iframe; these are belt and braces.
+        "#g-recaptcha-response",
+        "iframe[src*='recaptcha']",
+    ),
+    success_markers=_ONETRUST_SUCCESS,
+    notes=(
+        "Verified against the live form on 2026-09-22. Closest of the four to "
+        "Consumer Canvas: both listboxes are present up front, so no ordered "
+        "steps are needed. Labels are bolttech's own ('Consumer', 'Request to "
+        "Opt-Out (Do Not Sell or Share My Personal Information)') and differ "
+        "from Consumer Canvas's, which is exactly why they were read off the "
+        "live page. No Request Details box. Phone number is offered but "
+        "optional and sits behind a separate country-code combobox, so it is "
+        "deliberately not filled. Bot check is Google reCAPTCHA v2."
+    ),
+)
+
+CREDIT_COM = FormRecipe(
+    broker_id="credit-com",
+    broker_name="Credit.com",
+    url=(
+        "https://privacyportal-cdn.onetrust.com/dsarwebform/"
+        "e5972974-adf3-405e-b919-62b20ae438a0/eb0adcee-1fed-4068-9801-85b289d900b6.html"
+    ),
+    # Same flavor as the rest, and that is a FINDING, not an assumption: the
+    # CDN-hosted page was opened and its DOM is the same Angular widget with
+    # the same element ids. The hosting path differs; the driver does not
+    # need to.
+    flavor=FLAVOR_ONETRUST_DSAR,
+    choices=(
+        Choice(container="#subjectTypesDSARElement",
+               option_label="Consumer",
+               label="I am a (an)"),
+        Choice(container="#requestTypesDSARElement",
+               option_label="Do Not Sell or Share My Personal Information",
+               label="Request type"),
+    ),
+    fields=(
+        Field(selector="#firstNameDSARElement", source="first_name", label="First Name"),
+        Field(selector="#lastNameDSARElement", source="last_name", label="Last Name"),
+        Field(selector="#emailDSARElement", source="email", label="Email"),
+        # This form has no country/state. It wants a postal address instead,
+        # and makes Address and Zip required.
+        Field(selector="#addressDSARElement", source="address", label="Address"),
+        Field(selector="#zipDSARElement", source="zip", label="Zip"),
+        Field(selector="#requestDetailsDSARElement", source="literal",
+              label="Request Details", value=_OPT_OUT_DETAILS, required=False),
+    ),
+    forbidden_selectors=(
+        # Both optional on the form, and neither is any of Credit.com's
+        # business for an opt-out request. Enforced, see assert_no_forbidden.
+        "#nationalIdDSARElement",
+        "#dateOfBirthDSARElement",
+    ),
+    submit_selector="#dsar-webform-submit-button",
+    captcha_selectors=_BOTDETECT_SELECTORS,
+    success_markers=_ONETRUST_SUCCESS,
+    notes=(
+        "Verified against the live CDN-hosted form on 2026-09-22. The prior "
+        "agent's worry that the 'privacyportal-cdn.../dsarwebform/....html' "
+        "shape might need its own flavor was checked and is not borne out: "
+        "identical widget, identical ids, identical submit button, BotDetect "
+        "CAPTCHA. What genuinely differs is the field set -- no Country or "
+        "State, but required Address and Zip, plus OPTIONAL SSN-last-4 and "
+        "date-of-birth boxes that this recipe refuses to fill."
+    ),
+)
+
+
+LS_MOBILE_APPS = FormRecipe(
+    broker_id="ls-mobile-apps-holdings-ltd",
+    broker_name="L.S Mobile Apps Holdings Ltd",
+    # The dataset records https://www.lsmapps.com/onetrust-opt-out, which
+    # 301s to this. The settled URL is recorded here so the driver does not
+    # depend on a redirect staying in place.
+    url="https://lsmapps.com/opt-out",
+    flavor=FLAVOR_LSM_BESPOKE,
+    steps=(
+        Field(selector="#fullName", source="full_name", label="Full name"),
+        Field(selector="#email", source="email", label="Email address"),
+        Field(selector="#phoneNumber", source="phone", label="Phone number"),
+        # "Are you a user of our App?" -- answered No because that is the
+        # true answer for someone who is opting out of a data holding they
+        # never signed up for. If Penn DOES use one of their apps, this is
+        # the line to change to "Yes"; it is a factual claim made in his
+        # name, which is why it is a hand-written literal and not a guess.
+        Select(container="#appUser", option_label="No",
+               label="Are you a user of our App?"),
+        # Territory must be chosen BEFORE the rights dropdown: until it is,
+        # #privacyRight holds a single placeholder option reading "Select
+        # your territory first".
+        Select(container="#territory", option_label="US", label="Territory"),
+        Select(container="#privacyRight",
+               option_label="Right to Opt-Out of Sale of Personal Information",
+               label="Which right do you wish to exercise?"),
+        Field(selector="#details", source="literal", label="Additional details",
+              value=_OPT_OUT_DETAILS, required=False),
+        Check(selector="#confirmation", label="Confirmation of accuracy"),
+    ),
+    forbidden_selectors=(
+        # The honeypot. Offscreen (-left-[9999px]), aria-hidden, tabindex=-1,
+        # autocomplete=off: a bot trap, and the one field on this form whose
+        # correct value is "untouched".
+        "#website",
+    ),
+    submit_selector="button[type='submit']",
+    captcha_selectors=(
+        # A canvas-drawn security code. The generic sweep's
+        # input[id*='captcha'] already matches #captcha; the canvas is named
+        # here so detection does not hinge on one id spelling.
+        "#captcha",
+        "canvas#canv",
+    ),
+    success_markers=(
+        "thank you",
+        "your request has been received",
+        "request has been submitted",
+    ),
+    notes=(
+        "Verified against the live page on 2026-09-22. NOT a OneTrust form "
+        "despite the 'onetrust-opt-out' path in the dataset URL, which "
+        "redirects to lsmapps.com/opt-out. Real <select> elements, a required "
+        "confirmation checkbox, a #website honeypot, and -- not flagged in "
+        "the brief -- its OWN CAPTCHA: a canvas-drawn security code with a "
+        "#captcha input. So this form also stops at 'needs manual action' on "
+        "a real run. The rights dropdown is populated from Territory, hence "
+        "ordered steps. Requires a phone number in international format."
+    ),
+)
+
+
+# Keyed by the broker id. Every entry here has been opened, read and
+# transcribed by hand; see each recipe's ``notes`` for the date and the
+# surprises. Being listed here is necessary but NOT sufficient for a real
+# submission -- the enabled flag, the dry-run flag and Playwright are three
+# further interlocks, and as it happens all four of these forms carry a
+# CAPTCHA, so a live run stops at "needs manual action" by design.
 RECIPES = {
     CONSUMER_CANVAS.broker_id: CONSUMER_CANVAS,
+    NIELSEN.broker_id: NIELSEN,
+    BOLTTECH.broker_id: BOLTTECH,
+    CREDIT_COM.broker_id: CREDIT_COM,
+    LS_MOBILE_APPS.broker_id: LS_MOBILE_APPS,
 }
 
 
@@ -199,6 +484,68 @@ STAGED_RECIPES: dict = {}
 
 class RecipeNotFound(KeyError):
     """No verified form recipe exists for this broker."""
+
+
+class ForbiddenFieldError(ValueError):
+    """A recipe tried to target an input this codebase refuses to fill."""
+
+
+def ordered_steps(recipe: FormRecipe) -> tuple:
+    """Every step of *recipe*, in the order the driver must run them.
+
+    A recipe with an explicit ``steps`` tuple is run exactly as written --
+    that is the whole point of it, because on Nielsen's form the
+    request-type listbox does not exist until Country has been filled.
+    Otherwise the historical order applies: all choices, then all fields
+    (Consumer Canvas's request-type listbox is not rendered until a subject
+    type is chosen, and nothing else on that form is order-sensitive).
+    """
+    if recipe.steps:
+        return tuple(recipe.steps)
+    return tuple(recipe.choices) + tuple(recipe.fields)
+
+
+def recipe_fields(recipe: FormRecipe) -> tuple:
+    """The ``Field`` steps of *recipe*, whichever way it was written."""
+    return tuple(s for s in ordered_steps(recipe) if isinstance(s, Field))
+
+
+def targeted_selectors(recipe: FormRecipe) -> tuple:
+    """Every selector *recipe* would touch, including its submit button."""
+    out = []
+    for step in ordered_steps(recipe):
+        if isinstance(step, Field):
+            out.append(step.selector)
+        elif isinstance(step, Check):
+            out.append(step.selector)
+        elif isinstance(step, Choice):     # covers Select
+            out.append(step.container)
+    if recipe.submit_selector:
+        out.append(recipe.submit_selector)
+    return tuple(out)
+
+
+def assert_no_forbidden(recipe: FormRecipe) -> None:
+    """Raise if *recipe* targets one of its own ``forbidden_selectors``.
+
+    The honeypot rule with teeth. ``#website`` on L.S Mobile's form is an
+    offscreen, ``aria-hidden``, ``tabindex=-1`` bot trap: a request that
+    arrives with it filled is a request that gets binned, and worse, it is
+    this tool announcing itself as a bot on the person's behalf. Credit.com
+    likewise asks for SSN-last-4 and date of birth, both optional, and a
+    "do not sell my data" request does not need to hand over either.
+
+    A recipe is data, and data gets edited; this is the check that turns
+    "we wrote it down correctly" into "it cannot be wrong at runtime".
+    """
+    forbidden = {s for s in (recipe.forbidden_selectors or ())}
+    if not forbidden:
+        return
+    clashes = sorted(forbidden.intersection(targeted_selectors(recipe)))
+    if clashes:
+        raise ForbiddenFieldError(
+            "recipe {!r} targets forbidden input(s): {}".format(
+                recipe.broker_id, ", ".join(clashes)))
 
 
 def recipe_for(broker_id: str) -> FormRecipe:
@@ -257,6 +604,14 @@ def state_from_addresses(addresses) -> str:
     full name is returned either way, because that is what the form's
     autocomplete lists.
 
+    A trailing ZIP is tolerated: a real address line ends ``", IL 62704"``,
+    not ``", IL"``, and reading that as "no state" used to make Nielsen's and
+    bolttech's required State field come back missing. Only the exact shapes
+    ``IL``, ``Illinois`` and ``IL 62704`` are accepted -- a two-letter word
+    that merely happens to sit inside a street name is NOT treated as a
+    state, because a wrong state is sent to a third party under the person's
+    name.
+
     Returns "" when no address line yields a recognizable state -- the caller
     reports that as a missing required field rather than guessing.
     """
@@ -270,6 +625,73 @@ def state_from_addresses(addresses) -> str:
                 return US_STATES[code]
             if token.lower() in by_name:
                 return by_name[token.lower()]
+            # "IL 62704" / "Illinois 62704-1234"
+            with_zip = re.match(r"^(.*?)\s+\d{5}(?:-\d{4})?$", token)
+            if with_zip:
+                head = with_zip.group(1).strip()
+                if head.upper() in US_STATES:
+                    return US_STATES[head.upper()]
+                if head.lower() in by_name:
+                    return by_name[head.lower()]
+    return ""
+
+
+_ZIP_RE = re.compile(r"\b(\d{5})(?:-\d{4})?\b")
+
+
+def zip_from_addresses(addresses) -> str:
+    """The 5-digit US ZIP in a profile's address lines, or "".
+
+    Credit.com makes Zip a REQUIRED field, so "" here is what makes that
+    attempt stop as a recorded missing-field failure instead of a
+    half-filled request. Only the 5-digit form is returned: ZIP+4 is
+    accepted as input but the +4 is dropped, because a wrong +4 is worse
+    than no +4 for matching.
+    """
+    for line in reversed(list(addresses or [])):
+        if not isinstance(line, str):
+            continue
+        found = _ZIP_RE.search(line)
+        if found:
+            return found.group(1)
+    return ""
+
+
+def street_from_addresses(addresses) -> str:
+    """The most specific address line, verbatim, or "".
+
+    Deliberately NOT parsed into street/city/state parts. Credit.com's
+    Address box is free text; handing it the line the person actually
+    wrote is more faithful than this module guessing where a street name
+    ends, and a wrong guess is sent to a third party under their name.
+    """
+    for line in reversed(list(addresses or [])):
+        if isinstance(line, str) and line.strip():
+            return line.strip()
+    return ""
+
+
+def phone_for_form(phones) -> str:
+    """The first profile phone in the international format forms ask for.
+
+    L.S Mobile's form says outright: "We cannot process a request without a
+    country code". A bare 10-digit US number is therefore rendered as
+    ``+1XXXXXXXXXX``. Anything already starting with ``+`` is passed
+    through untouched, and anything that is neither is returned as-is
+    rather than being mangled into a number that is not the person's.
+    """
+    for raw in list(phones or []):
+        if not isinstance(raw, str) or not raw.strip():
+            continue
+        text = raw.strip()
+        if text.startswith("+"):
+            return text
+        digits = "".join(c for c in text if c.isdigit())
+        if len(digits) == 10:
+            return "+1" + digits
+        if len(digits) == 11 and digits.startswith("1"):
+            return "+" + digits
+        return text
     return ""
 
 
@@ -290,10 +712,18 @@ def resolve_fields(recipe: FormRecipe, identity) -> dict:
     suite actually asserts on.
     """
     values, labels, missing = {}, {}, []
-    for f in recipe.fields:
+    for f in recipe_fields(recipe):
         labels[f.selector] = f.label
         if f.source == "literal":
             text = f.value
+        elif f.source == "full_name":
+            text = (getattr(identity, "full_name", "") or "").strip()
+        elif f.source == "zip":
+            text = zip_from_addresses(getattr(identity, "addresses", None))
+        elif f.source == "address":
+            text = street_from_addresses(getattr(identity, "addresses", None))
+        elif f.source == "phone":
+            text = phone_for_form(getattr(identity, "phones", None))
         elif f.source == "first_name":
             text = (getattr(identity, "first_name", "") or "").strip()
         elif f.source == "last_name":

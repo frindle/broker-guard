@@ -115,7 +115,10 @@ def test_live_button_asks_for_confirmation(client):
 def test_only_allow_listed_brokers_get_a_button(client):
     text = client.get("/review").text
     assert "CONSUMER CANVAS LLC" in text
-    assert "Nielsen" not in text
+    assert "Nielsen" in text                  # allow-listed since 2026-09-22
+    # A broker with a dataset entry but no hand-verified recipe stays off the
+    # page: presence in the 970-entry dataset is NOT what grants a button.
+    assert "Allant Group" not in text
 
 
 # --- screenshots -------------------------------------------------------------
@@ -209,7 +212,7 @@ def test_an_unrecognized_mode_falls_back_to_dry_run(client, monkeypatch, mode):
 
 
 def test_a_broker_with_no_recipe_is_404(client):
-    resp = client.post("/review/run", data={"broker_id": "nielsen"},
+    resp = client.post("/review/run", data={"broker_id": "allant-group"},
                        follow_redirects=False)
     assert resp.status_code == 404
 
