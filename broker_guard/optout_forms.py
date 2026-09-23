@@ -122,6 +122,15 @@ FLAVOR_PDL_BESPOKE = "peopledatalabs_bespoke_form"
 # shared SCHEMA.
 FLAVOR_INFOPAY_DNS = "infopay_do_not_sell_form"
 
+# ThatsThem's own /optout page. A single server-rendered Tailwind form --
+# Full Name, Street Address, City, State (<select>), ZIP, Email, Phone, all
+# seven starred required -- posting to itself, with no wizard, no emailed
+# link and no account. Its bot check is an INVISIBLE Cloudflare Turnstile:
+# there is no .cf-turnstile div and no iframe on the page, only a hidden
+# input[name='cf-turnstile-response'] whose id carries Cloudflare's
+# cf-chl-widget- prefix.
+FLAVOR_THATSTHEM_BESPOKE = "thatsthem_bespoke_form"
+
 # RevealPhoneOwner's own /data-removal/ page. The plainest form in this
 # pilot: a server-rendered Bootstrap POST form with five visible inputs
 # (name, last name, phone, e-mail, free-text reason), a hidden form-name
@@ -1023,6 +1032,89 @@ REVEALPHONEOWNER = FormRecipe(
 )
 
 
+THATSTHEM = FormRecipe(
+    broker_id="thatsthem-com",
+    broker_name="ThatsThem",
+    url="https://thatsthem.com/optout",
+    flavor=FLAVOR_THATSTHEM_BESPOKE,
+    fields=(
+        # One box for the whole name; this form has no first/last split.
+        Field(selector="#name", source="full_name", label="Full Name"),
+        Field(selector="#street", source="street", label="Street Address"),
+        Field(selector="#city", source="city", label="City"),
+        # A real <select> whose options are full state names (value="NV",
+        # text="Nevada"), so kind="select" picking by the resolved LABEL --
+        # confirmed live: selectOption('Nevada') set the value to NV.
+        Field(selector="#state", source="state", label="State", kind="select"),
+        Field(selector="#zip", source="zip", label="ZIP Code"),
+        Field(selector="#email", source="email", label="Email"),
+        Field(selector="#phone", source="phone", label="Phone"),
+    ),
+    submit_selector="form button[type='submit']",
+    captcha_selectors=(
+        # An INVISIBLE Cloudflare Turnstile, which is why this is declared
+        # here at all: optout_submit's generic sweep looks for
+        # .cf-turnstile and iframe[src*='turnstile'], and on this page
+        # BOTH are absent (checked live: 0 matches each, and zero iframes
+        # on the document). The only trace of it is the hidden response
+        # input Cloudflare injects. Without these two selectors the generic
+        # detection would report "no bot check" on a form that has one --
+        # exactly the miss captcha_selectors exists to cover.
+        "input[name='cf-turnstile-response']",
+        "input[id^='cf-chl-widget-']",
+    ),
+    success_markers=(
+        # NOT read off a real submitted page -- nothing was submitted. Kept
+        # deliberately plain; see notes.
+        "your request has been received",
+        "thank you",
+    ),
+    notes=(
+        "Verified against the live form on 2026-09-23, fill-only: every "
+        "selector was resolved (all ten, including the submit button, match "
+        "exactly ONE element on the page), the whole form was filled with "
+        "obviously fictitious data (Zzyzx Testperson, 400 Nonexistent Way, "
+        "Elko NV 89801) to confirm each control accepts a value and the "
+        "State <select> maps a full-name label onto its two-letter value, "
+        "and then the page was navigated away from. Submit was never "
+        "pressed, so success_markers are a plausible guess rather than "
+        "wording read off a confirmation page -- the same caveat the "
+        "L.S Mobile recipe carries.\n"
+        "\n"
+        "The page's own copy states the shape: 'Request removal of your "
+        "personal information from our database', 'Requests are typically "
+        "processed within 72 hours. You'll receive a confirmation email "
+        "once complete.' No account, no emailed link before the form, no "
+        "record-picking -- which is what separates this from BeenVerified "
+        "and Intelius, both of whose removals are out of scope.\n"
+        "\n"
+        "One finding worth carrying forward, because it cuts against the "
+        "usual reassurance that a captcha stops us anyway: this Turnstile "
+        "is INVISIBLE and it self-issued. Immediately after filling the "
+        "form, input[name='cf-turnstile-response'] already held a token "
+        "(a '1.PjBI_...' string) with nothing clicked and no widget shown. "
+        "So this is a form a fully-enabled, dry-run-off run really could "
+        "submit unattended -- it is listed in captcha_selectors so that it "
+        "will not, and so that the first live attempt stops at 'needs "
+        "manual action' with a screenshot for a human to look at. Do not "
+        "remove those selectors on the grounds that 'there is no visible "
+        "captcha'; that is precisely the observation that makes them "
+        "necessary. Its SEARCH leg is a shipped recipe in search_forms "
+        "(THATSTHEM), whose results endpoint separately serves headless "
+        "clients an Access Denied page.\n"
+        "\n"
+        "One known mismatch, recorded rather than papered over: "
+        "resolve_fields feeds #phone through phone_for_form, which yields "
+        "E.164 ('+17755550142'), while the field's own placeholder shows "
+        "'(206) 555-1234'. It is a plain type=tel text input with no "
+        "pattern attribute, so nothing rejects E.164 client-side -- but "
+        "whether ThatsThem's SERVER accepts that shape is not something a "
+        "fill-only verification can answer, and it will only be known from "
+        "the first dry-run screenshot and the reply that follows a real "
+        "submission."
+    ),
+)
+
 RECIPES = {
     CONSUMER_CANVAS.broker_id: CONSUMER_CANVAS,
     NIELSEN.broker_id: NIELSEN,
@@ -1038,6 +1130,7 @@ RECIPES = {
     STATERECORDS_ORG.broker_id: STATERECORDS_ORG,
     RECORDSFINDER.broker_id: RECORDSFINDER,
     REVEALPHONEOWNER.broker_id: REVEALPHONEOWNER,
+    THATSTHEM.broker_id: THATSTHEM,
 }
 
 
