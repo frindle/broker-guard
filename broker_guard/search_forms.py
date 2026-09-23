@@ -394,6 +394,80 @@ CYBERBACKGROUNDCHECKS = SearchRecipe(
     ),
 )
 
+PRIVATENUMBERCHECKER = SearchRecipe(
+    broker_id="privatenumberchecker-com",
+    broker_name="PrivateNumberChecker",
+    search_url="https://www.privatenumberchecker.com/",
+    fields=(
+        SearchField(selector="#search-form input[name='phone-search']",
+                    source="phone", label="Phone Number"),
+    ),
+    submit_selector="#search-form button[type='submit']",
+    results_host="privatenumberchecker.com",
+    no_results_markers=("no result found",),
+    # "Result for <number>" on the settled hit page. Distinct from the miss
+    # page's "No Result found!" -- checked, not assumed: the two strings
+    # share the word "result" and nothing else.
+    hit_markers=("result for",),
+    # Measured: the hit page walks through a staged animation ("Initiating
+    # reverse phone lookup", "Get location", "Querying service provider",
+    # "Generating result") and lands on /phone-number/<number>/ at about
+    # eleven seconds. Under the shared 20s default that fits, but only just,
+    # so this recipe buys margin rather than reporting "unknown" on a slow
+    # night.
+    ready_timeout_ms=30000,
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. Built on the same template "
+        "as RevealPhoneOwner (same page furniture, same 'No Result found!' "
+        "miss page, same staged progress animation, same 2022 copyright "
+        "line), but recorded as its own finding from its own live run "
+        "rather than inherited: a shared look is not a shared codebase, and "
+        "the two do differ -- this one settles in ~11s and lands on a "
+        "different URL shape (/phone-number/<number>/), and its hit wording "
+        "is 'Result for <number>', not 'Data result found for'. Like its "
+        "sibling it is a reverse-phone directory, so this asks about the "
+        "profile's PHONE, and the owner name sits behind a 'Full Report' "
+        "paywall -- which does not matter, because the only question asked "
+        "here is whether a record exists. Its REMOVAL page, unlike the rest "
+        "of the site, is behind a Cloudflare Turnstile challenge -- see "
+        "optout_forms.OPTOUT_BLOCKED."
+    ),
+)
+
+NATIONALPUBLICDATA = SearchRecipe(
+    broker_id="nationalpublicdata-com",
+    broker_name="National Public Data",
+    search_url="https://nationalpublicdata.com/",
+    fields=(
+        # The page carries TWO name boxes -- a compact one in the header
+        # (#search-name) and the main hero form (#main-search-name) -- so
+        # the selector names the hero one explicitly. A generic
+        # "input[type=text]" here would match both and Playwright's strict
+        # mode would refuse to type into either.
+        SearchField(selector="#main-search-name", source="full_name",
+                    label="Name"),
+    ),
+    submit_selector="#page-search-form button",
+    results_host="nationalpublicdata.com",
+    no_results_markers=("we could not find people named",),
+    hit_markers=("people found",),
+    count_pattern=r"([\d,]+)\s+people\s+found",
+    verified_on="2026-09-23",
+    notes=(
+        "Verified live both ways on 2026-09-23. A hit navigates to "
+        "/people/<letter>/<first>-<last>/ and prints '9352 people found' "
+        "above per-person cards; a nonsense name lands on /search/?name=... "
+        "titled 'Results Not Found' and prints 'We could not find people "
+        "named <name>'. The miss page echoes the searched name (the usual "
+        "trap) but carries no count and no 'people found' wording at all, "
+        "checked by reading its full text. The optional 'City & State' box "
+        "is deliberately left empty. Note the contrast with this broker's "
+        "OPT-OUT page, which is behind a Cloudflare Turnstile challenge -- "
+        "see optout_forms.OPTOUT_BLOCKED."
+    ),
+)
+
 REVEALPHONEOWNER = SearchRecipe(
     broker_id="revealphoneowner-com",
     broker_name="RevealPhoneOwner",
@@ -443,6 +517,8 @@ RECIPES = {
     ADVANCEDBACKGROUNDCHECKS.broker_id: ADVANCEDBACKGROUNDCHECKS,
     SEARCHPUBLICRECORDS.broker_id: SEARCHPUBLICRECORDS,
     CYBERBACKGROUNDCHECKS.broker_id: CYBERBACKGROUNDCHECKS,
+    NATIONALPUBLICDATA.broker_id: NATIONALPUBLICDATA,
+    PRIVATENUMBERCHECKER.broker_id: PRIVATENUMBERCHECKER,
     REVEALPHONEOWNER.broker_id: REVEALPHONEOWNER,
 }
 
