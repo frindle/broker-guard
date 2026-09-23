@@ -412,7 +412,7 @@ def test_a_conditional_field_is_not_probed_for_and_must_say_so():
     """
     from broker_guard import optout_forms
 
-    nielsen = optout_forms.RECIPES["nielsen"]
+    nielsen = optout_forms.RECIPES["onetrust-com"]
     conditional = {getattr(s, "selector", None) or getattr(s, "container", None)
                    for s in optout_forms.ordered_steps(nielsen)
                    if getattr(s, "appears_later", False)}

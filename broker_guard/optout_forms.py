@@ -131,6 +131,15 @@ FLAVOR_INFOPAY_DNS = "infopay_do_not_sell_form"
 # cf-chl-widget- prefix.
 FLAVOR_THATSTHEM_BESPOKE = "thatsthem_bespoke_form"
 
+# Pipl's /personal-information-removal-request page. Not Pipl's own form at
+# all: a Salesforce Web-to-Case form (action=webto.salesforce.com/servlet/
+# servlet.WebToCase, orgid=00D5e000003ToGq) embedded in their marketing
+# site, so the visible fields sit alongside Salesforce's hidden bookkeeping
+# (subject="Information Removal Request", priority="Medium", retURL to a
+# thank-you page) and two custom-field ids instead of names. It carries TWO
+# bot checks: reCAPTCHA, and a required arithmetic question.
+FLAVOR_PIPL_WEBTOCASE = "pipl_salesforce_webtocase_form"
+
 # RevealPhoneOwner's own /data-removal/ page. The plainest form in this
 # pilot: a server-rendered Bootstrap POST form with five visible inputs
 # (name, last name, phone, e-mail, free-text reason), a hidden form-name
@@ -342,7 +351,9 @@ _ONETRUST_SUCCESS = (
 )
 
 NIELSEN = FormRecipe(
-    broker_id="nielsen",
+    # The dataset's id for Nielsen, not a slug of its name. See the
+    # "Keyed by the DATASET's id" note above RECIPES.
+    broker_id="onetrust-com",
     broker_name="Nielsen",
     url=(
         "https://privacyportal-de.onetrust.com/webform/"
@@ -389,7 +400,7 @@ NIELSEN = FormRecipe(
 )
 
 BOLTTECH = FormRecipe(
-    broker_id="bolttech",
+    broker_id="bolttech-io",
     broker_name="bolttech (Boltech)",
     url=(
         "https://privacyportal-de.onetrust.com/webform/"
@@ -487,7 +498,7 @@ CREDIT_COM = FormRecipe(
 
 
 LS_MOBILE_APPS = FormRecipe(
-    broker_id="ls-mobile-apps-holdings-ltd",
+    broker_id="lsmapps-com",
     broker_name="L.S Mobile Apps Holdings Ltd",
     # The dataset records https://www.lsmapps.com/onetrust-opt-out, which
     # 301s to this. The settled URL is recorded here so the driver does not
@@ -1032,6 +1043,108 @@ REVEALPHONEOWNER = FormRecipe(
 )
 
 
+# A second standing request text, for forms whose own request-type control
+# says DELETION rather than do-not-sell. Kept separate from
+# ``_OPT_OUT_DETAILS`` and equally literal, for the same reason: it is sent
+# verbatim to a third party in Penn's name, so it is reviewable here. Using
+# the do-not-sell wording on a form whose Type field says "Deletion" would
+# be filing one request while asking for another, and a broker that answers
+# the wrong one has still spent the request.
+_DELETION_DETAILS = (
+    "I am exercising my right to have my personal information deleted. "
+    "Please delete all personal information you hold about me, and instruct "
+    "any service providers and third parties to whom you have disclosed it "
+    "to do the same. Please confirm in writing once this request has been "
+    "processed."
+)
+
+PIPL = FormRecipe(
+    broker_id="pipl-com",
+    broker_name="Pipl",
+    url="https://pipl.com/personal-information-removal-request",
+    flavor=FLAVOR_PIPL_WEBTOCASE,
+    steps=(
+        Field(selector="#full-name", source="full_name", label="Full Name"),
+        Field(selector="#email-support", source="email", label="Email Address"),
+        # The two Salesforce custom fields. Their ids ARE their names --
+        # there is no friendlier handle -- and each was tied to its visible
+        # label by reading the label text wrapping the input, not guessed
+        # from the id.
+        Field(selector="#00NUc000000TNu5", source="phone", label="Phone Number",
+              required=False),
+        Field(selector="#00N4U000009AIoj", source="address", label="Address",
+              required=False),
+        # A real <select>; its options are "Please Select", "Deletion",
+        # "Disclosure", "Disclosure + Deletion". A fixed choice, not a
+        # profile-varying one, so Select rather than Field(kind='select').
+        Select(container="#direct_your_support_question",
+               option_label="Deletion", label="Type"),
+        Field(selector="#message_desc", source="literal", label="Message",
+              value=_DELETION_DETAILS),
+    ),
+    forbidden_selectors=(
+        # The arithmetic bot check. Listed as forbidden as well as declared
+        # below, so that no future edit can "helpfully" teach the driver to
+        # compute it: solving a bot check is the one thing this module does
+        # not do.
+        "#00NUc000002Porh",
+    ),
+    submit_selector="#submit-btn",
+    captcha_selectors=(
+        # (1) reCAPTCHA. The generic sweep's .g-recaptcha already catches
+        # this one (three matching elements on the page), and it is named
+        # here for the record.
+        ".g-recaptcha",
+        # (2) The one the generic sweep would MISS. A required number input
+        # labelled "Solve this math problem to continue*" whose prompt is
+        # rendered next to it ("10 + 1 ="). Its id is a Salesforce custom
+        # field key, so it matches neither input[name*='captcha'] nor
+        # input[id*='captcha'].
+        "#00NUc000002Porh",
+    ),
+    success_markers=(
+        # The form's own retURL is https://pipl.com/lp/customer-support-
+        # thank-you, so a successful POST lands on a thank-you page. Read
+        # off the hidden field, NOT off a page reached by submitting --
+        # nothing was submitted.
+        "thank you",
+    ),
+    notes=(
+        "Verified against the live page on 2026-09-23, read-only: the form "
+        "was enumerated element by element (every visible control plus "
+        "Salesforce's six hidden inputs) and each visible field matched to "
+        "its own label. Nothing was typed and nothing was submitted.\n"
+        "\n"
+        "It is a Salesforce Web-to-Case form posting to "
+        "webto.salesforce.com, not to pipl.com, which is worth knowing "
+        "before anyone reads a failed POST as Pipl being down. Two fields "
+        "are Salesforce custom keys rather than names "
+        "(00NUc000000TNu5 = Phone Number, 00N4U000009AIoj = Address); both "
+        "are optional on the form and are marked required=False here so a "
+        "profile without them still files.\n"
+        "\n"
+        "TWO bot checks, and only one of them is detectable generically. "
+        "The reCAPTCHA is caught by the shared sweep. The other is a "
+        "REQUIRED arithmetic question -- 'Solve this math problem to "
+        "continue*' over a rendered '10 + 1 =' and a number input -- whose "
+        "id is a Salesforce custom key, so none of the generic "
+        "input[name*='captcha'] / input[id*='captcha'] patterns touch it. "
+        "It is declared in captcha_selectors so the run stops, and ALSO in "
+        "forbidden_selectors so that nobody later implements the two-line "
+        "arithmetic solver that would quietly turn this into the first "
+        "bot-check bypass in the codebase. The expected outcome of a live "
+        "run is therefore 'needs manual action' with a screenshot of a "
+        "fully filled form -- which is the useful outcome, since the only "
+        "things left to do by hand are the sum and the reCAPTCHA.\n"
+        "\n"
+        "Request type is set to 'Deletion' and the message body is "
+        "_DELETION_DETAILS rather than the do-not-sell _OPT_OUT_DETAILS "
+        "every other recipe uses, because this form makes the request type "
+        "explicit and the two must agree. Pipl has no consumer search "
+        "surface at all; see search_forms.NO_SEARCH_SURFACE."
+    ),
+)
+
 THATSTHEM = FormRecipe(
     broker_id="thatsthem-com",
     broker_name="ThatsThem",
@@ -1115,6 +1228,29 @@ THATSTHEM = FormRecipe(
     ),
 )
 
+# Keyed by the DATASET's broker id -- the value of ``id`` in
+# ``data/brokers.json`` -- and by nothing else. That is not a style note, it
+# is the only thing that makes the allow-list reachable: every lookup comes
+# in holding an id the dataset produced, so a recipe filed under a slug of
+# the broker's NAME is not a stricter allow-list, it is an absent one.
+#
+# Found the hard way on 2026-09-23, while cross-checking every key in this
+# dict against data/brokers.json. THREE of the fourteen recipes -- Nielsen
+# ("nielsen"), bolttech ("bolttech") and L.S Mobile Apps
+# ("ls-mobile-apps-holdings-ltd") -- were filed under ids that appear
+# nowhere in the dataset, whose real ids are "onetrust-com", "bolttech-io"
+# and "lsmapps-com". All three had been unreachable since they were
+# written, including all three the README advertises by name under
+# "Automated opt-out submission". The remap is not a guess: Nielsen's and
+# bolttech's recipe urls are byte-identical to their dataset entries'
+# optout_url, and L.S Mobile's is the redirect target this module's own
+# docstring already documents for lsmapps-com's dataset url. The names
+# match exactly in all three cases too.
+#
+# Nothing asserts this today. A test that every key here (and in
+# search_forms.RECIPES, which was checked at the same time and is clean)
+# resolves to a real dataset broker would have caught it the day it landed,
+# and is the obvious next piece of work.
 RECIPES = {
     CONSUMER_CANVAS.broker_id: CONSUMER_CANVAS,
     NIELSEN.broker_id: NIELSEN,
@@ -1131,6 +1267,7 @@ RECIPES = {
     RECORDSFINDER.broker_id: RECORDSFINDER,
     REVEALPHONEOWNER.broker_id: REVEALPHONEOWNER,
     THATSTHEM.broker_id: THATSTHEM,
+    PIPL.broker_id: PIPL,
 }
 
 

@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from broker_guard import optout_forms, optout_submit, review
+from broker_guard import optout_forms, optout_submit, review, search_forms
 from broker_guard.config import Config
 from broker_guard.profile import Identity
 from conftest import FAKE_EMAIL, FAKE_FIRST, FAKE_LAST
@@ -333,11 +333,19 @@ def test_exactly_the_hand_verified_brokers_are_turned_on():
     """
     assert optout_forms.supported_broker_ids() == [
         "achcoop-com", "advancedbackgroundchecks-com", "bigdbm-com",
-        "bolttech", "consumer-canvas-llc", "courtrecords-us", "credit-com",
-        "ls-mobile-apps-holdings-ltd", "nielsen", "peopledatalabs-com",
-        "recordsfinder-com", "revealphoneowner-com",
+        "bolttech-io", "consumer-canvas-llc", "courtrecords-us",
+        "credit-com", "lsmapps-com", "onetrust-com", "peopledatalabs-com",
+        "pipl-com", "recordsfinder-com", "revealphoneowner-com",
         "searchpublicrecords-com", "staterecords-org", "thatsthem-com",
     ]
+    # Three of these changed on 2026-09-23, and the change is a BUG FIX, not
+    # a new broker: "bolttech" -> "bolttech-io",
+    # "ls-mobile-apps-holdings-ltd" -> "lsmapps-com" and "nielsen" ->
+    # "onetrust-com". Those three were filed under slugs of the brokers'
+    # NAMES, which appear nowhere in data/brokers.json, so all three were
+    # unreachable from the day they were written -- and this test pinned the
+    # broken ids, which is why nothing said so. See the comment above
+    # optout_forms.RECIPES for the evidence behind each remap.
     # In the dataset, but not hand-verified -> still unsubmittable.
     assert not optout_forms.is_supported("allant-group")
     assert not optout_forms.is_supported("cybba")
@@ -1264,3 +1272,43 @@ def test_a_captcha_free_recipe_says_so_in_its_notes():
 ])
 def test_a_state_is_read_through_a_trailing_zip(addresses, expected):
     assert optout_forms.state_from_addresses(addresses) == expected
+
+
+def test_every_recipe_key_is_a_real_dataset_broker_id():
+    """A recipe filed under an id the dataset never emits is UNREACHABLE.
+
+    Both allow-lists are keyed by broker id, and every lookup arrives
+    holding an id that ``data/brokers.json`` produced. So a recipe keyed by
+    a slug of the broker's NAME is not a stricter allow-list, it is an
+    absent one: the broker silently keeps the no-recipe fallback forever,
+    and nothing anywhere says so.
+
+    That is not hypothetical. On 2026-09-23 three of the fourteen opt-out
+    recipes -- Nielsen, bolttech and L.S Mobile Apps, all three of them
+    brokers the README advertises BY NAME as supported -- were found filed
+    under "nielsen", "bolttech" and "ls-mobile-apps-holdings-ltd", none of
+    which appear in the dataset. They had been dead since they were
+    written. The only test watching that list asserted the broken ids, so
+    it passed the whole time.
+
+    This test is the one that would have caught it on day one.
+    """
+    path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "data", "brokers.json",
+    )
+    with open(path) as fh:
+        dataset_ids = {b["id"] for b in json.load(fh)["brokers"]}
+
+    unreachable = {
+        "optout_forms.RECIPES": sorted(
+            k for k in optout_forms.RECIPES if k not in dataset_ids
+        ),
+        "search_forms.RECIPES": sorted(
+            k for k in search_forms.RECIPES if k not in dataset_ids
+        ),
+    }
+    assert unreachable == {
+        "optout_forms.RECIPES": [],
+        "search_forms.RECIPES": [],
+    }

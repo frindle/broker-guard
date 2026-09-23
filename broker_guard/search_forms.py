@@ -1039,6 +1039,21 @@ NO_SEARCH_SURFACE = {
         "with 200 and the Windows one with 403, i.e. the current UA is the "
         "better of the two."
     ),
+    "pipl-com": (
+        "Verified 2026-09-23: Pipl no longer sells a consumer people "
+        "search, and its own homepage says so -- it is titled 'Fraud "
+        "intelligence for enterprise risk decisions' and carries ZERO "
+        "<form> elements and zero inputs of any kind, checked both in a "
+        "browser after the page's JavaScript had run and in the raw HTML. "
+        "Every 'Search' link on it goes to marketing copy "
+        "(/solutions/search), API documentation "
+        "(docs.pipl.com/docs/welcome-to-the-pipl-search-api) or the "
+        "login-gated customer product at search.pipl.com/accounts/login/, "
+        "which serves no form to an unauthenticated visitor either. There "
+        "is nothing on this domain that answers whether it holds a record "
+        "on someone. Its OPT-OUT leg is a different story and ships as a "
+        "working recipe; see optout_forms.PIPL."
+    ),
     "peoplefinder-com": (
         "Verified 2026-09-23: PeopleFinder.com is an Intelius front, and "
         "its own page says so ('PeopleFinder.com powered by Intelius'). "
