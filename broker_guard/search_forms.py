@@ -2957,6 +2957,118 @@ NO_SEARCH_SURFACE = {
         "is closed rather than left open, because a search recipe could "
         "never be written against a surface the broker does not offer."
     ),
+    "evorra-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Evorra sells audience segments to "
+        "advertisers through a platform login; its public pages carry a "
+        "newsletter box and a demo request. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "clarityservices-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Clarity is an FCRA credit bureau selling to "
+        "lenders -- a consumer reaches their own file by requesting a "
+        "report, not by searching, and the only input on the site is a "
+        "site search. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "explorium-ai": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Explorium sells external data to data- "
+        "science teams via API; its site is behind a Cloudflare challenge "
+        "and offers no lookup in any case. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "vdx-tv": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. VDX.TV sells connected-TV advertising; its "
+        "only form is a cookie-preferences panel. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "eyeota-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Eyeota sells audience data to advertisers; "
+        "the only input on its site is a site search over its own pages. "
+        "The leg is closed because a search recipe cannot be written "
+        "against a surface the broker does not offer."
+    ),
+    "factori-ai": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Factori sells location and mobility data to "
+        "businesses; its consumer-facing page is a request form, not a "
+        "lookup. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "fairscreen-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Fair Screen is an FCRA background screener "
+        "selling to employers -- see the opt-out entry; its site is "
+        "login-gated and offers no public lookup. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "faraday-io": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Faraday sells predictive-audience modelling "
+        "to marketers; nothing on the site could be read at all, but no "
+        "lookup is advertised anywhere on it. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "fideo-ai": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Fideo sells identity and fraud signals to "
+        "businesses; its consumer-facing app is a rights wizard, not a "
+        "lookup. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "fifty-io": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Fifty sells audience segmentation to "
+        "agencies; its only form is a demo request. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "findem-ai": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Findem sells talent-sourcing data to "
+        "recruiters, behind a login; its public pages offer a demo "
+        "request and the do-not-sell form. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "firstam-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. First American is a title insurer and "
+        "property-data provider; consumer-facing search is a site search "
+        "over its own content. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "firstdirectmarketing-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. First Direct sells direct-marketing lists to "
+        "businesses; its compliance subdomain is a governance portal with "
+        "no lookup. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "fmadata-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. FMAdata sells sales leads and marketing data "
+        "to businesses; its only form is the opt-out request. The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "firstorion-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. First Orion supplies caller-identification "
+        "data to carriers and businesses; its privacy subdomain is a "
+        "request wizard, not a lookup. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
 }
 
 
@@ -3889,6 +4001,45 @@ SEARCH_UNDECIDED = {
         "vicious), and an 'isca' checkbox for California residency. Use a "
         "disposable address, run it twice (a known-present one and "
         "nonsense), and record both markers."
+    ),
+    "famousbirthdays-com": (
+        "NO VERDICT as of 2026-09-23, and this one is a CODEBASE GAP "
+        "rather than a research gap: the search was verified live, both "
+        "ways, and then could not be shipped.  What was verified. The "
+        "homepage form #fb_search takes a single input[name='q']. 'Taylor "
+        "Swift' navigated to /people/taylor-swift.html showing the name "
+        "beside 'Birthday', 'Birth Sign' and 'Birthplace'. 'Qzxjv "
+        "Wrrblfnd' navigated to /notfound/ printing 'Qzxjv Wrrblfnd "
+        "wasn't found'. No interstitial, no bot check on either path, no "
+        "printed result count. A hit goes STRAIGHT TO THE PROFILE rather "
+        "than to a result list, so the hit markers have to be the profile "
+        "page's own furniture ('birth sign', 'birthplace') and the miss "
+        "marker is the invariant tail of a query-interpolated sentence "
+        "('wasn't found'). That is a complete, working set of markers and "
+        "it should not have to be rediscovered.  WHY IT IS NOT IN "
+        "RECIPES. The form's only submit control is <button type='submit' "
+        "class='search-submit' aria-label='Search'> and it measures ZERO "
+        "PIXELS WIDE (39.1 high, 0 wide -- an icon button whose glyph is "
+        "a background image). Playwright will not click a zero-area "
+        "element, so search_probe's page.click(submit_selector) times out "
+        "after 30 seconds. The form submits perfectly well on Enter, "
+        "which is how the verification above was done, but SearchRecipe "
+        "has no way to say 'press Enter' -- it has submit_selector and "
+        "nothing else, and run_search always clicks it. A recipe was "
+        "written, run through run_search, and failed both ways on 'could "
+        "not submit the search', which is exactly the honest outcome the "
+        "allow-list is meant to prevent shipping.  The fix is in the "
+        "codebase, not here: either a force-click option or a submit_key "
+        "field on SearchRecipe. Until one exists this broker cannot be "
+        "checked. Recorded in full so that whoever adds it can turn this "
+        "entry into a recipe in five minutes.  Two notes on what the "
+        "answer would mean. Famous Birthdays is a celebrity and internet- "
+        "personality database, so for almost every user the correct "
+        "answer is 'not present' -- a real answer, not a failed lookup. "
+        "And the submit-control confusion here is the THIRD in this sweep "
+        "(checkpeople, convex): the probe reports a control's DOM .type, "
+        "in which a <button type=submit> and an <input type=submit> are "
+        "indistinguishable. Read the tag, never infer it."
     ),
 }
 

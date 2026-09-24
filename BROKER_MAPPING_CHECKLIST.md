@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **304** / 969
-- Search leg mapped: 306 / 969
-- Opt-out leg mapped: 308 / 969
+- Fully mapped (both legs): **320** / 969
+- Search leg mapped: 322 / 969
+- Opt-out leg mapped: 324 / 969
 
 ## How to resume
 
@@ -362,33 +362,33 @@ of those dicts against source-brokers.json).
 - [x] **Equimine** (`propstream-com`) -- search: no-surface, opt-out: blocked
 - [x] **Erepublic LLC** (`force-com`) -- search: no-surface, opt-out: blocked
 - [ ] **eTarget s.r.o.** (`etarget-sk`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Evorra Ltd** (`evorra-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Evorra Ltd** (`evorra-com`) -- search: no-surface, opt-out: blocked
 - [ ] **EXACT OPCO LLC** (`exactcustomer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Exact Opco, LLC** (`remodelyourhome-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Experian Data Corp** (`clarityservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Experian Data Corp** (`clarityservices-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Experian Marketing Services** (`experian-com`) -- search: no-surface, opt-out: undecided
-- [ ] **EXPLORIUM Inc** (`explorium-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Exponential Interactive, Inc.** (`vdx-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Eyeota Pte Ltd** (`eyeota-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **EXPLORIUM Inc** (`explorium-ai`) -- search: no-surface, opt-out: blocked
+- [x] **Exponential Interactive, Inc.** (`vdx-tv`) -- search: no-surface, opt-out: no-surface
+- [x] **Eyeota Pte Ltd** (`eyeota-com`) -- search: no-surface, opt-out: staged
 - [x] **FaceCheck.ID** (`facecheck-id`) -- search: no-surface, opt-out: no-surface
-- [ ] **Factori Technologies LLC** (`factori-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Fair Screen, Inc.** (`fairscreen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Factori Technologies LLC** (`factori-ai`) -- search: no-surface, opt-out: undecided
+- [x] **Fair Screen, Inc.** (`fairscreen-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **FamilySearch** (`familysearch-org`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **FamilyTreeNow** (`familytreenow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Famous Birthdays, LLC** (`famousbirthdays-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Faraday, Inc.** (`faraday-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Famous Birthdays, LLC** (`famousbirthdays-com`) -- search: undecided, opt-out: blocked
+- [x] **Faraday, Inc.** (`faraday-io`) -- search: no-surface, opt-out: undecided
 - [ ] **Faraday, Inc.** (`faraday-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **FastBackgroundCheck** (`fastbackgroundcheck-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **FastPeopleSearch** (`fastpeoplesearch-com`) -- search: recipe, opt-out: out-of-scope
-- [ ] **Fideo Intelligence, Inc.** (`fideo-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Fifty Technology Ltd** (`fifty-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Findem, Inc.** (`findem-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Fideo Intelligence, Inc.** (`fideo-ai`) -- search: no-surface, opt-out: blocked
+- [x] **Fifty Technology Ltd** (`fifty-io`) -- search: no-surface, opt-out: no-surface
+- [x] **Findem, Inc.** (`findem-ai`) -- search: no-surface, opt-out: staged
 - [ ] **FinThrive Healthcare, Inc.** (`finthrive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **First Advantage** (`fadv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **First American Data Tree LLC** (`firstam-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **First Direct, Inc** (`firstdirectmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **First Movers Advantage, LLC** (`fmadata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **First Orion, Inc.** (`firstorion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **First American Data Tree LLC** (`firstam-com`) -- search: no-surface, opt-out: undecided
+- [x] **First Direct, Inc** (`firstdirectmarketing-com`) -- search: no-surface, opt-out: undecided
+- [x] **First Movers Advantage, LLC** (`fmadata-com`) -- search: no-surface, opt-out: blocked
+- [x] **First Orion, Inc.** (`firstorion-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Florida Court Records (CourtRecords.us network)** (`floridacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Focus USA, Inc.** (`focus-usa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **FOO MONK LLC** (`instantly-ai`) -- search: UNMAPPED, opt-out: UNMAPPED

@@ -185,6 +185,9 @@ FLAVOR_PGM_OPTOUT = "porchgroupmedia_individual_optout"
 # boxes, three of them required, one submit, and nothing else on the page.
 FLAVOR_ENIGMA_HUBSPOT = "enigma_do_not_sell_hubspot_form"
 
+FLAVOR_EYEOTA_DSR = "eyeota_data_subject_request_hubspot"
+FLAVOR_FINDEM_WEBFLOW = "findem_do_not_sell_webflow_form"
+
 
 # --- step types --------------------------------------------------------------
 
@@ -1744,6 +1747,128 @@ ENIGMA = FormRecipe(
 )
 
 
+_EYEOTA_FORM = "form.hs-form-private:has(select[name='regulation'])"
+
+EYEOTA = FormRecipe(
+    broker_id="eyeota-com",
+    broker_name="Eyeota",
+    url="https://www.eyeota.com/data-subject-request",
+    flavor=FLAVOR_EYEOTA_DSR,
+    steps=(
+        # The request TYPE is a checkbox group, not a select, and several may
+        # be ticked at once. Only the opt-out is ticked here: a recipe should
+        # ask for what it was told to ask for and nothing else, and bundling
+        # in a deletion would be making a decision for the user.
+        Check(selector=(_EYEOTA_FORM
+                        + " input[name='nature_of_request'][value='Opt-out']"),
+              label="I would like to opt out"),
+        Field(selector=_EYEOTA_FORM + " input[name='firstname']",
+              source="first_name", label="First name", required=False),
+        Field(selector=_EYEOTA_FORM + " input[name='lastname']",
+              source="last_name", label="Last name", required=False),
+        Field(selector=_EYEOTA_FORM + " input[name='email']",
+              source="email", label="Email"),
+        # Options read off the live select, verbatim: "Please Select One",
+        # "CCPA (California, Colorado, Connecticut, Virginia, Utah, Nevada
+        # Residents)", "GDPR (Non US Requests)", "Other / Generic".
+        Field(selector=_EYEOTA_FORM + " select[name='regulation']",
+              source="literal", value="Other / Generic",
+              label="Regulation", kind="select"),
+    ),
+    submit_selector=_EYEOTA_FORM + " input[type='submit']",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23. The dataset points "
+        "at /how-to-opt-out, which is an EXPLAINER; it links onward to "
+        "/data-subject-request, which is the form, and which describes its "
+        "own scope: 'This is the form for submitting a request to see what "
+        "data Eyeota may have about you ... to ask that Eyeota delete your "
+        "data, and to exercise other rights under applicable law.'\n"
+        "\n"
+        "WHY 'Other / Generic' AND NOT THE CCPA OPTION, which is the one real "
+        "judgement call in this recipe. The regulation select is required and "
+        "its CCPA option enumerates six states by name. A recipe cannot know "
+        "the user's state -- resolve_fields can supply one, but nothing maps "
+        "a state to a statute, and picking CCPA for someone in Texas would "
+        "assert a jurisdiction they are not in. 'Other / Generic' is true "
+        "for every requester, and an opt-out filed under it is still an "
+        "opt-out. The cost is that a Californian may get generic handling "
+        "instead of statutory handling, which is a real cost and is the thing "
+        "a human should weigh before this leaves STAGED_RECIPES. If it is "
+        "decided that jurisdiction should be asserted, the option string must "
+        "be copied from the live select exactly -- kind='select' matches by "
+        "LABEL.\n"
+        "\n"
+        "The checkbox VALUES are clean and were read off the live page: "
+        "'Access Request', 'Deletion', 'Update Request', 'HEM Opt-out', "
+        "'Opt-out', 'Questions', 'Complaints'. Note 'HEM Opt-out' sitting "
+        "beside 'Opt-out' -- HEM being hashed email, a different request -- so "
+        "the value must be matched exactly and not by prefix.\n"
+        "\n"
+        "THE FORM ID CARRIES A PER-RENDER SUFFIX: it read "
+        "#hsForm_c1b0b5d7-7377-412c-a187-c25e06d9e929_4310, and the trailing "
+        "_4310 is HubSpot's instance counter. Hence the structural selector, "
+        "keyed on the regulation select, which no other form on the page has. "
+        "input[name='hidden_field_for_rich_text_'] is a HubSpot rendering "
+        "artefact rather than a honeypot and is simply left alone.\n"
+        "\n"
+        "NOT LIVE-VERIFIED. Nothing was submitted, success_markers is empty "
+        "rather than guessed, and no_captcha_verified stays False: no captcha "
+        "script, element or hidden challenge input was seen, which is a real "
+        "observation and not a verification. Second channel for a human: "
+        "privacy@eyeota.com. Note also that the page offers a TrustArc "
+        "'Your Privacy Choices' link (submit-irm.trustarc.eu) as a separate "
+        "surface, unexamined here."
+    ),
+)
+
+
+_FINDEM_FORM = "form#wf-form-Do-not-sell"
+
+FINDEM = FormRecipe(
+    broker_id="findem-ai",
+    broker_name="Findem",
+    url="https://www.findem.ai/privacy-rights",
+    flavor=FLAVOR_FINDEM_WEBFLOW,
+    fields=(
+        Field(selector=_FINDEM_FORM + " input[name='First-Name']",
+              source="first_name", label="First Name", required=False),
+        Field(selector=_FINDEM_FORM + " input[name='Last-Name']",
+              source="last_name", label="Last Name", required=False),
+        Field(selector=_FINDEM_FORM + " input[name='Email-Address']",
+              source="email", label="Email Address"),
+    ),
+    submit_selector=_FINDEM_FORM + " input[type='submit']",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-23, loaded twice and "
+        "identical both times. A plain Webflow form on a page titled "
+        "'Privacy Rights', and the form's own id says what it is for: "
+        "wf-form-Do-not-sell. Only the email address is required.\n"
+        "\n"
+        "Unlike every HubSpot-hosted form in this module the id here is "
+        "AUTHORED rather than generated, so it is used directly -- and it has "
+        "to be, because the scoping is load-bearing for the usual reason: the "
+        "page carries a SECOND form, a HubSpot newsletter box whose only "
+        "field is also an email input (input[name='email'], beside ten hidden "
+        "UTM and gclid trackers and a 'Subscribe' button). An unscoped email "
+        "selector on this page is a coin flip between filing the request and "
+        "joining a mailing list.\n"
+        "\n"
+        "input[name='Other-comments'] is deliberately left unfilled: there is "
+        "nothing a recipe could honestly put in a free-text box that the "
+        "structured fields have not already said.\n"
+        "\n"
+        "NOT LIVE-VERIFIED and staged rather than shipped: nothing was "
+        "submitted, so success_markers is empty rather than invented, and "
+        "no_captcha_verified stays False. No captcha script, element or "
+        "hidden challenge field was present on either load. Webflow forms "
+        "post to the page itself and swap in a success div, so a future "
+        "verification pass should expect an in-place success message rather "
+        "than a navigation. taylor@findem.ai is the address the dataset "
+        "records."
+    ),
+)
+
+
 # Brokers whose form has been WRITTEN DOWN but which are not yet turned on.
 # It exists so that "we transcribed the form" and "we are willing to submit
 # to it" stay two separate decisions. Nothing reads this at runtime: a broker
@@ -1756,6 +1881,8 @@ STAGED_RECIPES: dict = {
     CONVEX.broker_id: CONVEX,
     PORCHGROUPMEDIA.broker_id: PORCHGROUPMEDIA,
     ENIGMA.broker_id: ENIGMA,
+    EYEOTA.broker_id: EYEOTA,
+    FINDEM.broker_id: FINDEM,
 }
 
 
@@ -2548,6 +2675,96 @@ NO_OPTOUT_SURFACE = {
         "is left to a human. Note also, in passing, that the surviving "
         "evidence is a Google Form -- the same pattern as clay-com, which "
         "is still open pending aria-labelledby resolution."
+    ),
+    "clarityservices-com": (
+        "FLAGGED AS BORDERLINE-FCRA, 2026-09-23, and mapped as its own "
+        "entry rather than folded into the FCRA-screening category note "
+        "above -- the same treatment as earlywarning-com and for the same "
+        "reason. Clarity Services (Experian Data Corp) is a consumer "
+        "reporting agency, but a SUBPRIME LENDING one: it supplies the "
+        "alternative-credit data behind payday and instalment lending "
+        "decisions. That is neither employment screening, which the "
+        "category note covers, nor marketing data, which this tool exists "
+        "for.  The recorded /support/opt-out-2/ is titled 'How to Opt-Out "
+        "of a Prescreen List' and it contains no form -- the only form "
+        "elements on the page are two copies of the theme's site search. "
+        "What it describes is the PRESCREEN opt-out, the statutory FCRA "
+        "right to stop credit bureaus including you in pre-approved "
+        "credit and insurance offers. That right is real and worth "
+        "exercising, but it is not exercised here: it is exercised "
+        "centrally, through the industry's joint channel and by "
+        "telephone, and nothing on this broker's own site can take the "
+        "request.  So there is no first-party web surface to automate. "
+        "The site's other consumer routes are 'Request Your Clarity "
+        "Report' and a dispute process, which are FCRA access and dispute "
+        "rights rather than an opt-out, and are the correct recourse for "
+        "anyone who wants their file changed. optout@experian.com is the "
+        "address the dataset records."
+    ),
+    "vdx-tv": (
+        "Verified 2026-09-23. VDX.TV's privacy page carries exactly one "
+        "form and it is #cookie-preferences, a Finsweet consent panel "
+        "with three checkboxes (marketing, personalization, analytics). "
+        "There is no request form, no rights form and no email address "
+        "recorded for this row.  What the page offers instead, under 'Do "
+        "Not Sell or Share My Info', is a single link: 'Click here to "
+        "Opt-Out' pointing at "
+        "a.tribalfusion.com/optout/vdx?participant=... . That is an ad- "
+        "industry COOKIE opt-out on the Tribal Fusion (Exponential) ad- "
+        "serving host -- per-browser, suppressing targeting rather than "
+        "removing a profile, and keyed to a participant parameter rather "
+        "than to a person.  IT WAS DELIBERATELY NOT FOLLOWED. Everything "
+        "about its shape says it is actuated by the GET itself, which is "
+        "precisely the hazard dstillery demonstrated earlier in this "
+        "sweep, where merely navigating to an /optout URL performed the "
+        "opt-out. The probe tool's docstring now says such URLs are to be "
+        "opened deliberately and one at a time, never in a bulk sweep, "
+        "and this entry honours that rather than quietly making an "
+        "exception. Not following it costs nothing: a cookie opt-out on a "
+        "throwaway browser profile would tell us nothing we do not "
+        "already know.  Recorded as no-surface rather than blocked "
+        "because nothing is defending anything -- there simply is no "
+        "first-party request form here."
+    ),
+    "fairscreen-com": (
+        "FCRA_SCREENING_NOTE applies, and this broker states it in its "
+        "own words. fairscreen.com/privacy-policy opens: 'Fair Screen, "
+        "Inc ('FSI') is a consumer reporting agency governed by the "
+        "federal Fair Credit Reporting Act (FCRA), 15 U.S.C. ...'. That "
+        "is the exact self-declaration the category note above "
+        "NO_OPTOUT_SURFACE describes, so the reasoning is not repeated "
+        "here: see it for why a marketing-style opt-out would not touch "
+        "the report database and why the real recourse is the FCRA access "
+        "and dispute rights instead.  Verified 2026-09-23 by rendering "
+        "both the homepage and the privacy policy: there is no request "
+        "form of any kind on either, and the only controls on either page "
+        "belong to the cookie banner. The dataset already records this "
+        "row as email-method with compliance@fairscreen.com, which is the "
+        "appropriate channel.  One detail worth keeping because it is the "
+        "sort of thing that distinguishes a careful screener from a "
+        "careless one: FSI states it is a member of Concerned CRAs, a "
+        "group opposed to offshoring sensitive personal information for "
+        "processing."
+    ),
+    "fifty-io": (
+        "Verified 2026-09-23. The dataset's /opt-out serves the SAME page "
+        "as the homepage: the only form on it is #book-demo-form, a sales "
+        "enquiry posting to /assets/php/captcha.php (Full name, Company, "
+        "Email, Phone, Message), reCAPTCHA-protected. There is no opt-out "
+        "form on the opt-out page.  What the page does carry is an IAB "
+        "TCF consent panel -- the [#IABV2SETTINGS#] placeholder and "
+        "Necessary/Preferences/Statistics/Marketing toggles with vendor "
+        "counts -- so 'opt out' here means cookie consent, per-browser, "
+        "and not a request about data the broker holds. Recorded as no- "
+        "surface rather than blocked because the captcha guards a demo "
+        "form; there is nothing behind it that would serve a person "
+        "exercising rights.  One detail worth keeping for the pattern "
+        "collection: the demo form's honeypot is input[name='name2'] and "
+        "its placeholder reads 'Paste your spam here' -- a honeypot that "
+        "announces itself in plain English, which is the opposite of "
+        "enformion's 'yourFavoriteNumber'. privacy@fifty.io is the "
+        "address on file, and as a UK company its statutory channel is a "
+        "UK GDPR request by email."
     ),
 }
 
@@ -4791,6 +5008,109 @@ OPTOUT_UNDECIDED = {
         "following states: "
         "CA,CO,CT,DE,IA,IN,KY,MD,MT,NE,NH,NJ,OR,TN,TX,UT,VA,VT'."
     ),
+    "factori-ai": (
+        "NO VERDICT as of 2026-09-23. The surface was found, fully read, "
+        "and is blocked by a CODEBASE GAP rather than by the broker. "
+        "/do-not-sell-my-information/ embeds a GOOGLE FORM in a child "
+        "frame (docs.google.com/forms/d/e/1FAIpQLSenQ43- "
+        "rKbEqNWX8jUhKaXWpxzs4G5NLNFaU1-ML9htK-OmLQ). The main frame has "
+        "no form at all, so this is another that would have read as 'no "
+        "form found' before the probe learned to walk frames. Resolving "
+        "the fields through aria-labelledby -- Google Forms give their "
+        "inputs no name attribute, only entry.NNNNNNNNN on parallel "
+        "hidden inputs -- gives five required questions: Name, Email, "
+        "Country, MOBILE ADVERTISING ID, and Message.  The blocker is "
+        "Mobile Advertising ID, required. Nothing in resolve_fields "
+        "supplies a MAID and nothing could: it is a per-device identifier "
+        "the user would have to read out of their phone's settings. This "
+        "is the fourth broker in the sweep keyed to one (complementics, "
+        "collectivedata, datafy, and datonics optionally), and it is "
+        "recorded the same way they were -- undecided, because the form "
+        "is honest and reachable and the gap is on our side. If MAID "
+        "capture is ever added to resolve_fields, these five brokers "
+        "unblock together.  For whoever returns: the hidden entry ids are "
+        "entry.1647377565, entry.1929211145, entry.1262164174, "
+        "entry.444203481 and entry.38362276, in the same document order "
+        "as the five visible inputs, but they should be re-read rather "
+        "than trusted -- they change if the form is edited. No captcha "
+        "was present. clay-com is the other open Google Form in this "
+        "module and has the same aria-labelledby shape; whatever is built "
+        "for one will serve both. privacy@factori.ai is the published "
+        "channel."
+    ),
+    "faraday-io": (
+        "NO VERDICT as of 2026-09-23, and the reason is a reproducible "
+        "failure to read the page at all rather than anything observed on "
+        "it.  https://www.faraday.io/privacy-options WEDGES THE BROWSER. "
+        "Probed twice, in separate processes, and both attempts exceeded "
+        "the 75-second per-target budget with nothing recorded -- no "
+        "status, no title, no text. This is the page that exposed the "
+        "probe tool's own defect: a child frame whose main thread never "
+        "yields makes frame.evaluate hang forever, Playwright offers no "
+        "timeout on that call, and the first run lost eight already- "
+        "probed targets because results were only written at the end. "
+        "Both halves are now fixed (per-target child processes, "
+        "incremental writes), which is why this entry exists at all "
+        "instead of the run simply dying.  Nothing about the broker "
+        "follows from that. It is NOT evidence of an anti-bot wall: a "
+        "wall serves a challenge page, which reads perfectly well, and "
+        "this served nothing. The likeliest explanations are a busy-loop "
+        "in an embedded widget or a consent manager fighting "
+        "instrumentation, the way Osano does on thedatatrust-com "
+        "elsewhere in this module.  Next step, and it is the same one "
+        "thedatatrust needs: read this page WITHOUT script evaluation -- "
+        "take page.content() and parse it offline, or block the third- "
+        "party frame at the route level before navigating. Two brokers "
+        "now need that capability, which makes it worth building once. "
+        "privacy@faraday.ai is on file, and note it differs from the "
+        "row's domain (faraday.io)."
+    ),
+    "firstam-com": (
+        "NO VERDICT as of 2026-09-23: the surface is one hop further on "
+        "and was not opened.  firstam.com/privacy-policy carries no "
+        "request form -- its only forms are two site searches -- but it "
+        "does carry a 'Do Not Sell or Share My Personal Information' "
+        "submit control outside any form, and its prose links out three "
+        "separate times to firstam.service-now.com. So First American's "
+        "rights requests are handled on a hosted SERVICENOW portal.  That "
+        "is recorded as undecided rather than guessed at because "
+        "ServiceNow is a known-awkward host for this work: its forms are "
+        "keyed by per-instance sys-ids rather than by stable field names, "
+        "which this sweep has already met and which makes any "
+        "transcription instance-specific. It needs rendering directly "
+        "before anything can be said about its fields or whether it "
+        "carries a challenge.  The page also offers the usual third-party "
+        "cookie opt-outs (Google's gaoptout, optout.aboutads.info) which "
+        "are not this broker's surface and should not be mistaken for it. "
+        "The dataset's contact for this row, tree-trace- "
+        "legal.sna@firstam.com, is specific to the First American Data "
+        "Tree subsidiary the row is actually about, which is worth "
+        "preserving: a request sent to the parent may not reach the right "
+        "database."
+    ),
+    "firstdirectmarketing-com": (
+        "NO VERDICT as of 2026-09-23. compliance.firstdirectmarketing.com "
+        "is a hosted 'Governance portal' -- a third-party compliance-page "
+        "product, judging by its generic copy ('Empowering you through "
+        "absolute transparency') and its Legal/Company chrome -- and it "
+        "advertises exactly the right thing: 'Data subject requests: "
+        "Exercise and manage your personal data privacy rights'.  It "
+        "could not be read. The portal is a JavaScript application that "
+        "renders no form element at any URL tried, including /data- "
+        "subject-requests, which serves the same landing content as the "
+        "root. The only interactive controls in the DOM are the portal's "
+        "own chrome plus one telling entry: a submit labelled 'Open "
+        "privacy widget.' So the request form is inside a WIDGET opened "
+        "by that control, not a page that can be navigated to.  Next step "
+        "is concrete: click 'Open privacy widget.', let it render, then "
+        "enumerate the fields and check for a captcha at that point. "
+        "Worth doing carefully rather than quickly, because a hosted "
+        "governance portal is likely to be shared across many brokers -- "
+        "identifying the product by name would probably resolve several "
+        "dataset rows at once, which is the same leverage the OneTrust "
+        "and DataGrail patterns gave. privacy@firstdirectmarketing.com is "
+        "the published channel."
+    ),
 }
 
 
@@ -5943,6 +6263,146 @@ OPTOUT_BLOCKED = {
         "whenever the page is edited. This is the most fragile naming "
         "scheme the sweep has met, worse than Gravity's input_N. "
         "privacy@erepublic.com is the published channel."
+    ),
+    "evorra-com": (
+        "Verified 2026-09-23. The dataset's product-privacy-policy page "
+        "is an explainer whose only form is Gravity #gform_2 -- an email "
+        "box with 'I would like to subscribe' beside it, i.e. a "
+        "NEWSLETTER, not an opt-out. The real surface is the page's own "
+        "'opt-out' link, which lands on privacy.evorra.com, and that form "
+        "is genuinely good: a requester-type radio, first/last name, "
+        "email, country and state of residence, four rights checkboxes, "
+        "an authorised-agent block with a file upload, and a details box. "
+        "Blocked by Cloudflare Turnstile -- challenges.cloudflare.com "
+        "loaded, a .cf-turnstile element present, a hidden cf-turnstile- "
+        "response awaiting its token.  Two further obstacles recorded so "
+        "nobody thinks clearing the Turnstile would be enough. There is a "
+        "HONEYPOT: a hidden input[name='website'] on a form that never "
+        "asks a human for a website. And the page states an out-of-band "
+        "hop for some request types: 'If you ask to access or correct "
+        "your own data, we email you a code to confirm you control the "
+        "address' -- there is an input[name='code'] on the form for "
+        "exactly that. The opt-out right may or may not be gated the same "
+        "way; the wording only names access and correction.  One more "
+        "finding on the explainer page, worth carrying forward as a "
+        "pattern: gform_2 carries a hidden input named "
+        "gform_submission_speeds. That is Gravity Forms measuring HOW "
+        "FAST the form was filled, the same class of timing trap found on "
+        "e.Republic's Salesforce form. It is becoming common enough to "
+        "expect. privacy@evorra.com is the published channel."
+    ),
+    "explorium-ai": (
+        "Verified 2026-09-23. The request returned HTTP 429 and landed on "
+        "/do-not-sell-my-personal-info/?__cf_chl_rt_tk=... -- a "
+        "Cloudflare challenge page reading 'Performing security "
+        "verification ... This website uses a security service to protect "
+        "against malicious bots', Ray ID a3fda1ad0f5131a9, with "
+        "challenges.cloudflare.com loaded and a stray cf-turnstile- "
+        "response input outside any form. The opt-out form behind it "
+        "never renders, so there is nothing to transcribe.  The 429 is "
+        "worth separating from the challenge itself: it is a RATE-LIMIT "
+        "status, not a refusal, so this particular response may say as "
+        "much about how recently the host had been asked as about the "
+        "client. A retry from a cold address would be a fairer test "
+        "before concluding the page is walled against everyone. Note also "
+        "that the dataset's path (/do-not-sell-my-personal-information/) "
+        "redirects to the shorter -info/ form of the URL. "
+        "privacy@explorium.ai does not appear in the dataset for this "
+        "row, which records no opt-out email at all."
+    ),
+    "famousbirthdays-com": (
+        "Verified 2026-09-23. Famous Birthdays publishes no privacy "
+        "request form: the dataset's /contact is a general contact form "
+        "-- Your Name, Your Email, an 'Is this related to an existing "
+        "Famous Birthdays URL?' select, a Comments box and Send -- "
+        "POSTing to /contact/submit. There is no do-not-sell link "
+        "anywhere on the site and the dataset records no opt-out email. "
+        "Blocked by reCAPTCHA: a .g-recaptcha element is rendered on the "
+        "contact page. So even the general channel cannot be driven.  One "
+        "field needs explaining so it is not mistaken for a honeypot: "
+        "input[name='url'] computes to hidden at rest, but it is "
+        "CONDITIONAL, not a trap -- it is revealed when the 'Is this "
+        "related to an existing ... URL?' select is set to 'Yes'. A "
+        "recipe would need appears_later=True on it rather than "
+        "forbidden_selectors, which is the opposite treatment, and the "
+        "distinction is only visible by reading the select beside it. "
+        "See the search leg for the more interesting half of this broker: "
+        "its search IS verified, both ways, and is held out of RECIPES "
+        "only by a zero-width submit button that Playwright cannot click."
+    ),
+    "fideo-ai": (
+        "Verified 2026-09-23 by driving the wizard one step, reading "
+        "only. app.fideo.ai/your-privacy-choices is a multi-step SPA: "
+        "step one offers five radio choices OUTSIDE any form element -- "
+        "Access my data, Correct my data, Do not sell my data, Limit "
+        "sharing of my data, Delete my data -- and a CONTINUE button. "
+        "Selecting the do-not-sell option and continuing advances to "
+        "/your-privacy-choices/country, a second step holding one unnamed "
+        "text input and another CONTINUE. How many steps follow is "
+        "unknown; the flow was not driven further.  Blocked by reCAPTCHA, "
+        "which the app loads explicitly in EXPLICIT RENDER mode "
+        "(recaptcha/api.js?onload=googleRecaptchaLoaded&render=explicit). "
+        "That is worth naming: in explicit mode the widget is created by "
+        "the application at a moment of its choosing, so it will not "
+        "appear in the DOM until whichever step calls for it -- an early "
+        "step looking clean says nothing at all about the last one.  Two "
+        "details that would matter if the captcha were ever cleared. "
+        "EVERY RADIO HAS value='on' -- all five of them -- so a recipe "
+        "cannot select by value and must key on the surrounding label "
+        "text or on position, which is fragile. And no control on either "
+        "step carries a name attribute, so selectors would have to be "
+        "built from React-generated structure. dpo@fideo.ai is the "
+        "published channel, and the page also names an authorised-agent "
+        "route by email."
+    ),
+    "fmadata-com": (
+        "Verified 2026-09-23. The form at /opt-out-requests/new is real "
+        "and unusually clear about its own scope, offering a request-type "
+        "select with 'Opt out', 'Disclosure' and 'Deletion', a name, a "
+        "full address block and an authorised-agent yes/no radio with a "
+        "conditional agent-name field.  Blocked by hCaptcha: hcaptcha.com "
+        "is loaded, an .h-captcha element is present, a "
+        "newassets.hcaptcha.com challenge frame is attached, and an "
+        "h-captcha-response textarea sits in the form. A leftover "
+        "g-recaptcha-response textarea sits beside it -- the same "
+        "migration fossil seen on listmatch-com, where a site moved from "
+        "reCAPTCHA to hCaptcha and left the old field in place. Two "
+        "response fields does not mean two challenges; only the hCaptcha "
+        "one is live.  Second blocker regardless: a per-load Rails "
+        "authenticity_token, so no stored POST can be replayed.  A small "
+        "trap for whoever transcribes this later. The address fields' "
+        "PLACEHOLDERS ARE A REAL, COMPLETE ADDRESS -- '4845 Pearl East "
+        "Cir Ste', 'Boulder', 'CO', '80301-6112' -- rather than generic "
+        "hints. A reader skimming the probe output could easily mistake "
+        "those for pre-filled values and conclude the form arrives partly "
+        "completed. It does not; they are placeholder text. The broker "
+        "also publishes a PDF alternative at /opt-out-requests/new.pdf "
+        "for anyone who cannot use the web form, and privacy@fmadata.com "
+        "is on file."
+    ),
+    "firstorion-com": (
+        "Verified 2026-09-23. privacy.firstorion.com links 'GET STARTED "
+        "ONLINE' to /opt-out/step-one, which is a genuine first step: "
+        "First Name, Last Name, Email Address, Phone Number, a two-way "
+        "radio (request removal of personal information, or access it), "
+        "an attestation checkbox and a 'Send Confirmation' button. "
+        "Blocked by reCAPTCHA -- g-recaptcha-response in the form, with "
+        "both api2/anchor and api2/bframe frames attached, the bframe "
+        "indicating the checkbox-with-puzzle variant rather than "
+        "invisible v3.  Two further obstacles behind it. The button says "
+        "'Send Confirmation' and the page explains the flow: the request "
+        "is not completed here, an email confirmation follows -- the out- "
+        "of-band hop that already rules out several brokers in this "
+        "module. And NONE OF THE FOUR TEXT INPUTS HAS A NAME ATTRIBUTE; "
+        "only the radio group carries one (name='opt-out'). So even past "
+        "the captcha, selectors would have to be built from position or "
+        "from React-generated structure, which is the same fragility as "
+        "fideo-ai in this batch.  Worth recording as a point in the "
+        "broker's favour: it states a real prerequisite honestly -- 'you "
+        "will need access to the device associated with the phone number "
+        "you are opting out' -- and it publishes a postal alternative for "
+        "people without an email address. ccparequests@firstorion.com is "
+        "the address on file."
     ),
 }
 
