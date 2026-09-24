@@ -866,6 +866,130 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch 19 of 2026-09-24: list brokers / B2B data / skip tracing ---
+    #
+    # Same structural answer as batch 18 and for the same reason: these are
+    # wholesale data vendors, and a free consumer lookup would give away the
+    # inventory. One row is more interesting than that and is filed under
+    # SEARCH_UNDECIDED instead: lusha-com, which advertises a 'control your
+    # profile' route that was not rendered this pass.
+    #
+    # locatesmarter-com is NOT in this batch's additions even though its
+    # opt-out leg is -- its search leg was already closed on 2026-09-22 and
+    # that entry stands. Worth knowing when reading the counts: a broker can
+    # be "unmapped" because one leg is missing, not both.
+    "lightboxre-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. LightBox sells commercial-real-estate data and "
+        "location intelligence to CRE professionals; the only input on "
+        "either page rendered is a WordPress site search over its own "
+        "marketing pages. The leg is closed because a search recipe cannot "
+        "be written against a surface the broker does not offer.\n"
+        "\n"
+        "Category note: LightBox's records are keyed to PARCELS AND "
+        "BUILDINGS rather than to people, so for most individuals the "
+        "honest answer to 'am I in here' is no -- which is a real answer, "
+        "not a failed lookup. See optout_forms for the broken do-not-sell "
+        "link, which is the substantive finding on this row."
+    ),
+    "lionsharemarketing-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. LionShare sells direct-marketing lists; the "
+        "opt-out page is a submission form, not a search. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer. The opt-out leg is the interesting one on "
+        "this row -- it is staged in optout_forms."
+    ),
+    "lists-inc-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here, and very little else: the whole site is four "
+        "pages of marketing copy for healthcare and consumer mailing-list "
+        "products. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "listservicedirect-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. ListServiceDirect sells consumer mailing "
+        "lists; its 'SIC Code Search' and 'Quick Counts' tools are "
+        "inventory queries for BUYERS -- how many records match a segment "
+        "-- not a self-lookup, and they return counts rather than people. "
+        "The site's only other input is a WordPress site search. The leg is "
+        "closed because a search recipe cannot be written against a surface "
+        "the broker does not offer."
+    ),
+    "listsonline-com": (
+        "Verified 2026-09-24 by rendering the site, which now trades as "
+        "Everleads (see optout_forms for the domain change and why an HTTPS "
+        "certificate error nearly buried this row). No consumer-facing "
+        "lookup exists on everleads.com. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer.\n"
+        "\n"
+        "Worth noting for anyone who revisits this: the do-not-sell form "
+        "IS, by the company's own description, a search -- 'We will use the "
+        "information you provide solely for searching our data to determine "
+        "if your information is present in our database.' But it returns "
+        "its answer by email and by acting on it, not to the page, so there "
+        "is nothing a search recipe could read."
+    ),
+    "livedatatechnologies-com": (
+        "Verified 2026-09-24 by rendering the site (now livedatatech.com). "
+        "No consumer-facing lookup exists here. Live Data Technologies "
+        "tracks job changes across ~160 million professional profiles and "
+        "sells access to sales teams; every route on the site is 'Talk to "
+        "Sales' or 'Request a Data Test'. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker does "
+        "not offer."
+    ),
+    "logiq-com": (
+        "Verified 2026-09-24 by rendering the site. There is no site: "
+        "logiq.com is a parked GoDaddy Auctions listing. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer -- see optout_forms, including the warning "
+        "about confirming ownership if the name ever resolves to content "
+        "again."
+    ),
+    "lotadata-com": (
+        "Verified 2026-09-24: lotadata.com does not resolve, and the "
+        "company stated to us directly that it is no longer operational. "
+        "The leg is closed on the same basis as the opt-out leg; see "
+        "optout_forms for why this row is filed as absence rather than as "
+        "an open question."
+    ),
+    "loopme-com": (
+        "Verified 2026-09-24 by rendering the site and its opt-out frame. "
+        "No consumer-facing lookup exists here. LoopMe is a mobile "
+        "advertising platform whose records are keyed to ADVERTISING "
+        "IDENTIFIERS, not names -- its own opt-out asks for an AAID or "
+        "IDFA. There is nothing a person could search by, and nothing a "
+        "name-based search recipe could express. The leg is closed because "
+        "a search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "lsmapps-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. L.S Mobile Apps publishes consumer mobile "
+        "apps; its only privacy surface is the data-subject request form "
+        "that optout_forms already carries a shipped recipe for. The leg is "
+        "closed because a search recipe cannot be written against a surface "
+        "the broker does not offer.\n"
+        "\n"
+        "This row's search leg was the last one outstanding for it, and "
+        "reading it turned up drift in the SHIPPED opt-out recipe -- the "
+        "live form has grown a security-code field. That finding is "
+        "recorded at the head of OPTOUT_UNDECIDED in optout_forms; it is "
+        "flagged there rather than acted on here."
+    ),
+    "localblox-com": (
+        "Verified 2026-09-24 by rendering the site. localblox.com now "
+        "serves an empty default WordPress installation with no content, "
+        "and the recorded consumer subdomain no longer resolves. There is "
+        "no lookup, because there is no site. The leg is closed here while "
+        "the opt-out leg stays undecided, because 'this placeholder offers "
+        "no search' is an observation and 'LocalBlox has no opt-out "
+        "surface' would be a claim about a company that has merely gone "
+        "quiet."
+    ),
     # --- batch 18 of 2026-09-24: lead-generation / B2B contact vendors ----
     #
     # A structurally uniform batch on this leg. Every company here sells
@@ -3827,6 +3951,68 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    # --- batch 19 of 2026-09-24: list brokers / B2B data / skip tracing ---
+    "lusha-com": (
+        "NO VERDICT 2026-09-24, and it is the row in batch 19 most likely "
+        "to have a real search leg. Lusha's footer links 'Do Not Sell My "
+        "Info' to www.lusha.com/privacy_topic/control-your-profile/ -- a "
+        "page whose name promises exactly the self-lookup this leg is "
+        "about, and which was NOT rendered this pass. Reading it resolves "
+        "this row.\n"
+        "\n"
+        "Two things to carry into that reading. First, Lusha sells B2B "
+        "contact data scraped and inferred from the open web, so a profile "
+        "on a given person very plausibly exists, and a 'control your "
+        "profile' flow is the industry's usual answer -- compare LeadIQ's "
+        "'Claim My Profile', already open under this same dict. Second, and "
+        "the reason to be careful: claiming or viewing a profile normally "
+        "requires handing over the email address the profile is keyed to, "
+        "and on a contact-data vendor that VERIFIES a record the company "
+        "was previously only guessing at. Use a disposable address and "
+        "prefer a route that reads without claiming.\n"
+        "\n"
+        "The opt-out leg of this row is separately worth reading -- see "
+        "optout_forms, where the 'Request Removal' page turns out to lead "
+        "with a sales-contact form."
+    ),
+    "limeleads-com": (
+        "NO VERDICT 2026-09-24: limeleads.com serves WP Engine's 'Site Not "
+        "Configured' page on every path tried -- the apex and the recorded "
+        "opt-out path alike -- so no surface of any kind was observed and "
+        "none can be described. UNREACHABLE for the defects list; see "
+        "optout_forms for why a hosting-level 'not configured' is a "
+        "different animal from a 404 and from a DNS failure.\n"
+        "\n"
+        "A category expectation, offered as an expectation and not as a "
+        "finding: LimeLeads sold B2B contact lists by subscription, and no "
+        "wholesale list vendor in this sweep has yet offered a free "
+        "consumer self-lookup. That is a reason to think the answer will be "
+        "no, not a reason to record one."
+    ),
+    "lizdev-com": (
+        "NO VERDICT 2026-09-24: lizdev.com answered HTTP 403 from "
+        "Cloudflare ('Sorry, you have been blocked ... You are unable to "
+        "access secureservercdn2.net') and no content was retrieved, so "
+        "neither leg could be read. UNREACHABLE for the defects list.\n"
+        "\n"
+        "The block page names GoDaddy's CDN rather than the site itself, "
+        "which suggests a shared-hosting edge rule against this client "
+        "rather than a refusal aimed at the public. Recheck from the "
+        "deployment host before concluding anything; see optout_forms for "
+        "the fuller account."
+    ),
+    "lookify-io": (
+        "NO VERDICT 2026-09-24: www.lookify.io/opt-out never rendered -- "
+        "Cloudflare Turnstile's managed-challenge interstitial answered "
+        "instead ('Just a moment...', HTTP 403, a __cf_chl_rt_tk token on "
+        "the URL). Nothing behind the wall was observed, so nothing can be "
+        "said about a lookup surface.\n"
+        "\n"
+        "Worth a recheck rather than an assumption: the name is a lookup "
+        "name, and the dataset says the web form is the ONLY channel this "
+        "company honours. Good candidate for the deployment-host recheck "
+        "pass."
+    ),
     # --- batch 18 of 2026-09-24: lead-generation / B2B contact vendors ---
     "leadiq-com": (
         "NO VERDICT 2026-09-24, and it is the one row in batch 18 where a "

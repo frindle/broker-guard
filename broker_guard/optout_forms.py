@@ -140,6 +140,22 @@ FLAVOR_THATSTHEM_BESPOKE = "thatsthem_bespoke_form"
 # bot checks: reCAPTCHA, and a required arithmetic question.
 FLAVOR_PIPL_WEBTOCASE = "pipl_salesforce_webtocase_form"
 
+# LionShare Marketing's /opt-out/ page. A Quform (WordPress) form posting to
+# the plugin's own opt-out/quform/process.php, with seven plainly-named
+# visible inputs, a full state <select>, no honeypot and no bot check of any
+# kind. Notable for what it LACKS: no quform_form_id and no nonce were
+# present in the rendered markup, which is unusual for the plugin -- see the
+# staged recipe's notes.
+FLAVOR_LIONSHARE_QUFORM = "lionshare_quform_optout_form"
+
+# Everleads' /do-not-sell page -- the live identity of the dataset's
+# listsonline.com row. A plain server-rendered form with authored ids that
+# POSTs to a THIRD-PARTY form relay, api.staticforms.dev, carrying a hidden
+# apiKey and formType issued with the page. No captcha, no frames, no
+# honeypot. Named separately because the third-party relay is the thing a
+# future maintainer needs to notice.
+FLAVOR_EVERLEADS_STATICFORMS = "everleads_staticforms_do_not_sell"
+
 # RevealPhoneOwner's own /data-removal/ page. The plainest form in this
 # pilot: a server-rendered Bootstrap POST form with five visible inputs
 # (name, last name, phone, e-mail, free-text reason), a hidden form-name
@@ -1899,11 +1915,152 @@ FINDEM = FormRecipe(
 )
 
 
+_LIONSHARE_FORM = "form[action*='quform/process.php']"
+
+LIONSHARE = FormRecipe(
+    broker_id="lionsharemarketing-com",
+    broker_name="Lionshare Marketing, Inc.",
+    url="https://www.lionsharemarketing.com/opt-out/",
+    flavor=FLAVOR_LIONSHARE_QUFORM,
+    fields=(
+        Field(selector="#firstname", source="first_name", label="First Name"),
+        Field(selector="#lastname", source="last_name", label="Last Name"),
+        Field(selector="#address1", source="street", label="Street Address"),
+        Field(selector="#city", source="city", label="City"),
+        Field(selector="#state", source="state", kind="select", label="State"),
+        Field(selector="#zip", source="zip", label="Zip"),
+        Field(selector="#email", source="email", label="Email Address",
+              required=False),
+    ),
+    submit_selector="#submit-btn",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-24, batch 19. A Quform "
+        "(WordPress) opt-out at /opt-out/ posting to "
+        "/opt-out/quform/process.php. Seven visible inputs, all with "
+        "authored ids and names that say what they are -- firstname, "
+        "lastname, address1, city, state, zip, email -- a full 50-state "
+        "select, and an input[type=submit]#submit-btn reading 'SUBMIT'. The "
+        "page's own sentence is unambiguous about purpose: 'In accordance "
+        "with the LionShare privacy policy, you can opt-out by submitting "
+        "the information below'.\n"
+        "\n"
+        "NO BOT CHECK WAS PRESENT on the render: no captcha script of any "
+        "origin, no captcha element, no widget, and NO FRAMES AT ALL on the "
+        "page. ``no_captcha_verified`` is nevertheless left False, because "
+        "this module's standing rule is that the flag is set only when a "
+        "human has swept the form, and nobody has.\n"
+        "\n"
+        "REQUIREDNESS IS TAKEN FROM THE LABELS, NOT THE DOM, and that is a "
+        "deliberate divergence worth flagging. Every visible field reports "
+        "required=false in the markup, but the rendered labels read 'First "
+        "Name (Required)', 'Street Address (Required)' and so on, with "
+        "'Email Address (Optional)' as the single exception. Quform "
+        "validates server-side rather than with the HTML attribute, so the "
+        "labels are the truthful statement and the attributes are not. This "
+        "recipe follows the labels.\n"
+        "\n"
+        "THE ONE REAL UNCERTAINTY, and the reason this is staged rather "
+        "than proposed for promotion. Quform normally carries a hidden "
+        "``quform_form_id`` and a per-load nonce, and NEITHER WAS IN THE "
+        "RENDERED MARKUP -- the form has exactly eight controls and none of "
+        "them is hidden. Either this install posts without them, or the "
+        "probe read the page before the plugin's script injected them. Those "
+        "two possibilities have different consequences: in the second case a "
+        "submission driven too early would post an incomplete body and be "
+        "dropped, which is a silent failure rather than a loud one. Whoever "
+        "verifies this should re-render, wait for network idle, and confirm "
+        "whether hidden fields appear before anything is submitted.\n"
+        "\n"
+        "NOT LIVE-VERIFIED: nothing was submitted, so success_markers is "
+        "empty rather than invented.\n"
+        "\n"
+        "DATASET DEFECT, flagged and not fixed: the recorded opt_out_url is "
+        "/ccpa-opt-out/, which 301s to /opt-out/. Harmless, but the recipe "
+        "points at the live path."
+    ),
+)
+
+
 # Brokers whose form has been WRITTEN DOWN but which are not yet turned on.
 # It exists so that "we transcribed the form" and "we are willing to submit
 # to it" stay two separate decisions. Nothing reads this at runtime: a broker
 # here is absent from RECIPES, which is what actually stops a submission.
+_EVERLEADS_FORM = "form[action*='staticforms.dev']"
+
+EVERLEADS = FormRecipe(
+    broker_id="listsonline-com",
+    broker_name="Listsonline (trading as Everleads)",
+    url="https://everleads.com/do-not-sell",
+    flavor=FLAVOR_EVERLEADS_STATICFORMS,
+    fields=(
+        Field(selector="#first-name", source="first_name",
+              label="First Name"),
+        Field(selector="#last-name", source="last_name", label="Last Name"),
+        Field(selector="#dns-email", source="email", label="Email Address",
+              required=False),
+        Field(selector="#street", source="street", label="Street Address",
+              required=False),
+        Field(selector="#city", source="city", label="City", required=False),
+        Field(selector="#state", source="state", label="State",
+              required=False),
+        Field(selector="#zip", source="zip", label="Zip Code",
+              required=False),
+    ),
+    submit_selector=_EVERLEADS_FORM + " button[type='submit']",
+    notes=(
+        "Transcribed from the rendered DOM on 2026-09-24, batch 19.\n"
+        "\n"
+        "READ THE DOMAIN CHANGE FIRST, because the recipe points somewhere "
+        "the dataset does not name. The dataset row is listsonline.com. "
+        "https://listsonline.com fails TLS outright with "
+        "net::ERR_CERT_COMMON_NAME_INVALID -- on both the apex and www -- "
+        "which looks like a dead host and is not one. Over PLAIN HTTP the "
+        "same name 301s to everleads.com, and the certificate error is "
+        "simply the old name still pointed at the new site's certificate. "
+        "Listsonline now trades as Everleads. Recorded as a dataset defect "
+        "and not fixed.\n"
+        "\n"
+        "That failure mode is the reason this note is long: a sweep that "
+        "only ever tries HTTPS would have written this row off as "
+        "unreachable, and a TLS common-name mismatch is a much weaker "
+        "signal of death than it looks. Try HTTP before concluding a host "
+        "is gone.\n"
+        "\n"
+        "THE FORM. /do-not-sell is headed 'Do Not Sell or Share My Data' "
+        "and 'Delete Your Information / Opt Out of Sale or Sharing'. Seven "
+        "visible inputs with authored ids -- first-name and last-name "
+        "required, then email, street, city, state and zip -- under a "
+        "button reading SUBMIT. No captcha script of any origin, no captcha "
+        "element, no widget and NO FRAMES on the page. ``no_captcha_"
+        "verified`` is still False: nobody has swept it by hand.\n"
+        "\n"
+        "THE THIRD-PARTY RELAY, and the reason this has its own flavor. The "
+        "form POSTs to https://api.staticforms.dev/submit with a hidden "
+        "apiKey and a hidden formType issued with the page. Two "
+        "consequences. A recipe MUST drive the rendered page rather than "
+        "construct the POST, because those hidden values belong to the "
+        "page. And the person's name and address transit a form-relay "
+        "service that is neither the broker nor us -- which is not a "
+        "blocker, since the data is being handed to the broker anyway, but "
+        "it is a fact about where the data goes and it belongs on the "
+        "record.\n"
+        "\n"
+        "ONE THING THE PAGE SAYS THAT IS WORTH QUOTING, because it is "
+        "unusually candid about the bargain: 'We will use the information "
+        "you provide solely for searching our data to determine if your "
+        "information is present in our database.' An opt-out here is a "
+        "lookup by another name, which is true of most of these forms and "
+        "rarely admitted.\n"
+        "\n"
+        "NOT LIVE-VERIFIED: nothing was submitted, so success_markers is "
+        "empty rather than invented."
+    ),
+)
+
+
 STAGED_RECIPES: dict = {
+    LIONSHARE.broker_id: LIONSHARE,
+    EVERLEADS.broker_id: EVERLEADS,
     AGR_MARKETING.broker_id: AGR_MARKETING,
     COURTCASEFINDER.broker_id: COURTCASEFINDER,
     PROPERTYCHECKER.broker_id: PROPERTYCHECKER,
@@ -1976,6 +2133,114 @@ FCRA_SCREENING_NOTE = (
 # webform, etc). These are notes, not behaviour: nothing reads this at
 # runtime.
 NO_OPTOUT_SURFACE = {
+    # --- batch 19 of 2026-09-24: list brokers / B2B data / skip tracing ---
+    "lightboxre-com": (
+        "Verified 2026-09-24, and the absence here is a BROKEN LINK rather "
+        "than a missing one -- the second instance of the defect first "
+        "recorded at hivestack-com, and worth reading beside it.\n"
+        "\n"
+        "Two pages were rendered: www.lightboxre.com and "
+        "www.lightboxre.com/privacy-policy/. Both carry a footer link "
+        "reading 'Do Not Sell or Share My Personal Information' -- the "
+        "statutory phrase, the thing a person looks for -- and on BOTH "
+        "pages its href resolves to the page's own URL plus a bare '#'. It "
+        "goes nowhere. Clicking it does nothing at all and reports no "
+        "error, so a visitor would reasonably conclude either that the site "
+        "was broken or that they had already opted out. The second reading "
+        "is the dangerous one and it is why this is written up rather than "
+        "recorded in a line.\n"
+        "\n"
+        "THE ONLY WORKING OPT-OUT LINKS on the privacy policy belong to "
+        "OTHER organisations: optout.aboutads.info (the DAA industry "
+        "opt-out) and tools.google.com/dlpage/gaoptout (Google Analytics). "
+        "Neither touches what LightBox holds. Offering either would be "
+        "offering a remedy that does not address the complaint -- the same "
+        "reasoning already applied at hivestack-com, fourleafdata-com and "
+        "gundir-com.\n"
+        "\n"
+        "The only form anywhere on either page is a HubSpot SALES enquiry "
+        "injected into an about:blank frame -- Job title, Company name, "
+        "Business Email, Industry and Product Interest, all required, plus "
+        "a marketing-subscription checkbox. It is a demo request, not a "
+        "rights channel.\n"
+        "\n"
+        "LightBox sells commercial-real-estate data and location "
+        "intelligence, so its subjects are largely properties and "
+        "businesses rather than named consumers, which may be why the "
+        "consumer channel was never wired up. Closed as no-surface because "
+        "the absence is established on two pages rather than merely "
+        "unobserved -- but note this is a DEFECT the company could fix in "
+        "one line, and a recheck is cheap."
+    ),
+    "lists-inc-com": (
+        "Verified 2026-09-24. Lists Inc publishes no web opt-out and the "
+        "dataset agrees: the row records the method as email, with "
+        "info@lists-inc.com.\n"
+        "\n"
+        "WHAT WAS CHECKED, since this is an absence claim. The homepage was "
+        "rendered: its entire navigation is HOME / HEALTHCARE MARKETING / "
+        "CONSUMER MARKETING / CONTACT, and it carries NO anchor whose text "
+        "or href mentions do-not-sell, opt-out, privacy choices, remove, "
+        "request, DSAR or suppress. /privacy-policy/ returns a genuine 404 "
+        "('The page can't be found'). There is no privacy policy in the "
+        "navigation either. For a company that has been selling healthcare "
+        "and consumer mailing lists since 1989, publishing no privacy "
+        "policy at all is itself the finding.\n"
+        "\n"
+        "ONE FLAG FOR THE EMAIL LEG: info@ is a GENERIC address, not a "
+        "privacy or removal one. This is the eligibility question already "
+        "open with Penn over support@/info@ addresses, and this row is a "
+        "clean example of why it matters -- a removal request to a list "
+        "broker's general inbox has no named owner and no obligation "
+        "attached to it. Whatever that decision turns out to be, it decides "
+        "this row."
+    ),
+    "logiq-com": (
+        "Verified 2026-09-24: logiq.com is a PARKED DOMAIN LISTED FOR SALE "
+        "on GoDaddy Auctions. The page is GoDaddy's aftermarket shell -- "
+        "'logiq.com is available on GoDaddy Auctions', a 'Get This Domain' "
+        "button, and keyword-ad filler for unrelated products (Logiq E "
+        "Ultrasound, Logiq Air Suspension, Logiq Coffee). There is no site "
+        "behind the name.\n"
+        "\n"
+        "This CORROBORATES what the dataset already says -- its notes "
+        "record that Logiq Inc (LGIQ) is delisted and that the site was "
+        "non-functional at an earlier check -- and it is the second "
+        "for-sale listing in the module after idengine-com. The row records "
+        "no opt-out URL, no opt-out email and an unknown method, so there "
+        "was never a channel here to lose.\n"
+        "\n"
+        "THE WARNING FROM idengine-com APPLIES WITH FULL FORCE and is "
+        "restated rather than cross-referenced, because it is the part that "
+        "can do harm: a domain in an aftermarket listing has been given up "
+        "by its owner and may shortly belong to someone entirely "
+        "unrelated. If a future sweep finds logiq.com resolving to a live "
+        "site, that site is not evidence that Logiq is back. Confirm "
+        "OWNERSHIP before submitting a name and address to anything served "
+        "there."
+    ),
+    "lotadata-com": (
+        "Verified 2026-09-24: lotadata.com does not resolve "
+        "(net::ERR_NAME_NOT_RESOLVED), and unlike most dead-domain rows "
+        "this one is filed as ABSENCE rather than as an open question, "
+        "because the company told us itself.\n"
+        "\n"
+        "The dataset's notes record a direct reply from apu@lotadata.com: "
+        "'This company is no longer operational.' A statement from the "
+        "company's own address, plus a DNS failure observed independently "
+        "afterwards, is a materially stronger basis than either signal "
+        "alone -- and it is the same standard that put emerges-com in this "
+        "dict rather than in the undecided list. Compare outlastdfs-com, "
+        "which has two independent technical signals of death but no such "
+        "statement, and is deliberately left undecided as a result.\n"
+        "\n"
+        "LotaData sold location and mobility analytics, so its records were "
+        "almost certainly device-ID keyed -- meaning that even a live host "
+        "would have landed in the MAID identifier-shape gap that this "
+        "codebase cannot fill. Nothing is lost here. The ownership warning "
+        "recorded at logiq-com applies to any future reappearance of this "
+        "name."
+    ),
     "leadloft-com": (
         "Verified 2026-09-24, batch 18. LeadLoft publishes no web opt-out of "
         "any kind and the dataset agrees with that: the row carries no "
@@ -3196,6 +3461,164 @@ NO_OPTOUT_SURFACE = {
 # as the marketing-signup finding -- a form on a privacy page whose purpose
 # is to collect, not to delete.
 OPTOUT_UNDECIDED = {
+    # --- batch 19 of 2026-09-24: list brokers / B2B data / skip tracing ---
+    #
+    # RECIPE HEALTH CHECK -- lsmapps-com, a SHIPPED recipe, read here as a
+    # side effect of batch 19 and NOT demoted.
+    #
+    # lsmapps-com is one of the sixteen entries in RECIPES. Its form at
+    # lsmapps.com/opt-out was re-rendered on 2026-09-24 and it has GROWN A
+    # BOT CHECK: the field list now includes input#captcha, labelled
+    # 'Security check -- enter the code shown below*', a required text input
+    # whose answer is read off an image. The shipped recipe has no step for
+    # it, and there is no resolve_fields source that could fill it.
+    #
+    # WHAT THAT MEANS IN PRACTICE. The recipe would fill everything else,
+    # click Submit, and the server would reject the request for a missing
+    # security code. That is a FAILED ATTEMPT, not a false success -- the
+    # same reasoning that kept thatsthem-com shipped through a site-wide
+    # 403. Nothing is silently mis-reported, so this is not demoted here;
+    # the demotion decision belongs to whoever owns the allow-list, and this
+    # note exists so the decision is made deliberately rather than
+    # discovered from a run.
+    #
+    # THE GOOD NEWS, recorded so nobody re-derives it: the honeypot is
+    # already handled. input#website is present on the live form and is
+    # already in the recipe's forbidden_selectors, so that part of the
+    # transcription is still accurate. The other fields -- fullName, email,
+    # phoneNumber, appUser, territory, privacyRight, details, confirmation
+    # -- all still exist with the same ids. The captcha is the only drift.
+    #
+    # Note also that the dataset's URL for this row, /onetrust-opt-out, now
+    # serves a bespoke form titled 'Data Subject Request' rather than
+    # anything OneTrust; the path name is a fossil. The recipe already
+    # points at /opt-out, which is correct.
+    "loopme-com": (
+        "NO VERDICT as of 2026-09-24, and it is decided-in-substance rather "
+        "than unread: the surface is fully legible and this codebase cannot "
+        "use it.\n"
+        "\n"
+        "legal.loopme.com/privacy-center/loopme-opt-out is a policy page "
+        "whose opt-out is an iframe on m.loopme.me/opt-out.html. That frame "
+        "was rendered directly and contains exactly two mechanisms:\n"
+        "  * 'Web cookie opt out', a bare OPT OUT button. This sets an "
+        "    opt-out COOKIE in whatever browser presses it. A headless "
+        "    browser on a server pressing that button opts out the server, "
+        "    not the user -- the cookie lands in a context the person will "
+        "    never browse from and is discarded with the session. It would "
+        "    produce a convincing success page and accomplish nothing, "
+        "    which is the exact false-success failure this module exists to "
+        "    prevent.\n"
+        "  * 'Device ID opt out', which takes a Google Advertising ID "
+        "    (AAID) or Apple IDFA typed into a box.\n"
+        "\n"
+        "THE IDENTIFIER-SHAPE GAP, now with a fourth instance. "
+        "resolve_fields has no MAID source and no way to obtain one -- the "
+        "identifier lives on the user's phone, is resettable, and differs "
+        "per device -- so the device route is unfillable in principle and "
+        "not merely unimplemented. This joins complementics, kochava, "
+        "datafy and factori. The pattern is now large enough that it "
+        "deserves a decision at the product level rather than four more "
+        "individual entries: either the profile grows a place for a person "
+        "to paste their own advertising IDs, or MAID-keyed brokers get a "
+        "standing category note the way FCRA screening did.\n"
+        "\n"
+        "Left undecided rather than out-of-scope purely for consistency "
+        "with the other three. The dataset also records a reply from the "
+        "shared Chartboost/LoopMe support desk about interest-based ads, so "
+        "there is a human channel here that works."
+    ),
+    "limeleads-com": (
+        "NO VERDICT as of 2026-09-24, with a DATASET DEFECT that is worth "
+        "distinguishing from an ordinary 404. Both the recorded opt-out URL "
+        "(/do-not-sell-my-data-request/) and the bare apex return WP "
+        "Engine's 'Site Not Configured' page: 'This domain is successfully "
+        "pointed at WP Engine, but is not configured for an account on our "
+        "platform.'\n"
+        "\n"
+        "That is a HOSTING-LEVEL failure, not a missing page. DNS resolves, "
+        "the host answers, and the answer is that no site is installed "
+        "behind the name. It sits between a live 404 (a working site with a "
+        "dead path) and a DNS failure (nothing at all): the company still "
+        "pays for the domain and still points it somewhere, but there is no "
+        "content. The commonest cause is a lapsed or migrated hosting "
+        "account, which can be reversed at any moment, so nothing about "
+        "LimeLeads' opt-out surface can be concluded from it. The dataset "
+        "records no opt-out email, so the URL was the only channel. Retry."
+    ),
+    "lizdev-com": (
+        "NO VERDICT as of 2026-09-24: HTTP 403 from Cloudflare -- 'Sorry, "
+        "you have been blocked ... You are unable to access "
+        "secureservercdn2.net'. No content from lizdev.com was retrieved, "
+        "so nothing is known about whether an opt-out surface exists.\n"
+        "\n"
+        "Recorded as undecided rather than blocked, per the distinction set "
+        "out at leadershipconnect-io: BLOCKED is for a wall observed in "
+        "front of a surface that was seen to exist, and here the wall "
+        "arrived instead of any page. Two details suggest this is an edge "
+        "rule against this client rather than a refusal aimed at the "
+        "public. The block page names secureservercdn2.net -- GoDaddy's CDN "
+        "-- rather than lizdev.com, so the site is behind shared hosting "
+        "infrastructure whose rules are not necessarily the site owner's. "
+        "And Cloudflare's standard explanation is offered verbatim, which "
+        "is what a generic bot rule looks like. A residential client will "
+        "very likely see a normal page; recheck from the deployment host. "
+        "The dataset's URL for this row is the bare homepage, so even on a "
+        "successful fetch the real surface would still have to be found."
+    ),
+    "lookify-io": (
+        "NO VERDICT as of 2026-09-24: www.lookify.io/opt-out never "
+        "rendered. The request was intercepted by CLOUDFLARE TURNSTILE'S "
+        "INTERSTITIAL -- the URL was rewritten with a __cf_chl_rt_tk "
+        "challenge token, the page title came back 'Just a moment...', and "
+        "the body read 'Performing security verification ... This page is "
+        "displayed while the website verifies you are not a bot' with a Ray "
+        "ID. HTTP 403.\n"
+        "\n"
+        "This is a MANAGED CHALLENGE in front of the whole path, not a "
+        "captcha on a form, and the distinction matters for how it is "
+        "filed. Nothing behind it was observed, so there is no surface to "
+        "call blocked and nothing to transcribe. Whether the opt-out form "
+        "there is good, bad or absent is simply unknown.\n"
+        "\n"
+        "WORTH THE RECHECK, because the dataset says this is the only route "
+        "that works: its notes record that Lookify 'doesn't process removal "
+        "requests via email -- use the opt-out form'. So a person here has "
+        "exactly one channel and it is behind a bot wall. A managed "
+        "challenge usually passes for an ordinary residential browser, so "
+        "this row may well resolve cleanly from the deployment host; it is "
+        "a good candidate for the same recheck pass as thatsthem-com, "
+        "leadershipconnect-io and lizdev-com."
+    ),
+    "localblox-com": (
+        "NO VERDICT as of 2026-09-24, and the shape of the failure is "
+        "specific enough to record.\n"
+        "\n"
+        "The recorded opt-out host, consumer.localblox.com, does not "
+        "resolve (net::ERR_NAME_NOT_RESOLVED) -- the SUBDOMAIN is gone "
+        "while the apex is not. localblox.com itself answers 200 and serves "
+        "an empty default WordPress installation: a title that is just the "
+        "domain name, a stock nav of Home / About / Services / Blog / Shop "
+        "/ Contact, a single 'Home' heading, a search box, and no content "
+        "under any of it. That is a placeholder someone stood up on the "
+        "name, not a company website.\n"
+        "\n"
+        "Combined with the dataset's own note that sabira@localblox.com "
+        "hard-bounced in August, the picture is of a business that has "
+        "wound down and a domain that is still registered. But an empty "
+        "template is not a statement from the company, which is the "
+        "standard lotadata-com met and this row does not, so it stays "
+        "undecided. LocalBlox aggregated social and property data into "
+        "person-level profiles -- it was the subject of a notable 2018 "
+        "exposure of ~48 million such profiles -- so if a successor ever "
+        "surfaces, the data this row is about did exist and was "
+        "substantial.\n"
+        "\n"
+        "A 'Shop' link on a placeholder site is also a small warning sign: "
+        "if the name changes hands, submitting a name and address to "
+        "whatever is served there would be handing it to a stranger. The "
+        "ownership check recorded at logiq-com applies."
+    ),
     # --- batch 18 of 2026-09-24: lead-generation / B2B contact vendors ---
     #
     # A REACHABILITY-HEAVY BATCH. Five of the sixteen rows below could not be
@@ -6954,6 +7377,180 @@ OPTOUT_UNDECIDED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually stops a submission.
 OPTOUT_BLOCKED = {
+    # --- batch 19 of 2026-09-24: list brokers / B2B data / skip tracing ---
+    "lusha-com": (
+        "Verified 2026-09-24, and this is the WORST INSTANCE of the "
+        "lead-capture-on-a-privacy-page pattern the sweep has found. Read "
+        "this one before writing any recipe that trusts a page's title.\n"
+        "\n"
+        "www.lusha.com/privacy-center/request-removal/ is titled 'Request "
+        "Removal'. The form that belongs to that page -- the one the DOM "
+        "hands you first, form#popupFormContact_31080, forty controls -- is "
+        "a SALES CONTACT FORM. Its required fields are Work email address, "
+        "First name, Last name, Phone number, 'What is your current "
+        "position? (Title)', 'How many employees in your company?' and 'How "
+        "can we help?', and it carries the full sales apparatus in hidden "
+        "inputs: leadsource, chilliQualified, chiliPosition, formIsSales, "
+        "sales_form_industry, formNumEmployees. Four of those required "
+        "fields have no meaning for a private individual asking to be "
+        "deleted, and a person who filled it in would have booked "
+        "themselves a sales conversation.\n"
+        "\n"
+        "THE REAL SURFACE is a cross-origin iframe on "
+        "privacyportal-eu.onetrust.com/webform/ff4ba552-d8f3-4209-8935-"
+        "155725f93afb/. It was rendered and read: required 'Why Did You "
+        "Reach This Page?' (#formField29DSARElement), required 'Country of "
+        "Residence' (#countryDSARElement), optional 'State of Residence' "
+        "(#stateDSARElement), required Email (#emailDSARElement), and "
+        "#dsar-webform-submit-button.\n"
+        "\n"
+        "BLOCKED BY reCAPTCHA: a g-recaptcha-response textarea inside the "
+        "OneTrust frame with both an anchor frame and a bframe attached -- "
+        "the interactive puzzle variant.\n"
+        "\n"
+        "THE FIELD-SET LESSON, which is the durable part. This is the "
+        "FOURTH OneTrust DSAR tenant in the module (koddi, gumgum, "
+        "leidosiq, lusha) and the fourth DIFFERENT field set. koddi offers "
+        "no request-type control at all, gumgum a multi-select of request "
+        "types, and lusha a required free-text 'Why Did You Reach This "
+        "Page?' with no structured request type whatsoever. The stable "
+        "part across tenants is the ELEMENT ID SCHEME (...DSARElement, "
+        "#dsar-webform-submit-button), not the questions. Any generic "
+        "OneTrust handler must therefore READ the tenant's fields at "
+        "runtime rather than assume them, and must be able to express the "
+        "opt-out as prose when the tenant provides nowhere else to put it. "
+        "Recorded here because lusha is the clearest proof: an arbitrary "
+        "required free-text question is not something a fixed recipe can "
+        "pre-answer.\n"
+        "\n"
+        "The footer also links 'Do Not Sell My Info' to a different page, "
+        "/privacy_topic/control-your-profile/, which was not rendered. "
+        "Whether that is a second surface is unchecked."
+    ),
+    "livedatatechnologies-com": (
+        "Verified 2026-09-24, and it begins with a DOMAIN CHANGE the "
+        "dataset does not record: livedatatechnologies.com now redirects to "
+        "www.livedatatech.com. Flagged, not fixed.\n"
+        "\n"
+        "The live surface is www.livedatatech.com/opt-out, reached from a "
+        "footer link reading 'YOUR PRIVACY CHOICES' and headed 'California "
+        "“Do Not Sell My Info” Opt-Out'. form#form-optout takes "
+        "three required fields -- Full-Name, Work-Email and "
+        "Postal-Address -- plus an optional Message textarea whose own "
+        "label is the request text ('I'd like to request an opt-out "
+        "according to CCPA'), under a Submit button. Every required value "
+        "has a resolve_fields source.\n"
+        "\n"
+        "BLOCKED, and by TWO STACKED CHALLENGES from different vendors on "
+        "one form: Google reCAPTCHA (api.js, the gstatic runtime, a "
+        "g-recaptcha-response textarea and an anchor frame) AND Cloudflare "
+        "Turnstile (the challenges.cloudflare.com script and a hidden "
+        "cf-turnstile-response with a cf-chl-widget id). That combination "
+        "is rare -- most brokers pick one -- and it means clearing either "
+        "one alone would not be enough.\n"
+        "\n"
+        "TWO NOTES. The email field is labelled 'Your work email', on a "
+        "consumer opt-out form; Live Data Technologies tracks job changes "
+        "for 160 million professionals, so its records are keyed to "
+        "employment, and the work address is genuinely the right "
+        "identifier here rather than a lead-capture tell. And the page "
+        "publishes remove@livedatatechnologies.com, which is a PURPOSE-BUILT "
+        "removal address and strictly better than the "
+        "accounting@livedatatechnologies.com the dataset carries. Worth "
+        "correcting in the dataset by whoever owns it."
+    ),
+    "locatesmarter-com": (
+        "Verified 2026-09-24, after a DATASET DEFECT that would have "
+        "stopped a mechanical retry dead. The recorded opt_out_url on "
+        "www.locatesmarter.com returns HTTP 404; the apex now redirects to "
+        "portal.locatesmarter.com, which announces 'Our website is "
+        "currently under maintenance' and carries nothing but links. Two of "
+        "those links are the live surfaces, on a THIRD host: "
+        "form.locatesmarter.com. Note the path is case-sensitive and "
+        "capitalises the last word -- '...my-personal-Information' -- which "
+        "is the kind of thing that turns a working URL into a 404 when it "
+        "is retyped. Flagged, not fixed.\n"
+        "\n"
+        "THE FORM is Gravity Forms gform_1, scoped to California residents, "
+        "with THREE PARALLEL REQUEST BLOCKS on one page: opt out for "
+        "yourself (My Full Name, My Email Address, Street Address, City, "
+        "State, ZIP -- all required but the email), opt out on behalf of a "
+        "MINOR, and opt out on behalf of another person. Submit reads 'Send "
+        "Form'.\n"
+        "\n"
+        "BLOCKED BY reCAPTCHA ENTERPRISE v3, invisible: enterprise.js with "
+        "?render=, the Gravity reCAPTCHA plugin's frontend script, a "
+        "gfield_recaptcha_response field and the grecaptcha badge. Nothing "
+        "on the page tells the user a check is happening.\n"
+        "\n"
+        "TWO THINGS THAT WOULD MATTER EVEN WITHOUT THE CAPTCHA.\n"
+        "  * A HONEYPOT WEARING A PLAUSIBLE NAME: input[name='input_28'] is "
+        "    labelled 'Instagram'. Gravity's honeypot normally picks an "
+        "    innocuous-looking label, and on a marketing site 'Instagram' "
+        "    reads like a real question. It is not; it must go in "
+        "    forbidden_selectors and must never be filled. This is the "
+        "    first honeypot in the module whose label would plausibly fool "
+        "    a HUMAN reading the field list, which is worth recording as a "
+        "    pattern: judge a honeypot by whether it computes to hidden, "
+        "    never by whether its name sounds fake.\n"
+        "  * SSN FIELDS. Both the minor block and the third-party block ask "
+        "    for 'Last 4 Digits of Social Security Number'. They are "
+        "    optional and belong to branches a self-service opt-out never "
+        "    touches, but they must be in forbidden_selectors so that no "
+        "    future generic filler volunteers them. This module does not "
+        "    send SSN digits to a skip-tracing vendor under any "
+        "    circumstances.\n"
+        "\n"
+        "Category note: LocateSmarter sells skip-tracing and location data, "
+        "largely to debt collectors and process servers. The separate "
+        "'Request to Know or Delete' route is a different form again, at "
+        "form.locatesmarter.com/request-to-know-or-delete-my-personal-"
+        "information/, and was not read this pass."
+    ),
+    "listservicedirect-com": (
+        "Verified 2026-09-24. listservicedirect.com/opt-out/ carries a "
+        "Contact Form 7 opt-out: a request-type select whose ONLY option is "
+        "'Opt-Out' (so the page's purpose is unambiguous), then your-name, "
+        "your-email, telephone-number, Company, Address, City, State and "
+        "Zip -- ALL REQUIRED -- a your-message textarea, and a Send "
+        "button.\n"
+        "\n"
+        "BLOCKED BY TWO CHECKS, one of them unusual.\n"
+        "  * reCAPTCHA v2, the interactive variant: api.js, the gstatic "
+        "    runtime, two g-recaptcha widgets and BOTH anchor and bframe "
+        "    frames attached.\n"
+        "  * A TYPED ATTESTATION: input[name='yes'], required, under the "
+        "    printed instruction 'By typing “YES” in the box...'. "
+        "    Unlike an arithmetic captcha this one is trivially fillable "
+        "    with a literal -- but it is an ATTESTATION, not a puzzle, and "
+        "    the thing being attested to was not read in full by this pass. "
+        "    A recipe that types YES is signing something on the user's "
+        "    behalf, and what it signs has to be read first. Recorded here "
+        "    rather than treated as a solved field.\n"
+        "\n"
+        "A DECOY FORM, and a textbook one. The same page carries a SECOND "
+        "Contact Form 7 form with an almost identical field set -- "
+        "your-name, your-email, telephone-number, Company, your-message, "
+        "its own reCAPTCHA -- distinguished only by a select named "
+        "'Request-information-about' offering Count Requests, Inquiry, "
+        "High-Volume Pricing, Consumer Data List, Print Services and "
+        "Modeling and Analytics. That is the SALES ENQUIRY form, and "
+        "submitting to it would ask the broker for a price list on consumer "
+        "data rather than ask to be removed from it. Because both are "
+        "wpcf7 forms with identically-named fields, an unscoped selector "
+        "here is a coin flip. The only durable discriminator is the "
+        "wpcf7-f<id> in the form's action -- f1893 for the opt-out, f1473 "
+        "for sales.\n"
+        "\n"
+        "ONE MORE THING WORTH THE USER'S ATTENTION: 'Company' is REQUIRED "
+        "on the opt-out form. A private individual opting out of a consumer "
+        "mailing list has no company to name, so the form as built cannot "
+        "be completed honestly by the people it is nominally for.\n"
+        "\n"
+        "The dataset's dataremoval@listservicedirect.com bounced with "
+        "'mailbox full', which is already on the row; info@ is what the "
+        "page publishes."
+    ),
     # --- batch 18 of 2026-09-24: lead-generation / B2B contact vendors ---
     #
     # Six of this batch's sixteen rows land here, and all six are blocked on

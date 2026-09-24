@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **435** / 969
-- Search leg mapped: 436 / 969
-- Opt-out leg mapped: 439 / 969
+- Fully mapped (both legs): **451** / 969
+- Search leg mapped: 451 / 969
+- Opt-out leg mapped: 454 / 969
 
 ## How to resume
 
@@ -540,7 +540,7 @@ of those dicts against source-brokers.json).
 - [ ] **Komodo Health, Inc.** (`komodohealth-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Kontext Data** (`kontextdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Kyber Health Data LLC** (`forian-com`) -- search: no-surface, opt-out: blocked
-- [ ] **L.S Mobile Apps Holdings Ltd** (`lsmapps-com`) -- search: UNMAPPED, opt-out: recipe
+- [x] **L.S Mobile Apps Holdings Ltd** (`lsmapps-com`) -- search: no-surface, opt-out: recipe
 - [x] **LABELS & LISTS Inc** (`l2political-com`) -- search: undecided, opt-out: undecided
 - [ ] **Labels & Lists, Inc** (`l2-data-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **LB Digital Data (LBDigital)** (`lbdigitaldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -558,29 +558,29 @@ of those dicts against source-brokers.json).
 - [x] **LET IT RIDE SPORTS LLC** (`outlastdfs-com`) -- search: undecided, opt-out: undecided
 - [x] **LexisNexis Risk Solutions** (`lexisnexis-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Lifesight LLC** (`lifesight-io`) -- search: undecided, opt-out: undecided
-- [ ] **Lightbox Parent, L.P.** (`lightboxre-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Lightbox Parent, L.P.** (`lightboxre-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Lighthouse List Company** (`lighthouselist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Limeleads** (`limeleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Lionshare Marketing, Inc.** (`lionsharemarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **List Service Direct Inc.** (`listservicedirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Listings, Information, Systems And Tabulation Services, Inc** (`lists-inc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Limeleads** (`limeleads-com`) -- search: undecided, opt-out: undecided
+- [x] **Lionshare Marketing, Inc.** (`lionsharemarketing-com`) -- search: no-surface, opt-out: staged
+- [x] **List Service Direct Inc.** (`listservicedirect-com`) -- search: no-surface, opt-out: blocked
+- [x] **Listings, Information, Systems And Tabulation Services, Inc** (`lists-inc-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **ListKit LLC** (`listkit-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Listsonline** (`listsonline-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Live Data Technologies Inc.** (`livedatatechnologies-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Listsonline** (`listsonline-com`) -- search: no-surface, opt-out: staged
+- [x] **Live Data Technologies Inc.** (`livedatatechnologies-com`) -- search: no-surface, opt-out: blocked
 - [ ] **LiveIntent** (`liveintent-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **LiveRamp** (`liveramp-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Lizdev, Inc** (`lizdev-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Lizdev, Inc** (`lizdev-com`) -- search: undecided, opt-out: undecided
 - [ ] **Lob.com, Inc.** (`lob-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Localblox** (`localblox-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Locatesmarter, LLC** (`locatesmarter-com`) -- search: no-surface, opt-out: UNMAPPED
-- [ ] **Logiq, Inc** (`logiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Lookify** (`lookify-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **LOOPME LTD** (`loopme-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Lotadata, Inc.** (`lotadata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Localblox** (`localblox-com`) -- search: no-surface, opt-out: undecided
+- [x] **Locatesmarter, LLC** (`locatesmarter-com`) -- search: no-surface, opt-out: blocked
+- [x] **Logiq, Inc** (`logiq-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Lookify** (`lookify-io`) -- search: undecided, opt-out: undecided
+- [x] **LOOPME LTD** (`loopme-com`) -- search: no-surface, opt-out: undecided
+- [x] **Lotadata, Inc.** (`lotadata-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Lotame Solutions, Inc.** (`lotame-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Louisiana Court Records (CourtRecords.us network)** (`louisianacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Lucid Holdings, LLC** (`luc-id`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Lusha Systems, Inc.** (`lusha-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Lusha Systems, Inc.** (`lusha-com`) -- search: undecided, opt-out: blocked
 - [ ] **M&R Strategic Services** (`mrss-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **M1 Data & Analytics, LLC** (`m1-data-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Machintel Inc.** (`machintel-com`) -- search: UNMAPPED, opt-out: UNMAPPED

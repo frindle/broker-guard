@@ -44,22 +44,22 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-92 findings across 71 brokers.
+101 findings across 77 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 9 |
-| dataset | 37 |
-| unreachable | 46 |
+| dataset | 39 |
+| unreachable | 53 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 47 |
+| parked-or-defunct | 54 |
+| unclassified | 13 |
 | dead-url | 12 |
-| unclassified | 12 |
 | broker-surface-defect | 8 |
 | entity-mismatch | 7 |
-| rebrand-or-domain-change | 4 |
+| rebrand-or-domain-change | 5 |
 | contact-address-oddity | 1 |
 | stale-200 | 1 |
 
@@ -472,6 +472,54 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > NO VERDICT as of 2026-09-24, and it is a close call held up by the same wrong-request-type problem already recorded at gumgum-com.
+
+### `limeleads-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24, with a DATASET DEFECT that is worth distinguishing from an ordinary 404. Both the recorded opt-out URL (/do-not-sell-my-data-request/) and the bare apex return WP Engine's 'Site Not Configured' page: 'This domain is successfully pointed at WP Engine, but is not configured for an account on our platform.'
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-24: limeleads.com serves WP Engine's 'Site Not Configured' page on every path tried -- the apex and the recorded opt-out path alike -- so no surface of any kind was observed and none can be described. UNREACHABLE for the defects list; see optout_forms for why a hosting-level 'not configured' is a different animal from a 404 and from a DNS failure.
+
+### `lizdev-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-24: lizdev.com answered HTTP 403 from Cloudflare ('Sorry, you have been blocked ... You are unable to access secureservercdn2.net') and no content was retrieved, so neither leg could be read. UNREACHABLE for the defects list.
+
+### `localblox-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > The recorded opt-out host, consumer.localblox.com, does not resolve (net::ERR_NAME_NOT_RESOLVED) -- the SUBDOMAIN is gone while the apex is not. localblox.com itself answers 200 and serves an empty default WordPress installation: a title that is just the domain name, a stock nav of Home / About / Services / Blog / Shop / Contact, a single 'Home' heading, a search box, and no content under any of it. That is a placeholder someone stood up on the name, not a company website.
+
+### `locatesmarter-com`
+
+- **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-24, after a DATASET DEFECT that would have stopped a mechanical retry dead. The recorded opt_out_url on www.locatesmarter.com returns HTTP 404; the apex now redirects to portal.locatesmarter.com, which announces 'Our website is currently under maintenance' and carries nothing but links. Two of those links are the live surfaces, on a THIRD host: form.locatesmarter.com. Note the path is case-sensitive and capitalises the last word -- '...my-personal-Information' -- which is the kind of thing that turns a working URL into a 404 when it is retyped. Flagged, not fixed.
+
+### `logiq-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-24: logiq.com is a PARKED DOMAIN LISTED FOR SALE on GoDaddy Auctions. The page is GoDaddy's aftermarket shell -- 'logiq.com is available on GoDaddy Auctions', a 'Get This Domain' button, and keyword-ad filler for unrelated products (Logiq E Ultrasound, Logiq Air Suspension, Logiq Coffee). There is no site behind the name.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > This CORROBORATES what the dataset already says -- its notes record that Logiq Inc (LGIQ) is delisted and that the site was non-functional at an earlier check -- and it is the second for-sale listing in the module after idengine-com. The row records no opt-out URL, no opt-out email and an unknown method, so there was never a channel here to lose.
+
+### `lotadata-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-24: lotadata.com does not resolve (net::ERR_NAME_NOT_RESOLVED), and unlike most dead-domain rows this one is filed as ABSENCE rather than as an open question, because the company told us itself.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-24: lotadata.com does not resolve, and the company stated to us directly that it is no longer operational. The leg is closed on the same basis as the opt-out leg; see optout_forms for why this row is filed as absence rather than as an open question.
 
 ### `nuwber-com`
 
