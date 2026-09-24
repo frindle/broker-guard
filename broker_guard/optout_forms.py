@@ -3063,7 +3063,275 @@ NO_OPTOUT_SURFACE = {
 # true to finish it.
 #
 # Notes, not behaviour: nothing reads this at runtime.
+# --- PATTERN, batch of 2026-09-23: the only form on the opt-out page is a
+# --- MARKETING SIGNUP. Read this before writing any recipe on those pages.
+#
+# Three brokers in this batch serve an opt-out URL whose sole captured <form>
+# is not the opt-out. intentiq-com's is a two-field "Name / Email" whose
+# submit button reads **Join**, with a marketing-consent checkbox. irys-us's
+# posts back to /do-not-sell-ccpa but its button reads **Sign Up**.
+# ispot-tv's is id='get-a-demo', posting to an endpoint named clearbitrisk.
+# In each case the real request mechanism is script-built and was not
+# captured, so what WAS captured is the page's newsletter or sales widget.
+#
+# Why this is a block comment rather than three separate notes: a
+# transcription pass that trusts "the form on the opt-out page" would produce
+# a recipe that submits Penn's name and email to a MAILING LIST while
+# reporting a successful opt-out. That is worse than no recipe and worse than
+# a failure -- it is a silent inversion of the user's intent, with a
+# confirmation in the log. optout_submit has no way to notice.
+#
+# The tell is the SUBMIT BUTTON'S TEXT, not the fields, which are name-and-
+# email either way. Join / Sign Up / Subscribe / Get A Demo mean stop. So
+# does a form action pointing at a CRM or risk-scoring endpoint. Any recipe
+# on these pages must be written against the real script-rendered form and
+# must assert on the button text before promotion.
+#
+# --- PATTERN: a shared CCPA form template across intent-data vendors -------
+#
+# intentgine-com and intentmacro-com serve what is recognisably the SAME form,
+# down to an identical and slightly ungrammatical option list: 'Access
+# Information', 'Correct Information', 'Delete Information', 'Forbid Selling
+# of Information'. The field names differ (Elementor form_fields[...] vs
+# Contact Form 7 your-...), so this is one template re-implemented on two
+# stacks rather than one shared host.
+#
+# Predictive, which is why it is recorded: expect that option list again
+# across this corner of the dataset, and expect a recipe written for one to
+# be a near-miss rather than a fit for the other. The request <select> is the
+# field that matters -- picking the wrong option files an ACCESS request when
+# the user asked for DELETION.
 OPTOUT_UNDECIDED = {
+    "intentiq-com": (
+        "NO VERDICT as of 2026-09-23, and see the marketing-signup pattern "
+        "note above -- this broker is the clearest instance of it.\n"
+        "\n"
+        "https://www.intentiq.com/opt-out/ renders exactly one form: a "
+        "Contact Form 7 instance (fields text-001 labelled 'Name' and "
+        "email-002 labelled 'Email', both required) whose submit button "
+        "reads **Join** and which carries a marketing checkbox "
+        "(checkbox-919[]). That is a mailing-list signup, not an opt-out. "
+        "Filling it would ADD Penn to something.\n"
+        "\n"
+        "The page also loads reCAPTCHA v3 (api.js?render=) and the form "
+        "carries the usual per-render WPCF7 hidden set -- _wpcf7, "
+        "_wpcf7_unit_tag, _wpcf7_posted_data_hash, _wpcf7_recaptcha_"
+        "response -- so even the wrong form could not be submitted from a "
+        "pinned transcription.\n"
+        "\n"
+        "NEXT STEP: re-probe with rendering and find the actual opt-out "
+        "control. Intent IQ is an identity-graph company, so its real "
+        "mechanism may be a cookie/ID-based opt-out rather than a form at "
+        "all, which would make this no-surface rather than undecided."
+    ),
+    "irys-us": (
+        "NO VERDICT as of 2026-09-23; marketing-signup pattern, see the "
+        "note above. https://www.irys.us/do-not-sell-ccpa serves a "
+        "Squarespace form block posting back to that same path, with "
+        "fname, lname and email -- and a submit button reading **Sign "
+        "Up**. The fields alone would read as a plausible CCPA form; the "
+        "button says otherwise, and it is the only evidence either way.\n"
+        "\n"
+        "Separately unshippable even if it IS the right form: the email "
+        "input's id is 'email-yui_3_17_2_2_1507845144807_20334-field', a "
+        "Squarespace YUI id containing a build timestamp. Those do not "
+        "survive a site rebuild, so a recipe must key on name (fname, "
+        "lname, email), which here are clean. Recorded because the same id "
+        "shape will recur on every Squarespace-hosted broker in the "
+        "dataset."
+    ),
+    "ispot-tv": (
+        "NO VERDICT as of 2026-09-23; marketing-signup pattern, see the "
+        "note above. https://www.ispot.tv/privacy/opt-out loads reCAPTCHA "
+        "with an onload callback literally named initOptOut, which is good "
+        "evidence a real opt-out form exists -- but it is built by that "
+        "script and was not captured. The only form in the document is "
+        "id='get-a-demo', posting to /ajax/users/clearbitrisk with a "
+        "csrfToken and a 'Work Email Address' field: a sales-qualification "
+        "widget that runs the submitted address through Clearbit. "
+        "Submitting Penn's address there would hand it to an enrichment "
+        "service, which is the exact opposite of the errand.\n"
+        "\n"
+        "NEXT STEP: re-probe with rendering and let initOptOut run. The "
+        "per-request csrfToken means any eventual recipe must read the "
+        "token from the live page rather than pin it."
+    ),
+    "intentmacro-com": (
+        "NO VERDICT as of 2026-09-23, and of this batch it is the closest "
+        "to shippable -- recorded here for reasons worth being explicit "
+        "about rather than because the form is unreadable.\n"
+        "\n"
+        "https://www.intentmacro.com/ccpa-privacy serves a Contact Form 7 "
+        "form with cleanly named required fields: your-fname, your-lname, "
+        "your-email, and a required your-request <select> (id 'request') "
+        "offering the shared option list described in the note above. All "
+        "four have sources in resolve_fields. NO captcha script loads on "
+        "this page at all.\n"
+        "\n"
+        "What holds it back:\n"
+        "  1. An Akismet HONEYPOT -- a textarea named _wpcf7_ak_hp_textarea "
+        "-- which must be left EMPTY. A fill-everything pass marks itself "
+        "as a bot here.\n"
+        "  2. Per-render hidden fields (_wpcf7_unit_tag, _wpcf7_posted_"
+        "data_hash, _wpcf7_ak_js) that must be read from the live page, "
+        "never pinned.\n"
+        "  3. A SECOND form on the same page -- a sales contact form asking "
+        "Company and Job Title, also Contact Form 7, also carrying a "
+        "your-email field. Two forms sharing a field name on one page is "
+        "how a loose selector fills the wrong one. Any recipe must scope to "
+        "the form carrying the f3565 unit tag, or to the one containing "
+        "your-request.\n"
+        "\n"
+        "No dry run was performed, so nothing is promoted."
+    ),
+    "intentgine-com": (
+        "NO VERDICT as of 2026-09-23. Same template as intentmacro-com "
+        "(see the note above) on a different stack: an Elementor form at "
+        "https://intentgine.com/ccpa-privacy/ with required "
+        "form_fields[fname], form_fields[lname], form_fields[email] and "
+        "form_fields[request], the last offering the same four options.\n"
+        "\n"
+        "Two transcription hazards, both structural:\n"
+        "  1. The request <select> is marked INVISIBLE and is shadowed by a "
+        "Select2 widget (inputs id 's2id_autogen1' and 's2id_autogen1_"
+        "search', neither of which has a name). Setting the underlying "
+        "<select> directly may not register with the widget, and typing "
+        "into the visible proxy is not the same as choosing an option. "
+        "This is the field that decides whether the request is a deletion "
+        "or a mere access request, so getting it wrong is not cosmetic.\n"
+        "  2. Hidden post_id, form_id and queried_id identify the form "
+        "instance and are per-page, not constants.\n"
+        "\n"
+        "A recipe here needs a way to express 'select an option through a "
+        "JS widget', which RECIPES does not have today -- the same kind of "
+        "structural gap already recorded for consent steps."
+    ),
+    "intentsify-io": (
+        "NO VERDICT as of 2026-09-23 -- a complete and well-built form "
+        "that is nonetheless unshippable twice over.\n"
+        "\n"
+        "https://app.intentsify.io/opt-out serves required email, "
+        "firstName and lastName, an optional proxyEmail ('E-mail Address "
+        "of Authorized Third Party or Proxy' -- worth noting, as one of "
+        "the few forms in this dataset that contemplates an agent acting "
+        "for the subject), a required country <select> and a required "
+        "request <select> offering do-not-sell, do-not-process, delete, "
+        "correct and access.\n"
+        "\n"
+        "Blockers:\n"
+        "  1. Cloudflare Turnstile (hidden cf-turnstile-response).\n"
+        "  2. BOTH <select> elements have NO name attribute at all and are "
+        "identified only by ids of the form 'field-_r_4_' -- React useId "
+        "output, which is positional and changes as the tree changes. "
+        "Neither name nor id is pinnable, so the two fields carrying the "
+        "actual request cannot be addressed reliably. Same class of "
+        "problem as publicinfoservices-com's randomised field name, from a "
+        "different cause: framework-generated ids rather than deliberate "
+        "obfuscation. Worth distinguishing, because this one is not "
+        "hostile and may well be stable across a given deploy.\n"
+        "\n"
+        "Any future recipe would have to locate both selects by their "
+        "LABEL text, which RECIPES cannot express."
+    ),
+    "iqvia-com": (
+        "NO VERDICT as of 2026-09-23. https://www.iqvia.com/about-us/"
+        "privacy/ccpa/do-not-sell embeds a OneTrust DSAR webform "
+        "(privacyportal.onetrust.com/webform/07e8dc4...), fully "
+        "transcribed: required request-type and relationship pickers, "
+        "name, email, country, full address, city and ZIP, with optional "
+        "telephone and an 'interaction with IQVIA' field.\n"
+        "\n"
+        "Why undecided:\n"
+        "  1. reCAPTCHA is loaded (api.js?onload=ngx_capt...).\n"
+        "  2. NO field has a name attribute. Every one is addressed by an "
+        "id of the form 'firstNameDSARElement' / 'formField83DSARElement'. "
+        "The semantic ones are stable enough; the formFieldNN ones are "
+        "keyed to OneTrust's per-tenant form definition and will not "
+        "survive IQVIA editing the form.\n"
+        "  3. Submit is <button type='button'> driven by JS, not a real "
+        "submit, so a recipe cannot rely on form submission.\n"
+        "\n"
+        "Worth flagging beyond this row: OneTrust hosts the DSAR portal "
+        "for a large share of the enterprise brokers in this dataset. A "
+        "generic OneTrust handler keyed on the *DSARElement id suffix and "
+        "on label text would likely unlock many rows at once. Conversely, "
+        "IQVIA is a HEALTH-DATA company, so whether this specific row "
+        "should be automated at all is a judgement for Penn, not a "
+        "technical question."
+    ),
+    "innovis-com": (
+        "NO VERDICT as of 2026-09-23, and the reason is category, not "
+        "mechanics. https://www.innovis.com/personal/optOutOptIn returns "
+        "200 but no form was captured, so the control is script-rendered.\n"
+        "\n"
+        "More important: Innovis is a NATIONWIDE CONSUMER REPORTING "
+        "AGENCY -- the fourth credit bureau alongside Equifax, Experian "
+        "and TransUnion -- and this URL is the prescreened-offer opt-out "
+        "(the FCRA 604(e) / OptOutPrescreen mechanism), not a data-broker "
+        "deletion. Two consequences a recipe-writer must not skip past: "
+        "the FCRA category note above governs, and prescreen opt-out is a "
+        "DIFFERENT ACT from deletion -- it is an election about firm "
+        "offers of credit, with a five-year term and a permanent variant "
+        "requiring a signed mailed form. Automating it as though it were a "
+        "CCPA deletion would misrepresent what Penn asked for, in both "
+        "directions: it would not delete anything, and it would make a "
+        "credit-file election he did not request.\n"
+        "\n"
+        "NEXT STEP: decide the category before touching the mechanics. "
+        "This probably belongs in OPTOUT_OUT_OF_SCOPE with the other FCRA "
+        "rows, but a credit-file election is not the same case as a "
+        "screening report, so it is not being filed there by analogy."
+    ),
+    "intellicorp-net": (
+        "NO VERDICT as of 2026-09-23. The dataset's URL, "
+        "https://www.intellicorp.net/marketing/Your-California-Privacy-"
+        "Rights, returns 404. DATASET NOTE: stale opt-out URL. IntelliCorp "
+        "is a background-screening CRA (a Verisk business), so the FCRA "
+        "category note above likely governs once a live page is found -- "
+        "but a 404 establishes nothing and no category is recorded."
+    ),
+    "integratedmedicaldata-com": (
+        "NO VERDICT as of 2026-09-23: integratedmedicaldata.com does not "
+        "resolve (net::ERR_NAME_NOT_RESOLVED), so there is no host to ask. "
+        "UNREACHABLE for the defects list. Given the name, a research pass "
+        "should establish what became of this company and where any health "
+        "data it held went -- that matters more than the usual dead domain, "
+        "and a failed DNS lookup does not answer it."
+    ),
+    "idatabasesolutions-com": (
+        "NO VERDICT as of 2026-09-23. https://idatabasesolutions.com/do-"
+        "not-sell-my-personal-info/ returns 200 and loads reCAPTCHA v3 "
+        "(api.js?render=), but no form was captured -- a WordPress site "
+        "whose form is script-built. The reCAPTCHA key being present on "
+        "this specific path is reasonable evidence a real request form "
+        "exists behind it. NEXT STEP: re-probe with rendering; expect a v3 "
+        "score gate on submit regardless of what the fields turn out to be."
+    ),
+    "backgroundsonline-com": (
+        "NO VERDICT as of 2026-09-23. https://backgroundsonline.com "
+        "returns 200 and loads reCAPTCHA, but no form was captured and "
+        "only the site root was probed -- the dataset supplied no opt-out "
+        "path. A background-screening CRA by name, so the FCRA category "
+        "note above may govern; not filed there without reading their own "
+        "wording. NEXT STEP: find the consumer/disclosure page."
+    ),
+    "esiteanalytics-com": (
+        "NO VERDICT as of 2026-09-23: https://esiteanalytics.com returns "
+        "200 with no form and no captcha captured, and only the root was "
+        "probed because the dataset supplied no opt-out path. Nothing is "
+        "known about whether a request mechanism exists. NEXT STEP: look "
+        "for a privacy or CCPA page on this domain."
+    ),
+    "ididata-com": (
+        "NO VERDICT as of 2026-09-23. https://ididata.com/idis-privacy-"
+        "statement#privacy returns 200 with no form -- a privacy statement, "
+        "and the dataset's URL points at an anchor within it rather than "
+        "at a request surface. ID Insight is a fraud/identity-verification "
+        "vendor, which places it nearer the FCRA and identity-verification "
+        "categories than the consumer-search ones. NEXT STEP: read the "
+        "statement's rights section for a published contact route; if "
+        "there is one, this is an email-channel candidate."
+    ),
     "inboundinsight-com": (
         "NO VERDICT as of 2026-09-23, and the reason is the form's KIND, "
         "not any trouble reaching it.\n"
@@ -6138,6 +6406,25 @@ OPTOUT_UNDECIDED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually stops a submission.
 OPTOUT_BLOCKED = {
+    "zoominfo-com": (
+        "Verified 2026-09-23: https://www.zoominfo.com/trust-center/your-"
+        "privacy answers 403 to this tool, with no page body served. "
+        "ZoomInfo is one of the larger B2B contact-data brokers in the "
+        "dataset and is known to operate a real privacy portal, so this is "
+        "a statement about our access and not about whether a surface "
+        "exists. Recorded as blocked rather than undecided because a 403 "
+        "is an explicit refusal, unlike a timeout. A human browser will "
+        "very likely reach this page normally."
+    ),
+    "spglobal-com": (
+        "Verified 2026-09-23: https://www.spglobal.com/en/privacy/"
+        "california-consumer-privacy-act answers 403 with no body. Same "
+        "reading as zoominfo-com above -- an explicit refusal of this "
+        "client, not evidence about the surface. S&P Global is a financial-"
+        "data company and much of what it holds is likely outside a "
+        "consumer deletion right in any case, but that question is not "
+        "reached while the page cannot be read."
+    ),
     "infocore-com": (
         "Verified 2026-09-23: https://infocore.com/ answers 403 with a "
         "Cloudflare interstitial -- 'Confirm you are human / We need to "

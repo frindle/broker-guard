@@ -44,21 +44,21 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-67 findings across 56 brokers.
+71 findings across 58 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 5 |
-| dataset | 30 |
-| unreachable | 32 |
+| dataset | 32 |
+| unreachable | 34 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 33 |
+| parked-or-defunct | 35 |
 | dead-url | 11 |
 | entity-mismatch | 7 |
+| unclassified | 7 |
 | broker-surface-defect | 5 |
-| unclassified | 5 |
 | rebrand-or-domain-change | 4 |
 | contact-address-oddity | 1 |
 | stale-200 | 1 |
@@ -352,6 +352,26 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > NEXT STEP, concretely: fetch /privacy-rights/ and transcribe whatever it serves. Deliberately not doing that from the stale URL's redirect chain here, because the two buttons post rather than link, so what /privacy-rights/ shows may depend on which button was pressed -- and guessing which is how a recipe ends up filing a copy request when the user asked for deletion. DATASET NOTE: the source row's opt-out URL is wrong.
+
+### `integratedmedicaldata-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: integratedmedicaldata.com does not resolve (net::ERR_NAME_NOT_RESOLVED), so there is no host to ask. UNREACHABLE for the defects list. Given the name, a research pass should establish what became of this company and where any health data it held went -- that matters more than the usual dead domain, and a failed DNS lookup does not answer it.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-23: the host does not resolve (ERR_NAME_NOT_RESOLVED), so nothing can be said about any surface. UNREACHABLE for the defects list; see optout_forms for why this particular dead domain deserves a research pass.
+
+### `intellicorp-net`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23. The dataset's URL, https://www.intellicorp.net/marketing/Your-California-Privacy-Rights, returns 404. DATASET NOTE: stale opt-out URL. IntelliCorp is a background-screening CRA (a Verisk business), so the FCRA category note above likely governs once a live page is found -- but a 404 establishes nothing and no category is recorded.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: the dataset's URL 404s and no other path was probed. A background-screening CRA, so any 'search' is a file disclosure gated behind identity verification rather than a public index -- same distinction as innovis-com above. DATASET NOTE: stale URL.
 
 ### `nuwber-com`
 

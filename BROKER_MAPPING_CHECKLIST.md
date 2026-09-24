@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **387** / 969
-- Search leg mapped: 388 / 969
-- Opt-out leg mapped: 391 / 969
+- Fully mapped (both legs): **403** / 969
+- Search leg mapped: 404 / 969
+- Opt-out leg mapped: 407 / 969
 
 ## How to resume
 
@@ -462,7 +462,7 @@ of those dicts against source-brokers.json).
 - [x] **Idengine LLC** (`idengine-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **IDG Communications Inc.** (`foundryco-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **IDStrong** (`idstrong-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **IHS Markit** (`spglobal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **IHS Markit** (`spglobal-com`) -- search: blocked, opt-out: blocked
 - [x] **Ileads.Com, LLC** (`ileads-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Illinois Court Records (CourtRecords.us network)** (`illinoiscourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Illumin Inc.** (`acuityads-com`) -- search: no-surface, opt-out: undecided
@@ -490,27 +490,27 @@ of those dicts against source-brokers.json).
 - [x] **InMarket Media, LLC** (`inmarket-com`) -- search: no-surface, opt-out: undecided
 - [ ] **InmatesSearcher** (`inmatessearcher-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Inmobi** (`trufactor-io`) -- search: undecided, opt-out: undecided
-- [ ] **Innovative Database Solutions, Inc.** (`idatabasesolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Innovis Data Solutions, Inc.** (`innovis-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **InsideView, Inc.** (`zoominfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Innovative Database Solutions, Inc.** (`idatabasesolutions-com`) -- search: no-surface, opt-out: undecided
+- [x] **Innovis Data Solutions, Inc.** (`innovis-com`) -- search: undecided, opt-out: undecided
+- [x] **InsideView, Inc.** (`zoominfo-com`) -- search: blocked, opt-out: blocked
 - [x] **Instant Checkmate** (`instantcheckmate-com`) -- search: undecided, opt-out: undecided
 - [ ] **Insurance Marketing Hub LLC** (`insurancemarketinghub-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Intalytics, Inc.** (`esiteanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Intalytics, Inc.** (`esiteanalytics-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Intalytics, Inc.** (`kalibrate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Integrated Direct Marketing, LLC (IDM)** (`idm-us-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Integrated Medical Data, LLC.** (`integratedmedicaldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Integrated Medical Data, LLC.** (`integratedmedicaldata-com`) -- search: undecided, opt-out: undecided
 - [x] **Intelius** (`intelius-com`) -- search: undecided, opt-out: out-of-scope
-- [ ] **Intellicorp Records, Inc.** (`intellicorp-net`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Intent IQ LLC** (`intentiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Intentgine Inc.** (`intentgine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Intentmacro Inc.** (`intentmacro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **INTENTSIFY LLC** (`intentsify-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **INTERACTIVE DATA LLC** (`ididata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Intellicorp Records, Inc.** (`intellicorp-net`) -- search: undecided, opt-out: undecided
+- [x] **Intent IQ LLC** (`intentiq-com`) -- search: no-surface, opt-out: undecided
+- [x] **Intentgine Inc.** (`intentgine-com`) -- search: no-surface, opt-out: undecided
+- [x] **Intentmacro Inc.** (`intentmacro-com`) -- search: no-surface, opt-out: undecided
+- [x] **INTENTSIFY LLC** (`intentsify-io`) -- search: no-surface, opt-out: undecided
+- [x] **INTERACTIVE DATA LLC** (`ididata-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Iowa Court Records (CourtRecords.us network)** (`iowacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **IQ Data Systems, Inc.** (`backgroundsonline-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **IQVIA Digital Inc.** (`iqvia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Irys** (`irys-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Ispot.Tv** (`ispot-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **IQ Data Systems, Inc.** (`backgroundsonline-com`) -- search: undecided, opt-out: undecided
+- [x] **IQVIA Digital Inc.** (`iqvia-com`) -- search: no-surface, opt-out: undecided
+- [x] **Irys** (`irys-us`) -- search: no-surface, opt-out: undecided
+- [x] **Ispot.Tv** (`ispot-tv`) -- search: no-surface, opt-out: undecided
 - [ ] **Ivy Tech Re, LLC** (`getivydata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Iwave Information Systems** (`kindsight-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **JD Power, a Corporation of Delaware** (`jdpower-com`) -- search: UNMAPPED, opt-out: UNMAPPED

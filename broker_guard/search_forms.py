@@ -857,6 +857,68 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch 16 of 2026-09-23: intent-data / enterprise vendors ---------
+    #
+    # Same reasoning as the B2B group below, restated only where a row needs
+    # it. None of these sells a public name lookup; their product is sold to
+    # companies. The SEARCH leg is genuinely terminal. Nothing here is a
+    # statement about the opt-out leg, which is open for most of them.
+    # Limit, as ever: one URL each was fetched.
+    "intentiq-com": (
+        "Verified 2026-09-23. Identity-graph / advertising company. The "
+        "reachable surface is an opt-out page whose only form is a mailing-"
+        "list signup (see optout_forms); there is no consumer lookup. If "
+        "Intent IQ keys on a cookie or device id rather than a name, a "
+        "presence search could not be expressed against it anyway."
+    ),
+    "intentsify-io": (
+        "Verified 2026-09-23. B2B intent-data platform; app.intentsify.io "
+        "is a customer application behind a login, not an index."
+    ),
+    "intentgine-com": (
+        "Verified 2026-09-23. B2B intent-data vendor. The only form on the "
+        "site root is its own content search (input name='s'), which "
+        "searches marketing pages, not people."
+    ),
+    "intentmacro-com": (
+        "Verified 2026-09-23. B2B intent-data vendor; the forms on the "
+        "reachable page are a CCPA request form and a sales contact form "
+        "(Company, Job Title). No consumer index."
+    ),
+    "ispot-tv": (
+        "Verified 2026-09-23. TV-advertising measurement. The only form "
+        "captured is a 'Get A Demo' sales widget; measurement panels are "
+        "not publicly searchable."
+    ),
+    "iqvia-com": (
+        "Verified 2026-09-23. Healthcare data and clinical research. Its "
+        "reachable privacy surface is a OneTrust DSAR portal (see "
+        "optout_forms); health data is emphatically not exposed as a "
+        "public lookup, and it would be a serious finding if it were."
+    ),
+    "irys-us": (
+        "Verified 2026-09-23. No consumer lookup on the reachable pages; "
+        "the site's own search box (action /search, input name='q') "
+        "searches site content."
+    ),
+    "esiteanalytics-com": (
+        "Verified 2026-09-23 on thin evidence, and flagged as such: the "
+        "site root returns 200 with no forms at all. Web-analytics vendor "
+        "by name, which would put it in this category, but only one page "
+        "was seen. Re-probe if this row matters downstream."
+    ),
+    "ididata-com": (
+        "Verified 2026-09-23. ID Insight is a fraud/identity-verification "
+        "vendor selling to institutions; the reachable page is a privacy "
+        "statement. No public lookup, and by the nature of the product "
+        "there should not be one."
+    ),
+    "idatabasesolutions-com": (
+        "Verified 2026-09-23 on thin evidence: only the do-not-sell path "
+        "was probed and it carries no visible form (script-built, see "
+        "optout_forms). No search surface was seen, but the site root was "
+        "not read, so this is weaker than the rows above it."
+    ),
     # --- batch of 2026-09-23: B2B data suppliers with no consumer index ---
     #
     # These all resolved the same way and the reasoning is identical, so it is
@@ -3500,6 +3562,21 @@ NO_SEARCH_SURFACE = {
 #
 # Notes, not behaviour: nothing reads this at runtime.
 SEARCH_BLOCKED = {
+    "zoominfo-com": (
+        "Verified 2026-09-23: the probed page answers 403 with no body, so "
+        "no surface could be read. Worth a note beyond the usual, because "
+        "ZoomInfo DOES operate a public person/company directory that "
+        "ordinarily appears in search results -- so unlike the B2B rows "
+        "recorded as no-search-surface, a presence check here is probably "
+        "MEANINGFUL and simply unreachable by this client. Do not let this "
+        "row drift into no-surface on the strength of the 403."
+    ),
+    "spglobal-com": (
+        "Verified 2026-09-23: probed page answers 403 with no body. "
+        "Nothing is known about a search surface; S&P Global's consumer-"
+        "facing exposure is likely minimal, but that is not established "
+        "here."
+    ),
     "infocore-com": (
         "Verified 2026-09-23: the whole site answers 403 behind a "
         "Cloudflare 'Confirm you are human' interstitial, so no page -- "
@@ -3583,6 +3660,38 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    "innovis-com": (
+        "NO VERDICT as of 2026-09-23, and deliberately NOT recorded as "
+        "no-search-surface despite no form being captured. Innovis is a "
+        "nationwide consumer reporting agency -- the fourth credit bureau "
+        "-- and it absolutely holds a file on most US adults. It offers a "
+        "consumer file disclosure, which is a presence check in every "
+        "sense that matters, just not a public one: it is gated behind "
+        "identity verification. So 'no search surface' would be false in "
+        "substance while true about the probed page, and that distinction "
+        "is the reason this entry exists. See optout_forms for why the "
+        "opt-out leg is a category question rather than a mechanical one."
+    ),
+    "intellicorp-net": (
+        "NO VERDICT as of 2026-09-23: the dataset's URL 404s and no other "
+        "path was probed. A background-screening CRA, so any 'search' is a "
+        "file disclosure gated behind identity verification rather than a "
+        "public index -- same distinction as innovis-com above. DATASET "
+        "NOTE: stale URL."
+    ),
+    "backgroundsonline-com": (
+        "NO VERDICT as of 2026-09-23: only the site root was probed (the "
+        "dataset gave no other path) and no form was captured, though "
+        "reCAPTCHA loads. Background-screening CRA by name, so the same "
+        "file-disclosure-not-public-index reading as innovis-com likely "
+        "applies, but nothing was read to confirm it."
+    ),
+    "integratedmedicaldata-com": (
+        "NO VERDICT 2026-09-23: the host does not resolve "
+        "(ERR_NAME_NOT_RESOLVED), so nothing can be said about any "
+        "surface. UNREACHABLE for the defects list; see optout_forms for "
+        "why this particular dead domain deserves a research pass."
+    ),
     # --- batch of 2026-09-23: hosts that could not be read at all ---
     #
     # Grouped because the reason is the same and it is a reason about the
