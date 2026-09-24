@@ -44,17 +44,17 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-101 findings across 77 brokers.
+108 findings across 81 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 9 |
 | dataset | 39 |
-| unreachable | 53 |
+| unreachable | 60 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 54 |
+| parked-or-defunct | 61 |
 | unclassified | 13 |
 | dead-url | 12 |
 | broker-surface-defect | 8 |
@@ -208,6 +208,16 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23: the domain serves nothing. degree.me has NS delegation to AWS Route53 (ns-1086.awsdns-07.org, ns-1685.awsdns-18.co.uk, ns-236.awsdns-29.com, ns-918.awsdns-50.net) but NO A or AAAA record resolves, confirmed by dig both ways, and curl returns http_code 000. This looks like a dormant registration tied to ACE Agents Inc. / academixdirect.com. It sits here rather than under NO_SEARCH_SURFACE because a domain that does not resolve today may resolve tomorrow; recheck resolution before deciding.
+
+### `digdevdirect-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-24: digdevdirect.com is a PARKED DOMAIN. The page is GoDaddy's free parking shell -- 'digdevdirect.com is parked free, courtesy of GoDaddy.com', a 'Get This Domain' button, and keyword-ad filler for Real Estate, Apartment For Rent, Personals and Cheap Airfare. There is no site behind the name.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Third parked domain in the module, after idengine-com and logiq-com, and worth one distinction: this is FREE PARKING rather than an auction listing. The registration is still held, so the owner has not necessarily given the name up -- a business that let its site lapse while keeping the domain looks exactly like this. That makes a future recheck slightly more likely to find something than it would be for an auction listing, and it does not change the present answer, which is that Media Direct publishes nothing here at all.
 
 ### `dynata-com`
 
@@ -520,6 +530,32 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
 
   > Verified 2026-09-24: lotadata.com does not resolve, and the company stated to us directly that it is no longer operational. The leg is closed on the same basis as the opt-out leg; see optout_forms for why this row is filed as absence rather than as an open question.
+
+### `m1-data-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24: HTTP 403 from Cloudflare. m1-data.com/unsubscribe/ returned the block page 'Sorry, you have been blocked ... You are unable to access secureservercdn2.net'. No content was retrieved. UNREACHABLE for the defects list.
+
+### `marketops-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24: net::ERR_CONNECTION_REFUSED on both the recorded /privacy-options/ path and the bare apex. UNREACHABLE for the defects list.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > Refused is not the same as timed out and not the same as a DNS failure: the name resolved and something answered at the TCP layer with a rejection, which is consistent with a decommissioned service on a live name, with an origin that is down, or with an edge that drops non-browser clients. It does not establish that the company is gone. See optout_forms for the same note.
+
+### `matchandappend-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24: two 30-second navigation timeouts, on the recorded /do-not-sell-my-data/ path and on the bare apex, with no response of any kind. UNREACHABLE for the defects list.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-24. The request timed out on two separate attempts -- no response at all, not a rejection. Nothing about a search surface was observed.
 
 ### `nuwber-com`
 

@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **451** / 969
-- Search leg mapped: 451 / 969
-- Opt-out leg mapped: 454 / 969
+- Fully mapped (both legs): **467** / 969
+- Search leg mapped: 467 / 969
+- Opt-out leg mapped: 470 / 969
 
 ## How to resume
 
@@ -579,28 +579,28 @@ of those dicts against source-brokers.json).
 - [x] **Lotadata, Inc.** (`lotadata-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Lotame Solutions, Inc.** (`lotame-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Louisiana Court Records (CourtRecords.us network)** (`louisianacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Lucid Holdings, LLC** (`luc-id`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Lucid Holdings, LLC** (`luc-id`) -- search: no-surface, opt-out: undecided
 - [x] **Lusha Systems, Inc.** (`lusha-com`) -- search: undecided, opt-out: blocked
 - [ ] **M&R Strategic Services** (`mrss-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **M1 Data & Analytics, LLC** (`m1-data-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Machintel Inc.** (`machintel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Madhive, Inc.** (`madhive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Madison Logic, Inc.** (`madisonlogic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MAGNITE Inc** (`magnite-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **M1 Data & Analytics, LLC** (`m1-data-com`) -- search: undecided, opt-out: undecided
+- [x] **Machintel Inc.** (`machintel-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Madhive, Inc.** (`madhive-com`) -- search: no-surface, opt-out: undecided
+- [x] **Madison Logic, Inc.** (`madisonlogic-com`) -- search: no-surface, opt-out: undecided
+- [x] **MAGNITE Inc** (`magnite-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Maine Court Records (CourtRecords.us network)** (`mainecourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Malvern Media Inc.** (`privacypillar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Marinus Analytics** (`marinusanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Market Force Corporation** (`marketforcecorp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Marketops LLC** (`marketops-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Malvern Media Inc.** (`privacypillar-com`) -- search: no-surface, opt-out: blocked
+- [x] **Marinus Analytics** (`marinusanalytics-com`) -- search: no-surface, opt-out: undecided
+- [x] **Market Force Corporation** (`marketforcecorp-com`) -- search: no-surface, opt-out: undecided
+- [x] **Marketops LLC** (`marketops-com`) -- search: undecided, opt-out: undecided
 - [ ] **Marriott International, Inc.** (`marriott-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Martin Data LLC** (`usinfosearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Martin Data LLC** (`usinfosearch-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Maryland Court Records (CourtRecords.us network)** (`marylandcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Massachusetts Court Records (CourtRecords.us network)** (`massachusettscourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Matchandappend.Com LLC** (`matchandappend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MATCHBOOK DATA LLC** (`matchbookdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MAXMIND Inc** (`maxmind-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MCH Inc** (`mchdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Media Direct, Inc.** (`digdevdirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Matchandappend.Com LLC** (`matchandappend-com`) -- search: undecided, opt-out: undecided
+- [x] **MATCHBOOK DATA LLC** (`matchbookdata-com`) -- search: no-surface, opt-out: undecided
+- [x] **MAXMIND Inc** (`maxmind-com`) -- search: no-surface, opt-out: blocked
+- [x] **MCH Inc** (`mchdata-com`) -- search: no-surface, opt-out: blocked
+- [x] **Media Direct, Inc.** (`digdevdirect-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Media Resource Group LLC** (`mrginc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Media Source Solutions** (`mediasourcesolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Media.Net Advertising Fz, LLC** (`media-net`) -- search: UNMAPPED, opt-out: UNMAPPED

@@ -866,6 +866,152 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch 20 of 2026-09-24: adtech / B2B list / identity vendors -----
+    #
+    # The adtech half of this batch closes for a reason worth stating once:
+    # these companies do not hold a record a person could look themselves up
+    # IN. Their inventory is bid requests, cookies and device graphs, and
+    # the identifier is not a name. "No consumer lookup" here is not a
+    # withheld feature; it is a consequence of the data's shape.
+    "luc-id": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. luc.id redirects to cint.com -- Lucid was "
+        "acquired by Cint -- and cint.com is a market-research marketplace "
+        "sold to researchers and brands; its only input is a site search "
+        "over its own pages. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer. The "
+        "opt-out leg is the open one on this row."
+    ),
+    "machintel-com": (
+        "Verified 2026-09-24 by rendering the site, including its "
+        "do-not-sell page. No consumer-facing lookup exists here. Machintel "
+        "sells B2B demand generation; the only input anywhere on the site "
+        "is the newsletter box. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer. See "
+        "optout_forms -- that newsletter box is the whole finding on this "
+        "row."
+    ),
+    "madhive-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Madhive is a connected-TV advertising "
+        "platform; its records are keyed to devices and bid requests, not "
+        "to names, so there is nothing a person could search by. The leg is "
+        "closed because a search recipe cannot be written against a surface "
+        "the broker does not offer."
+    ),
+    "madisonlogic-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Madison Logic sells account-based marketing "
+        "and intent data to B2B advertisers; every route on the site is "
+        "'Request Demo' or 'Book a Demo'. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker does "
+        "not offer."
+    ),
+    "magnite-com": (
+        "Verified 2026-09-24 by rendering the site, including its user "
+        "choice portal. No consumer-facing lookup exists here. Magnite is a "
+        "sell-side advertising platform; the only inputs on the page are a "
+        "site search and a newsletter signup. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker does "
+        "not offer -- and, per the note in optout_forms, its records are "
+        "keyed to bid requests rather than to people."
+    ),
+    "privacypillar-com": (
+        "Verified 2026-09-24 by rendering the portal. No consumer-facing "
+        "lookup exists here, and the reason is structural rather than a "
+        "choice: privacypillar.com is a PRIVACY-PORTAL PRODUCT, and the "
+        "page behind this row's URL is the tenant's request form. The "
+        "vendor holds nothing about the requester to look up. The leg is "
+        "closed because a search recipe cannot be written against a surface "
+        "the broker does not offer.\n"
+        "\n"
+        "Note for whoever reads the dataset row: it is filed under Malvern "
+        "Media Inc., which is the tenant. Any lookup Malvern Media might "
+        "offer would be on its own site, not on the portal, and that site "
+        "was not reached this pass."
+    ),
+    "marinusanalytics-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here, and it is important that there is not one. "
+        "Marinus Analytics sells Traffic Jam, a facial-recognition and "
+        "ad-scraping tool licensed to law enforcement for trafficking "
+        "investigations. A public self-lookup over that index would be a "
+        "search engine for escort advertising, which is the opposite of "
+        "what anyone should want built. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer, and it should stay closed.\n"
+        "\n"
+        "The opt-out leg carries the substantive finding on this row, "
+        "including why it warrants a human decision before any automated "
+        "submission."
+    ),
+    "marketforcecorp-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. MarketForce supplies B2B new-business lead "
+        "data; its opt-out page is a submission form, not a search. The leg "
+        "is closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "matchbookdata-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Matchbook Data's records are DEVICE-KEYED -- "
+        "its own privacy form requires a Device ID -- so there is no name a "
+        "person could search by, and a name-based search recipe could not "
+        "express the query even if a surface existed. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "maxmind-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here -- but this row deserves a sentence more than "
+        "the usual, because MaxMind DOES publish a public demo that looks "
+        "like one.\n"
+        "\n"
+        "MaxMind sells IP geolocation, and its records are keyed to IP "
+        "ADDRESSES rather than to people. Any 'look up an address' tool it "
+        "offers returns an inferred location for a network address, not a "
+        "person's record, so it is not a self-lookup in this module's sense "
+        "and a hit tells a user nothing about whether they are 'in' the "
+        "database. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer.\n"
+        "\n"
+        "Same reasoning already applied to ipapi-co and ip2location; this "
+        "is the third member of the IP-keyed family."
+    ),
+    "mchdata-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. MCH Strategic Data sells education and "
+        "healthcare marketing lists; its database sits behind an account "
+        "and a 'Build List' tool for buyers, which is an inventory query "
+        "rather than a self-lookup. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "usinfosearch-com": (
+        "Verified 2026-09-24 by rendering the site. usinfosearch.com IS a "
+        "people-search product -- SSN traces, skip tracing, criminal and "
+        "civil records -- but there is no consumer-facing lookup, and the "
+        "site says why in its own words: 'This service is for qualified "
+        "businesses only', 'Same-Day Credentialing', and 'Our services are "
+        "for credentialed businesses only and may not be used for marketing "
+        "purposes.' Access is gated behind a paid, credentialed account at "
+        "$39.95/month.\n"
+        "\n"
+        "The leg is closed on the same basis as locatesmarter-com: a "
+        "permissible-purpose vendor must NOT offer an anonymous "
+        "self-lookup, so the absence is a compliance posture rather than a "
+        "withheld feature. See optout_forms for the open question about "
+        "whether this row belongs in the FCRA category."
+    ),
+    "digdevdirect-com": (
+        "Verified 2026-09-24 by rendering the site. There is no site: "
+        "digdevdirect.com is a GoDaddy parked page. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer -- see optout_forms, including the "
+        "distinction between free parking and an auction listing and the "
+        "standing warning about confirming ownership if the name ever "
+        "serves content again."
+    ),
     # --- batch 19 of 2026-09-24: list brokers / B2B data / skip tracing ---
     #
     # Same structural answer as batch 18 and for the same reason: these are
@@ -3951,6 +4097,58 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    # --- batch 20 of 2026-09-24: adtech / B2B list / identity vendors -----
+    #
+    # All three rows here are the SAME situation, and it is the honest one:
+    # the site could not be reached, so nothing about its search surface was
+    # observed. These are not "no surface" -- calling a host surfaceless
+    # because it refused us would put a guess in the dict that reads like a
+    # finding. Each is also in optout_forms.OPTOUT_UNDECIDED and on the
+    # UNREACHABLE defects list; a recheck from a different network will
+    # settle both legs at once.
+    "m1-data-com": (
+        "NO VERDICT 2026-09-24. The site was never rendered: it returns a "
+        "Cloudflare 403 block page naming 'secureservercdn2.net'. Nothing "
+        "about a search surface was observed, so no verdict is recorded on "
+        "either direction.\n"
+        "\n"
+        "Worth knowing before anyone rechecks: this is the SAME GoDaddy-CDN "
+        "block page that refused lizdev-com in batch 19. Two unrelated "
+        "brokers hitting one shared-hosting edge rule is much better "
+        "explained by that edge rule than by either broker, so both rows "
+        "should be rechecked together, in one pass, from a different "
+        "network -- not chased separately.\n"
+        "\n"
+        "To resolve: recheck from the deployment host. If the site renders, "
+        "look for a consumer lookup and reclassify this and the opt-out leg."
+    ),
+    "marketops-com": (
+        "NO VERDICT 2026-09-24. The host refused the connection "
+        "(ERR_CONNECTION_REFUSED) on two separate attempts. Nothing about a "
+        "search surface was observed.\n"
+        "\n"
+        "Refused is not the same as timed out and not the same as a DNS "
+        "failure: the name resolved and something answered at the TCP "
+        "layer with a rejection, which is consistent with a decommissioned "
+        "service on a live name, with an origin that is down, or with an "
+        "edge that drops non-browser clients. It does not establish that "
+        "the company is gone. See optout_forms for the same note.\n"
+        "\n"
+        "To resolve: recheck from the deployment host, and try plain HTTP "
+        "as well as HTTPS -- the listsonline/Everleads row in batch 19 was "
+        "a live broker hiding behind a failure on the HTTPS path alone."
+    ),
+    "matchandappend-com": (
+        "NO VERDICT 2026-09-24. The request timed out on two separate "
+        "attempts -- no response at all, not a rejection. Nothing about a "
+        "search surface was observed.\n"
+        "\n"
+        "To resolve: recheck from the deployment host, and try plain HTTP "
+        "as well as HTTPS. A timeout is the weakest of the three failure "
+        "signatures: it is equally consistent with a dead host and with an "
+        "edge silently dropping an automated client, so it justifies no "
+        "inference about the company at all."
+    ),
     # --- batch 19 of 2026-09-24: list brokers / B2B data / skip tracing ---
     "lusha-com": (
         "NO VERDICT 2026-09-24, and it is the row in batch 19 most likely "
