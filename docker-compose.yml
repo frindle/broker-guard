@@ -21,6 +21,28 @@ services:
     # if you uncomment the macvlan `networks:` block at the bottom of this file (or
     # supply it via docker-compose.override.yml), this line MUST stay commented out;
     # Compose rejects a service that sets both.
+    #
+    # DO NOT UNCOMMENT THAT LINE WITHOUT READING THIS. It is not just a
+    # networking preference any more. The Proton Mail Bridge runs as its own
+    # container on this host (installed from the Unraid Community Apps
+    # template) and it listens on IMAP:143 inside that container whether or
+    # not a host port is published to it -- publishing governs access from the
+    # HOST, not traffic between containers. Leaving this commented out is what
+    # keeps broker-guard on its own private Compose network, where Docker's
+    # inter-network isolation means it cannot reach that IMAP port at all.
+    # `network_mode: bridge` would put it on docker0 beside the Bridge and end
+    # that, silently. broker-guard is SMTP-send-only; see the header of
+    # broker_guard/smtp_transport.py. tests/test_compose_bridge.py fails if
+    # this changes.
+
+    # Reach services published on the HOST (currently: the Proton Mail Bridge's
+    # SMTP port) by the name host.docker.internal, from our own network. This
+    # is the standard alias and is safe regardless of what SMTP host value is
+    # eventually configured -- it grants a route to the host's published ports,
+    # which is exactly the asymmetry we want, since the Bridge's IMAP port is
+    # deliberately left unpublished and so has nothing to route to.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     # Only meaningful when BG_SERVE_WEB=true below. If nothing binds
     # BG_WEB_PORT inside the container (the default), publishing it exposes
@@ -183,6 +205,52 @@ services:
       # hand-verified recipe in broker_guard/optout_forms.py are eligible.
       BG_OPTOUT_SUBMIT_ENABLED: "${BG_OPTOUT_SUBMIT_ENABLED:-false}"
       BG_OPTOUT_SUBMIT_DRY_RUN: "${BG_OPTOUT_SUBMIT_DRY_RUN:-true}"
+
+      # --- opt-out by email (broker_guard/optout_email.py) ---
+      # The same two-switch interlock as the form path above, for a reason
+      # that is arguably stronger: email cannot be recalled. Default is
+      # draft-only, where prepare_draft builds a mailto: the human opens,
+      # reads and sends from their own client.
+      #
+      #   BG_OPTOUT_EMAIL_ENABLED=false -> the feature does not run.
+      #   BG_OPTOUT_EMAIL_DRY_RUN=true  -> even enabled, the message is
+      #     composed and recorded but never handed to a transport.
+      #
+      # Neither flag can widen WHO gets written to. optout_email's
+      # eligibility check -- the broker's own domain, a role local-part --
+      # runs inside both compose_request and send_request and is not
+      # overridable by any flag or env var.
+      BG_OPTOUT_EMAIL_ENABLED: "${BG_OPTOUT_EMAIL_ENABLED:-false}"
+      BG_OPTOUT_EMAIL_DRY_RUN: "${BG_OPTOUT_EMAIL_DRY_RUN:-true}"
+
+      # The From: address -- a dedicated Proton alias, not a primary inbox.
+      # Left EMPTY here on purpose: this file is tracked, and the address is
+      # Penn's to set in the gitignored .env once he has confirmed it.
+      BG_OPTOUT_EMAIL_FROM: "${BG_OPTOUT_EMAIL_FROM:-}"
+
+      # --- SMTP transport for the above (broker_guard/smtp_transport.py) ---
+      # SEND ONLY. There is no IMAP/POP client in this codebase, no setting
+      # for one, and no feature that needs one -- nothing reads replies.
+      # Read that module's header before adding anything that would.
+      #
+      # Host is empty until the Bridge container is up and its published port
+      # is known; empty means no transport is built, so a live send has
+      # nothing to hand a message to and fails loudly rather than silently.
+      # Reach it via host.docker.internal (see extra_hosts above).
+      #
+      # USERNAME/PASSWORD are Bridge-generated and are NOT the Proton account
+      # password. Like BG_CRYPTO_KEY they belong in .env and must never be
+      # written literally here; a test enforces that.
+      BG_OPTOUT_EMAIL_SMTP_HOST: "${BG_OPTOUT_EMAIL_SMTP_HOST:-}"
+      BG_OPTOUT_EMAIL_SMTP_PORT: "${BG_OPTOUT_EMAIL_SMTP_PORT:-1025}"
+      BG_OPTOUT_EMAIL_SMTP_USERNAME: "${BG_OPTOUT_EMAIL_SMTP_USERNAME:-}"
+      BG_OPTOUT_EMAIL_SMTP_PASSWORD: "${BG_OPTOUT_EMAIL_SMTP_PASSWORD:-}"
+      # The Bridge's certificate is self-signed. Point this at its exported
+      # CA (mounted read-only) so verification stays ON -- that is the
+      # supported path. BG_OPTOUT_EMAIL_SMTP_INSECURE_TLS exists only as a
+      # bench-test hatch and is REFUSED for any host that is not
+      # container-local, so it cannot follow this config into production.
+      BG_OPTOUT_EMAIL_SMTP_CA_FILE: "${BG_OPTOUT_EMAIL_SMTP_CA_FILE:-}"
 
       # --- alerting ---
       # UI-editable (/settings); live from the next autopilot cycle.
