@@ -1293,6 +1293,36 @@ THATSTHEM = FormRecipe(
 # search_forms.RECIPES, which was checked at the same time and is clean)
 # resolves to a real dataset broker would have caught it the day it landed,
 # and is the obvious next piece of work.
+# --- RECIPE HEALTH CHECK, 2026-09-23 -----------------------------------
+#
+# All 16 promoted recipes were re-checked against their live pages, for two
+# things: that submit_selector still resolves, and that what it resolves TO
+# is the opt-out's own button rather than a marketing widget (see the
+# marketing-signup pattern note further down this file).
+#
+# RESULT: 15 of 16 healthy. Every one of those resolved to EXACTLY ONE
+# element, and no matched button was a Join / Sign Up / Subscribe.
+#
+# One near-miss worth keeping: peopledatalabs-com's page carries two
+# "Sign Up" buttons alongside its "Submit". Its recipe keys on the id
+# `#submit`, so it picks correctly -- but an unscoped
+# `button[type='submit']` there would have been a coin flip. That is the
+# hazard from the pattern note occurring on an ALREADY-PROMOTED page, not
+# a hypothetical.
+#
+# FAILING: thatsthem-com. https://thatsthem.com/ now answers 403 from
+# CloudFront ("Request blocked") across the WHOLE site -- the opt-out
+# page, the homepage and a search URL alike, on repeated attempts. Its
+# submit_selector matches nothing because no page is served at all.
+# NOTE THIS ALSO BREAKS ITS SEARCH RECIPE in search_forms, where it is
+# likewise promoted.
+#
+# It has deliberately NOT been demoted from RECIPES here. A datacenter IP
+# is a likely reason for a CloudFront block, and Penn's deployment runs
+# from a residential address that may not be blocked at all -- so demoting
+# on this evidence could remove a recipe that works fine where it actually
+# runs. The failure is also handled: a 403 surfaces as a failed attempt,
+# not a false success. Re-check from the deployment host before deciding.
 RECIPES = {
     CONSUMER_CANVAS.broker_id: CONSUMER_CANVAS,
     NIELSEN.broker_id: NIELSEN,

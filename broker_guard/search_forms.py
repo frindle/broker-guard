@@ -831,6 +831,15 @@ FASTPEOPLESEARCH = SearchRecipe(
     ),
 )
 
+# --- RECIPE HEALTH, 2026-09-23 -----------------------------------------
+#
+# thatsthem-com is currently UNREACHABLE: https://thatsthem.com/ answers 403
+# from CloudFront ("Request blocked") across the whole site -- homepage,
+# search URL and opt-out page alike, on repeated attempts. Its opt-out recipe
+# in optout_forms is affected identically; see the longer note above RECIPES
+# there, including why it has NOT been demoted on this evidence (a datacenter
+# IP is a likely cause, and Penn's deployment runs from a residential address
+# that may not be blocked). Re-check from the deployment host before deciding.
 RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
     MYLIFE.broker_id: MYLIFE,
