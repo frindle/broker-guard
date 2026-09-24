@@ -199,6 +199,19 @@ class Config:
     optout_submit_enabled: bool = False
     optout_submit_dry_run: bool = True
 
+    # --- Opt-out by email (broker_guard/optout_email.py) ---
+    #
+    # Same two-act interlock as the form path above, for the same reason:
+    # email cannot be recalled. Default is draft-only, where a human presses
+    # Send in their own client. Flip both of these to let the tool send
+    # unattended to addresses that have already passed optout_email's
+    # eligibility check -- which is a syntactic check and cannot tell whether
+    # an inbox is really the right company's, so the first run of any new
+    # template should be read by hand before these move.
+    optout_email_enabled: bool = False
+    optout_email_dry_run: bool = True
+    optout_email_from: str = ""
+
     # Serve the FastAPI dashboard (webui.py) + run the autopilot loop as a
     # background thread in this SAME process, instead of the plain headless
     # service.main() loop. Off by default -- the container stays a
@@ -261,6 +274,9 @@ def load_config(env=None) -> Config:
         captcha_api_key=_env_str(env, "BG_CAPTCHA_API_KEY"),
         optout_submit_enabled=_env_bool(env, "BG_OPTOUT_SUBMIT_ENABLED", False),
         optout_submit_dry_run=_env_bool(env, "BG_OPTOUT_SUBMIT_DRY_RUN", True),
+        optout_email_enabled=_env_bool(env, "BG_OPTOUT_EMAIL_ENABLED", False),
+        optout_email_dry_run=_env_bool(env, "BG_OPTOUT_EMAIL_DRY_RUN", True),
+        optout_email_from=_env_str(env, "BG_OPTOUT_EMAIL_FROM", ""),
         serve_web=_env_bool(env, "BG_SERVE_WEB", False),
         web_port=_env_int(env, "BG_WEB_PORT", 8000),
         interval_seconds=_env_int(env, "BG_INTERVAL_SECONDS", 86400),
