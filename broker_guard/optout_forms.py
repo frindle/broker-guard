@@ -3131,7 +3131,241 @@ NO_OPTOUT_SURFACE = {
 # be a near-miss rather than a fit for the other. The request <select> is the
 # field that matters -- picking the wrong option files an ACCESS request when
 # the user asked for DELETION.
+# --- PATTERN, batch 17 of 2026-09-23: DECOY FORMS, and why "key on name
+# --- attributes" is not the safe default it looks like.
+#
+# The marketing-signup note above says a page's opt-out URL may carry a form
+# that is not the opt-out. jmr-media-com sharpens that into something worse,
+# because here the WRONG forms are the ones with clean name attributes.
+#
+# Its /do-not-sell page serves THREE forms, all posting to that same path:
+#
+#   1. The real one. firstName, lastName, email, a required state <select>,
+#      requestType radios, Turnstile, and a honeypot named `website`. Every
+#      visible field is addressed by ID ONLY -- they have NO name attribute.
+#   2. and 3. Two hidden Netlify build-detection stubs (each carrying the
+#      tell-tale hidden `form-name` input). These DO have name attributes:
+#      firstName, lastName, email.
+#
+# So a selector written as input[name='firstName'] -- the conventional advice,
+# and what this file recommends elsewhere when ids look per-render -- matches
+# a HIDDEN STUB and never touches the real form. The submission would go
+# nowhere, or to Netlify's form collector, and the visible form would sit
+# untouched with the user told their request was filed.
+#
+# The lesson is not "prefer ids" either. It is that neither attribute is
+# trustworthy on its own: the choice has to be made per page, after counting
+# the forms. Any recipe on a multi-form page must scope to a container first
+# (the three InfoPay recipes in RECIPES do this correctly with
+# `form:has(#...)`) and only then address fields.
+#
+# Related, from the same batch: kbsynergy-com's do-not-sell page embeds a
+# third-party LEAD-GENERATION iframe (leads.liveleadgiant.com). Same family
+# as the marketing-signup finding -- a form on a privacy page whose purpose
+# is to collect, not to delete.
 OPTOUT_UNDECIDED = {
+    "jmr-media-com": (
+        "NO VERDICT as of 2026-09-23. See the decoy-form pattern note above; "
+        "this broker is the reason it exists.\n"
+        "\n"
+        "https://jmr-media.com/do-not-sell serves a real and rather good "
+        "request form -- required firstName, lastName, email and a State of "
+        "Residence <select>, optional postalAddress, city and zipCode, five "
+        "requestType radios, and a submit button reading 'Submit Request'. "
+        "Every value has a source in resolve_fields.\n"
+        "\n"
+        "Three things stop it:\n"
+        "  1. Cloudflare Turnstile (hidden cf-turnstile-response).\n"
+        "  2. The visible fields have NO name attributes -- only ids "
+        "(firstName, lastName, email, state...). Meanwhile two hidden "
+        "Netlify stub forms on the same page DO carry those exact strings as "
+        "NAMES. A name-keyed selector would silently drive a hidden form. "
+        "This is the single most dangerous shape seen in the sweep so far, "
+        "because the wrong target looks more correct than the right one.\n"
+        "  3. The requestType radios have no ids and no labels the probe "
+        "could read, so WHICH radio means deletion is not established. "
+        "Picking one blind is not acceptable on a request that has legal "
+        "meaning.\n"
+        "\n"
+        "NEXT STEP: re-probe with rendering to read the radio labels, and "
+        "write any recipe scoped to the VISIBLE form's container."
+    ),
+    "kochava-com": (
+        "NO VERDICT as of 2026-09-23, and this is one of the more "
+        "interesting surfaces in the dataset -- genuinely well built, and "
+        "still not automatable today.\n"
+        "\n"
+        "https://www.kochava.com/opt-out-do-not-sell-request-process/ "
+        "carries TWO parallel implementations of the same request:\n"
+        "  * form#ko-form -- the real UI. Fields id'd ko-* with clean names "
+        "(maid, email, first_name, last_name, address, city, state, zip, "
+        "country), three category checkboxes (choose_maid, choose_email, "
+        "choose_personal) that reveal the matching field groups, a "
+        "delete_and_optout checkbox, and an explicit HONEYPOT: "
+        "input#ko-honeypot named 'honeypot', labelled 'Leave blank'. It must "
+        "be left empty.\n"
+        "  * form#fluentform_3 -- a WordPress Fluent Forms fallback whose "
+        "inputs are named input_text, input_text_1 ... input_text_11 with "
+        "the real meanings carried only in LABELS ('maid', 'email', "
+        "'first_name'...). Positional names like these are exactly what "
+        "breaks when a form is edited.\n"
+        "\n"
+        "Two forms on one page targeting the same request -- see the decoy "
+        "note above. Which one actually submits was not determined, and "
+        "guessing would be a coin flip between a live endpoint and a "
+        "fallback.\n"
+        "\n"
+        "Blockers beyond that: reCAPTCHA is loaded, and the primary "
+        "identifier is a MAID (mobile advertising ID). resolve_fields has no "
+        "MAID source -- the identifier-shape cluster recorded elsewhere in "
+        "this file. The choose_* checkboxes do mean a name-and-address-only "
+        "request is possible without one, which makes this a better "
+        "candidate than the other MAID brokers if the captcha were solvable."
+    ),
+    "kindsight-io": (
+        "NO VERDICT as of 2026-09-23, blocked on captcha alone -- the form "
+        "itself is clean and would otherwise be close to shippable.\n"
+        "\n"
+        "https://go.kindsight.io/privacy-opt-out serves a HubSpot form "
+        "(hsForm_81f3fc59-...) posting to forms.hsforms.com, with required "
+        "firstname, lastname, email, address, main_country <select>, city "
+        "and zip, plus optional phone. All have sources in resolve_fields.\n"
+        "\n"
+        "Good news worth recording against the usual HubSpot warning in this "
+        "file: although every ID carries the per-render form uuid "
+        "(firstname-81f3fc59-...), the NAME attributes are plain and stable "
+        "(firstname, lastname, email...). So HubSpot embeds are addressable "
+        "after all -- by name, never by id. That refines rather than "
+        "contradicts the earlier note.\n"
+        "\n"
+        "The blocker is reCAPTCHA ENTERPRISE (recaptcha/enterprise.js), a "
+        "step beyond the v2/v3 seen elsewhere. Also note a second "
+        "'Country/Region' <select> named `country` distinct from the "
+        "required `main_country`; a recipe must not confuse them."
+    ),
+    "jungroup-com": (
+        "NO VERDICT as of 2026-09-23 -- two mechanisms on one page and no "
+        "way to tell which is authoritative.\n"
+        "\n"
+        "https://jungroup.com/ccpa/ carries a Gravity Forms form (#gform_2) "
+        "asking only for a required Email and an optional Name, and ALSO "
+        "embeds a Google Forms iframe (docs.google.com/forms/d/e/1FAIpQLSf"
+        "f6gJ...). Email-and-name alone is thin for a CCPA request, which "
+        "suggests the Gravity form may be a newsletter or acknowledgement "
+        "and the Google Form the real request -- but that is inference, not "
+        "observation, so neither is recorded as the surface.\n"
+        "\n"
+        "Mechanically the Gravity form also carries the usual per-render "
+        "set (gform_unique_id, state_2, gform_ajax) that must be read live. "
+        "A cross-origin Google Form cannot be driven from the parent page "
+        "at all. NEXT STEP: read the Google Form's own fields directly."
+    ),
+    "kbsynergy-com": (
+        "NO VERDICT as of 2026-09-23, and flagged rather than merely "
+        "unresolved. https://kbsynergy.com/privacy-policy-ccpa-do-not-sell-"
+        "my-information/ contains no form of its own; the only form on the "
+        "page is inside a third-party iframe from "
+        "leads.liveleadgiant.com/form2.php?Form_Key=... -- i.e. a LEAD-"
+        "GENERATION service is hosting the form on a do-not-sell page.\n"
+        "\n"
+        "Same family as the marketing-signup pattern noted above: a form on "
+        "a privacy page whose apparent business is collecting contacts. It "
+        "may genuinely be how they receive requests -- a small operator "
+        "reusing whatever form tool they already pay for is entirely "
+        "plausible -- but submitting Penn's details into a lead platform on "
+        "that assumption is not a risk worth taking blind. It is also "
+        "cross-origin, so its fields were not read.\n"
+        "\n"
+        "NEXT STEP: load the iframe URL directly and read what it asks for "
+        "before anything is submitted to it."
+    ),
+    "knowwho-com": (
+        "NO VERDICT as of 2026-09-23. https://knowwho.com returns 200 but "
+        "the only form is the site's ASP.NET WebForms chrome -- a login "
+        "(txtUsername1 / txtPassword1) and a site keyword search -- posting "
+        "to kw1.knowwho.com with __VIEWSTATE, __EVENTVALIDATION and "
+        "__EVENTTARGET. No privacy or opt-out surface was reached, and only "
+        "the root was probed because the dataset supplied no other path.\n"
+        "\n"
+        "Worth noting for any future recipe on this stack: ASP.NET "
+        "__VIEWSTATE and __EVENTVALIDATION are per-render and "
+        "cryptographically tied to the response; they must be read from the "
+        "live page and can never be pinned. KnowWho sells legislative and "
+        "government-official contact data, so whether its records are "
+        "'personal information' in the consumer sense is a category question "
+        "as much as a technical one."
+    ),
+    "klarifi-io": (
+        "NO VERDICT as of 2026-09-23: only the site root was probed (the "
+        "dataset gave no opt-out path) and the single form there is a "
+        "generic contact form -- name, email, message, button 'Send', "
+        "action '#'. Not an opt-out surface, and per the marketing-signup "
+        "note above a generic contact form should not be treated as one "
+        "without evidence.\n"
+        "\n"
+        "Incidental page defect worth recording since it would break a naive "
+        "selector: the message <textarea> carries id='name', DUPLICATING the "
+        "id of the name <input>. A recipe keyed on #name would match two "
+        "elements of different kinds. A DEFECT ON THE PAGE ITSELF, not a "
+        "dataset problem."
+    ),
+    "jdpower-com": (
+        "NO VERDICT as of 2026-09-23: https://www.jdpower.com/privacy/dsar "
+        "returns 200 but no form was captured, so the DSAR mechanism is "
+        "script-rendered. The path name makes it near-certain a real request "
+        "surface exists here. NEXT STEP: re-probe with rendering; given the "
+        "'dsar' path this may well be another OneTrust-style portal, which "
+        "would make it a candidate for the generic handler idea noted "
+        "against iqvia-com."
+    ),
+    "kargo-com": (
+        "NO VERDICT as of 2026-09-23: https://www.kargo.com/privacy-portal "
+        "returns 200 with no form captured -- script-rendered. Kargo is a "
+        "mobile advertising company, so expect a device/cookie-identifier "
+        "opt-out rather than a name-based one, which if confirmed would make "
+        "this the identifier-shape gap again rather than a captcha problem. "
+        "NEXT STEP: re-probe with rendering and record which identifier the "
+        "portal asks for."
+    ),
+    "jverify-com": (
+        "NO VERDICT as of 2026-09-23: https://jverify.com returns 200 with "
+        "no form captured, and only the root was probed because the dataset "
+        "supplied no opt-out path. Nothing is known about a request "
+        "mechanism. NEXT STEP: look for a privacy or CCPA page."
+    ),
+    "knowertech-com": (
+        "NO VERDICT as of 2026-09-23: https://knowertech.com returns 200 "
+        "with no form captured; only the root was probed, the dataset having "
+        "supplied no opt-out path. NEXT STEP: look for a privacy page."
+    ),
+    "jdmlistservices-com": (
+        "NO VERDICT as of 2026-09-23: https://www.jdmlistservices.com/do-"
+        "not-sell-my-info returns 404. DATASET NOTE: stale opt-out URL on a "
+        "host that still answers. A list-services company is squarely a "
+        "broker, so this is worth chasing rather than writing off -- the "
+        "page presumably moved."
+    ),
+    "keymarketingadvantage-com": (
+        "NO VERDICT as of 2026-09-23: https://www.keymarketingadvantage.com/"
+        "do_not_use_my_personal_information returns 404. DATASET NOTE: stale "
+        "opt-out URL; the host still answers, so the path moved rather than "
+        "the company vanishing."
+    ),
+    "getivydata-com": (
+        "NO VERDICT as of 2026-09-23: getivydata.com does not resolve "
+        "(net::ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list. "
+        "Only the bare domain was in the dataset, with no opt-out path."
+    ),
+    "kbmg-com": (
+        "NO VERDICT as of 2026-09-23: www.kbmg.com does not resolve "
+        "(net::ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list. "
+        "KBM Group was a sizeable Wunderman/WPP data business, so a dead "
+        "domain likely means absorption into a parent rather than closure -- "
+        "which would mean the data still exists somewhere under another "
+        "name. That is a research question, not something a DNS failure "
+        "settles, and it is the kind of row the consolidated defects list "
+        "exists to surface."
+    ),
     "intentiq-com": (
         "NO VERDICT as of 2026-09-23, and see the marketing-signup pattern "
         "note above -- this broker is the clearest instance of it.\n"
@@ -6436,6 +6670,19 @@ OPTOUT_UNDECIDED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually stops a submission.
 OPTOUT_BLOCKED = {
+    "ipapi-co": (
+        "Verified 2026-09-23: https://ipapi.co/donotsell/ answers 403 and "
+        "loads Cloudflare Turnstile, so the page never renders for this "
+        "client. Recorded as blocked rather than undecided -- a 403 plus a "
+        "live challenge script is a refusal, not a failure to reach.\n"
+        "\n"
+        "Category note for whoever unblocks it: ipapi is an IP-geolocation "
+        "API, so its 'personal information' is keyed to IP ADDRESSES, not "
+        "names. That puts it in the identifier-shape cluster with the "
+        "MAID-keyed brokers -- resolve_fields has no IP source, and Penn's "
+        "IP is not stable anyway. Even fully unblocked this leg may have no "
+        "expressible request."
+    ),
     "zoominfo-com": (
         "Verified 2026-09-23: https://www.zoominfo.com/trust-center/your-"
         "privacy answers 403 to this tool, with no page body served. "

@@ -866,6 +866,68 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch 17 of 2026-09-23: adtech / list / martech vendors ----------
+    #
+    # Same reasoning as the groups below: sold to businesses, no public name
+    # lookup, so the SEARCH leg is terminal. Opt-out legs are separate and
+    # mostly open. One URL each was fetched.
+    "kochava-com": (
+        "Verified 2026-09-23. Mobile attribution/adtech. Its opt-out form "
+        "(see optout_forms) is keyed on a MAID, which is the clearest "
+        "possible statement that its records are not indexed by name and "
+        "that a name-based presence check could not address them."
+    ),
+    "kargo-com": (
+        "Verified 2026-09-23. Mobile advertising; the reachable surface is a "
+        "privacy portal, not an index."
+    ),
+    "kindsight-io": (
+        "Verified 2026-09-23. Nonprofit-fundraising data platform sold to "
+        "institutions; the reachable page is an opt-out form on a HubSpot "
+        "landing domain. No public lookup."
+    ),
+    "jmr-media-com": (
+        "Verified 2026-09-23. Media/advertising; the only forms on the "
+        "reachable page are its do-not-sell form and two hidden Netlify "
+        "stubs (see optout_forms). No consumer index."
+    ),
+    "jungroup-com": (
+        "Verified 2026-09-23. Marketing agency; the reachable CCPA page "
+        "carries request forms only."
+    ),
+    "kbsynergy-com": (
+        "Verified 2026-09-23. Marketing services; the do-not-sell page "
+        "embeds a third-party lead-gen iframe and nothing resembling a "
+        "consumer index."
+    ),
+    "knowwho-com": (
+        "Verified 2026-09-23, with a caveat. KnowWho sells legislative and "
+        "government-official contact data, and its site root is a LOGIN plus "
+        "a site keyword search -- so a directory does exist, but it is "
+        "behind authentication and its subjects are officials in their "
+        "public capacity rather than private individuals. Recorded as "
+        "no-surface for the presence check this tool performs; not a claim "
+        "that nothing is searchable there."
+    ),
+    "klarifi-io": (
+        "Verified 2026-09-23 on thin evidence: the site root carries only a "
+        "generic contact form. No lookup seen, but only one page was read."
+    ),
+    "jverify-com": (
+        "Verified 2026-09-23 on thin evidence: site root returns 200 with no "
+        "forms captured. Identity-verification by name, which would be a "
+        "gated institutional service rather than a public index -- but only "
+        "one page was read."
+    ),
+    "knowertech-com": (
+        "Verified 2026-09-23 on thin evidence: site root returns 200 with no "
+        "forms captured and no other path was supplied by the dataset."
+    ),
+    "jdpower-com": (
+        "Verified 2026-09-23. J.D. Power sells automotive and market "
+        "research to businesses; the reachable path is a DSAR page. No "
+        "consumer-facing person lookup."
+    ),
     # --- batch 16 of 2026-09-23: intent-data / enterprise vendors ---------
     #
     # Same reasoning as the B2B group below, restated only where a row needs
@@ -3669,6 +3731,34 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    "getivydata-com": (
+        "NO VERDICT 2026-09-23: getivydata.com does not resolve "
+        "(ERR_NAME_NOT_RESOLVED), so nothing can be said about any surface. "
+        "UNREACHABLE for the defects list."
+    ),
+    "kbmg-com": (
+        "NO VERDICT 2026-09-23: www.kbmg.com does not resolve "
+        "(ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list; see "
+        "optout_forms for why this one warrants a research pass rather than "
+        "being written off as a dead domain."
+    ),
+    "jdmlistservices-com": (
+        "NO VERDICT 2026-09-23: only the dataset's opt-out path was probed "
+        "and it 404s on a live host. No search surface was looked for. "
+        "DATASET NOTE: stale URL."
+    ),
+    "keymarketingadvantage-com": (
+        "NO VERDICT 2026-09-23: only the dataset's opt-out path was probed "
+        "and it 404s on a live host. DATASET NOTE: stale URL."
+    ),
+    "ipapi-co": (
+        "NO VERDICT 2026-09-23: the probed page answers 403 behind Turnstile "
+        "so nothing was read. Recorded here rather than as no-surface "
+        "because ipapi is IP-geolocation -- any 'lookup' it offers is keyed "
+        "to an IP address, which is a different question from a name-based "
+        "presence check and is not answered by either bucket. See "
+        "optout_forms for the identifier-shape problem."
+    ),
     "innovis-com": (
         "NO VERDICT as of 2026-09-23, and deliberately NOT recorded as "
         "no-search-surface despite no form being captured. Innovis is a "

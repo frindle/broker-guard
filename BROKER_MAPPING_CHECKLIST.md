@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **403** / 969
-- Search leg mapped: 404 / 969
-- Opt-out leg mapped: 407 / 969
+- Fully mapped (both legs): **419** / 969
+- Search leg mapped: 420 / 969
+- Opt-out leg mapped: 423 / 969
 
 ## How to resume
 
@@ -511,30 +511,30 @@ of those dicts against source-brokers.json).
 - [x] **IQVIA Digital Inc.** (`iqvia-com`) -- search: no-surface, opt-out: undecided
 - [x] **Irys** (`irys-us`) -- search: no-surface, opt-out: undecided
 - [x] **Ispot.Tv** (`ispot-tv`) -- search: no-surface, opt-out: undecided
-- [ ] **Ivy Tech Re, LLC** (`getivydata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Iwave Information Systems** (`kindsight-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **JD Power, a Corporation of Delaware** (`jdpower-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **JDM List Services, LLC** (`jdmlistservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Ivy Tech Re, LLC** (`getivydata-com`) -- search: undecided, opt-out: undecided
+- [x] **Iwave Information Systems** (`kindsight-io`) -- search: no-surface, opt-out: undecided
+- [x] **JD Power, a Corporation of Delaware** (`jdpower-com`) -- search: no-surface, opt-out: undecided
+- [x] **JDM List Services, LLC** (`jdmlistservices-com`) -- search: undecided, opt-out: undecided
 - [ ] **Jigyasa Analytics LLC** (`jigyasaanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **JMR Media Consulting, Inc.** (`jmr-media-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **JMR Media Consulting, Inc.** (`jmr-media-com`) -- search: no-surface, opt-out: undecided
 - [x] **Judyrecords** (`judyrecords-com`) -- search: recipe, opt-out: no-surface
-- [ ] **Jun Group Productions, LLC** (`jungroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Jverify, Inc.** (`jverify-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Jun Group Productions, LLC** (`jungroup-com`) -- search: no-surface, opt-out: undecided
+- [x] **Jverify, Inc.** (`jverify-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Kansas Court Records (CourtRecords.us network)** (`kansascourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Kargo Global LLC** (`kargo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Kargo Global LLC** (`kargo-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Kaspr** (`kaspr-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **KB Synergy Inc** (`kbsynergy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **KBM GROUP LLC** (`kbmg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **KB Synergy Inc** (`kbsynergy-com`) -- search: no-surface, opt-out: undecided
+- [x] **KBM GROUP LLC** (`kbmg-com`) -- search: undecided, opt-out: undecided
 - [ ] **Kentucky Court Records (CourtRecords.us network)** (`kentuckycourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Key Marketing Advantage, LLC** (`keymarketingadvantage-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Key Marketing Advantage, LLC** (`keymarketingadvantage-com`) -- search: undecided, opt-out: undecided
 - [ ] **Key Marketing Advantage, LLC** (`keymarketingcorp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Keyword Connects LLC** (`keywordconnects-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Klarifi** (`klarifi-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **KLOUDEND Inc** (`ipapi-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Knower Tech Usa, LLC** (`knowertech-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Klarifi** (`klarifi-io`) -- search: no-surface, opt-out: undecided
+- [x] **KLOUDEND Inc** (`ipapi-co`) -- search: undecided, opt-out: blocked
+- [x] **Knower Tech Usa, LLC** (`knowertech-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Knower Tech USA, LLC** (`rbarrel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Knowwho** (`knowwho-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **KOCHAVA Inc.** (`kochava-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Knowwho** (`knowwho-com`) -- search: no-surface, opt-out: undecided
+- [x] **KOCHAVA Inc.** (`kochava-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Koddi Inc.** (`koddi-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Kols (Key Opinion Leaders)** (`keyopinionleaders-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Komodo Health, Inc.** (`komodohealth-com`) -- search: UNMAPPED, opt-out: UNMAPPED

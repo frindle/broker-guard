@@ -44,20 +44,20 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-71 findings across 58 brokers.
+80 findings across 63 brokers.
 
 | scope | findings |
 | --- | --- |
-| broker-surface | 5 |
-| dataset | 32 |
-| unreachable | 34 |
+| broker-surface | 6 |
+| dataset | 36 |
+| unreachable | 38 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 35 |
+| parked-or-defunct | 39 |
+| unclassified | 12 |
 | dead-url | 11 |
 | entity-mismatch | 7 |
-| unclassified | 7 |
 | broker-surface-defect | 5 |
 | rebrand-or-domain-change | 4 |
 | contact-address-oddity | 1 |
@@ -283,6 +283,16 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-23: fusedleads.com could not be loaded at all. The navigation failed with net::ERR_CERT_DATE_INVALID -- the site's TLS certificate is expired or not yet valid. That is worth distinguishing carefully from the other failure modes in this module. It is NOT a DNS failure (the name resolved), NOT a refused connection (the handshake got far enough to present a certificate), and NOT an anti-bot wall (a wall serves a challenge page, which reads fine). The host is up and answering; its certificate is simply out of date. Every ordinary visitor is seeing the same browser interstitial, so this is a broker whose site is effectively unreachable to the public rather than one defending itself against automation. It is undecided rather than closed because certificates get renewed, often within days, and the site behind it is unexamined. A retry in a week is the whole next step. If it is still expired then, that is worth saying out loud in any escalation: a data broker whose opt-out channel is unreachable because it has not renewed a certificate is not offering one. The dataset records this row as email- method with greg@fusedleads.com, which at least does not depend on the website.
 
+### `getivydata-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: getivydata.com does not resolve (net::ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list. Only the bare domain was in the dataset, with no opt-out path.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-23: getivydata.com does not resolve (ERR_NAME_NOT_RESOLVED), so nothing can be said about any surface. UNREACHABLE for the defects list.
+
 ### `granitelists-com`
 
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -372,6 +382,42 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23: the dataset's URL 404s and no other path was probed. A background-screening CRA, so any 'search' is a file disclosure gated behind identity verification rather than a public index -- same distinction as innovis-com above. DATASET NOTE: stale URL.
+
+### `jdmlistservices-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: https://www.jdmlistservices.com/do-not-sell-my-info returns 404. DATASET NOTE: stale opt-out URL on a host that still answers. A list-services company is squarely a broker, so this is worth chasing rather than writing off -- the page presumably moved.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-23: only the dataset's opt-out path was probed and it 404s on a live host. No search surface was looked for. DATASET NOTE: stale URL.
+
+### `kbmg-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: www.kbmg.com does not resolve (net::ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list. KBM Group was a sizeable Wunderman/WPP data business, so a dead domain likely means absorption into a parent rather than closure -- which would mean the data still exists somewhere under another name. That is a research question, not something a DNS failure settles, and it is the kind of row the consolidated defects list exists to surface.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-23: www.kbmg.com does not resolve (ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list; see optout_forms for why this one warrants a research pass rather than being written off as a dead domain.
+
+### `keymarketingadvantage-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: https://www.keymarketingadvantage.com/do_not_use_my_personal_information returns 404. DATASET NOTE: stale opt-out URL; the host still answers, so the path moved rather than the company vanishing.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-23: only the dataset's opt-out path was probed and it 404s on a live host. DATASET NOTE: stale URL.
+
+### `klarifi-io`
+
+- **scope:** broker-surface | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Incidental page defect worth recording since it would break a naive selector: the message <textarea> carries id='name', DUPLICATING the id of the name <input>. A recipe keyed on #name would match two elements of different kinds. A DEFECT ON THE PAGE ITSELF, not a dataset problem.
 
 ### `nuwber-com`
 
