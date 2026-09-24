@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **419** / 969
-- Search leg mapped: 420 / 969
-- Opt-out leg mapped: 423 / 969
+- Fully mapped (both legs): **435** / 969
+- Search leg mapped: 436 / 969
+- Opt-out leg mapped: 439 / 969
 
 ## How to resume
 
@@ -535,29 +535,29 @@ of those dicts against source-brokers.json).
 - [ ] **Knower Tech USA, LLC** (`rbarrel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Knowwho** (`knowwho-com`) -- search: no-surface, opt-out: undecided
 - [x] **KOCHAVA Inc.** (`kochava-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Koddi Inc.** (`koddi-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Kols (Key Opinion Leaders)** (`keyopinionleaders-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Koddi Inc.** (`koddi-com`) -- search: no-surface, opt-out: blocked
+- [x] **Kols (Key Opinion Leaders)** (`keyopinionleaders-com`) -- search: undecided, opt-out: undecided
 - [ ] **Komodo Health, Inc.** (`komodohealth-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Kontext Data** (`kontextdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Kyber Health Data LLC** (`forian-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Kyber Health Data LLC** (`forian-com`) -- search: no-surface, opt-out: blocked
 - [ ] **L.S Mobile Apps Holdings Ltd** (`lsmapps-com`) -- search: UNMAPPED, opt-out: recipe
-- [ ] **LABELS & LISTS Inc** (`l2political-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **LABELS & LISTS Inc** (`l2political-com`) -- search: undecided, opt-out: undecided
 - [ ] **Labels & Lists, Inc** (`l2-data-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **LB Digital Data (LBDigital)** (`lbdigitaldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **LEAD ME MEDIA LLC** (`leadmemedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Lead411 Corporation** (`lead411-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Leadcrunch** (`getrev-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Leadership Connect** (`leadershipconnect-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **LEADIQ Inc** (`leadiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Leadloft Inc.** (`leadloft-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Leadpost, LLC** (`leadpost-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Leadsmarket.Com LLC** (`leadsmarket-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Leadspace, Inc.** (`leadspace-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Leidos Digital Solutions, Inc.** (`leidosiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **LEAD ME MEDIA LLC** (`leadmemedia-com`) -- search: no-surface, opt-out: blocked
+- [x] **Lead411 Corporation** (`lead411-com`) -- search: no-surface, opt-out: blocked
+- [x] **Leadcrunch** (`getrev-ai`) -- search: no-surface, opt-out: blocked
+- [x] **Leadership Connect** (`leadershipconnect-io`) -- search: undecided, opt-out: undecided
+- [x] **LEADIQ Inc** (`leadiq-com`) -- search: undecided, opt-out: undecided
+- [x] **Leadloft Inc.** (`leadloft-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Leadpost, LLC** (`leadpost-com`) -- search: no-surface, opt-out: blocked
+- [x] **Leadsmarket.Com LLC** (`leadsmarket-com`) -- search: undecided, opt-out: undecided
+- [x] **Leadspace, Inc.** (`leadspace-com`) -- search: no-surface, opt-out: undecided
+- [x] **Leidos Digital Solutions, Inc.** (`leidosiq-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Lender Feed LLC** (`monitorbase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **LET IT RIDE SPORTS LLC** (`outlastdfs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **LET IT RIDE SPORTS LLC** (`outlastdfs-com`) -- search: undecided, opt-out: undecided
 - [x] **LexisNexis Risk Solutions** (`lexisnexis-com`) -- search: no-surface, opt-out: out-of-scope
-- [ ] **Lifesight LLC** (`lifesight-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Lifesight LLC** (`lifesight-io`) -- search: undecided, opt-out: undecided
 - [ ] **Lightbox Parent, L.P.** (`lightboxre-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Lighthouse List Company** (`lighthouselist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Limeleads** (`limeleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED

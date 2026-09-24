@@ -44,21 +44,21 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-80 findings across 63 brokers.
+92 findings across 71 brokers.
 
 | scope | findings |
 | --- | --- |
-| broker-surface | 6 |
-| dataset | 36 |
-| unreachable | 38 |
+| broker-surface | 9 |
+| dataset | 37 |
+| unreachable | 46 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 39 |
+| parked-or-defunct | 47 |
+| dead-url | 12 |
 | unclassified | 12 |
-| dead-url | 11 |
+| broker-surface-defect | 8 |
 | entity-mismatch | 7 |
-| broker-surface-defect | 5 |
 | rebrand-or-domain-change | 4 |
 | contact-address-oddity | 1 |
 | stale-200 | 1 |
@@ -265,6 +265,12 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23. Two layers of confusion resolved, then a wall. DATASET DEFECT, flagged and NOT fixed: the row is e.Republic (a government-and-education media company) but is KEYED to force.com, which is Salesforce's hosting domain rather than anything e.Republic owns. The broker_id 'force-com' is therefore meaningless, and any future row hosted on Salesforce would collide with it. The recorded URL (erepublic.secure.force.com/PrivacyRequest/) is dead: Salesforce answers 'URL No Longer Exists'. So does erepublic.com/privacy- policy/. The live surface was found on the footer of e.Republic's own 404 page -- erepublic.my.salesforce- sites.com/PrivacyRequest/ -- i.e. the same app migrated from the retired *.secure.force.com hostname to the current *.my.salesforce-sites.com one. That form is genuine (a request- type select, name, phone, email, full address, a state select, a comments box and a declaration 'under penalty of...' checkbox) and is blocked three times over: * reCAPTCHA, via a hidden recaptchaToken input. * A HONEYPOT named almost plausibly: a hidden text input ending ':HomeAddressHP' -- the HP suffix being the only giveaway on a form that also asks for a real home address. * A TIMING TRAP, which is new in this sweep and worth naming: the form carries formLoadTime and TimeSpent inputs, so the server judges HOW LONG the form took to fill. A recipe that fills instantly is detectable even with every field correct and every honeypot avoided. And even past all three, the field names are Visualforce's positional auto-ids -- j_id0:j_id2:j_id3:j_id31:j_id36 and so on -- which renumber whenever the page is edited. This is the most fragile naming scheme the sweep has met, worse than Gravity's input_N. privacy@erepublic.com is the published channel.
 
+### `forian-com`
+
+- **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-24. forian.com/privacy-consumer-requests/ carries a Divi (et_pb) contact form with a genuinely good structure: a 'Type of Request' select that includes 'Request to Opt-Out of Sale', a 'Who is Making this Request' select that -- unusually, and in welcome contrast to the gumgum-com wrong-request-type problem -- actually offers 'Consumer' and 'Website Visitor' alongside Healthcare Provider, Customer and Employee / Job Applicant. Then Name, Email Address, Address, an optional 'NPI #' and an 'Additional Information' textarea, under a Submit button.
+
 ### `forms-gle`
 
 - **scope:** dataset | **kind:** entity-mismatch | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -413,11 +419,59 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT 2026-09-23: only the dataset's opt-out path was probed and it 404s on a live host. DATASET NOTE: stale URL.
 
+### `keyopinionleaders-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24: www.keyopinionleaders.com does not resolve (net::ERR_NAME_NOT_RESOLVED from a real browser). DNS returns nothing for the name, so there is no host to ask and nothing can be said about any opt-out surface. UNREACHABLE for the defects list.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-24: www.keyopinionleaders.com does not resolve (net::ERR_NAME_NOT_RESOLVED), so there is no host to ask. UNREACHABLE for the defects list.
+
 ### `klarifi-io`
 
 - **scope:** broker-surface | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > Incidental page defect worth recording since it would break a naive selector: the message <textarea> carries id='name', DUPLICATING the id of the name <input>. A recipe keyed on #name would match two elements of different kinds. A DEFECT ON THE PAGE ITSELF, not a dataset problem.
+
+### `l2political-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24, with a DATASET DEFECT recorded and not fixed: the opt_out_url on file -- l2political.com/california-privacy-rights-for-california-residents-only/ -- returns a hard HTTP 404, and so does the conventional l2political.com/privacy-policy/ tried as a fallback. The domain itself resolves and serves, so this is a dead path on a live site rather than a dead company. The real rights page was not located this pass; finding it is a five-minute job for whoever picks this up, starting from the site's own footer.
+
+### `leadershipconnect-io`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24: HTTP 403. Both the dataset's recorded path and www.leadershipconnect.io/opt-out answered 403 with no content, so nothing is known about whether an opt-out form exists there. UNREACHABLE for the defects list.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-24: leadershipconnect.io answers HTTP 403 with no content, on both the dataset path and /opt-out, so neither leg could be read. UNREACHABLE for the defects list. Likeliest cause is an edge rule refusing a headless datacenter client; recheck from the deployment host, as with thatsthem-com.
+
+### `leadloft-com`
+
+- **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > WHAT WAS ACTUALLY CHECKED, since this is an absence claim and the standing rule is that absence must be established rather than merely unobserved. (1) www.leadloft.com was rendered in full. Its anchors were scanned for any text or href mentioning do-not-sell, opt-out, privacy choices, remove, request, DSAR or suppress: there are NONE. Not a dead link, not an empty href as at hivestack-com -- no such anchor exists on the page. (2) The two conventional paths, /privacy-policy and /do-not-sell, were each requested and each returns a hard HTTP 404.
+
+### `leadsmarket-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24: www.leadsmarket.com/privacy-policy did not respond. Navigation to it was attempted twice and both attempts ended in a 30-second timeout with no response at all -- no challenge page, no error page, nothing, the same signature already recorded at trufactor-io. UNREACHABLE for the defects list.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-24: www.leadsmarket.com did not respond -- two attempts, both 30-second navigation timeouts with no response at all. Nothing can be said about any surface. UNREACHABLE for the defects list; see the optout_forms entry for why two timeouts from one network still are not proof the host is gone.
+
+### `leadspace-com`
+
+- **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24, and it is a close call held up by the same wrong-request-type problem already recorded at gumgum-com.
 
 ### `nuwber-com`
 
@@ -428,6 +482,16 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23 for a network reason, not a research one: nuwber.com failed to RESOLVE (net::ERR_NAME_NOT_RESOLVED) from a headless Chromium on this host, so no page was ever reached. Nuwber is a well-known people-search site, so a single DNS failure is not grounds for a no-surface call in either leg. Next pass: resolve the name from a different network first. See the opt-out leg's entry, which is unresolved for the same reason.
+
+### `outlastdfs-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-24: outlastdfs.com does not resolve (net::ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-24: outlastdfs.com does not resolve (net::ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list, and corroborated independently by the hard-bounced mail recorded in the dataset a month earlier -- see optout_forms for why this is still filed as undecided rather than as absence.
 
 ### `parade-pet`
 

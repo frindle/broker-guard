@@ -866,6 +866,102 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch 18 of 2026-09-24: lead-generation / B2B contact vendors ----
+    #
+    # A structurally uniform batch on this leg. Every company here sells
+    # contact or audience data to other BUSINESSES, and a consumer lookup is
+    # not merely absent but contrary to the product: the people in these
+    # databases are the inventory, and exposing a free self-search would let
+    # anyone query the inventory for nothing. The one exception is
+    # leadiq-com, which does offer a profile-claim route and is filed under
+    # SEARCH_UNDECIDED rather than here.
+    "koddi-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Koddi sells retail-media and commerce "
+        "advertising technology to retailers and brands; its only consumer "
+        "surface is the OneTrust DSAR webform embedded at /dsr-form. The leg "
+        "is closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "forian-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Forian sells healthcare and life-sciences data "
+        "analytics to industry; the only input on its rights page is the "
+        "request form itself. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer.\n"
+        "\n"
+        "Worth noting for the category rather than the leg: much of what "
+        "Forian processes is de-identified claims data, where an individual "
+        "lookup is impossible by construction and not merely withheld."
+    ),
+    "lead411-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Lead411 sells B2B contact records by "
+        "subscription; its database is behind a login and a free trial, and "
+        "the site's only other input is a WordPress site search over its own "
+        "marketing pages. The leg is closed because a search recipe cannot "
+        "be written against a surface the broker does not offer.\n"
+        "\n"
+        "ONE THING THAT LOOKS LIKE A SEARCH LEG AND IS NOT, recorded so it "
+        "is not rediscovered: the privacy form at /your-privacy-choices/ "
+        "offers 'Access My Personal Information' and 'Know What Personal "
+        "Information' as request types, which would tell a person what is "
+        "held on them. That is a statutory ACCESS REQUEST -- emailed back "
+        "after an identity code is verified -- not a lookup, and it belongs "
+        "to the opt-out leg's machinery, not this one."
+    ),
+    "getrev-ai": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. GetRev sells AI-driven demand generation to B2B "
+        "sales teams; its only consumer surface is the privacy request form. "
+        "The leg is closed because a search recipe cannot be written against "
+        "a surface the broker does not offer."
+    ),
+    "leadloft-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here, and nothing else consumer-facing either: "
+        "leadloft.com is a sales-prospecting product whose every form is a "
+        "'Start Free Trial' capture. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer. See optout_forms for the full account of what this site does "
+        "carry, which is worth reading before anyone submits anything to it."
+    ),
+    "leadmemedia-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. policy.leadmemedia.com serves a rights-request "
+        "form and nothing else; LeadMe Media is a performance-marketing lead "
+        "vendor with no public database. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "leadpost-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. LeadPost sells website-visitor identification "
+        "to advertisers -- resolving anonymous traffic to named people -- so "
+        "its records are keyed to browsing activity a person cannot query. "
+        "app.leadpost.com serves the opt-out form and no lookup. The leg is "
+        "closed because a search recipe cannot be written against a surface "
+        "the broker does not offer."
+    ),
+    "leadspace-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Leadspace sells B2B audience data to marketing "
+        "teams; the only input on its site outside the do-not-sell form is a "
+        "site search over its own pages. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "leidosiq-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. leidosiq.com is a product marketing site for "
+        "Intranet Quorum, the constituent-management system used by "
+        "legislative offices; the only inputs on it are two site-search "
+        "boxes over its own pages. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer.\n"
+        "\n"
+        "The category question about whether this row belongs in the dataset "
+        "at all is recorded in optout_forms and is not restated here."
+    ),
     # --- batch 17 of 2026-09-23: adtech / list / martech vendors ----------
     #
     # Same reasoning as the groups below: sold to businesses, no public name
@@ -3731,6 +3827,75 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    # --- batch 18 of 2026-09-24: lead-generation / B2B contact vendors ---
+    "leadiq-com": (
+        "NO VERDICT 2026-09-24, and it is the one row in batch 18 where a "
+        "search leg plausibly EXISTS. privacy.leadiq.com offers 'Claim My "
+        "Profile' -- 'If you've become aware that LeadIQ has a professional "
+        "profile on you, you can claim that profile' -- alongside 'Request "
+        "Access', described as giving 'a look at what' is held. Either could "
+        "function as a self-lookup.\n"
+        "\n"
+        "Neither was exercised, deliberately. Both routes are gated behind "
+        "embedded Typeforms that render one question at a time and exposed "
+        "no fields to the probe, and both require handing a real email "
+        "address to a B2B contact vendor -- and in the claim case, plausibly "
+        "creating an account. That is not a read, and it is exactly the "
+        "situation already recorded at listmatch-com: an address given to a "
+        "contact-data company to test a form is an address they now have, "
+        "and claiming a profile gives them a VERIFIED identity for someone "
+        "whose reason for being there was to be less exposed. Whoever takes "
+        "this should use a disposable address and run it both ways, and "
+        "should prefer 'Request Access' over 'Claim My Profile' for exactly "
+        "that reason."
+    ),
+    "leadsmarket-com": (
+        "NO VERDICT 2026-09-24: www.leadsmarket.com did not respond -- two "
+        "attempts, both 30-second navigation timeouts with no response at "
+        "all. Nothing can be said about any surface. UNREACHABLE for the "
+        "defects list; see the optout_forms entry for why two timeouts from "
+        "one network still are not proof the host is gone."
+    ),
+    "leadershipconnect-io": (
+        "NO VERDICT 2026-09-24: leadershipconnect.io answers HTTP 403 with "
+        "no content, on both the dataset path and /opt-out, so neither leg "
+        "could be read. UNREACHABLE for the defects list. Likeliest cause is "
+        "an edge rule refusing a headless datacenter client; recheck from "
+        "the deployment host, as with thatsthem-com."
+    ),
+    "l2political-com": (
+        "NO VERDICT 2026-09-24: the domain serves, but both the dataset's "
+        "recorded rights URL and /privacy-policy/ return HTTP 404, and no "
+        "working page was rendered, so no statement about a lookup surface "
+        "is supported. Dataset defect flagged in optout_forms, not fixed.\n"
+        "\n"
+        "Worth a proper look rather than a write-off: L2 is a commercial "
+        "voter-file vendor, and voter-file products DO often carry a "
+        "self-lookup, since the underlying registration data is public "
+        "record. If one exists here it would be a genuine search leg."
+    ),
+    "keyopinionleaders-com": (
+        "NO VERDICT 2026-09-24: www.keyopinionleaders.com does not resolve "
+        "(net::ERR_NAME_NOT_RESOLVED), so there is no host to ask. "
+        "UNREACHABLE for the defects list."
+    ),
+    "outlastdfs-com": (
+        "NO VERDICT 2026-09-24: outlastdfs.com does not resolve "
+        "(net::ERR_NAME_NOT_RESOLVED). UNREACHABLE for the defects list, and "
+        "corroborated independently by the hard-bounced mail recorded in the "
+        "dataset a month earlier -- see optout_forms for why this is still "
+        "filed as undecided rather than as absence."
+    ),
+    "lifesight-io": (
+        "NO VERDICT 2026-09-24: lifesight.io/opt-out/ was rendered twice and "
+        "its body text never settled -- under 900 characters both times, all "
+        "of it nav, cookie banner and a rotating promo ticker. The only form "
+        "on the page is a HubSpot newsletter signup whose button reads "
+        "'Subscribe Now'. Nothing about a lookup surface can be concluded "
+        "from a page whose content did not render. See the optout_forms "
+        "entry, which is the fuller write-up of this row and of the "
+        "marketing-signup hazard it illustrates."
+    ),
     "getivydata-com": (
         "NO VERDICT 2026-09-23: getivydata.com does not resolve "
         "(ERR_NAME_NOT_RESOLVED), so nothing can be said about any surface. "
