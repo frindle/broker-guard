@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **353** / 969
-- Search leg mapped: 354 / 969
-- Opt-out leg mapped: 357 / 969
+- Fully mapped (both legs): **371** / 969
+- Search leg mapped: 372 / 969
+- Opt-out leg mapped: 375 / 969
 
 ## How to resume
 
@@ -407,7 +407,7 @@ of those dicts against source-brokers.json).
 - [x] **Fused Leads, LLC** (`fusedleads-com`) -- search: no-surface, opt-out: undecided
 - [x] **Fushia Media, LLC.** (`fushiamedia-com`) -- search: no-surface, opt-out: no-surface
 - [x] **G2 Bankruptcy Risk Solutions, Inc.** (`g2risksolutions-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **General Information Solutions LLC** (`backgroundchecks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **General Information Solutions LLC** (`backgroundchecks-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **General Motors LLC** (`gm-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Genius Sports Group** (`geniussports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Georgia Court Records (CourtRecords.us network)** (`georgiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -431,7 +431,7 @@ of those dicts against source-brokers.json).
 - [ ] **Growbots Inc.** (`growbots-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Growing Libraries, LLC** (`growinglibraries-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **GUIDESTAR DIRECT CORP** (`carneydirect-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Gumgum, Inc.** (`gumgum-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Gumgum, Inc.** (`gumgum-com`) -- search: no-surface, opt-out: blocked
 - [x] **Gunderson Direct** (`gundir-com`) -- search: no-surface, opt-out: no-surface
 - [x] **H1 Insights Inc.** (`h1-co`) -- search: no-surface, opt-out: undecided
 - [ ] **Haines & Company** (`haines-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -441,31 +441,31 @@ of those dicts against source-brokers.json).
 - [x] **Health Is Wealth Marketing LLC** (`pickmedicare-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Healthcare, Inc.** (`healthcare-com`) -- search: no-surface, opt-out: blocked
 - [x] **Healthlink Dimensions, LLC** (`healthlinkdimensions-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Healthwise Data, LLC** (`healthwisedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **HEARTBEAT.AI Inc** (`heartbeat-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Helix Campaigns LLC** (`helixcampaigns-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **HERE North America LLC** (`here-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Hexasoft Development Sdn. Bhd.** (`ip2location-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Healthwise Data, LLC** (`healthwisedata-com`) -- search: no-surface, opt-out: blocked
+- [x] **HEARTBEAT.AI Inc** (`heartbeat-ai`) -- search: no-surface, opt-out: blocked
+- [x] **Helix Campaigns LLC** (`helixcampaigns-com`) -- search: no-surface, opt-out: blocked
+- [x] **HERE North America LLC** (`here-com`) -- search: no-surface, opt-out: undecided
+- [x] **Hexasoft Development Sdn. Bhd.** (`ip2location-com`) -- search: no-surface, opt-out: blocked
 - [x] **HireRight** (`hireright-com`) -- search: no-surface, opt-out: blocked
-- [ ] **HIRETEAMMATE Inc** (`hireez-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **HIRETEAMMATE Inc** (`hireez-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Hivestack Inc.** (`perion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Hivestack, Inc.** (`hivestack-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Home Contractors Review, LLC** (`fivestarrated-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Hivestack, Inc.** (`hivestack-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Home Contractors Review, LLC** (`fivestarrated-com`) -- search: no-surface, opt-out: undecided
 - [ ] **HomeData (a DeepSync brand)** (`homedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Homeowners Marketing Services Inc** (`homeownersmarketingservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Hunt Club Inc** (`exploreatlas-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Hunter Web Services Inc** (`hunter-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Homeowners Marketing Services Inc** (`homeownersmarketingservices-com`) -- search: no-surface, opt-out: blocked
+- [x] **Hunt Club Inc** (`exploreatlas-io`) -- search: no-surface, opt-out: undecided
+- [x] **Hunter Web Services Inc** (`hunter-io`) -- search: no-surface, opt-out: undecided
 - [ ] **i360, LLC** (`i-360-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ID5 Technology** (`id5-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **ID5 Technology** (`id5-io`) -- search: no-surface, opt-out: undecided
 - [ ] **Idaho Court Records (CourtRecords.us network)** (`idahocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **IDCrawl** (`idcrawl-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Idengine LLC** (`idengine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Idengine LLC** (`idengine-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **IDG Communications Inc.** (`foundryco-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **IDStrong** (`idstrong-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **IHS Markit** (`spglobal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Ileads.Com, LLC** (`ileads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Ileads.Com, LLC** (`ileads-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Illinois Court Records (CourtRecords.us network)** (`illinoiscourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Illumin Inc.** (`acuityads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Illumin Inc.** (`acuityads-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Imprint Analytics LLC** (`imprintanalytics-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Inbound Insight, LLC** (`inboundinsight-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Incheck Inc** (`inchecksolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -497,7 +497,7 @@ of those dicts against source-brokers.json).
 - [ ] **Insurance Marketing Hub LLC** (`insurancemarketinghub-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Intalytics, Inc.** (`esiteanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Intalytics, Inc.** (`kalibrate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Integrated Direct Marketing, LLC (IDM)** (`idm-us-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Integrated Direct Marketing, LLC (IDM)** (`idm-us-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Integrated Medical Data, LLC.** (`integratedmedicaldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Intelius** (`intelius-com`) -- search: undecided, opt-out: out-of-scope
 - [ ] **Intellicorp Records, Inc.** (`intellicorp-net`) -- search: UNMAPPED, opt-out: UNMAPPED

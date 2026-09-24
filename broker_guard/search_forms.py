@@ -3304,6 +3304,136 @@ NO_SEARCH_SURFACE = {
         "search recipe cannot be written against a surface the broker "
         "does not offer."
     ),
+    "healthwisedata-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. HealthWise Data sells healthcare audience "
+        "data to marketers behind a demo request; its only form is the "
+        "privacy request. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "heartbeat-ai": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Heartbeat sells contact enrichment to "
+        "recruiters behind a login, and its public pages sit behind a "
+        "Cloudflare bot check in any case. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "helixcampaigns-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Helix Campaigns sells political audience "
+        "targeting to campaigns; its only public form is the rights "
+        "request. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "here-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. HERE sells mapping and location services; "
+        "its products search PLACES and routes, never people. The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "ip2location-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. IP2Location sells IP geolocation databases "
+        "-- its lookups resolve IP ADDRESSES to coarse locations, and "
+        "return no person. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "hireez-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. hireez sells recruiting search over "
+        "candidate profiles, but only to paying recruiters behind a "
+        "login; nothing is public. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "hivestack-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Hivestack sells programmatic out-of-home "
+        "advertising to media buyers; its site carries no lookup of any "
+        "kind. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "fivestarrated-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. FiveStarRated is a home-services directory: "
+        "its ZIP and keyword boxes search CONTRACTORS AND BUSINESSES, not "
+        "individuals. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "homeownersmarketingservices-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Homeowners Marketing Services rents "
+        "homeowner mailing lists to marketers; its only form is the "
+        "removal request. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "exploreatlas-io": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. exploreatlas.io serves 'This page couldn't "
+        "be found' and offers nothing; see the opt-out entry. The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "hunter-io": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Hunter's email-finder searches by COMPANY "
+        "DOMAIN and is gated behind an account; its public page is the "
+        "claim/removal form only. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "id5-io": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. ID5 operates an advertising identity graph "
+        "consumed by ad tech, not by people; there is no lookup surface "
+        "and nothing to query. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "idengine-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. idengine.com is a parked domain listed for "
+        "sale; see the opt-out entry. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "idm-us-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. IDM sells marketing data and analytics to "
+        "advisers; its only public form is the do-not-sell request. The "
+        "leg is closed because a search recipe cannot be written against "
+        "a surface the broker does not offer."
+    ),
+    "ileads-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. iLeads sells mortgage and insurance leads to "
+        "lenders; its only public form is the CCPA request. The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "acuityads-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. AcuityAds -- now trading as illumin -- sells "
+        "programmatic advertising to brands; there is no consumer lookup "
+        "anywhere on it. The leg is closed because a search recipe cannot "
+        "be written against a surface the broker does not offer."
+    ),
+    "gumgum-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. GumGum sells contextual advertising to "
+        "brands; the only input on its site is a site search over its own "
+        "marketing pages. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "backgroundchecks-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. backgroundchecks.com sells screening reports "
+        "to employers behind a credentialed account; the consumer routes "
+        "it offers are a file disclosure and a dispute, not a lookup. The "
+        "leg is closed because a search recipe cannot be written against "
+        "a surface the broker does not offer."
+    ),
 }
 
 
