@@ -3185,6 +3185,125 @@ NO_SEARCH_SURFACE = {
         "out. The leg is closed because a search recipe cannot be written "
         "against a surface the broker does not offer."
     ),
+    "giantpartners-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Giant Partners is a data-driven marketing "
+        "agency selling list services to businesses; its only public form "
+        "is the opt-out. The leg is closed because a search recipe cannot "
+        "be written against a surface the broker does not offer."
+    ),
+    "parade-pet": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Pet Parade is a consumer photo-contest game; "
+        "its forms are signup, login and phone/email code verification, "
+        "none of which look anyone up. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "grassrootsanalytics-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Grassroots Analytics sells donor data to "
+        "political campaigns behind a sales process; the CCPA page's form "
+        "is a rights request, not a lookup. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "grata-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Grata sells private-company search to "
+        "dealmakers -- its product searches COMPANIES, not people, and "
+        "requires a paid login. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "grayhairsoftware-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. GrayHair Software sells mail-tracking "
+        "analytics to mailers; its site carries no inputs beyond a cookie "
+        "banner. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "greatlakeslists-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Great Lakes List Management rents marketing "
+        "lists to businesses; its site browses LIST CATEGORIES, not "
+        "individuals. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "grin-co": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. GRIN sells influencer-marketing software; "
+        "its public pages are behind a Cloudflare interstitial and offer "
+        "no lookup in any case. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "forms-gle": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. The row points at a Google Form, which is a "
+        "submission surface only; see the opt-out entry for what that "
+        "form actually belongs to. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "carneydirect-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Carney Direct does database management for "
+        "mailers; the only input on its site is a WordPress site search. "
+        "The leg is closed because a search recipe cannot be written "
+        "against a surface the broker does not offer."
+    ),
+    "gundir-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Gundir is a direct-mail agency; the only "
+        "input on its site is a WordPress site search. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "h1-co": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. H1 sells healthcare-provider intelligence to "
+        "life-sciences firms behind a demo request and login; no public "
+        "lookup is offered. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "healthcare-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. healthcare.com compares insurance plans, not "
+        "people; its quoting flow takes a ZIP to price plans and returns "
+        "no records about a person. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "healthlinkdimensions-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. HealthLink Dimensions sells healthcare- "
+        "professional contact data to marketers; its consumer page is "
+        "prose with no inputs at all. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "granitelists-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. granitelists.com is serving 'Account "
+        "Suspended' and offers nothing at all; see the opt-out entry. The "
+        "leg is closed because a search recipe cannot be written against "
+        "a surface the broker does not offer."
+    ),
+    "harmonresearch-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Harmon Research runs survey panels and focus "
+        "groups for clients; its site is a brochure with a contact form "
+        "and a panel-book request. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "pickmedicare-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. PickMedicare is a Medicare lead-generation "
+        "landing page whose entire call to action is a phone number; it "
+        "has no lookup and in fact no form. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
 }
 
 

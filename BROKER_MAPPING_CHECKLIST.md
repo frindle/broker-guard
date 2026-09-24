@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **336** / 969
-- Search leg mapped: 338 / 969
-- Opt-out leg mapped: 340 / 969
+- Fully mapped (both legs): **353** / 969
+- Search leg mapped: 354 / 969
+- Opt-out leg mapped: 357 / 969
 
 ## How to resume
 
@@ -413,34 +413,34 @@ of those dicts against source-brokers.json).
 - [ ] **Georgia Court Records (CourtRecords.us network)** (`georgiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **GETEMAILS LLC** (`retention-com`) -- search: no-surface, opt-out: blocked
 - [ ] **GetVector, Inc.** (`vector-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Giant Partners** (`giantpartners-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Glad I Know, Inc.** (`gladiknow-com`) -- search: no-surface, opt-out: UNMAPPED
+- [x] **Giant Partners** (`giantpartners-com`) -- search: no-surface, opt-out: blocked
+- [x] **Glad I Know, Inc.** (`gladiknow-com`) -- search: no-surface, opt-out: undecided
 - [x] **Golookup** (`golookup-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Good Boy Studios, Inc** (`parade-pet`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Good Boy Studios, Inc** (`parade-pet`) -- search: no-surface, opt-out: undecided
 - [x] **GoodHire** (`goodhire-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **GovernmentRegistry** (`governmentregistry-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Granite Lists, LLC** (`granitelists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Grassroots Analytics** (`grassrootsanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Grata Inc** (`grata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Granite Lists, LLC** (`granitelists-com`) -- search: no-surface, opt-out: undecided
+- [x] **Grassroots Analytics** (`grassrootsanalytics-com`) -- search: no-surface, opt-out: undecided
+- [x] **Grata Inc** (`grata-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Gravy Analytics** (`gravyanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Grayhair Software LLC** (`grayhairsoftware-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Grayhair Software LLC** (`grayhairsoftware-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Graze Social PBC** (`graze-social`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **GREAT LAKES LIST Inc** (`greatlakeslists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Grin Technologies Inc.** (`grin-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Growbots Inc** (`forms-gle`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **GREAT LAKES LIST Inc** (`greatlakeslists-com`) -- search: no-surface, opt-out: blocked
+- [x] **Grin Technologies Inc.** (`grin-co`) -- search: no-surface, opt-out: blocked
+- [x] **Growbots Inc** (`forms-gle`) -- search: no-surface, opt-out: undecided
 - [ ] **Growbots Inc.** (`growbots-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Growing Libraries, LLC** (`growinglibraries-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **GUIDESTAR DIRECT CORP** (`carneydirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **GUIDESTAR DIRECT CORP** (`carneydirect-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Gumgum, Inc.** (`gumgum-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Gunderson Direct** (`gundir-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **H1 Insights Inc.** (`h1-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Gunderson Direct** (`gundir-com`) -- search: no-surface, opt-out: no-surface
+- [x] **H1 Insights Inc.** (`h1-co`) -- search: no-surface, opt-out: undecided
 - [ ] **Haines & Company** (`haines-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Harmon Research Group, LLC** (`harmonresearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Harmon Research Group, LLC** (`harmonresearch-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Harte Hanks** (`hartehanks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Hawaii Court Records (CourtRecords.us network)** (`hawaiicourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Health Is Wealth Marketing LLC** (`pickmedicare-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Healthcare, Inc.** (`healthcare-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Healthlink Dimensions, LLC** (`healthlinkdimensions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Health Is Wealth Marketing LLC** (`pickmedicare-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Healthcare, Inc.** (`healthcare-com`) -- search: no-surface, opt-out: blocked
+- [x] **Healthlink Dimensions, LLC** (`healthlinkdimensions-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Healthwise Data, LLC** (`healthwisedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **HEARTBEAT.AI Inc** (`heartbeat-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Helix Campaigns LLC** (`helixcampaigns-com`) -- search: UNMAPPED, opt-out: UNMAPPED
