@@ -63,6 +63,15 @@ It also flags, explicitly:
                  ``unreadable``, because "there is a cross-origin form here"
                  is a finding and silence is not.
 
+                 THE HAZARD: ``frame.evaluate`` accepts no timeout and can
+                 hang indefinitely on a frame whose main thread is wedged.
+                 ``faraday.io`` did exactly that on 2026-09-23 and took a
+                 whole 16-target run down with it -- eight targets had been
+                 probed successfully and all eight were lost, because
+                 results were only written at the end. Both halves of that
+                 are now fixed: ``TARGET_BUDGET_S`` caps each target, and
+                 the output file is rewritten after every one of them.
+
 READ-ONLY, WITH ONE HONEST CAVEAT
 ---------------------------------
 Nothing is ever typed, clicked or submitted. The browser navigates, waits for
@@ -98,9 +107,17 @@ written-up entry from an anti-bot wall.
 Roughly fifteen URLs per invocation keeps the output readable in one screen.
 """
 import json
+import os
+import subprocess
 import sys
 
 from playwright.sync_api import sync_playwright
+
+# How long one target may take in total before it is abandoned. This is a
+# WALL-CLOCK cap over the whole per-target block, not a per-call timeout,
+# because the hang this exists for was not in any call that takes one.
+TARGET_BUDGET_S = 75
+
 
 # Reads the rendered DOM. Kept as one expression so it can be handed to
 # page.evaluate() unchanged, and deliberately defensive: className is not a
@@ -164,15 +181,14 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
 
 
-def probe(targets, headed=False):
-    """Render each (broker_id, url) and return {broker_id: description}."""
-    results = {}
+def probe_one(url, headed=False):
+    """Render ONE url and return its description. Runs in a child process."""
+    rec = {"url": url}
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=not headed)
         ctx = browser.new_context(user_agent=UA)
-        for broker_id, url in targets:
-            page = ctx.new_page()
-            rec = {"url": url}
+        page = ctx.new_page()
+        if True:  # indentation kept so the body below reads unchanged
             try:
                 resp = page.goto(url, wait_until="domcontentloaded",
                                  timeout=30000)
@@ -208,21 +224,61 @@ def probe(targets, headed=False):
                     rec["frames"] = frames
             except Exception as exc:  # noqa: BLE001 -- the failure IS the finding
                 rec["error"] = "%s: %s" % (type(exc).__name__, str(exc)[:200])
-            page.close()
-            results[broker_id] = rec
-            print("probed %-28s %s %s" % (broker_id, rec.get("status"),
-                                          rec.get("error", "")),
-                  file=sys.stderr)
         browser.close()
+    return rec
+
+
+def probe(targets, headed=False, out_path=None):
+    """Render each (broker_id, url) and return {broker_id: description}.
+
+    EACH TARGET RUNS IN ITS OWN CHILD PROCESS, killed if it overruns
+    ``TARGET_BUDGET_S``. That costs a browser launch per target and is worth
+    it: a wedged child frame can hang ``frame.evaluate`` forever, and a hang
+    inside Playwright's sync API cannot be interrupted from within the same
+    process. Signals were tried first and are WORSE THAN USELESS here -- a
+    SIGALRM raised into Playwright's greenlet unwound it silently, ending the
+    run early with exit code 0 and no error anywhere. A killed child cannot
+    lie about it.
+
+    ``out_path``, if given, is rewritten after EVERY target rather than once
+    at the end, so an abandoned run keeps everything it had finished.
+    """
+    results = {}
+    for broker_id, url in targets:
+        cmd = [sys.executable, os.path.abspath(__file__), "--one", url]
+        if headed:
+            cmd.append("--head")
+        try:
+            done = subprocess.run(cmd, capture_output=True, text=True,
+                                  timeout=TARGET_BUDGET_S)
+            rec = json.loads(done.stdout) if done.stdout.strip() else {
+                "url": url,
+                "error": "child produced no output: %s" % done.stderr[-200:]}
+        except subprocess.TimeoutExpired:
+            # The finding, not a failure of the sweep: some frame on this
+            # page never yields. Worth retrying alone before reading anything
+            # into it, since a slow network looks identical from here.
+            rec = {"url": url, "timed_out": True,
+                   "error": "TargetTimeout: exceeded %ds" % TARGET_BUDGET_S}
+        results[broker_id] = rec
+        if out_path:
+            json.dump(results, open(out_path, "w"), indent=0)
+        print("probed %-28s %s %s" % (broker_id, rec.get("status"),
+                                      rec.get("error", "")),
+              file=sys.stderr, flush=True)
     return results
 
 
 def main(argv):
+    if "--one" in argv:
+        rec = probe_one(argv[argv.index("--one") + 1], headed="--head" in argv)
+        json.dump(rec, sys.stdout)
+        return 0
     if len(argv) < 3:
         print(__doc__.strip().split("USAGE")[-1], file=sys.stderr)
         return 2
     targets = json.load(open(argv[1]))
-    out = probe(targets, headed="--head" in argv)
+    out = probe(targets, headed="--head" in argv, out_path=argv[2])
     json.dump(out, open(argv[2], "w"), indent=0)
     print("wrote %s: %d targets" % (argv[2], len(out)), file=sys.stderr)
     return 0
