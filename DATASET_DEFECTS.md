@@ -44,18 +44,18 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-108 findings across 81 brokers.
+114 findings across 85 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 9 |
-| dataset | 39 |
-| unreachable | 60 |
+| dataset | 44 |
+| unreachable | 61 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 61 |
-| unclassified | 13 |
+| parked-or-defunct | 62 |
+| unclassified | 18 |
 | dead-url | 12 |
 | broker-surface-defect | 8 |
 | entity-mismatch | 7 |
@@ -77,6 +77,16 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23: the domain does not resolve. Both agrgroupinc.com and www.agrgroupinc.com fail DNS with getaddrinfo ENOTFOUND, so no page of this broker exists to carry a search surface. The company is real -- CA data-broker registration 186616, All Global Resources, LLC, Henderson NV, privacy@agrgroupinc.com -- but it is a registration with no live website, which is also why the dataset lists it as email-only. If the domain ever comes back this call should be revisited.
 
+### `alchemer-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-24 by browser render, and this row carries a dataset defect as well as a block.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > DATASET DEFECT: the recorded opt_out_url points at Alchemer survey 8249180; it redirects to survey 8534043 ('Do Not Sell Request - 2026'). The survey is reissued per year, so the recorded id will rot again. Whatever eventually consumes this row should follow the redirect rather than pin the id.
+
 ### `assurance-com`
 
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
@@ -88,6 +98,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.NO_OPTOUT_SURFACE`
 
   > FCRA CATEGORY, verified 2026-09-23, and folded into the shared background-screening treatment rather than given a recipe. backgroundchecks.com sells pre-employment screening reports to employers. The dataset's /privacy path returns a genuine HTTP 404 ('This is a 404 error, meaning this link doesn't exist'), and the only frame on the page is a HubSpot chat widget. Flagged as a dataset defect; not fixed. More to the point, the routes the site does offer are the FCRA ones, visible in its own navigation: 'Get a Copy of Your Background Report' and 'Dispute Background Report'. Those are the statutory file-disclosure and dispute rights against a consumer reporting agency, and they are not opt-outs. A CRA regulated under the FCRA cannot simply delete a person from its files on request the way a marketing list broker can -- which is why this module treats the whole category as no-surface with an explanation rather than as a broker refusing to cooperate. The distinction to preserve for anyone reading this row: unlike g2risksolutions-com, which is a FURNISHER feeding data into TransUnion's files, backgroundchecks.com compiles and issues reports itself. Both are FCRA entities; only the latter holds a file a person can demand a copy of. support@backgroundchecks.com is published and is the right channel for a disclosure or dispute request.
+
+### `beeswax-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > That host is broken. Over HTTPS it fails with ERR_CERT_COMMON_NAME_INVALID; inspecting the certificate shows it is issued for segment.prod.bidr.io (SANs: segment.prod.bidr.io, apac.segment.prod.bidr.io) and does not cover optout.prod.bidr.io at all. Per the standing rule from listsonline/Everleads in batch 19, plain HTTP was tried before calling it dead -- and here HTTP does not rescue it: it returns 301 Moved Permanently straight back to https://optout.prod.bidr.io:443/optout, i.e. back into the certificate error. There is no reachable path.
 
 ### `bidr-io`
 
@@ -104,6 +120,22 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23: www.blisspointmedia.com did not RESOLVE (net::ERR_NAME_NOT_RESOLVED) from a headless Chromium on this host, so nothing about either leg can be stated. Recheck from a different network before calling it dead, and check whether the company now trades under another name. Same situation as nuwber-com; see the opt-out leg's entry.
+
+### `box-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT 2026-09-24, and this row should probably not exist in the form it exists in. It is recorded as a DATASET DEFECT.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-24 by rendering the recorded URL. No consumer-facing lookup exists there -- but read the opt-out leg before trusting this row, because the row itself is a dataset defect: box.com is Box, Inc., a file-sharing host, and the company named on the row is EAB Global, whose domain is eab.com. What was actually observed is a PDF viewer showing EAB's privacy policy. The leg is closed as to box.com, which offers no lookup and is not a broker; whether EAB offers one at eab.com is a separate question this row cannot answer.
+
+### `brandwatch-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > DATASET DEFECT: the recorded opt_out_url, www.brandwatch.com/confirmation/legal-data/, is not a form. It is the POST-SUBMISSION THANK-YOU PAGE: it renders 'Thank you! We'll be in touch. We'll be in touch soon. In the meantime, why not check out some of our latest content.' A consumer following that link would see a confirmation for a request they never made, and an automated agent keying on confirmation text would read it as SUCCESS without having submitted anything. That is the most dangerous shape a bad URL can take in this dataset, and it is worth generalising: success markers must be checked against the page that a submission actually navigated TO, never against a URL taken from the dataset.
 
 ### `bridgevine-com`
 

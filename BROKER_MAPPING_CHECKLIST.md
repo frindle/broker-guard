@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **467** / 969
-- Search leg mapped: 467 / 969
-- Opt-out leg mapped: 470 / 969
+- Fully mapped (both legs): **483** / 969
+- Search leg mapped: 483 / 969
+- Opt-out leg mapped: 485 / 969
 
 ## How to resume
 
@@ -151,29 +151,29 @@ of those dicts against source-brokers.json).
 - [x] **AZIRA LLC** (`trustarc-com`) -- search: no-surface, opt-out: undecided
 - [x] **B.I Science (2009) Ltd** (`biscience-com`) -- search: no-surface, opt-out: undecided
 - [x] **Background Information Services, Inc.** (`bisi-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **BackgroundCheckers** (`backgroundcheckers-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **BackgroundCheckers** (`backgroundcheckers-net`) -- search: undecided, opt-out: blocked
 - [x] **BB Direct, Inc** (`bbdirect-com`) -- search: no-surface, opt-out: blocked
 - [x] **Bdex, LLC** (`bdex-com`) -- search: no-surface, opt-out: blocked
 - [x] **BDO USA, LLP** (`bdo-com`) -- search: no-surface, opt-out: blocked
 - [x] **BeenVerified** (`beenverified-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **Beeswax** (`bidr-io`) -- search: no-surface, opt-out: undecided
-- [ ] **Beeswax** (`beeswax-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Belardi Ostroy** (`belardiwong-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Beeswax** (`beeswax-com`) -- search: no-surface, opt-out: undecided
+- [x] **Belardi Ostroy** (`belardiwong-com`) -- search: no-surface, opt-out: blocked
 - [x] **Best Pick Reports, LLC** (`bestpickreports-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Big Brook Media, LLC (d/b/a Little Brook Media)** (`littlebrookmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Biointelli Corporation** (`biointelli-com`) -- search: no-surface, opt-out: undecided
 - [x] **Birchwood Credit Services Inc** (`birchwoodcreditservices-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Biscred** (`biscred-com`) -- search: no-surface, opt-out: undecided
 - [x] **Black Pearl Group Limited** (`blackpearl-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Blackbaud, Inc** (`blackbaud-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Blackbaud, Inc** (`blackbaud-com`) -- search: no-surface, opt-out: blocked
 - [x] **Blis USA, Inc.** (`blis-com`) -- search: no-surface, opt-out: undecided
 - [x] **Bliss Point Media, Inc.** (`blisspointmedia-com`) -- search: undecided, opt-out: undecided
-- [ ] **BlockShopper** (`blockshopper-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **BlockShopper** (`blockshopper-com`) -- search: undecided, opt-out: no-surface
 - [x] **Blue Action** (`datasubject-com`) -- search: no-surface, opt-out: undecided
 - [x] **Blue Hill Marketing Solutions, Inc.** (`liftbasedata-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **bolttech (Boltech)** (`bolttech-io`) -- search: UNMAPPED, opt-out: recipe
+- [x] **bolttech (Boltech)** (`bolttech-io`) -- search: no-surface, opt-out: recipe
 - [x] **Bombora, Inc** (`bombora-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Bridg, a division of Cardlytics, Inc.** (`bridg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Bridg, a division of Cardlytics, Inc.** (`bridg-com`) -- search: no-surface, opt-out: undecided
 - [x] **Bridge** (`thebridgecorp-com`) -- search: no-surface, opt-out: undecided
 - [x] **Bridgevine Inc.** (`bridgevine-com`) -- search: undecided, opt-out: undecided
 - [x] **Brigthswipe Inc** (`brightswipe-com`) -- search: undecided, opt-out: undecided
@@ -264,7 +264,7 @@ of those dicts against source-brokers.json).
 - [ ] **Creditreform** (`creditreform-de`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Creditsafe** (`creditsafe-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **CRIF S.p.A.** (`crif-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Crimson Hexagon** (`brandwatch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Crimson Hexagon** (`brandwatch-com`) -- search: no-surface, opt-out: blocked
 - [x] **CRISIL Irevna US LLC** (`crisil-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Criteo SA** (`criteo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Cross Pixel Media, Inc.** (`crsspxl-com`) -- search: no-surface, opt-out: no-surface
@@ -337,7 +337,7 @@ of those dicts against source-brokers.json).
 - [ ] **Dun & Bradstreet, Inc.** (`trustarc-eu`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Dynata, LLC** (`dynata-com`) -- search: no-surface, opt-out: blocked
 - [ ] **e.Republic, LLC** (`erepublic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **EAB Global, Inc.** (`box-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **EAB Global, Inc.** (`box-com`) -- search: no-surface, opt-out: undecided
 - [x] **Early Warning Services, LLC** (`earlywarning-com`) -- search: no-surface, opt-out: no-surface
 - [x] **ECONOMIC MODELING LLC** (`lightcast-io`) -- search: no-surface, opt-out: blocked
 - [x] **Edvisors Network, Inc.** (`edvisors-com`) -- search: no-surface, opt-out: blocked
@@ -471,7 +471,7 @@ of those dicts against source-brokers.json).
 - [x] **Incheck Inc** (`inchecksolutions-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Indiana Court Records (CourtRecords.us network)** (`indianacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Indiemark LLC** (`emailindustries-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Indiemark LLC** (`blackbox-email`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Indiemark LLC** (`blackbox-email`) -- search: no-surface, opt-out: blocked
 - [x] **Infinite Knot Inc.** (`contacts411-com`) -- search: undecided, opt-out: undecided
 - [x] **Infinite Media Concepts Inc** (`mlxp-com`) -- search: undecided, opt-out: undecided
 - [ ] **Infinite Media Concepts Inc** (`mailinglists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -662,7 +662,7 @@ of those dicts against source-brokers.json).
 - [ ] **New Mexico Court Records (CourtRecords.us network)** (`newmexicocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **New York Court Records (CourtRecords.us network)** (`newyorkcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Nexsales Solutions Inc.** (`nexsales-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Next Wave Marketing Strategies, Inc** (`agedleadstore-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Next Wave Marketing Strategies, Inc** (`agedleadstore-com`) -- search: no-surface, opt-out: blocked
 - [ ] **NextRoll, Inc** (`nextroll-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Nextroll, Inc.** (`relyance-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Nexxen Inc.** (`nexxen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -750,8 +750,8 @@ of those dicts against source-brokers.json).
 - [x] **PrivateNumberChecker** (`privatenumberchecker-com`) -- search: recipe, opt-out: blocked
 - [ ] **Privco Media LLC** (`privco-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **ProdPro Inc** (`prodpro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Project Affinity, Inc** (`affinity-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Project Applecart LLC** (`applecart-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Project Affinity, Inc** (`affinity-co`) -- search: no-surface, opt-out: no-surface
+- [x] **Project Applecart LLC** (`applecart-co`) -- search: no-surface, opt-out: blocked
 - [ ] **Property Reach LP** (`propertyreach-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **PropertyChecker** (`propertychecker-com`) -- search: undecided, opt-out: staged
 - [ ] **PropertyRadar, Inc.** (`propertyradar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -778,7 +778,7 @@ of those dicts against source-brokers.json).
 - [ ] **Qurium Solutions, Inc.** (`supplier-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Radaris** (`radaris-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Rampedup, LLC.** (`rampedup-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Rategain Adara, Inc.** (`adara-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Rategain Adara, Inc.** (`adara-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Ray Cdp, Inc.** (`rayinsights-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Reach Marketing LLC** (`reachmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **REAL INTENT Inc.** (`realintent-co`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -793,7 +793,7 @@ of those dicts against source-brokers.json).
 - [ ] **Redmob Limited Liability Company** (`redmob-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Refinitiv US LLC** (`refinitiv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Regis24** (`regis24-de`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Regulatory Datacorp, Inc.** (`alchemer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Regulatory Datacorp, Inc.** (`alchemer-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Rehold** (`rehold-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **REKLAIM LTD** (`reklaimyours-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Relpro, Inc.** (`relpro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -913,7 +913,7 @@ of those dicts against source-brokers.json).
 - [ ] **Terminus Software, Inc.** (`terminusplatform-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Texas Court Records (CourtRecords.us network)** (`texascourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **ThatsThem** (`thatsthem-com`) -- search: recipe, opt-out: recipe
-- [ ] **THE ALESCO GROUP LLC** (`alescodata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **THE ALESCO GROUP LLC** (`alescodata-com`) -- search: no-surface, opt-out: blocked
 - [ ] **The Data Group** (`thedatagroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **The Nielsen Company** (`nielsen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **The Open Data People, Inc.** (`openpeoplesearch-com`) -- search: no-surface, opt-out: out-of-scope

@@ -866,6 +866,153 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch 21 of 2026-09-24: A-B sweep, marketing / people-search ----
+    #
+    # Fourteen of sixteen close here, and the split inside the batch is
+    # clean: every marketing/adtech/B2B row has no consumer lookup, and
+    # the only two rows that do are the two people-search sites
+    # (backgroundcheckers-net, blockshopper-com), both of which are in
+    # SEARCH_UNDECIDED rather than here. That is the pattern the whole
+    # sweep keeps reproducing -- a self-lookup exists when, and only when,
+    # showing people their own record is the product.
+    "adara-com": (
+        "Verified 2026-09-24 by rendering the site's privacy pages. No "
+        "consumer-facing lookup exists here. Adara (RateGain) sells travel "
+        "advertising and analytics; its own opt-out page says its tool is "
+        "cookie-based, which is as direct a statement as a broker makes "
+        "that its records are keyed to a browser rather than to a person. "
+        "The leg is closed because a search recipe cannot be written "
+        "against a surface the broker does not offer. The opt-out leg "
+        "carries the finding on this row."
+    ),
+    "affinity-co": (
+        "Verified 2026-09-24 by rendering www.affinity.co in full. No "
+        "consumer-facing lookup exists here. Affinity sells relationship-"
+        "intelligence CRM software to dealmakers; the only input on the "
+        "site is its own content search (GET /search). The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "agedleadstore-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Aged Lead Store sells insurance leads to "
+        "agents; its consumer-facing pages are opt-out forms, and its "
+        "'BROWSE LEADS' route is an inventory catalogue for buyers, not a "
+        "self-lookup. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer.\n"
+        "\n"
+        "Worth one line of honesty: a lead broker plainly HOLDS "
+        "name-keyed records -- its opt-out form asks for exactly those "
+        "fields. It simply does not let the subject look at them. The "
+        "absence is a choice here, not a consequence of the data's shape."
+    ),
+    "alchemer-com": (
+        "Verified 2026-09-24 by rendering the surface. No consumer-facing "
+        "lookup exists here, and note what the domain is: alchemer.com is "
+        "a SURVEY PLATFORM, and the page behind this row is a tenant's "
+        "request survey. The platform holds nothing about the requester to "
+        "look up, and the tenant (Regulatory DataCorp) would offer any "
+        "lookup on its own site rather than here. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer. Same shape as privacypillar-com in batch "
+        "20; see optout_forms for the domain-attribution note."
+    ),
+    "alescodata-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Alesco Data sells consumer and B2B marketing "
+        "lists; every route is 'Request Quote' or 'Partnerships'. The leg "
+        "is closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "applecart-co": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Applecart builds relationship graphs for "
+        "advocacy and political campaigns; its consumer-facing page is a "
+        "privacy request form only. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer -- and note that its own request form restricts itself to "
+        "residents of sixteen states, so even the request route is "
+        "narrower than the data it holds."
+    ),
+    "beeswax-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Beeswax (now FreeWheel/Comcast) is a "
+        "bidder/DSP; its records are bid requests and device identifiers, "
+        "not names. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer. The opt-out "
+        "leg is the open one, and for an unusual reason -- see "
+        "optout_forms for the broken certificate on their own opt-out "
+        "host."
+    ),
+    "belardiwong-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Belardi Wong (Belardi Ostroy) is a direct-"
+        "marketing agency; its only consumer route is the OneTrust DSAR "
+        "webform linked from its privacy policy. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "blackbaud-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Blackbaud sells fundraising and donor-"
+        "management software to nonprofits and schools; the individuals in "
+        "its systems are its CUSTOMERS' donors, and it holds that data as "
+        "a processor on their behalf. A self-lookup across tenants is not "
+        "a thing it could offer even in principle. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer -- its own webform, per optout_forms, is "
+        "framed around access and correction rather than lookup."
+    ),
+    "blackbox-email": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. BlackBox (Indiemark LLC) sells email "
+        "marketing services; its only consumer route is a HubSpot 'Data "
+        "Requests for California Residents' form. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "bolttech-io": (
+        "Verified 2026-09-24 by rendering the surface. No consumer-facing "
+        "lookup exists here. bolttech is an insurance-technology company; "
+        "its consumer route is a OneTrust DSAR webform. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer. Note the dataset files this row under "
+        "'risk' rather than 'marketing' -- if that category is right, the "
+        "same permissible-purpose reasoning that closed usinfosearch-com "
+        "in batch 20 would apply here too."
+    ),
+    "box-com": (
+        "Verified 2026-09-24 by rendering the recorded URL. No consumer-"
+        "facing lookup exists there -- but read the opt-out leg before "
+        "trusting this row, because the row itself is a dataset defect: "
+        "box.com is Box, Inc., a file-sharing host, and the company named "
+        "on the row is EAB Global, whose domain is eab.com. What was "
+        "actually observed is a PDF viewer showing EAB's privacy policy. "
+        "The leg is closed as to box.com, which offers no lookup and is "
+        "not a broker; whether EAB offers one at eab.com is a separate "
+        "question this row cannot answer."
+    ),
+    "brandwatch-com": (
+        "Verified 2026-09-24 by rendering the site and its /legal/ index. "
+        "No consumer-facing lookup exists here. Brandwatch (Crimson "
+        "Hexagon / Runtime Collective / Cision) sells social-listening "
+        "analytics; the only input on its pages is the site content "
+        "search. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer.\n"
+        "\n"
+        "Note in passing: Brandwatch publishes a separate 'Author Privacy "
+        "Statement' for the people whose public posts it indexes, which is "
+        "a clearer acknowledgement than most adtech vendors give that "
+        "non-customers are in the data. It still offers them no lookup."
+    ),
+    "bridg-com": (
+        "Verified 2026-09-24 by rendering the site and its DataGrail "
+        "portal. No consumer-facing lookup exists here. Bridg (a division "
+        "of Cardlytics) resolves offline purchase data for retailers; its "
+        "consumer route is a privacy request portal, not a search. The leg "
+        "is closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
     # --- batch 20 of 2026-09-24: adtech / B2B list / identity vendors -----
     #
     # The adtech half of this batch closes for a reason worth stating once:
@@ -4097,6 +4244,86 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    # --- batch 21 of 2026-09-24: A-B sweep, marketing / people-search ----
+    #
+    # Both rows here are the opposite of the usual undecided: the surface
+    # was FOUND, rendered, and its selectors recorded. What is missing in
+    # each case is the result page -- what a hit looks like, what a miss
+    # looks like, and what fires on submit. A search recipe needs that to
+    # have a success marker at all, and inventing one would be exactly the
+    # fabrication this sweep must not commit. Each entry below therefore
+    # records the selectors that WERE observed, so the recheck is cheap.
+    "backgroundcheckers-net": (
+        "NO VERDICT 2026-09-24, and this is a promising row rather than a "
+        "dead one. A real consumer lookup exists and was rendered.\n"
+        "\n"
+        "OBSERVED on www.backgroundcheckers.net: input#firstName ('First "
+        "name'), input#lastName ('Last name'), a state select#state, and a "
+        "submit #perform-search labelled 'FREE SEARCH'. Those three inputs "
+        "map onto resolve_fields (first_name, last_name, state) with "
+        "nothing left over.\n"
+        "\n"
+        "THREE THINGS STOP A RECIPE TODAY, and a recheck should settle all "
+        "three in one pass:\n"
+        "  1. AN FCRA AGE/USE GATE FIRST. The page opens with a modal "
+        "     notice -- 'BackgroundCheckers does not provide consumer "
+        "     reports and is not a consumer reporting agency under the "
+        "     Fair Credit Reporting Act' -- and a submit button reading "
+        "     'I AGREE' that must be clicked before the search is usable. "
+        "     A recipe needs that as an explicit first step; it is a "
+        "     certification about how the results will be used, so it "
+        "     should be an acknowledged step rather than a click buried "
+        "     in a selector list.\n"
+        "  2. CAPTCHA ON SUBMIT IS UNCONFIRMED. The homepage render showed "
+        "     no live challenge, but this site DOES serve Cloudflare "
+        "     Turnstile elsewhere -- the opt-out route renders it from a "
+        "     first-party path, /assets/common/captcha/turnstile.html. "
+        "     Whether it fires on the search submit was not observed, and "
+        "     per the standing rule this cannot be called 'no bot check' "
+        "     from what was seen.\n"
+        "  3. NO RESULT PAGE WAS REACHED, so there is no success marker "
+        "     and no way to distinguish a hit from a miss.\n"
+        "\n"
+        "To resolve: click I AGREE, run one search for a profile with a "
+        "known listing, and record the result-page markers plus whatever "
+        "challenge appears. The opt-out leg is separately blocked (see "
+        "optout_forms) on captcha plus an email-confirmation hop."
+    ),
+    "blockshopper-com": (
+        "NO VERDICT 2026-09-24. A search surface exists and was rendered, "
+        "but it is not obviously the right KIND of search, which is why no "
+        "verdict is recorded either way.\n"
+        "\n"
+        "OBSERVED on blockshopper.com: two forms, both GET /search, "
+        "carrying input[name='q'] with the placeholder 'Search for Homes "
+        "by Address, City or Zip' and a type selector (Places). So the "
+        "public entry point is keyed to a PROPERTY, not to a person.\n"
+        "\n"
+        "That matters for this module's purpose. BlockShopper's product is "
+        "publishing home-purchase records under the buyers' NAMES -- that "
+        "is why it is filed as people-search and why it appears on "
+        "removal lists -- but the search box offered to the public asks "
+        "for an address. A recipe could technically drive it: "
+        "resolve_fields supplies street, city and zip. What is unknown is "
+        "whether the result page then surfaces the person, which is the "
+        "only thing that would make this a self-lookup rather than a real "
+        "estate search.\n"
+        "\n"
+        "Not filed as no-surface because a surface plainly exists, and not "
+        "filed as a recipe because what it returns was never seen. To "
+        "resolve: run one address search for a profile with a known "
+        "listing and record whether a name appears in the result, plus the "
+        "result-page markers. If it does, this becomes an address-keyed "
+        "search recipe -- which would be the first of its kind in this "
+        "module and worth flagging as a shape the search leg does not yet "
+        "model.\n"
+        "\n"
+        "Related: the opt-out leg is NO_OPTOUT_SURFACE (mailbox-only), and "
+        "the removal email is documented as wanting the URL of the "
+        "listing. That URL can only come from this search, so the two legs "
+        "are coupled on this row -- resolving this one is worth more than "
+        "it looks."
+    ),
     # --- batch 20 of 2026-09-24: adtech / B2B list / identity vendors -----
     #
     # All three rows here are the SAME situation, and it is the honest one:
