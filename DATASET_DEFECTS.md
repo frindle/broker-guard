@@ -44,19 +44,19 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-114 findings across 85 brokers.
+119 findings across 90 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 9 |
-| dataset | 44 |
+| dataset | 49 |
 | unreachable | 61 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
 | parked-or-defunct | 62 |
-| unclassified | 18 |
-| dead-url | 12 |
+| unclassified | 21 |
+| dead-url | 14 |
 | broker-surface-defect | 8 |
 | entity-mismatch | 7 |
 | rebrand-or-domain-change | 5 |
@@ -157,6 +157,18 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Reachability failure, 2026-09-23: https://brightswipe.com/ does not resolve (net::ERR_NAME_NOT_RESOLVED). Same caveat as bridgevine-com -- recheck from another network before calling the domain dead. Dataset contact: admin@brightswipe.com.
 
+### `ca-gov`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > Verified 2026-09-24 by browser render. This row is a DATASET DEFECT, and a consequential one.
+
+### `californiacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > DATASET DEFECT: the row records opt_out_method 'web-form' with verification_step 'CAPTCHA required on the opt-out form'. There is no form and therefore no captcha on it. The recorded opt_out_url (/optout) is a rights-information page.
+
 ### `calltruth-com`
 
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -183,6 +195,18 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Reachability failure, 2026-09-23: https://carmarketsolutions.com/ resolves but never completes a connection -- the browser timed out after 30s without reaching DOMContentLoaded. Distinct from the two ERR_NAME_NOT_RESOLVED rows in this batch: something answers DNS here, so this is more likely a hung or firewalled host than a retired domain. Recheck later and from another network. The dataset holds no email for this row, so it currently has no working channel at all.
 
+### `cashmereai-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > DATASET DEFECT: the recorded opt_out_url www.cashmereai.com/privacy returns a hard 404 ('This page wandered off the trail'). The live policy is at /policy/privacy-policy.
+
+### `catalogchoice-org`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > Verified 2026-09-24 by browser render. This row is a DATASET DEFECT of the same species as ca-gov: Catalog Choice is not a data broker, it is a NONPROFIT OPT-OUT SERVICE. Its own pages say so -- 'We're a non-profit organization working to stop [junk mail]', 'Stop Junk Mail For Good', 'Free service to cancel unwanted paper catalogs' (the last from the dataset's own note, which describes the service correctly while still filing it as a broker).
+
 ### `catalyzeai-com`
 
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -194,6 +218,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.NO_OPTOUT_SURFACE`
 
   > Verified by browser render 2026-09-23: CDK's 'Do Not Sell or Share My Personal Information' footer link has an EMPTY href -- it is a JavaScript consent-widget trigger, not a page -- and the privacy statement scopes it explicitly to tracking technologies: 'You may manage your preferences on the tracking technologies deployed on the Site by clicking on the Do Not Sell or Share My Personal Information link at the footer'. Its own text says 'We do not sell your Personal Information' for other purposes, and every actual rights request (deletion, access) is directed to a contact address rather than a form. So there is no web surface that suppresses a person's records here, only a cookie preference for this website's visitors. The remaining channel is mailbox-only, which this codebase cannot represent. Dataset contact for a human: james.kinzer@cdk.com.
+
+### `citydata-ai`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > DATASET DEFECT: the recorded opt_out_url citydata.ai/privacy/do_not_sell_personal_information/ returns a hard 404 ('Page Not Found'). The live policy is at /privacy/.
 
 ### `civisanalytics-com`
 

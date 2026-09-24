@@ -866,6 +866,168 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch 22 of 2026-09-24: B-C sweep, credit bureaus / adtech ------
+    #
+    # Two of these fourteen close for a reason this bucket has not had
+    # before: ca-gov and catalogchoice-org are NOT DATA BROKERS at all --
+    # a state regulator's opt-out platform and a nonprofit junk-mail
+    # service, swept into the dataset by a harvester. They are recorded
+    # here rather than skipped so the sweep's own arithmetic stays honest,
+    # but the reason they have no consumer lookup is that there is nothing
+    # to look up, not that a broker withheld one. See optout_forms, where
+    # both are filed OUT_OF_SCOPE with the defect written up.
+    #
+    # The four credit bureaus are worth a word too. Buro de Credito,
+    # Circulo de Credito, Centrix and CIAL D&B all hold richly
+    # name-keyed records, and all four offer the subject a way to SEE
+    # them -- but always as a purchased, authenticated credit report, not
+    # as a public lookup. That is the correct posture for a bureau and
+    # this bucket is the right home, but the reason differs from the
+    # adtech rows: not "the data is not keyed to people" but "the data is
+    # keyed to people and access is deliberately gated".
+    "burodecredito-com-mx": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup of the kind this module means exists here. Buró de "
+        "Crédito (Trans Union de México) is a regulated Mexican credit "
+        "bureau; a consumer can obtain their own Reporte de Crédito "
+        "Especial, but only through an authenticated, identity-verified, "
+        "purchased flow -- the only free-text input on the public site is "
+        "the site-wide page search. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer publicly, and a credit bureau SHOULD NOT offer an anonymous "
+        "self-lookup: the same reasoning that closed locatesmarter-com and "
+        "usinfosearch-com applies with more force here."
+    ),
+    "buyerlink-co": (
+        "Verified 2026-09-24 by rendering the site and its privacy policy "
+        "in full. No consumer-facing lookup exists here. Buyerlink sells "
+        "digital-marketing lead generation for automotive, real estate and "
+        "home improvement; every route on the site is 'Request a Demo' or "
+        "'Log In'. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "ca-gov": (
+        "Verified 2026-09-24 by browser render. No consumer lookup exists "
+        "here, and the row should be read with its opt-out leg: ca.gov is "
+        "the State of California, and the recorded URL is the California "
+        "Privacy Protection Agency's DROP platform -- a regulator's "
+        "opt-out tool, not a data broker. There is nothing here to look "
+        "oneself up in. The leg is closed on that basis rather than on any "
+        "finding about a broker's product."
+    ),
+    "cadent-com": (
+        "Verified 2026-09-24 by rendering the site and its privacy portal. "
+        "No consumer-facing lookup exists here. Cadent is a television "
+        "advertising platform; its records are keyed to advertising "
+        "identifiers and households rather than to names. The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "captifytechnologies-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. Captify sells search-intent data to "
+        "advertisers and publishers; its consumer route is a mailbox. The "
+        "leg is closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "carpe-io": (
+        "Verified 2026-09-24 by rendering the site and its privacy policy "
+        "in full. No consumer-facing lookup exists here. Carpe Data sells "
+        "claims and underwriting intelligence to P&C insurers -- its "
+        "customers are carriers, and the people in its data are claimants "
+        "who never dealt with it directly. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker does "
+        "not offer.\n"
+        "\n"
+        "Worth noting honestly: this is one of the rows where the absence "
+        "matters most. A claimant has no way to see what an insurer was "
+        "told about them, and no lookup is offered to make that possible."
+    ),
+    "cashmereai-com": (
+        "Verified 2026-09-24 by rendering the live policy (the recorded "
+        "URL 404s -- see optout_forms). No consumer-facing lookup exists "
+        "here. Pludo Inc. dba Cashmere sells a client-intelligence "
+        "platform to banks; its only public routes are 'Request a Demo' "
+        "and 'Login'. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "catalogchoice-org": (
+        "Verified 2026-09-24 by browser render. No consumer lookup of a "
+        "PERSON exists here, and the row should be read with its opt-out "
+        "leg: Catalog Choice is a nonprofit junk-mail opt-out service, not "
+        "a data broker. It does offer a search -- /catalogs is a browsable "
+        "A-Z of about 920 pages of CATALOG PUBLISHERS -- but that is a "
+        "directory of merchants to cancel, not a way to look up a person. "
+        "The leg is closed on that basis. Recording the distinction "
+        "because a keyword sweep for 'search' would otherwise flag this "
+        "site as having a lookup."
+    ),
+    "cengagegroup-com": (
+        "Verified 2026-09-24 by rendering the site and its rights form. No "
+        "consumer-facing lookup exists here. Cengage is an education "
+        "publisher; the individuals in its systems are learners at "
+        "institutions it serves, and it holds much of that data as a "
+        "processor. A self-lookup across institutions is not something it "
+        "could offer. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "centrix-co-nz": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup of the kind this module means exists here. Centrix is a "
+        "New Zealand credit bureau: a consumer can obtain their own credit "
+        "report, but through an authenticated, identity-verified flow, and "
+        "the site's public 'Check a Consumer' / 'Check a Business' routes "
+        "are products sold to CREDIT PROVIDERS, not self-lookups -- an "
+        "anonymous search there would be a stranger-lookup tool. The leg "
+        "is closed on the permissible-purpose reasoning already applied to "
+        "locatesmarter-com and usinfosearch-com.\n"
+        "\n"
+        "The substantive finding on this row is on the opt-out leg: the "
+        "suppression form requires a date of birth, which resolve_fields "
+        "cannot supply."
+    ),
+    "cialdnb-com": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup exists here. CIAL Dun & Bradstreet sells business-credit "
+        "and supplier intelligence across Latin America; its subjects are "
+        "largely companies, and its lookup products are sold to "
+        "subscribers. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer.\n"
+        "\n"
+        "Caveat carried from the opt-out leg: the page read was the "
+        "Spanish-language one, and this is a 43-country network. A "
+        "per-country site may differ."
+    ),
+    "circulodecredito-com-mx": (
+        "Verified 2026-09-24 by rendering the site. No consumer-facing "
+        "lookup of the kind this module means exists here. Círculo de "
+        "Crédito is a regulated Mexican credit bureau; the consumer route "
+        "to their own Reporte de Crédito Especial runs through "
+        "registration and login ('Regístrate', 'Ingresa'). The leg is "
+        "closed for the same reason as burodecredito-com-mx: not only is "
+        "no public lookup offered, a bureau should not offer one."
+    ),
+    "citydata-ai": (
+        "Verified 2026-09-24 by rendering the live policy (the recorded "
+        "URL 404s -- see optout_forms). No consumer-facing lookup exists "
+        "here. CityData.AI sells mobility and location analytics for civic "
+        "use; it states its data is anonymized, obfuscated and aggregated, "
+        "which -- if true -- means there is no individual record to "
+        "surface. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "claritas-com": (
+        "Verified 2026-09-24 by rendering the site and its OneTrust "
+        "webform. No consumer-facing lookup exists here. Claritas sells "
+        "consumer segmentation and audience data to marketers; its "
+        "consumer route is a rights webform. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker does "
+        "not offer.\n"
+        "\n"
+        "Note the asymmetry recorded on the opt-out leg: to make a request "
+        "Claritas requires a document upload, while offering the subject "
+        "no way to see what it holds in the first place."
+    ),
     # --- batch 21 of 2026-09-24: A-B sweep, marketing / people-search ----
     #
     # Fourteen of sixteen close here, and the split inside the batch is
@@ -4244,6 +4406,79 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    # --- batch 22 of 2026-09-24: B-C sweep, credit bureaus / adtech ------
+    # Both rows are people-search sites belonging to WHITE-LABEL NETWORKS,
+    # and that is the thing to carry away from this batch: resolving
+    # either one resolves many domains at once. See optout_forms under
+    # checksecrets-com for the evidence that these are engines rather than
+    # resemblances.
+    "checksecrets-com": (
+        "NO VERDICT 2026-09-24, and this row is worth more than one site.\n"
+        "\n"
+        "OBSERVED on www.checksecrets.com/optOut/name/landing: "
+        "#email-form, GET to /name/landing, with input#First-Name "
+        "(\"Enter person's First Name\"), input#Last-Name, a select "
+        "named 'field', and a submit reading 'FREE SEARCH'. Behind an 'I "
+        "AGREE' FCRA notice modal.\n"
+        "\n"
+        "This is the SAME ENGINE as backgroundcheckers-net (batch 21): "
+        "identical FCRA notice text word for word, identical 'I AGREE' "
+        "gate, identical /api/helper/optOutLight/search removal path, "
+        "identical #pageForm field list. The dataset files them under "
+        "different companies (TRUTH NOW LLC vs BackgroundCheckers). One "
+        "search recipe written against this engine would very likely serve "
+        "both and any other sibling domains -- which is the argument for "
+        "identifying the engine BEFORE spending a research slot per "
+        "domain.\n"
+        "\n"
+        "The same three gaps as its sibling stop a recipe today: the "
+        "I AGREE gate must be an explicit first step; whether the "
+        "platform's Cloudflare Turnstile fires on the search submit was "
+        "not observed, so 'no bot check' cannot be claimed; and no result "
+        "page was reached, so there is no success marker. Note the search "
+        "form here differs slightly from backgroundcheckers-net's (a "
+        "'field' select rather than a state select), so the engine is "
+        "themed per tenant even where the flow is identical -- a shared "
+        "recipe would need to read the third control at runtime.\n"
+        "\n"
+        "To resolve: click I AGREE on ONE of the two sites, run a single "
+        "search, record the result-page markers and any challenge, then "
+        "check whether the other site's result page matches."
+    ),
+    "californiacourtrecords-us": (
+        "NO VERDICT 2026-09-24. A search exists, the FCRA gate in front of "
+        "it was read in full, and what it says is the reason for no "
+        "verdict.\n"
+        "\n"
+        "The notice modal states: 'You understand that by clicking \"I "
+        "Agree\", CourtRecords.us will conduct only a PRELIMINARY people "
+        "search of the information you provide and that a search of any "
+        "records will only be conducted and made available AFTER YOU "
+        "REGISTER FOR AN ACCOUNT OR PURCHASE A REPORT.' So there are two "
+        "different surfaces wearing one name: a free preliminary search "
+        "whose depth is unknown, and the real record search behind "
+        "registration and payment.\n"
+        "\n"
+        "That distinction decides the row and could not be settled without "
+        "running it. If the preliminary search returns enough to confirm a "
+        "person is listed, it is a usable self-lookup and this becomes a "
+        "recipe. If it returns only a teaser designed to sell a report, it "
+        "is a paywall and belongs in no-surface alongside the other "
+        "credentialed vendors. Guessing between those would be inventing a "
+        "finding.\n"
+        "\n"
+        "Two further notes. The search form itself was not captured on "
+        "either page probed -- both /optout/ and /do-not-sell-share-my-"
+        "personal-information/ are rights-information pages, and a "
+        "TrustArc consent overlay ('AGREE & PROCEED') sits over the site, "
+        "so a recheck should dismiss that first. And this is ONE OF FIFTY "
+        "per-state sites in the CourtRecords.us white-label network, so "
+        "the result of that single test applies to all of them.\n"
+        "\n"
+        "The opt-out leg is separately closed as mailbox-only, and note "
+        "the coupling: the removal email is per-record, so it needs "
+        "whatever this search returns."
+    ),
     # --- batch 21 of 2026-09-24: A-B sweep, marketing / people-search ----
     #
     # Both rows here are the opposite of the usual undecided: the surface
