@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **320** / 969
-- Search leg mapped: 322 / 969
-- Opt-out leg mapped: 324 / 969
+- Fully mapped (both legs): **336** / 969
+- Search leg mapped: 338 / 969
+- Opt-out leg mapped: 340 / 969
 
 ## How to resume
 
@@ -390,28 +390,28 @@ of those dicts against source-brokers.json).
 - [x] **First Movers Advantage, LLC** (`fmadata-com`) -- search: no-surface, opt-out: blocked
 - [x] **First Orion, Inc.** (`firstorion-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Florida Court Records (CourtRecords.us network)** (`floridacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Focus USA, Inc.** (`focus-usa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **FOO MONK LLC** (`instantly-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Forager.Ai, LLC** (`forager-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **FOREWARN LLC** (`forewarn-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Fourleaf LLC** (`fourleafdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Foursquare Labs, Inc.** (`foursquare-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Fourthwall Media, Inc.** (`fourthwall-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Fraiser, LLC** (`fraiser-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Focus USA, Inc.** (`focus-usa-com`) -- search: no-surface, opt-out: blocked
+- [x] **FOO MONK LLC** (`instantly-ai`) -- search: no-surface, opt-out: undecided
+- [x] **Forager.Ai, LLC** (`forager-ai`) -- search: no-surface, opt-out: undecided
+- [x] **FOREWARN LLC** (`forewarn-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Fourleaf LLC** (`fourleafdata-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Foursquare Labs, Inc.** (`foursquare-com`) -- search: no-surface, opt-out: undecided
+- [x] **Fourthwall Media, Inc.** (`fourthwall-tv`) -- search: no-surface, opt-out: undecided
+- [x] **Fraiser, LLC** (`fraiser-org`) -- search: no-surface, opt-out: undecided
 - [x] **FreeBackgroundCheck.org** (`freebackgroundcheck-org`) -- search: undecided, opt-out: no-surface
-- [ ] **Freemium Data Services, LLC** (`reachdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Freemium Data Services, LLC** (`reachdata-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **FreePeopleDirectory** (`freepeopledirectory-com`) -- search: UNMAPPED, opt-out: no-surface
 - [x] **Freepeoplesearch.Com, LLC** (`freepeoplesearch-com`) -- search: blocked, opt-out: blocked
-- [ ] **Freewheel Media Inc** (`freewheel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Fullcontact, Inc.** (`fullcontact-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Fused Leads, LLC** (`fusedleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Fushia Media, LLC.** (`fushiamedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **G2 Bankruptcy Risk Solutions, Inc.** (`g2risksolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Freewheel Media Inc** (`freewheel-com`) -- search: no-surface, opt-out: blocked
+- [x] **Fullcontact, Inc.** (`fullcontact-com`) -- search: no-surface, opt-out: blocked
+- [x] **Fused Leads, LLC** (`fusedleads-com`) -- search: no-surface, opt-out: undecided
+- [x] **Fushia Media, LLC.** (`fushiamedia-com`) -- search: no-surface, opt-out: no-surface
+- [x] **G2 Bankruptcy Risk Solutions, Inc.** (`g2risksolutions-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **General Information Solutions LLC** (`backgroundchecks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **General Motors LLC** (`gm-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Genius Sports Group** (`geniussports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Georgia Court Records (CourtRecords.us network)** (`georgiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **GETEMAILS LLC** (`retention-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **GETEMAILS LLC** (`retention-com`) -- search: no-surface, opt-out: blocked
 - [ ] **GetVector, Inc.** (`vector-co`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Giant Partners** (`giantpartners-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Glad I Know, Inc.** (`gladiknow-com`) -- search: no-surface, opt-out: UNMAPPED
@@ -884,7 +884,7 @@ of those dicts against source-brokers.json).
 - [ ] **Statara Solutions LLC** (`statara-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **StateRecords.org** (`staterecords-org`) -- search: undecided, opt-out: recipe
 - [ ] **Statsocial, Inc.** (`statsocial-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Stefan Certic** (`flashintel-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Stefan Certic** (`flashintel-ai`) -- search: no-surface, opt-out: blocked
 - [ ] **STEP2SUCCESS Marketing** (`step2successmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **STEPPINGBLOCKS Inc** (`steppingblocks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Sterling** (`sterlingcheck-com`) -- search: no-surface, opt-out: undecided

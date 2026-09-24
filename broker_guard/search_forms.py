@@ -3069,6 +3069,122 @@ NO_SEARCH_SURFACE = {
         "recipe cannot be written against a surface the broker does not "
         "offer."
     ),
+    "flashintel-ai": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. FlashIntel (now trading as FlashLabs) sells "
+        "B2B contact enrichment behind a login; its public pages offer a "
+        "demo and the request form. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "focus-usa-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Focus USA sells targeted mailing lists to "
+        "marketers; its only forms are the privacy request and a docs "
+        "feedback box. The leg is closed because a search recipe cannot "
+        "be written against a surface the broker does not offer."
+    ),
+    "instantly-ai": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Instantly sells cold-email tooling to sales "
+        "teams; its privacy content is an Intercom help centre that "
+        "requires sign-in. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "forager-ai": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Forager sells B2B contact data by API and "
+        "platform login; its public site offers sign-in and the removal "
+        "form. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "forewarn-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. FOREWARN sells pre-meeting risk checks to "
+        "real-estate agents, behind a login; there is no public lookup. "
+        "The leg is closed because a search recipe cannot be written "
+        "against a surface the broker does not offer."
+    ),
+    "fourleafdata-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. FourLeaf runs marketing services for "
+        "clients; its site is a contact page and a privacy policy, with "
+        "no inputs at all. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "foursquare-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Foursquare's consumer app searches PLACES, "
+        "not people -- the header search takes a query and a location, "
+        "and no person-lookup exists. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "fourthwall-tv": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Fourthwall Media sells television-audience "
+        "measurement to advertisers; its only forms are the opt-out "
+        "request and a newsletter box. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
+    "fraiser-org": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Fraiser sells grassroots fundraising tooling "
+        "to campaigns and non-profits, behind a login; no public lookup "
+        "is offered. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "reachdata-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. reachdata.com has not launched -- the site "
+        "reads 'Coming Soon!!' and carries no forms; see the opt-out "
+        "entry. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "freewheel-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. FreeWheel sells video-advertising "
+        "infrastructure to publishers; its only inputs are a site search "
+        "and the opt-out form. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "fullcontact-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. FullContact sells identity resolution by "
+        "API; its consumer-facing page is a rights wizard, not a lookup. "
+        "The leg is closed because a search recipe cannot be written "
+        "against a surface the broker does not offer."
+    ),
+    "fusedleads-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. fusedleads.com serves an expired certificate "
+        "and could not be read at all; no lookup is advertised anywhere "
+        "associated with it. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "fushiamedia-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Fuchsia Media sells database enrichment to "
+        "marketers; its only form is a three-page site's contact box. The "
+        "leg is closed because a search recipe cannot be written against "
+        "a surface the broker does not offer."
+    ),
+    "g2risksolutions-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. G2 Risk Solutions sells bankruptcy and "
+        "merchant-risk data to lenders and acquirers; its consumer page "
+        "is informational text with no inputs. The leg is closed because "
+        "a search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "retention-com": (
+        "Verified 2026-09-23 by rendering the site. No consumer-facing "
+        "lookup exists here. Retention.com sells website-visitor "
+        "identification to marketers; its only public form is the opt- "
+        "out. The leg is closed because a search recipe cannot be written "
+        "against a surface the broker does not offer."
+    ),
 }
 
 
