@@ -857,6 +857,59 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch of 2026-09-23: B2B data suppliers with no consumer index ---
+    #
+    # These all resolved the same way and the reasoning is identical, so it is
+    # stated once: each is a business-to-business data or marketing-technology
+    # company whose product is sold to companies, not a site where a member of
+    # the public types a name and gets a record back. There is nothing for a
+    # presence check to query -- not because the data is absent (it is very
+    # much present, which is why they are in the dataset) but because it is
+    # never exposed as a public lookup. That is a genuine terminal state for
+    # the SEARCH leg, and it is NOT a statement about the opt-out leg, which
+    # is tracked separately and in most of these cases is still open.
+    #
+    # The honest limit on all of them: one URL each was fetched. A search
+    # surface on some other path would not have been seen.
+    "infutor-com": (
+        "Verified 2026-09-23 to the extent stated above. Identity-"
+        "resolution data supplier; /privacy-center/ and the site nav "
+        "(Products, Business Need, Industries, Resources, About, Contact) "
+        "are entirely B2B. No consumer lookup exists to query."
+    ),
+    "inmarket-com": (
+        "Verified 2026-09-23. Location/advertising data company; the "
+        "reachable surface is a 'Privacy Request Center' at "
+        "preferences.inmarket.com, not an index. Likely keys on a mobile "
+        "advertising ID rather than a name in any case -- see the "
+        "identifier-shape cluster noted in optout_forms."
+    ),
+    "inflection-com": (
+        "Verified 2026-09-23. Corporate site for GoodHire and the "
+        "SafeDecision/Insight APIs; background-screening results are "
+        "delivered to the employer who ordered them, never through a "
+        "public search. See also the FCRA category note in optout_forms."
+    ),
+    "inchecksolutions-com": (
+        "Verified 2026-09-23. Employment-screening CRA. The only form on "
+        "the homepage is the site's own content search (input name='s'), "
+        "which searches InCheck's marketing pages, not people -- worth "
+        "saying explicitly because a fill-everything pass would happily "
+        "type a name into it and report the resulting page as a hit."
+    ),
+    "inboundinsight-com": (
+        "Verified 2026-09-23. B2B marketing/intent-data vendor (the site "
+        "leads with a webinar registration and a 'Schedule Demo' button). "
+        "No consumer-facing lookup."
+    ),
+    "emailindustries-com": (
+        "Recorded 2026-09-23 on WEAKER evidence than the others in this "
+        "group, and flagged as such: the site timed out and was never "
+        "read. Placed here on the strength of the company's name and "
+        "category alone -- email-deliverability tooling sold to senders. "
+        "If that inference matters to anything downstream, re-probe; the "
+        "opt-out leg is separately undecided for the same timeout."
+    ),
     "onetrust-com": (
         "The dataset files this one under the NAME 'Nielsen' but gives the "
         "url onetrust.com, and onetrust.com is not Nielsen -- it is the "
@@ -3447,6 +3500,12 @@ NO_SEARCH_SURFACE = {
 #
 # Notes, not behaviour: nothing reads this at runtime.
 SEARCH_BLOCKED = {
+    "infocore-com": (
+        "Verified 2026-09-23: the whole site answers 403 behind a "
+        "Cloudflare 'Confirm you are human' interstitial, so no page -- "
+        "search or otherwise -- could be reached. Same evidence as the "
+        "opt-out leg; recorded on both so neither looks unexamined."
+    ),
     "voterrecords-com": (
         "Verified 2026-09-23: the site's own HOMEPAGE is a Cloudflare "
         "Turnstile interstitial ('Performing security verification', a "
@@ -3524,6 +3583,117 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
+    # --- batch of 2026-09-23: hosts that could not be read at all ---
+    #
+    # Grouped because the reason is the same and it is a reason about the
+    # ATTEMPT, not the broker: nothing was served, so nothing is known about
+    # whether a search surface exists. Each is undecided on the opt-out leg
+    # too, with the same evidence, recorded in optout_forms.
+    "imprintanalytics-io": (
+        "NO VERDICT 2026-09-23: TLS handshake fails outright "
+        "(ERR_SSL_VERSION_OR_CIPHER_MISMATCH), so no HTTP request is ever "
+        "made. Server misconfiguration on their side."
+    ),
+    "contacts411-com": (
+        "NO VERDICT 2026-09-23: the host does not resolve in DNS "
+        "(ERR_NAME_NOT_RESOLVED). The name suggests a consumer directory, "
+        "which is exactly why no surface is being inferred from it."
+    ),
+    "trufactor-io": (
+        "NO VERDICT 2026-09-23: connection to https://trufactor.io/ timed "
+        "out after 30s with no response at all -- not a challenge page, "
+        "not an error page, nothing. TruFactor was an SK Telecom-backed "
+        "mobile-data venture; a dead host is a plausible end state, but a "
+        "single timeout is not evidence of that and no such conclusion is "
+        "recorded here. Retry before treating this row as anything."
+    ),
+    "privacycompliance-biz": (
+        "NO VERDICT 2026-09-23: only the dataset's opt-out path was "
+        "probed and it 404s. The host is live (it served a WordPress 404 "
+        "template), so a root probe would tell us something; it has not "
+        "been done. The site appears to be an opt-out PROCESSOR acting for "
+        "DatabaseUSA rather than a data holder in its own right, in which "
+        "case a presence search against it would be meaningless -- but "
+        "that is an inference from a URL slug, not a finding."
+    ),
+    "infopay-com": (
+        "NO VERDICT 2026-09-23: only /privacy was probed, which is prose "
+        "with no form. InfoPay operates consumer-facing people-search "
+        "brands under OTHER domains, so the search leg for this row may "
+        "belong to those rows rather than this one. Needs the site root "
+        "read before anything is concluded."
+    ),
+    "mlxp-com": (
+        "NO VERDICT 2026-09-23: the homepage renders a cookie banner and "
+        "two HubSpot iframes; no search surface was seen and no other "
+        "path was probed, the dataset giving only the root URL."
+    ),
+    "privatereports-com": (
+        "NO VERDICT as of 2026-09-23, and unusually the reason is not "
+        "that the form is hard to read -- it is fully transcribed below -- "
+        "but that it was reached from the wrong URL.\n"
+        "\n"
+        "What rendered: form#email-form, action https://www.privatereports"
+        ".com/nameSearch/landingPage, with First-Name and Last-Name (text, "
+        "name and id identical, labelled 'Enter First Name' / 'Enter Last "
+        "Name'), a state <select name='state' id='state'> whose options "
+        "begin 'Select States', 'All States' and then the states, and a "
+        "submit button reading 'FREE SEARCH'. The form appears twice on "
+        "the page with identical ids -- duplicate DOM ids, so a selector "
+        "keyed on #First-Name matches two elements and a recipe must "
+        "take the first, or scope to a container.\n"
+        "\n"
+        "Why no verdict: this page was served from the dataset's OPT-OUT "
+        "URL (/optOut/name/landing), not from a search path, so it is not "
+        "established that this is the site's general search surface rather "
+        "than the first step of its removal flow. Those are the same "
+        "form in shape and very different in meaning -- see the matching "
+        "entry in optout_forms.OPTOUT_UNDECIDED. Writing a SEARCH recipe "
+        "from a form that is actually the removal wizard's step one would "
+        "make the presence check silently drive an opt-out flow. NEXT "
+        "STEP: load the site's own homepage and compare; if the same form "
+        "is there, this promotes cleanly.\n"
+        "\n"
+        "Also noted, not a blocker: the page carries an FCRA disclaimer "
+        "and a 'please be cautious when using this tool' notice, but "
+        "neither is a gate -- no modal, no I-AGREE button of the kind "
+        "recorded against instantcheckmate-com below."
+    ),
+    "information-com": (
+        "NO VERDICT as of 2026-09-23. The page reached (from the "
+        "dataset's opt-out URL, which serves the search landing page -- "
+        "see optout_forms) carries a search form posting to "
+        "https://information.com/privacy-rights/ with firstName, lastName, "
+        "city and a state <select>, plus a 'Search' submit.\n"
+        "\n"
+        "That action URL is the reason this is undecided and not a "
+        "recipe. A SEARCH form whose action is /privacy-rights/ is not a "
+        "search form in the ordinary sense; the same page also has two "
+        "buttons posting to that identical URL reading 'REQUEST A COPY OF "
+        "MY DATA' and 'DELETE MY USER DATA'. Whatever /privacy-rights/ "
+        "does, it is a privacy-request endpoint, and submitting to it to "
+        "answer 'does this broker hold Penn?' would be filing a request "
+        "rather than running a query -- a side effect, from the leg of "
+        "this tool that is supposed to have none. Not submitted.\n"
+        "\n"
+        "NEXT STEP: find whether information.com has a plain search "
+        "endpoint distinct from /privacy-rights/, and if it does not, "
+        "record this as no-search-surface with that reasoning rather than "
+        "as a recipe."
+    ),
+    "publicinfoservices-com": (
+        "NO VERDICT as of 2026-09-23. Only the privacy-requests page was "
+        "probed (see optout_forms.OPTOUT_BLOCKED for what it contains and "
+        "why the opt-out leg is blocked); the site advertises a 'Sample "
+        "Report' and a login, so a search surface plausibly exists, but "
+        "none was reached and none is described here. Recorded so the "
+        "search leg is not silently treated as answered by the opt-out "
+        "probe. NEXT STEP: probe the site root.\n"
+        "\n"
+        "Carry forward from the opt-out side: that page randomises at "
+        "least one field's name per render, so if the search form does "
+        "the same, it cannot be pinned by name either."
+    ),
     "instantcheckmate-com": (
         "Verified as far as this tool may go, 2026-09-23. The search form "
         "itself is ordinary and readable -- <form id='form-search' "

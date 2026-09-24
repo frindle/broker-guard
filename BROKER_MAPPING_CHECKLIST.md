@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **371** / 969
-- Search leg mapped: 372 / 969
-- Opt-out leg mapped: 375 / 969
+- Fully mapped (both legs): **387** / 969
+- Search leg mapped: 388 / 969
+- Opt-out leg mapped: 391 / 969
 
 ## How to resume
 
@@ -466,30 +466,30 @@ of those dicts against source-brokers.json).
 - [x] **Ileads.Com, LLC** (`ileads-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Illinois Court Records (CourtRecords.us network)** (`illinoiscourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Illumin Inc.** (`acuityads-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Imprint Analytics LLC** (`imprintanalytics-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Inbound Insight, LLC** (`inboundinsight-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Incheck Inc** (`inchecksolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Imprint Analytics LLC** (`imprintanalytics-io`) -- search: undecided, opt-out: undecided
+- [x] **Inbound Insight, LLC** (`inboundinsight-com`) -- search: no-surface, opt-out: undecided
+- [x] **Incheck Inc** (`inchecksolutions-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Indiana Court Records (CourtRecords.us network)** (`indianacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Indiemark LLC** (`emailindustries-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Indiemark LLC** (`emailindustries-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Indiemark LLC** (`blackbox-email`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Infinite Knot Inc.** (`contacts411-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Infinite Media Concepts Inc** (`mlxp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Infinite Knot Inc.** (`contacts411-com`) -- search: undecided, opt-out: undecided
+- [x] **Infinite Media Concepts Inc** (`mlxp-com`) -- search: undecided, opt-out: undecided
 - [ ] **Infinite Media Concepts Inc** (`mailinglists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Inflection Risk Solutions, LLC** (`inflection-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Inflection Risk Solutions, LLC** (`inflection-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Info** (`info`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Infocore Inc.** (`infocore-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Infofree.Com LLC** (`privacycompliance-biz`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **INFOMATICS LLC** (`privatereports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **INFOPAY Inc** (`infopay-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Infocore Inc.** (`infocore-com`) -- search: blocked, opt-out: blocked
+- [x] **Infofree.Com LLC** (`privacycompliance-biz`) -- search: undecided, opt-out: undecided
+- [x] **INFOMATICS LLC** (`privatereports-com`) -- search: undecided, opt-out: undecided
+- [x] **INFOPAY Inc** (`infopay-com`) -- search: undecided, opt-out: undecided
 - [ ] **Informa USA Inc.** (`informa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Information Data Resources, LLC** (`publicinfoservices-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Information.Com, LLC** (`information-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Information Data Resources, LLC** (`publicinfoservices-com`) -- search: undecided, opt-out: blocked
+- [x] **Information.Com, LLC** (`information-com`) -- search: undecided, opt-out: undecided
 - [x] **Infotracer** (`infotracer-com`) -- search: undecided, opt-out: undecided
-- [ ] **Infutor Data Solutions LLC** (`infutor-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Infutor Data Solutions LLC** (`infutor-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Inmar-OIQ, LLC** (`inmar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **InMarket Media, LLC** (`inmarket-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **InMarket Media, LLC** (`inmarket-com`) -- search: no-surface, opt-out: undecided
 - [ ] **InmatesSearcher** (`inmatessearcher-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Inmobi** (`trufactor-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Inmobi** (`trufactor-io`) -- search: undecided, opt-out: undecided
 - [ ] **Innovative Database Solutions, Inc.** (`idatabasesolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Innovis Data Solutions, Inc.** (`innovis-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **InsideView, Inc.** (`zoominfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED

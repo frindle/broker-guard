@@ -44,22 +44,22 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-39 findings across 39 brokers.
+42 findings across 42 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 5 |
-| dataset | 27 |
+| dataset | 30 |
 | unreachable | 7 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| dead-url | 10 |
+| dead-url | 11 |
 | parked-or-defunct | 8 |
 | entity-mismatch | 7 |
 | broker-surface-defect | 5 |
+| unclassified | 5 |
 | rebrand-or-domain-change | 4 |
-| unclassified | 3 |
 | contact-address-oddity | 1 |
 | stale-200 | 1 |
 
@@ -239,11 +239,29 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23. idengine.com is a PARKED DOMAIN LISTED FOR SALE. The recorded opt-out path /dnsmpi/ redirects into GoDaddy's aftermarket and returns an Akamai 'Access Denied' for 'http://forsale.godaddy.com/forsale/idengine.com'. There is no site behind the name. This is the most complete form of absence in the module, and distinct from its neighbours: reachdata-com had not launched yet, emerges-com had shut down, granitelists- com is suspended and may return. A domain in a for-sale listing has been given up by its owner, and may shortly belong to someone entirely unrelated. That last point is the reason this is worth more than one line. The dataset records NO opt-out email for this row, so the URL was the only channel -- and if the domain is bought, /dnsmpi/ could later resolve to a live page belonging to a different company. A tool that retried this row mechanically could then submit a person's name and address to a stranger. Any future recheck of parked-domain rows should confirm OWNERSHIP, not merely that a page has appeared.
 
+### `information-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NEXT STEP, concretely: fetch /privacy-rights/ and transcribe whatever it serves. Deliberately not doing that from the stale URL's redirect chain here, because the two buttons post rather than link, so what /privacy-rights/ shows may depend on which button was pressed -- and guessing which is how a recipe ends up filing a copy request when the user asked for deletion. DATASET NOTE: the source row's opt-out URL is wrong.
+
 ### `parade-pet`
 
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23, and the surface was found only because the site leaks it. parade.pet is a single-page app: every path, including ones that return HTTP 404, serves the same shell, and that shell contains every form the app will ever show. Enumerating them turns up signUpForm, loginForm, phoneNumberForm, smsCode, emailCodeForm -- and, decisively, form#optOutLoginForm, an email box with a Login button. So an opt-out flow exists and is reachable, which the visible site never advertises; the homepage FAQ item 'How do I delete my account and remove my ...' links only to an on-page accordion, and an 'Opt out of marketing' link points at '#'. It is undecided because the flow is GATED ON AN EMAILED CODE. optOutLoginForm takes an email and logs you in; emailCodeForm then asks for a code delivered out of band. Nothing beyond that step was observed, so the fields that carry the actual request are unknown. Same shape as forager-ai in the previous batch and as the shipped ADVANCEDBACKGROUNDCHECKS recipe, so not out of scope in principle. One caution for whoever continues: because the SPA serves all forms at all times, PRESENCE OF A FORM IN THE DOM DOES NOT MEAN IT IS ON SCREEN. A recipe here must assert the opt-out view is actually displayed before filling anything, or it will type into a hidden login box and report success. DATASET NOTE, flagged not fixed: this row's domain is parade.pet but its contact is hello@goodboystudios.com -- the operator's name, not the site's.
+
+### `privacycompliance-biz`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23. https://privacycompliance.biz/databaseusa-opt-out-process/ returns a 404 ('Looks like you have taken a wrong turn'); the site itself is up and serves a WordPress 404 template with a working search box, so this is a dead PATH on a live host rather than a dead host. DATASET NOTE: the source row's opt-out URL no longer resolves to a page. Worth a look for a current DatabaseUSA opt-out path before writing this off -- the slug names a specific process that presumably moved rather than vanished.
+
+### `privatereports-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Two readings, not distinguished by this probe: the opt-out path redirects to search, or the opt-out flow BEGINS with a search to locate your record -- which is how several already-mapped brokers work. The second is likelier given the URL's /optOut/ prefix, and it matters because under that reading the automation would be running a search on Penn against a site that then has to be carried through to a removal step. Recording it as undecided rather than guessing. NEXT STEP: submit a search from the opt-out path and observe whether the result page offers a removal action; that single observation resolves this leg. DATASET NOTE: if the first reading is right, the source row's opt-out URL is stale.
 
 ### `reachdata-com`
 
