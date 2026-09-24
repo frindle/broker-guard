@@ -212,6 +212,31 @@ class Config:
     optout_email_dry_run: bool = True
     optout_email_from: str = ""
 
+    # --- SMTP transport for the above (broker_guard/smtp_transport.py) ---
+    #
+    # SEND ONLY. There is deliberately no IMAP/POP counterpart anywhere in
+    # this codebase and no setting for one -- see the header of
+    # smtp_transport.py for why, before adding one.
+    #
+    # Empty host = no transport configured, which is the default and means
+    # send_request has nothing to hand a message to even if both flags above
+    # were flipped. Credentials come from the environment (.env, gitignored),
+    # never from settings.json, for the same reason as BG_CRYPTO_KEY.
+    optout_email_smtp_host: str = ""
+    optout_email_smtp_port: int = 25
+    optout_email_smtp_username: str = ""
+    optout_email_smtp_password: str = ""
+    optout_email_smtp_starttls: bool = True
+    # Proton Mail Bridge presents a SELF-SIGNED certificate, so the default
+    # trust store will reject it. The intended answer is this one: point at
+    # the Bridge's exported CA certificate and keep verification ON.
+    optout_email_smtp_ca_file: str = ""
+    # The escape hatch, for a bench test where no cert has been exported yet.
+    # smtp_transport honours it only when the host is container-local, so it
+    # cannot silently disable verification against a remote server.
+    optout_email_smtp_insecure_tls: bool = False
+    optout_email_smtp_timeout_s: int = 30
+
     # Serve the FastAPI dashboard (webui.py) + run the autopilot loop as a
     # background thread in this SAME process, instead of the plain headless
     # service.main() loop. Off by default -- the container stays a
@@ -277,6 +302,20 @@ def load_config(env=None) -> Config:
         optout_email_enabled=_env_bool(env, "BG_OPTOUT_EMAIL_ENABLED", False),
         optout_email_dry_run=_env_bool(env, "BG_OPTOUT_EMAIL_DRY_RUN", True),
         optout_email_from=_env_str(env, "BG_OPTOUT_EMAIL_FROM", ""),
+        optout_email_smtp_host=_env_str(env, "BG_OPTOUT_EMAIL_SMTP_HOST", ""),
+        optout_email_smtp_port=_env_int(env, "BG_OPTOUT_EMAIL_SMTP_PORT", 25),
+        optout_email_smtp_username=_env_str(
+            env, "BG_OPTOUT_EMAIL_SMTP_USERNAME", ""),
+        optout_email_smtp_password=_env_str(
+            env, "BG_OPTOUT_EMAIL_SMTP_PASSWORD", ""),
+        optout_email_smtp_starttls=_env_bool(
+            env, "BG_OPTOUT_EMAIL_SMTP_STARTTLS", True),
+        optout_email_smtp_ca_file=_env_str(
+            env, "BG_OPTOUT_EMAIL_SMTP_CA_FILE", ""),
+        optout_email_smtp_insecure_tls=_env_bool(
+            env, "BG_OPTOUT_EMAIL_SMTP_INSECURE_TLS", False),
+        optout_email_smtp_timeout_s=_env_int(
+            env, "BG_OPTOUT_EMAIL_SMTP_TIMEOUT_S", 30),
         serve_web=_env_bool(env, "BG_SERVE_WEB", False),
         web_port=_env_int(env, "BG_WEB_PORT", 8000),
         interval_seconds=_env_int(env, "BG_INTERVAL_SECONDS", 86400),
