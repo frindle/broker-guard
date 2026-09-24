@@ -118,6 +118,16 @@ DICTS = (
 # can change state without notice. A parked domain is the sharpest case: if
 # someone buys it, the recorded opt-out path could later belong to a stranger.
 UNREACHABLE_MARKERS = (
+    # Transport-level failures: the host never answered, so there is nothing
+    # to read and nothing to conclude about the company from a fetch alone.
+    # These are research items precisely BECAUSE the fetch cannot settle them.
+    r"ERR_NAME_NOT_RESOLVED",
+    r"does not resolve",
+    r"ERR_SSL_VERSION_OR_CIPHER_MISMATCH",
+    r"TLS handshake fails",
+    r"timed out",
+    r"navigation timeout",
+    r"UNREACHABLE for the defects list",
     r"PARKED DOMAIN",
     r"parked domain",
     r"listed for sale",

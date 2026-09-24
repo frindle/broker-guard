@@ -44,18 +44,18 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-42 findings across 42 brokers.
+67 findings across 56 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 5 |
 | dataset | 30 |
-| unreachable | 7 |
+| unreachable | 32 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
+| parked-or-defunct | 33 |
 | dead-url | 11 |
-| parked-or-defunct | 8 |
 | entity-mismatch | 7 |
 | broker-surface-defect | 5 |
 | unclassified | 5 |
@@ -70,6 +70,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23, and there are three separate reasons to leave it open. FIRST, A REBRAND THE DATASET DOES NOT RECORD: privacy.acuityads.com resolves through to illumin.com. AcuityAds now trades as illumin, and every live URL is on the new domain. Flagged, not fixed. SECOND, the form is real but barely legible from the outside. illumin.com/opt-out/ hosts a HubSpot form inside an ABOUT:BLANK frame -- injected by script rather than served from a URL -- containing a single required input[name='email'] with a per-render id (email-56f7074b-6a42-488a-abca-2066a9726da2) and a Submit. No captcha script was seen, but the frame is about:blank, so that observation covers the parent page and NOT reliably the frame's own contents. Under this module's standing rule that is not a finding of 'no captcha'. A recipe would also have to address a frame with no URL and an id that changes per render -- neither impossible nor stable. THIRD, AND THE BEST FINDING HERE: the consent page carries UNREPLACED COOKIEBOT TEMPLATE PLACEHOLDERS. Its links include a literal '[#DSR_FORM_URL_TEXT#]' pointing at 'illumin.com/opt-out-success/[#DSR_FORM_URL#]', alongside '[#IABV2SETTINGS#]'. The DSR form URL -- the data subject request link, the thing a person on a privacy page is looking for -- was never configured, so the banner offers a link to a page that cannot exist. That is a real, checkable defect in the broker's published rights channel, not a rendering artifact. itops@acuityads.com is the dataset contact; note it is an operations address, not a privacy one.
+
+### `agrgroupinc-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-23: the domain does not resolve. Both agrgroupinc.com and www.agrgroupinc.com fail DNS with getaddrinfo ENOTFOUND, so no page of this broker exists to carry a search surface. The company is real -- CA data-broker registration 186616, All Global Resources, LLC, Henderson NV, privacy@agrgroupinc.com -- but it is a registration with no live website, which is also why the dataset lists it as email-only. If the domain ever comes back this call should be revisited.
 
 ### `assurance-com`
 
@@ -89,11 +95,61 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-23: the page could not be reached at all, and the failure is specific enough to be worth recording. A headless Chromium navigation to the dataset's opt_out_url (optout.prod.bidr.io/optout) failed with net::ERR_CERT_COMMON_NAME_INVALID -- the TLS certificate served on that host does not cover that name, so no browser will load it without an explicit override, which this tool will not do. That is a misconfiguration on Beeswax's side rather than an anti-bot wall, and it means the opt-out is effectively unavailable to any ordinary consumer using an ordinary browser -- which is itself the finding. Next pass: recheck whether the certificate has been fixed; if it has not, this row arguably belongs under NO_OPTOUT_SURFACE, because an opt-out nobody can open is not an opt-out.
 
+### `blisspointmedia-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23, for a network reason rather than a research one: www.blisspointmedia.com failed to RESOLVE (net::ERR_NAME_NOT_RESOLVED) from a headless Chromium on this host, so no page was reached. This is the second row in the dataset to fail this way (see nuwber-com), and the two should be rechecked together from a different network before either is called dead -- a DNS failure is not a 404 and is not an anti-bot block. If it does turn out to be gone, note that Bliss Point Media was acquired and may now trade under another name, the same trap corelogic-com fell into.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: www.blisspointmedia.com did not RESOLVE (net::ERR_NAME_NOT_RESOLVED) from a headless Chromium on this host, so nothing about either leg can be stated. Recheck from a different network before calling it dead, and check whether the company now trades under another name. Same situation as nuwber-com; see the opt-out leg's entry.
+
+### `bridgevine-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Reachability failure, 2026-09-23 -- same finding as the search leg. https://bridgevine.com/ does not resolve (net::ERR_NAME_NOT_RESOLVED from a real browser), so no opt-out page could be reached. Recorded as undecided rather than absent because one network's DNS failure is not proof of a dead company; recheck from elsewhere. Dataset contact dwayne.landry@bridgevine.com is a personal address, not a privacy alias, and would be worth verifying before anyone relies on it.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > Reachability failure, 2026-09-23: https://bridgevine.com/ does not resolve (net::ERR_NAME_NOT_RESOLVED from a real browser). Recorded as UNDECIDED rather than no-surface because a DNS failure from one network is not proof the company is gone -- it should be rechecked from a different network before anyone concludes the domain is dead. The dataset carries an opt_out_email for it (dwayne.landry@bridgevine.com), which is a personal address rather than a privacy alias and is itself worth doubting.
+
+### `brightswipe-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Reachability failure, 2026-09-23 -- same finding as the search leg. https://brightswipe.com/ does not resolve (net::ERR_NAME_NOT_RESOLVED). Recheck from another network before concluding the domain is retired. Dataset contact: admin@brightswipe.com.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > Reachability failure, 2026-09-23: https://brightswipe.com/ does not resolve (net::ERR_NAME_NOT_RESOLVED). Same caveat as bridgevine-com -- recheck from another network before calling the domain dead. Dataset contact: admin@brightswipe.com.
+
+### `calltruth-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Reachability failure, 2026-09-23 -- same finding as the search leg. https://www.calltruth.com/opt_out.php does not resolve (net::ERR_NAME_NOT_RESOLVED), so no opt-out page could be reached. Recheck from another network before concluding the domain is retired; note the URL shape (/opt_out.php) suggests the surface did once exist. The dataset records no email for this row, so it has no working channel at all.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > Reachability failure, 2026-09-23: https://www.calltruth.com/opt_out.php does not resolve (net::ERR_NAME_NOT_RESOLVED from a real browser). Same treatment as the bridgevine/brightswipe rows -- a DNS failure on one network is not proof the domain is retired, so this is undecided pending a recheck from elsewhere. The dataset holds no email for this row, so it currently has no working channel at all.
+
 ### `cardlytics-com`
 
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.NO_OPTOUT_SURFACE`
 
   > Verified by browser render 2026-09-23, and this row is also a dataset defect. The recorded opt_out_url, datagrail.cardlytics.com, returns a hard HTTP 404 ('Page not found') -- the DataGrail portal is gone, not merely JS-rendered. www.cardlytics.com/privacy-notice and /privacy also 404; the live policy is www.cardlytics.com/privacy-policy, which was read in full (about 50k characters) and offers NO web form of any kind: every rights path it names is a mailbox. Its California, Colorado and Connecticut sections each say rights are exercised 'by emailing us at privacy@cardlytics.com', and appeals go to the same address with the subject 'Appeal of Consumer Rights Request'. Separately, the policy says opting out of a card- linked marketing program is done through the Publishing Partner (the consumer's own bank), not through Cardlytics. Mailbox-only with no webform is the definition of this bucket. Note the dataset carries legalnotices@cardlytics.com while the policy names privacy@cardlytics.com -- the dataset should be corrected on both the dead URL and the address.
+
+### `carmarketsolutions-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Reachability failure, 2026-09-23 -- same finding as the search leg, and a different failure mode from the two ERR_NAME_NOT_RESOLVED rows beside it: https://carmarketsolutions.com/ answers DNS but never completes a page load, timing out at 30s before DOMContentLoaded. That points at a hung or firewalled host rather than a retired domain, so it is worth a retry later and from another network. The dataset records no email for this row, so it presently has no working channel of any kind.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > Reachability failure, 2026-09-23: https://carmarketsolutions.com/ resolves but never completes a connection -- the browser timed out after 30s without reaching DOMContentLoaded. Distinct from the two ERR_NAME_NOT_RESOLVED rows in this batch: something answers DNS here, so this is more likely a hung or firewalled host than a retired domain. Recheck later and from another network. The dataset holds no email for this row, so it currently has no working channel at all.
 
 ### `catalyzeai-com`
 
@@ -119,6 +175,16 @@ expired certificate gets renewed, a suspended host comes back).
 
   > DATASET DEFECT, verified 2026-09-23: the row's opt_out_url https://www.completemailinglists.com/node/3697 returns HTTP 404. What is behind it is worth recording: the 404 page is a half- finished template whose navigation still reads 'Menu Item One / Menu Item Two / Menu Item Three', so the site appears to have been rebuilt without its rights pages being carried across. Its sibling completemedicallists.com DOES publish a working CCPA form at /ccpa.php, so the obvious next step is to check whether completemailinglists.com serves the same /ccpa.php form -- if it does, this row resolves immediately. Not fixed in data/source- brokers.json. Dataset contact: ewoolf@completemailinglists.com.
 
+### `contacts411-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: www.contacts411.com does not resolve -- net::ERR_NAME_NOT_RESOLVED, i.e. DNS returns nothing for the host, so there is no server to ask. That is a stronger signal than a timeout or a 404 (both of which need a live host) and is consistent with the domain being gone rather than the page having moved. Still recorded as undecided rather than no-surface, because 'the domain no longer resolves' is a claim about the company's continued existence, and that is a research question for the consolidated defects list, not something a single failed lookup settles. UNREACHABLE for the defects list.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-23: the host does not resolve in DNS (ERR_NAME_NOT_RESOLVED). The name suggests a consumer directory, which is exactly why no surface is being inferred from it.
+
 ### `data-axle-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
@@ -137,11 +203,37 @@ expired certificate gets renewed, a suspended host comes back).
 
   > DATASET DEFECT, verified 2026-09-23: the row's opt_out_url https://datalinedata.com/privacy-portal/ returns HTTP 404, so the recorded surface is gone. One genuinely useful detail came out of the render anyway: the site's reCAPTCHA Enterprise is BROKEN -- its challenge frame reports 'This site is exceeding reCAPTCHA Enterprise free quota' -- which means any form on this domain may be unsubmittable for everyone right now, not just for this tool. Anyone returning here should check that before concluding a form is walled against them specifically. Next step: find the live privacy portal (the footer offers only 'Request a Demo'). Dataset contact: psobel@datalinedata.com, a personal address.
 
+### `degree-me`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: the domain serves nothing. degree.me has NS delegation to AWS Route53 (ns-1086.awsdns-07.org, ns-1685.awsdns-18.co.uk, ns-236.awsdns-29.com, ns-918.awsdns-50.net) but NO A or AAAA record resolves, confirmed by dig both ways, and curl returns http_code 000. This looks like a dormant registration tied to ACE Agents Inc. / academixdirect.com. It sits here rather than under NO_SEARCH_SURFACE because a domain that does not resolve today may resolve tomorrow; recheck resolution before deciding.
+
 ### `dynata-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
 
   > Verified 2026-09-23, confirming and extending the research already in the dataset's own note rather than repeating it. Rendering dynata.com and dynata.com/privacy (which resolves to /privacy/) found exactly one form on each page: the WordPress site search. No request-form anchor exists on either, matching the note's finding that the 'Do Not Sell My Information' control is a Usercentrics-rendered JavaScript pop-up with no linkable address. It is recorded as blocked rather than as having no surface because a surface does exist -- it simply cannot be reached or completed. Per the dataset note, the pop-up asks first name, last name and email, then presents A CAPTCHA, and then requires clicking a 'Confirm Data Request' link sent by email. Two walls in series: the challenge, and an out-of-band confirmation hop. Even setting the captcha aside, there is no stable URL for a recipe to navigate to. privacy@dynata.com and (833) 909-1804 / 833-681-0436 are the channels the published policy names, and email is the only automatable one.
+
+### `electroniccommerceatoz-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: electroniccommerceatoz.com does not resolve. The navigation failed with net::ERR_NAME_NOT_RESOLVED, i.e. DNS returned nothing -- not a refused connection, not a timeout, not a certificate mismatch. Nothing about the broker can be said from that. It is recorded as undecided rather than as having no surface because a single DNS failure from one network is weak evidence. This sweep has already accumulated a short list of rows failing the same way (nuwber, bridgevine, brightswipe, carmarketsolutions, calltruth, blisspointmedia) and they should be rechecked together from a different resolver before any of them is written off -- a local resolver, a captive network or an upstream block would produce exactly this result for a domain that is perfectly alive. The dataset records no opt-out email and an opt_out_method of 'unknown' for this row, so if the domain really is dead there may be no channel at all, which is itself worth establishing rather than assuming.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-23 by rendering the site. No consumer-facing lookup exists here. electroniccommerceatoz.com does not resolve in DNS, so neither leg has a surface to describe; see the opt- out entry for the recheck that is owed. The leg is closed rather than left open, because a search recipe could never be written against a surface the broker does not offer.
+
+### `emailindustries-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: https://www.emailindustries.com/legal/ did not finish loading within 75s (navigation timeout), so nothing was rendered to read. Not recorded as blocked -- a timeout is not a refusal, and there was no challenge page, no 403 and no captcha, just no response in time. Retry before drawing any conclusion.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Recorded 2026-09-23 on WEAKER evidence than the others in this group, and flagged as such: the site timed out and was never read. Placed here on the strength of the company's name and category alone -- email-deliverability tooling sold to senders. If that inference matters to anything downstream, re-probe; the opt-out leg is separately undecided for the same timeout.
 
 ### `emerges-com`
 
@@ -203,6 +295,12 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23, and the first finding is a DATASET DEFECT, flagged and deliberately not fixed. The recorded opt_out_url, greatlakeslists.com/opt_out_request.php, still returns HTTP 200 but no longer contains a form -- it renders the site's generic chrome and nothing else. A tool following the dataset would find an apparently healthy page with nothing on it and could easily record 'no surface'. The live surfaces are reached only from the footer: /do-not-sell-ca ('California Consumer Privacy Act Requests') and /do-not-sell-non-ca ('Opt Out Requests Web Form'). A 200 that quietly stopped being the page it used to be is a worse failure than a 404, which would at least announce itself. Both live pages are blocked by reCAPTCHA v3 -- api.js?render= with site key 6LeG5lAbAAAAAB2mnbwCEYHiihwLefn_Udbwksfe, plus the gstatic runtime and an anchor frame, on each. v3 is score-based and entirely invisible: there is no checkbox to click and no puzzle, which means an automated submission is not refused so much as silently scored down. That failure mode is particularly bad for this tool, because the request can appear to go through. Both are also ROLE-GATED wizards before any fields appear: 'Who is submitting this request? ... I am the person opting out / I am an authorized agent'. No field set was reached, so nothing beyond the choice step is recorded. The pages do offer a 'Check the status of your opt-out request' route, which is unusual and useful, and the dataset records no opt-out email for this row, so the web form is the only channel.
 
+### `grin-co`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-23. grin.co/data-privacy-form/ returns HTTP 200 but the body is a Cloudflare interstitial -- title 'One moment, please...', text 'Please wait while your request is being verified...'. No form, no fields, nothing else in the DOM. This is the shape that most deserves care in this module, because it lies twice. The status code says success. The page renders without error. A probe that only checked for HTTP 200 and then counted form elements would report 'page loads fine, no opt-out form present' and the row would be closed as no-surface -- a conclusion that is exactly backwards, since the URL is named data-privacy-form and the form is almost certainly sitting behind the challenge. Recorded as blocked rather than undecided because the obstacle is deliberate and persistent: Cloudflare's managed challenge is aimed at precisely the kind of headless automation this tool performs, and waiting longer does not resolve it. The only honest statement about what is behind it is that nothing has been seen. The dataset records no opt-out email for this row, so there is no fallback channel to offer a user. A human with an ordinary browser will pass the challenge without noticing it, so the page is reachable to people and not to this tool -- worth saying plainly if the row is ever surfaced in a report.
+
 ### `gumgum-com`
 
 - **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_BLOCKED`
@@ -239,11 +337,31 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23. idengine.com is a PARKED DOMAIN LISTED FOR SALE. The recorded opt-out path /dnsmpi/ redirects into GoDaddy's aftermarket and returns an Akamai 'Access Denied' for 'http://forsale.godaddy.com/forsale/idengine.com'. There is no site behind the name. This is the most complete form of absence in the module, and distinct from its neighbours: reachdata-com had not launched yet, emerges-com had shut down, granitelists- com is suspended and may return. A domain in a for-sale listing has been given up by its owner, and may shortly belong to someone entirely unrelated. That last point is the reason this is worth more than one line. The dataset records NO opt-out email for this row, so the URL was the only channel -- and if the domain is bought, /dnsmpi/ could later resolve to a live page belonging to a different company. A tool that retried this row mechanically could then submit a person's name and address to a stranger. Any future recheck of parked-domain rows should confirm OWNERSHIP, not merely that a page has appeared.
 
+### `imprintanalytics-io`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: https://imprintanalytics.io/limit-the-use-of-my-sensitive-personal-information/ cannot be loaded at all -- net::ERR_SSL_VERSION_OR_CIPHER_MISMATCH, i.e. the TLS handshake fails before any HTTP request is made. That is a server configuration fault on their side, not a block aimed at us and not a missing page: the URL's own slug is a CCPA right, so the surface was evidently meant to exist. Nothing can be said about its contents. Retry later; if it persists, this belongs in the consolidated defects list as UNREACHABLE rather than as a broker finding.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-23: TLS handshake fails outright (ERR_SSL_VERSION_OR_CIPHER_MISMATCH), so no HTTP request is ever made. Server misconfiguration on their side.
+
 ### `information-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > NEXT STEP, concretely: fetch /privacy-rights/ and transcribe whatever it serves. Deliberately not doing that from the stale URL's redirect chain here, because the two buttons post rather than link, so what /privacy-rights/ shows may depend on which button was pressed -- and guessing which is how a recipe ends up filing a copy request when the user asked for deletion. DATASET NOTE: the source row's opt-out URL is wrong.
+
+### `nuwber-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23, and for an unusual reason worth recording rather than retrying blindly: nuwber.com would not RESOLVE. A headless Chromium navigation to the dataset's opt_out_url (nuwber.com/removal/link) failed with net::ERR_NAME_NOT_RESOLVED -- a DNS failure, not a timeout, a certificate problem or an anti-bot block, and distinct from the HTTP errors recorded on other rows here. One observation from one host on one day is not enough to call a large and previously-active people-search site dead, so this is undecided rather than no-surface. Next pass: resolve the name from a different network before concluding anything, and if it resolves, render /removal/link and transcribe. Both legs of this broker are unresolved for the same reason.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23 for a network reason, not a research one: nuwber.com failed to RESOLVE (net::ERR_NAME_NOT_RESOLVED) from a headless Chromium on this host, so no page was ever reached. Nuwber is a well-known people-search site, so a single DNS failure is not grounds for a no-surface call in either leg. Next pass: resolve the name from a different network first. See the opt-out leg's entry, which is unresolved for the same reason.
 
 ### `parade-pet`
 
@@ -304,6 +422,16 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > Verified by browser render 2026-09-23: same finding as experian- com. www.transunion.com/consumer-privacy renders an FAQ accordion ('How do I make a data privacy request?', 'Where can I learn about my consumer rights?') and no request form -- the only two forms are copies of the header site search. reCAPTCHA v3 is loaded on the page (api.js?render=6LfUswssAAAAAEy6MG6LCW72Avmkx2Yohnv2oQfY plus a recaptcha-cloudservice element), so whatever the accordion links out to is captcha-backed. Not resolved: which TransUnion property accepts a marketing-data suppression as opposed to a credit-file request, and whether the acquired Neustar identity- graph data the dataset notes mention is covered by the same request or needs a separate one. Second channel for a human: privacy@transunion.com.
+
+### `trufactor-io`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-23: https://trufactor.io/ timed out (Page.goto, 30000ms) with no response at all. TruFactor was an SK Telecom-backed mobile-data venture, so a dead host is a plausible end state for it, but 'timed out once' is not evidence of that and is not being written up as if it were. Retry; if it stays dark, the question for the defects list is whether the company still exists, which is a research question and not one this tool can answer from a fetch.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > NO VERDICT 2026-09-23: connection to https://trufactor.io/ timed out after 30s with no response at all -- not a challenge page, not an error page, nothing. TruFactor was an SK Telecom-backed mobile-data venture; a dead host is a plausible end state, but a single timeout is not evidence of that and no such conclusion is recorded here. Retry before treating this row as anything.
 
 ### `winwithoptimal-com`
 
