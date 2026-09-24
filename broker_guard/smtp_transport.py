@@ -16,12 +16,23 @@ the eligibility gate in ``optout_email``, not an unfinished corner:
     entire mailbox. Those are very different blast radii for a process whose
     whole job is talking to hostile third parties, and this one only ever
     needs the first.
-  * The containment is layered on purpose. This module is the code half; the
-    other half is in docker-compose.yml, where the Bridge's IMAP port is
-    bound to host loopback and is NOT published onto any network this
-    container sits on. Either half alone would be enough to stop an
-    accidental read; both together mean a future code mistake in this repo
-    has no route to the mailbox at all.
+  * The containment is layered on purpose. This module is the code half. The
+    other half is deployment-side: the Bridge runs as its own container,
+    installed from the Unraid Community Apps template, with its SMTP host
+    port published and its IMAP host port left blank, on a different docker
+    network from this one. broker-guard reaches SMTP through the published
+    host port; IMAP has no published port to reach.
+
+    READ THIS BEFORE CHANGING ANY NETWORK SETTING. An unpublished port is
+    NOT an unreachable one. Publishing governs access from the HOST; it has
+    no bearing on container-to-container traffic. The Bridge listens on 143
+    inside its container either way, so any container sharing a network with
+    it reaches IMAP directly at its container IP. The only reason
+    broker-guard cannot is that Compose puts it on a private per-project
+    network. `network_mode: bridge` -- offered, commented out, one line away
+    in docker-compose.yml -- would end that, and nothing about such a diff
+    would look like a security change. tests/test_compose_bridge.py exists
+    to fail if it happens.
 
 If you are here to add "just a small reply-checker", that is the change this
 comment exists to interrupt. It needs a deliberate decision by the operator,
