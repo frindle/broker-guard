@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **531** / 969
-- Search leg mapped: 531 / 969
-- Opt-out leg mapped: 532 / 969
+- Fully mapped (both legs): **550** / 969
+- Search leg mapped: 550 / 969
+- Opt-out leg mapped: 551 / 969
 
 ## How to resume
 
@@ -304,27 +304,27 @@ of those dicts against source-brokers.json).
 - [x] **Delaware Court Records (CourtRecords.us network)** (`delawarecourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **Delivr.Ai Inc** (`delivr-ai`) -- search: no-surface, opt-out: undecided
 - [x] **Delivr.ai Inc** (`pii-ai`) -- search: no-surface, opt-out: blocked
-- [ ] **Deloitte Consulting LLP** (`deloitte-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Deloitte Consulting LLP** (`deloitte-com`) -- search: no-surface, opt-out: undecided
 - [x] **Deluxe Corporation** (`deluxe-com`) -- search: no-surface, opt-out: undecided
 - [x] **Demand Science Group, LLC** (`demandscience-com`) -- search: no-surface, opt-out: undecided
 - [x] **Demandbase** (`demandbase-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Demyst Data, Ltd** (`demystdata-com`) -- search: no-surface, opt-out: out-of-scope
-- [ ] **Demyst Data, Ltd** (`demyst-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Deutsche Post Direkt GmbH** (`deutschepost-de`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Demyst Data, Ltd** (`demyst-com`) -- search: no-surface, opt-out: undecided
+- [x] **Deutsche Post Direkt GmbH** (`deutschepost-de`) -- search: undecided, opt-out: undecided
 - [x] **Diablo Media** (`diablomedia-com`) -- search: no-surface, opt-out: undecided
 - [x] **Dice Career Solutions, Inc.** (`dice-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Digital Advertising Alliance WebChoices (AboutAds)** (`optout-aboutads-info`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Digital Advertising Alliance WebChoices (AboutAds)** (`optout-aboutads-info`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Digital Media Solutions, LLC** (`dmsunsub-io`) -- search: no-surface, opt-out: blocked
 - [x] **Digital Safety Products, LLC** (`spyfly-com`) -- search: blocked, opt-out: blocked
 - [x] **DIGITAL SEGMENT LLC** (`digitalsegment-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **DIGITAL VIKING MEDIA Inc** (`digitalvikingmedia-com`) -- search: no-surface, opt-out: no-surface
 - [x] **DIRECT MARKETING SOLUTIONS Inc** (`teamdms-com`) -- search: no-surface, opt-out: blocked
 - [x] **Disco Technology Inc.** (`disconetwork-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Disqus, Inc.** (`disqus-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Disqus, Inc.** (`disqus-com`) -- search: no-surface, opt-out: blocked
 - [x] **Distribution Processing Center LLC** (`dpcoptout-com`) -- search: no-surface, opt-out: blocked
-- [ ] **DMAchoice (Data & Marketing Association)** (`dmachoice-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Do Not Call Registry** (`donotcall-gov`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DomainTools** (`domaintools-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **DMAchoice (Data & Marketing Association)** (`dmachoice-org`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Do Not Call Registry** (`donotcall-gov`) -- search: no-surface, opt-out: out-of-scope
+- [x] **DomainTools** (`domaintools-com`) -- search: no-surface, opt-out: undecided
 - [x] **Dresdendirect** (`dresdendirect-com`) -- search: no-surface, opt-out: undecided
 - [x] **Driveniq Corporation** (`driveniq-com`) -- search: no-surface, opt-out: blocked
 - [x] **Drobu Media LLC** (`drobu-com`) -- search: no-surface, opt-out: no-surface
@@ -332,39 +332,39 @@ of those dicts against source-brokers.json).
 - [x] **Dstillery, Inc** (`dstillery-com`) -- search: no-surface, opt-out: undecided
 - [x] **DT Client Services, LLC** (`thedatatrust-com`) -- search: no-surface, opt-out: undecided
 - [x] **DTN LLC** (`dtn-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Dun & Bradstreet (EU, incl. former Bisnode entities)** (`dnb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **DUN & BRADSTREET Inc** (`netwisedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Dun & Bradstreet, Inc.** (`trustarc-eu`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Dun & Bradstreet (EU, incl. former Bisnode entities)** (`dnb-com`) -- search: no-surface, opt-out: blocked
+- [x] **DUN & BRADSTREET Inc** (`netwisedata-com`) -- search: no-surface, opt-out: blocked
+- [x] **Dun & Bradstreet, Inc.** (`trustarc-eu`) -- search: no-surface, opt-out: blocked
 - [x] **Dynata, LLC** (`dynata-com`) -- search: no-surface, opt-out: blocked
-- [ ] **e.Republic, LLC** (`erepublic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **e.Republic, LLC** (`erepublic-com`) -- search: no-surface, opt-out: blocked
 - [x] **EAB Global, Inc.** (`box-com`) -- search: no-surface, opt-out: undecided
 - [x] **Early Warning Services, LLC** (`earlywarning-com`) -- search: no-surface, opt-out: no-surface
 - [x] **ECONOMIC MODELING LLC** (`lightcast-io`) -- search: no-surface, opt-out: blocked
 - [x] **Edvisors Network, Inc.** (`edvisors-com`) -- search: no-surface, opt-out: blocked
 - [x] **Effyis, Inc.** (`socialgist-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Effyis, Inc.** (`socialgist-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Effyis, Inc.** (`socialgist-ai`) -- search: no-surface, opt-out: no-surface
 - [x] **Efunds Corporation** (`worldpay-com`) -- search: no-surface, opt-out: undecided
 - [x] **Ekata, Inc. (Mastercard)** (`mastercard-us`) -- search: no-surface, opt-out: blocked
 - [x] **EL Toro.Com, LLC** (`eltoro-com`) -- search: no-surface, opt-out: blocked
 - [x] **Electronic Commerce A To Z** (`electroniccommerceatoz-com`) -- search: no-surface, opt-out: undecided
 - [x] **ELECTRONIC VOICE SERVICES Inc** (`evs7-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Electronic Voice Services, Inc. (TelephoneLists.biz)** (`telephonelists-biz`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Electronic Voice Services, Inc. (TelephoneLists.biz)** (`telephonelists-biz`) -- search: no-surface, opt-out: blocked
 - [x] **Email Marketing Services, Inc** (`listmatch-com`) -- search: undecided, opt-out: undecided
 - [x] **Emailmovers Ltd** (`emailmovers-com`) -- search: no-surface, opt-out: no-surface
 - [x] **EMERGES.COM INCORPORATED** (`emerges-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Endgame Labs, Inc** (`endgame-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Endgame Labs, Inc** (`endgame-io`) -- search: no-surface, opt-out: no-surface
 - [x] **Enformion LLC** (`enformion-com`) -- search: no-surface, opt-out: blocked
 - [x] **ENIGMA TECHNOLOGIES Inc** (`enigma-com`) -- search: no-surface, opt-out: staged
 - [x] **Eprodirect** (`eprodirect-com`) -- search: no-surface, opt-out: blocked
 - [x] **Epsilon Data Management** (`epsilon-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Equativ (formerly Smart AdServer)** (`equativ-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Equativ (formerly Smart AdServer)** (`equativ-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Equifax Marketing Services** (`equifax-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Equimine** (`propstream-com`) -- search: no-surface, opt-out: blocked
 - [x] **Erepublic LLC** (`force-com`) -- search: no-surface, opt-out: blocked
-- [ ] **eTarget s.r.o.** (`etarget-sk`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **eTarget s.r.o.** (`etarget-sk`) -- search: no-surface, opt-out: no-surface
 - [x] **Evorra Ltd** (`evorra-com`) -- search: no-surface, opt-out: blocked
-- [ ] **EXACT OPCO LLC** (`exactcustomer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Exact Opco, LLC** (`remodelyourhome-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **EXACT OPCO LLC** (`exactcustomer-com`) -- search: no-surface, opt-out: undecided
+- [x] **Exact Opco, LLC** (`remodelyourhome-com`) -- search: no-surface, opt-out: blocked
 - [x] **Experian Data Corp** (`clarityservices-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Experian Marketing Services** (`experian-com`) -- search: no-surface, opt-out: undecided
 - [x] **EXPLORIUM Inc** (`explorium-ai`) -- search: no-surface, opt-out: blocked

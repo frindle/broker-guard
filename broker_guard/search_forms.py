@@ -4580,6 +4580,213 @@ NO_SEARCH_SURFACE = {
         "recipe cannot be written against a surface the broker does not "
         "offer."
     ),
+    "deloitte-com": (
+        "Verified 2026-09-25 by rendering deloitte.com/us/en.html and the "
+        "Data Analytics Privacy Notice this row records. No consumer- "
+        "facing lookup exists here. Deloitte Consulting is a "
+        "professional-services firm; the notice covers its "
+        "PredictRisk/data-analytics products, which are sold to clients "
+        "rather than queried by the public, and the only input anywhere "
+        "on either page is the site's own #search-button article search "
+        "plus a 'Type location' picker. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "demyst-com": (
+        "Verified 2026-09-25 by rendering demyst.com/privacy-policy and "
+        "both of its request pages. Same finding as the demystdata-com "
+        "row, which now serves from this same domain: Demyst is a data- "
+        "orchestration platform that brokers third-party data inside a "
+        "customer's underwriting workflow rather than publishing "
+        "anything, and no page carries a lookup. The leg is closed "
+        "because a search recipe cannot be written against a surface the "
+        "broker does not offer."
+    ),
+    "optout-aboutads-info": (
+        "Verified 2026-09-25 by rendering https://optout.aboutads.info/. "
+        "No lookup of any kind. This row is not a broker but the Digital "
+        "Advertising Alliance's WebChoices browser tool: it enumerates 99 "
+        "participating ad companies and reports a per-company cookie "
+        "status for the browser that is visiting. There is nothing to "
+        "search and nobody to be found. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "disqus-com": (
+        "Verified 2026-09-25 by rendering disqus.com and its /data- "
+        "sharing-settings/ page. No consumer-facing lookup exists here. "
+        "Disqus sells a hosted comment and audience-engagement widget to "
+        "publishers; the homepage carries no inputs at all beyond its "
+        "cookie banner and a nav dropdown, and anything about a specific "
+        "commenter sits behind the publisher or commenter login. The leg "
+        "is closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "dmachoice-org": (
+        "Verified 2026-09-25 by rendering dmachoice.org and its "
+        "registration page. No lookup exists. DMAchoice is the ANA's "
+        "mail-preference service: the homepage is a #memberForm login "
+        "(email and password, action /login.php) and everything else is "
+        "the paid registration flow. It holds a suppression list, not "
+        "searchable profiles, and it will not tell a visitor what is on "
+        "it. The leg is closed because a search recipe cannot be written "
+        "against a surface the broker does not offer."
+    ),
+    "donotcall-gov": (
+        "Verified 2026-09-25 by rendering donotcall.gov and "
+        "/register.html. No lookup of held data exists. This row is the "
+        "FTC's National Do Not Call Registry, a suppression list rather "
+        "than a broker: the only lookup on the site is 'verify "
+        "registration', which takes a phone number and answers whether "
+        "that number is on the Registry -- it returns no record, no name "
+        "and no address, so there is nothing for a search recipe to read "
+        "out. The leg is closed because a search recipe cannot be written "
+        "against a surface the broker does not offer."
+    ),
+    "domaintools-com": (
+        "Verified 2026-09-25 by rendering domaintools.com and "
+        "whois.domaintools.com in full. There is a search box, and it is "
+        "not a people search: #whois-landing-form takes a single "
+        "input[name='q'] labelled 'Enter a domain or IP address...' and "
+        "GETs /go/, i.e. the unit of lookup is a domain or an IP, never a "
+        "person. The direction this row would actually need -- reverse "
+        "WHOIS by registrant name -- is a paid Iris feature, and the only "
+        "routes to it on the rendered page are the LOGIN and SIGN UP "
+        "buttons. No captcha on the WHOIS landing page itself, though the "
+        "marketing homepage does load "
+        "challenges.cloudflare.com/turnstile/v0/api.js. The leg is closed "
+        "because the broker offers no lookup that takes a person as "
+        "input; the dataset's own note is worth keeping, that DomainTools "
+        "only redisplays third-party WHOIS data and cannot unpublish a "
+        "domain's historical WHOIS records."
+    ),
+    "dnb-com": (
+        "Verified 2026-09-25 by rendering dnb.com/en-us/ and "
+        "dnb.com/business-directory.html. The public directory exists and "
+        "it is a COMPANY lookup: its input is labelled 'Search by company "
+        "name or D-U-N-S Number' and the browse axis below it is NAICS "
+        "industry, so a person cannot be looked up by name. Everything "
+        "person-shaped is behind 'Log In' or in D&B Hoovers. Worth "
+        "recording for anyone who revisits: the business-directory page "
+        "carries reCAPTCHA ENTERPRISE (enterprise.js with a grecaptcha- "
+        "badge) on an Eloqua/Marketo #eloquaForm lead capture, so even "
+        "the marketing furniture on this host is challenged. The leg is "
+        "closed because the broker offers no lookup that takes a person "
+        "as input."
+    ),
+    "netwisedata-com": (
+        "Verified 2026-09-25 by rendering netwisedata.com. The brand is "
+        "gone: www.netwisedata.com/consumer-privacy 404s with and without "
+        "a trailing slash, and the host now serves D&B pages -- the apex "
+        "landed on https://www.dnb.com/en-us/products/dnb-id-graph- "
+        "plus.html, the identity-graph product that absorbed NetWise. "
+        "There is no consumer lookup on either the old domain or the page "
+        "it resolves to; see the dnb-com row for the company-only "
+        "Business Directory. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "trustarc-eu": (
+        "Verified 2026-09-25 by rendering the URL this row records. There "
+        "is no lookup, and there is no broker site here either: submit- "
+        "irm.trustarc.eu is TrustArc's hosted data-subject-request "
+        "service, and this row's URL is one client's form on it -- Dun & "
+        "Bradstreet's, reached from both dnb.com and netwisedata.com. The "
+        "searchable surface question belongs to the dnb-com row. The leg "
+        "is closed because a search recipe cannot be written against a "
+        "vendor form host."
+    ),
+    "erepublic-com": (
+        "Verified 2026-09-25 by rendering erepublic.com/privacy/ and "
+        "following its rights route. No consumer-facing lookup exists "
+        "here. e.Republic is a government-market media and research "
+        "company (Governing, Government Technology); the privacy page's "
+        "only controls are its OneTrust consent dialog, and nothing on "
+        "the site invites a visitor to look a person up. The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "socialgist-ai": (
+        "Verified 2026-09-25 by rendering socialgist.ai and its /privacy- "
+        "and-terms in full. No consumer-facing lookup exists here. Effyis "
+        "d/b/a Socialgist licenses firehose access to social and forum "
+        "content to enterprise buyers; the homepage carries no inputs at "
+        "all beyond a nav toggle and its own accept/decline cookie "
+        "buttons. Note for the opt-out leg: the policy is explicit that "
+        "what Socialgist holds about a person is whatever appears in "
+        "collected Content, keyed to handles and usernames rather than to "
+        "a name and address. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "telephonelists-biz": (
+        "Verified 2026-09-25 by rendering telephonelists.biz. There is a "
+        "live data surface on the homepage and it is not a person lookup: "
+        "a 'LEADS PORTAL: LIVE DEMO' panel of list-building filters -- "
+        "country USA/Canada, list type Consumer/Business, a STATE select, "
+        "a homeowners checkbox, a monthly-plan-size range slider and '+ "
+        "See all 40 additional filters' -- whose output is a COUNT of "
+        "matching records for purchase, with the records themselves "
+        "behind a paid plan. It takes demographic criteria as input, "
+        "never a name, so there is nothing a search recipe could ask it "
+        "about one person. Electronic Voice Services sells 189 million US "
+        "and Canadian consumer and business phone records this way. The "
+        "leg is closed because the broker offers no lookup that takes a "
+        "person as input."
+    ),
+    "endgame-io": (
+        "Verified 2026-09-25 by rendering endgame.io and /privacy in "
+        "full. No consumer-facing lookup exists here. Endgame Labs sells "
+        "AI revenue-intelligence and deal-preparation tooling to sales "
+        "teams; both pages render zero forms -- every control is a nav "
+        "dropdown, a feature tab or a case-study card -- and the product "
+        "itself sits behind 'Go to app'. Its own policy says it processes "
+        "contact data as a service provider on its customers' "
+        "instructions, which is why the consumer-facing side of this "
+        "broker is a mailbox and not a page. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "equativ-com": (
+        "Verified 2026-09-25 by rendering privacy.equativ.com/user- "
+        "rights-hub/ and its linked request pages. No consumer-facing "
+        "lookup exists here. Equativ (formerly Smart AdServer) is a "
+        "French ad-serving and supply-side platform whose consumer-facing "
+        "estate is a privacy centre and a cookie-sync endpoint; there is "
+        "nothing to query about a person. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "etarget-sk": (
+        "Verified 2026-09-25 by rendering etarget.sk and its privacy "
+        "policy. No lookup, and almost no site: etarget.sk redirects to "
+        "www.etarget.eu/sk/home/, which renders ZERO controls of any "
+        "kind, and etarget.sk/privacy.php redirects to "
+        "sk.search.etargetnet.com/policy.html, which is equally inert. "
+        "ETARGET SE is a Slovak ad network and registered IAB Europe CMP; "
+        "its only person-shaped surface is the advertiser login. The leg "
+        "is closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "exactcustomer-com": (
+        "Verified 2026-09-25 by rendering exactcustomer.com. No consumer- "
+        "facing lookup exists here. EXACT OPCO sells performance lead "
+        "generation ('we don't just sell leads... we put sales on the "
+        "board'); the two forms on the homepage are WordPress Contact "
+        "Form 7 instances -- a Name/E-mail/Phone contact form and a one- "
+        "field email capture -- both carrying a Cloudflare Turnstile "
+        "widget, and neither queries anything. The leg is closed because "
+        "a search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "remodelyourhome-com": (
+        "Verified 2026-09-25 by rendering remodelyourhome.com. No "
+        "consumer-facing lookup exists here. Exact Opco's RemodelYourHome "
+        "is a home-improvement lead funnel: every control on the page is "
+        "a quote call-to-action ('Start a Quote', 'GET AN ESTIMATE', "
+        "'REQUEST A QUOTE' into /find-local-pros.html), which collects a "
+        "homeowner's details rather than returning anyone's. The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
 }
 
 
@@ -6252,6 +6459,22 @@ SEARCH_UNDECIDED = {
         "bounced on 2026-08-21, so this row currently has no working "
         "channel at all; a recheck is cheap (one TLS handshake) and "
         "should be redone rather than re-researched."
+    ),
+    "deutschepost-de": (
+        "NO VERDICT as of 2026-09-25, and the honest statement is "
+        "'nothing could be read', not 'there is no lookup'. Every "
+        "deutschepost.de path tried from a real browser answered HTTP 404 "
+        "with Deutsche Post's own bare 'Not Found' body -- the apex "
+        "https://www.deutschepost.de/ itself, /de/d.html, and "
+        "/de/d/datenschutz.html -- and www.postdirekt.de redirected into "
+        "/de/d/deutsche-post-direkt.html which 404s the same way. An apex "
+        "that 404s while the domain plainly works for ordinary visitors "
+        "reads as an edge rule against automated clients rather than a "
+        "missing site, so no claim about what the site offers can be made "
+        "from this pass. The broker is Deutsche Post Direkt GmbH, the "
+        "group's address and geo-marketing arm; its recorded channel is "
+        "the datenschutz@postdirekt.de mailbox. Recheck is one render of "
+        "the apex."
     ),
 }
 
