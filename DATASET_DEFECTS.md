@@ -44,18 +44,18 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-160 findings across 128 brokers.
+165 findings across 131 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 11 |
-| dataset | 85 |
-| unreachable | 64 |
+| dataset | 86 |
+| unreachable | 68 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 65 |
-| unclassified | 53 |
+| parked-or-defunct | 69 |
+| unclassified | 54 |
 | dead-url | 17 |
 | broker-surface-defect | 10 |
 | entity-mismatch | 8 |
@@ -755,6 +755,12 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-24, and it is a close call held up by the same wrong-request-type problem already recorded at gumgum-com.
 
+### `leadzod-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Verified by browser render (Playwright, 11-13s settle) 2026-09-25. RECIPE-READY IN SUBSTANCE, held back only by Wix's form transport. The dataset records opt_out_url as null and opt_out_method 'email', which is FALSIFIED: www.leadzod.com/your-privacy-choices serves a real, captcha-free rights form (page heading 'Your Privacy Choices Contact Us Form'), linked from the footer of every page as 'Your Privacy Choices'. Full transcription, element by element -- form id 'form-3537423c-e438-410a-b550-e488e7c78d20', method GET, action back to the same page: input[type=text] REQUIRED labelled 'First name*', id 'form-field- input-7e9d7a34-8f8d-481e-ee07-66a36d1ef4ed-comp-lz1mqa5d-'; input[type=text] optional labelled 'Last name', id 'form-field- input-4f006c2a-1363-4911-5f72-020aa087e055-comp-lz1mqa5d-'; input[type=email] REQUIRED labelled 'Email*', id 'form-field- input-8ffeec5e-d1fd-49d4-b311-bf77a33d3eea-comp-lz1mqa5d-'; textarea optional labelled 'Write a message', id 'form-field- input-8aeac2cb-e4f2-4a80-9a92-21d659b14f99-comp-lz1mqa5d-'; button 'Submit'. cap[] and widget[] are both EMPTY at an 11s settle -- no reCAPTCHA, no Turnstile, no honeypot flagged invisible, no email-confirmation step advertised. WHY IT IS NOT A RECIPE. Not one control has a name attribute; Wix identifies fields by those opaque comp- ids and submits them through its own _api endpoint rather than by POSTing the form's action, so a recipe keyed on field names cannot be written and a recipe keyed on those ids would break the moment the page is re-published in the Wix editor. The 'opt-out' framing is also the site's own: this is a contact form repurposed as the privacy channel, so the request text has to go in the message textarea. Also worth recording for the next pass: the dataset note says LeadZod replied on 2026-08-21 that they are a service provider holding no personal information of their own, and the homepage tells California mobile users to 'see Privacy Choices link in mobile menu for privacy requests' -- so this form is the intended channel even though the company disclaims holding data.
+
 ### `limeleads-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -834,6 +840,26 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT 2026-09-24. The request timed out on two separate attempts -- no response at all, not a rejection. Nothing about a search surface was observed.
+
+### `mediasoftstudio-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 11-13s settle) 2026-09-25. mediasoftstudio.com IS DEAD, in three independent ways. (1) HTTPS is broken: Playwright refused the navigation with net::ERR_CERT_DATE_INVALID and curl reports 'certificate has expired', so nothing on the site can be reached over TLS at all. (2) Over plain HTTP the root serves a 17-character body reading 'Under Maintenance' (title 'Under Maintenance') and nothing else -- no forms, no links, no captcha. (3) The dataset's opt_out_url path, /unsubscribe.php, returns HTTP 404 over HTTP. Probed as a single target on its own invocation, since the URL contains 'unsubscribe'. Dataset claim falsified: opt_out_method 'web-form' at www.mediasoftstudio.com/unsubscribe.php is a 404 behind an expired certificate. Nothing remains but info@mediasoftstudio.com, on a domain whose web presence is a maintenance stub -- no reachable form, hence no-surface rather than blocked (an expired cert and a 404 are the finding, not an anti-bot wall).
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified by browser render (Playwright, 11-13s settle) 2026-09-25. mediasoftstudio.com IS DEAD, in three independent ways. (1) HTTPS is broken: Playwright refused the navigation with net::ERR_CERT_DATE_INVALID and curl reports 'certificate has expired', so nothing on the site can be reached over TLS at all. (2) Over plain HTTP the root serves a 17-character body reading 'Under Maintenance' (title 'Under Maintenance') and nothing else -- no forms, no links, no captcha. (3) The dataset's opt_out_url path, /unsubscribe.php, returns HTTP 404 over HTTP. Probed as a single target on its own invocation, since the URL contains 'unsubscribe'. No search surface: there is no site left to search.
+
+### `mediasourcesolutions-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 11-13s settle) 2026-09-25. www.mediasourcesolutions.com IS GONE. Every path on it, including the bare domain and the do-not-share URL from the notes, 302s to /cgi-sys/suspendedpage.cgi and serves a 103-character body reading 'Account Suspended / This Account has been suspended. / Contact your hosting provider for more information.' -- the cPanel suspension page. Probed twice in the same batch (root and the rights URL) with the same result. This is a dead site, not an anti-bot wall: status 200, no captcha, no challenge, no frames, nothing to render. The dataset's 2026-09-12 sweep note claims 'their own privacy page lists privacy@mediasourcesolutions.com and a dedicated do-not-share form' at www.mediasourcesolutions.com/do-not-share-my-personal- information/. That claim is now FALSIFIED: the URL is suspended along with the rest of the host, so there is no form, and the privacy page it cites is unreachable too. Consistent with the earlier recorded finding that mail to the domain hard-bounced on 2026-08-21 -- the email channel and the web channel are both dead, which is why this is no-surface rather than undecided.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified by browser render (Playwright, 11-13s settle) 2026-09-25. www.mediasourcesolutions.com IS GONE. Every path on it, including the bare domain and the do-not-share URL from the notes, 302s to /cgi-sys/suspendedpage.cgi and serves a 103-character body reading 'Account Suspended / This Account has been suspended. / Contact your hosting provider for more information.' -- the cPanel suspension page. Probed twice in the same batch (root and the rights URL) with the same result. This is a dead site, not an anti-bot wall: status 200, no captcha, no challenge, no frames, nothing to render. No search surface can exist on a suspended host.
 
 ### `netwisedata-com`
 
