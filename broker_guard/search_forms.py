@@ -4787,6 +4787,109 @@ NO_SEARCH_SURFACE = {
         "closed because a search recipe cannot be written against a "
         "surface the broker does not offer."
     ),
+    "faraday-ai": (
+        "Verified 2026-09-25 by rendering https://faraday.ai/ (200, read "
+        "in full). Same company as the already-mapped faraday-io row and "
+        "the same verdict: it is a B2B predictive-modelling vendor -- "
+        "'Faraday provides context on 240 million U.S. adults via MCP, "
+        "real-time API, and batch deployment' -- and the only interactive "
+        "controls on the page are nav menus, a docs search and a 'Build "
+        "predictive model' demo widget. No consumer lookup is offered "
+        "anywhere on it, so there is no surface a search recipe could "
+        "target."
+    ),
+    "finthrive-com": (
+        "Verified 2026-09-25 by rendering https://finthrive.com/privacy- "
+        "policy (200, read in full). FinThrive sells revenue-cycle- "
+        "management software to hospitals; the only forms on the page are "
+        "two copies of the site-header site-search widget and the "
+        "OneTrust cookie preference centre. There is no people lookup, "
+        "and nothing on the site advertises one, so this leg is closed "
+        "for want of a surface rather than for want of research."
+    ),
+    "fadv-com": (
+        "Verified 2026-09-25 by rendering https://fadv.com/ (200). First "
+        "Advantage is an employment background-screening CRA: the site "
+        "sells screening to employers and routes individuals to "
+        "'Candidates' and 'Check Status', which are per-order status "
+        "lookups behind a candidate's own order id, not a public person "
+        "search. The only forms on the home page are two copies of the "
+        "site-search overlay posting to /search/. No consumer-facing name "
+        "lookup exists to write a recipe against."
+    ),
+    "geniussports-com": (
+        "Verified 2026-09-25 by rendering https://www.geniussports.com/ "
+        "and its privacy policy (both 200, read in full). Genius Sports "
+        "sells sports data, streaming and betting technology to leagues, "
+        "sportsbooks and advertisers; the home page's only controls are "
+        "nav menus and a carousel. No person lookup is offered or "
+        "advertised, so there is no surface for a search recipe."
+    ),
+    "vector-co": (
+        "Verified 2026-09-25 by rendering "
+        "https://www.vector.co/legal/privacy and "
+        "https://www.vector.co/opt-out (both 200, read in full). "
+        "GetVector sells an account-based-marketing platform to B2B "
+        "sellers -- 'The ABM platform that shows its work' -- and the "
+        "only forms anywhere on those pages are a newsletter subscribe "
+        "box and the consumer privacy-request form. No consumer-facing "
+        "lookup exists here."
+    ),
+    "gravyanalytics-com": (
+        "Verified 2026-09-25 by render, and the domain has MOVED: "
+        "https://gravyanalytics.com/ now redirects to "
+        "https://www.unacast.com/ (Gravy Analytics having been folded "
+        "into Unacast). Unacast sells enterprise location intelligence; "
+        "the only forms on the landing page are two HubSpot lead-capture "
+        "forms ('Book a Meeting', 'Submit') and a cookie-preferences box. "
+        "Location-data brokers of this kind key their records to mobile "
+        "advertising identifiers rather than to names, and nothing on "
+        "either domain offers a person lookup, so there is no search "
+        "surface to recipe."
+    ),
+    "graze-social": (
+        "Verified 2026-09-25 by rendering https://www.graze.social/ and "
+        "its privacy policy (both 200, read in full). Graze is a custom- "
+        "feed builder for Bluesky/ATProto -- it processes public Bluesky "
+        "content on behalf of feed curators -- and the site offers feed "
+        "building and a marketplace, not a person lookup. No search "
+        "surface exists to write a recipe against."
+    ),
+    "growbots-com": (
+        "Verified 2026-09-25 by rendering https://www.growbots.com/ "
+        "(200). Growbots sells outbound-sales lead generation as a done- "
+        "for-you service to B2B sellers; the site's calls to action are "
+        "'TALK TO US' and 'BOOK A DEMO' and there is no public lookup of "
+        "any kind. Its prospect database is reachable only from inside a "
+        "paid account, which is not a surface this codebase can search."
+    ),
+    "growinglibraries-com": (
+        "Verified 2026-09-25 by rendering https://growinglibraries.com/ "
+        "(200). Growing Libraries sells a marketing platform to public "
+        "libraries for reaching non-users; the home page carries no form "
+        "at all beyond a cookie banner, and no consumer lookup is offered "
+        "or advertised. The company's consumer-facing surface is the do- "
+        "not-sell form only (see optout_forms)."
+    ),
+    "haines-com": (
+        "Verified 2026-09-25 by rendering https://haines.com/ and its "
+        "privacy policy (both 200, read in full). Haines publishes the "
+        "Criss+Cross Directory and sells property and lead data to "
+        "businesses -- 'Delivering Qualified Leads to Grow Your Business "
+        "for Over 90 Years' -- with products (Property Connect, "
+        "Criss+Cross PLUS) sold by subscription and reached through a "
+        "customer login. Nothing on the public site is a consumer lookup, "
+        "so this leg closes for want of a surface."
+    ),
+    "hartehanks-com": (
+        "Verified 2026-09-25 by rendering https://www.hartehanks.com/ and "
+        "the current privacy highlights page (both 200, read in full). "
+        "Harte Hanks is a B2B marketing-services agency that compiles "
+        "what it calls a Behavioral Index for clients; the only form on "
+        "the site is the WordPress site-search box. It offers no "
+        "consumer-facing lookup, so there is no surface a search recipe "
+        "could target."
+    ),
 }
 
 
@@ -5118,6 +5221,76 @@ SEARCH_BLOCKED = {
         "or purchase a report'. Blocked by that registration paywall. See "
         "californiacourtrecords-us for the full write-up; nothing on this "
         "state site differs."
+    ),
+    "familysearch-org": (
+        "Verified 2026-09-25 by browser render. Both "
+        "www.familysearch.org/ and the recorded privacy URL "
+        "/en/legal/privacy come back HTTP 200 with a COMPLETELY EMPTY "
+        "main document (title '', 0 characters of text, zero forms) -- "
+        "the real page is an Imperva/Incapsula interstitial served in a "
+        "child frame titled 'Captcha Required', reading "
+        "'www.familysearch.org Additional security check is required ... "
+        "FamilySearch uses security tools to ensure that only real people "
+        "can access our services', loading js.hcaptcha.com/1/api.js with "
+        "an h-captcha widget and both g-recaptcha-response and h-captcha- "
+        "response textareas parked off-layout. The genealogy search "
+        "surface certainly exists behind that, but it is walled on every "
+        "visit from this browser, so no search recipe can be written "
+        "against it. Note the shape for anyone rechecking: a 200 with an "
+        "empty body is the tell here, not a 403."
+    ),
+    "familytreenow-com": (
+        "Verified 2026-09-25 by browser render. "
+        "https://www.familytreenow.com/ answers 403 and redirects to a "
+        "?__cf_chl_rt_tk= challenge page titled 'Just a moment...' "
+        "reading 'Performing security verification. This website uses a "
+        "security service to protect against malicious bots', loading "
+        "challenges.cloudflare.com/turnstile/v0/b/d76008a69eab/api.js "
+        "with a cf-turnstile-response hidden input. Cloudflare Turnstile "
+        "on the front door, so the name lookup FamilyTreeNow is known for "
+        "never rendered at all. Blocked rather than no-surface: the "
+        "surface is not in doubt, only reachable."
+    ),
+    "floridacourtrecords-us": (
+        "Verified 2026-09-25, and resolved by IDENTITY with the "
+        "CourtRecords.us network rather than by driving the flow again. "
+        "floridacourtrecords.us serves the white-label template observed "
+        "in this render: form#nameSearchForm, POST to "
+        "https://floridacourtrecords.us/search/loading/, with "
+        "input#firstName and input#lastName both required, an optional "
+        "input#city, a hidden state field and the same bank of twelve "
+        "unnamed record-type checkboxes (Felonies, Misdemeanors, "
+        "Incarcerations, Arrests & Warrants, Bankruptcies, Judgments, Tax "
+        "Liens, Property Liens, Contract Disputes, Traffic Offenses, "
+        "Small Claims), under the heading 'Instant Access to Civil and "
+        "Criminal Court Records'. That is the identical surface already "
+        "driven to its end on californiacourtrecords-us and confirmed on "
+        "colorado-, connecticut- and delawarecourtrecords-us, where the "
+        "network's own FCRA notice states the wall: only a preliminary "
+        "people search runs, and records are 'made available after you "
+        "register for an account or purchase a report'. See "
+        "californiacourtrecords-us for the full write-up."
+    ),
+    "georgiacourtrecords-us": (
+        "Verified 2026-09-25. Page-for-page identical to "
+        "floridacourtrecords-us and the rest of the CourtRecords.us "
+        "network: the same form#nameSearchForm POSTing to "
+        "/search/loading/ with required #firstName and #lastName, "
+        "optional #city, a hidden state and twelve unnamed record-type "
+        "checkboxes, observed in this render, behind the same "
+        "registration paywall proven on californiacourtrecords-us. "
+        "Recorded separately only because the dataset lists the fifty "
+        "network sites as fifty rows; nothing here is specific to "
+        "Georgia."
+    ),
+    "hawaiicourtrecords-us": (
+        "Verified 2026-09-25. Page-for-page identical to "
+        "floridacourtrecords-us and georgiacourtrecords-us -- same "
+        "form#nameSearchForm POSTing to /search/loading/, same required "
+        "#firstName / #lastName, optional #city, hidden state and twelve "
+        "unnamed record-type checkboxes, observed in this render -- and "
+        "behind the same registration paywall proven on "
+        "californiacourtrecords-us. See that entry for the full write-up."
     ),
 }
 
@@ -6475,6 +6648,74 @@ SEARCH_UNDECIDED = {
         "group's address and geo-marketing arm; its recorded channel is "
         "the datenschutz@postdirekt.de mailbox. Recheck is one render of "
         "the apex."
+    ),
+    "fastbackgroundcheck-com": (
+        "A REAL, UNWALLED SEARCH FORM, transcribed 2026-09-25 by browser "
+        "render, and undecided only because the result page was never "
+        "driven. https://www.fastbackgroundcheck.com/ serves three "
+        "sibling forms; the name one is form#search-form-people, "
+        "METHOD=GET with action on the site root, carrying input#search- "
+        "input-name labelled 'Full Name' and input#search-input-address2 "
+        "labelled 'City/State/Zip' (neither marked required), with "
+        "sibling #search-form-phone and #search-form-address for the "
+        "other two tabs. No captcha script and no captcha element "
+        "anywhere on the page. What is missing to promote this to a "
+        "recipe is only the response side: nobody has submitted a name "
+        "and recorded the results host, the hit and no-hit markers or a "
+        "count pattern, and the site's own opt-out notice shows it "
+        "operates the same infrastructure family as fastpeoplesearch-com, "
+        "whose results ARE free and readable. Whoever drives one search "
+        "closes this row."
+    ),
+    "freepeopledirectory-com": (
+        "A REAL, UNWALLED, URL-ADDRESSABLE-LOOKING SEARCH FORM, "
+        "transcribed 2026-09-25 by browser render, which directly "
+        "contradicts this row's dataset note. "
+        "https://www.freepeopledirectory.com/ carries form#form- "
+        "submit.name-form, METHOD=GET with action on the site root, "
+        "holding input#fname 'First Name', input#lname 'Last Name' and "
+        "input#address 'City & State' (name attribute address_data) plus "
+        "button#submit-button 'SEARCH'. No captcha script, no captcha "
+        "element. DATASET DEFECT: the row claims 'Results load behind a "
+        "Spokeo-style city/state wizard, so not URL-addressable' -- there "
+        "is no wizard on the entry page, just a three-field GET. Left "
+        "undecided because the results page was not driven, so the "
+        "results host, the hit and no-hit markers and any count pattern "
+        "are all still unknown, and this is a Spokeo-network property "
+        "whose results may well be gated the way Spokeo's are. The opt- "
+        "out leg is already settled (NO_OPTOUT_SURFACE)."
+    ),
+    "gm-com": (
+        "NO VERDICT as of 2026-09-25, and the reason is that the site "
+        "could not be read at all. Both https://www.gm.com/ and the "
+        "recorded https://www.gm.com/consumer-privacy answer HTTP 403 "
+        "with an Akamai 'Access Denied' page ('You don't have permission "
+        "to access ... on this server', Reference #18.54c90b17, "
+        "errors.edgesuite.net). Two separate attempts, same result. GM is "
+        "a vehicle manufacturer on the CA data-broker registry rather "
+        "than a people-search site, so the honest expectation is that no "
+        "consumer lookup exists -- but that is an expectation, not an "
+        "observation, and this leg must not be recorded as no-surface on "
+        "the strength of a page nobody has seen. Recheck from a different "
+        "network egress."
+    ),
+    "governmentregistry-org": (
+        "A REAL, UNWALLED SEARCH FORM, transcribed 2026-09-25 by browser "
+        "render, and undecided only because the result page was never "
+        "driven. https://www.governmentregistry.org/ (title 'Search "
+        "Government Public Records') carries a METHOD=GET form on the "
+        "site root with input#firstName 'First Name *' (required), "
+        "input#lastName 'Last Name *' (required), input#city named town "
+        "'City' (optional) and select#state 'State *' (required, 52 "
+        "options, first is the 'State' placeholder and second is 'All "
+        "States'), submitted by a button reading SEARCH. No captcha "
+        "script and no captcha element on the page. What is unknown is "
+        "what comes back: this is an Accucom / CIS Nationwide property "
+        "that disclaims FCRA consumer-reporting-agency status, and the "
+        "sibling people-search sites in this dataset routinely put a "
+        "registration or purchase wall on the results, so the response "
+        "side has to be observed before a recipe can claim hit and no-hit "
+        "markers."
     ),
 }
 

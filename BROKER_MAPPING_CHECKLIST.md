@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **550** / 969
-- Search leg mapped: 550 / 969
-- Opt-out leg mapped: 551 / 969
+- Fully mapped (both legs): **570** / 969
+- Search leg mapped: 570 / 969
+- Opt-out leg mapped: 570 / 969
 
 ## How to resume
 
@@ -373,23 +373,23 @@ of those dicts against source-brokers.json).
 - [x] **FaceCheck.ID** (`facecheck-id`) -- search: no-surface, opt-out: no-surface
 - [x] **Factori Technologies LLC** (`factori-ai`) -- search: no-surface, opt-out: undecided
 - [x] **Fair Screen, Inc.** (`fairscreen-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **FamilySearch** (`familysearch-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **FamilyTreeNow** (`familytreenow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **FamilySearch** (`familysearch-org`) -- search: blocked, opt-out: blocked
+- [x] **FamilyTreeNow** (`familytreenow-com`) -- search: blocked, opt-out: blocked
 - [x] **Famous Birthdays, LLC** (`famousbirthdays-com`) -- search: undecided, opt-out: blocked
 - [x] **Faraday, Inc.** (`faraday-io`) -- search: no-surface, opt-out: undecided
-- [ ] **Faraday, Inc.** (`faraday-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **FastBackgroundCheck** (`fastbackgroundcheck-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Faraday, Inc.** (`faraday-ai`) -- search: no-surface, opt-out: undecided
+- [x] **FastBackgroundCheck** (`fastbackgroundcheck-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **FastPeopleSearch** (`fastpeoplesearch-com`) -- search: recipe, opt-out: out-of-scope
 - [x] **Fideo Intelligence, Inc.** (`fideo-ai`) -- search: no-surface, opt-out: blocked
 - [x] **Fifty Technology Ltd** (`fifty-io`) -- search: no-surface, opt-out: no-surface
 - [x] **Findem, Inc.** (`findem-ai`) -- search: no-surface, opt-out: staged
-- [ ] **FinThrive Healthcare, Inc.** (`finthrive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **First Advantage** (`fadv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **FinThrive Healthcare, Inc.** (`finthrive-com`) -- search: no-surface, opt-out: blocked
+- [x] **First Advantage** (`fadv-com`) -- search: no-surface, opt-out: no-surface
 - [x] **First American Data Tree LLC** (`firstam-com`) -- search: no-surface, opt-out: undecided
 - [x] **First Direct, Inc** (`firstdirectmarketing-com`) -- search: no-surface, opt-out: undecided
 - [x] **First Movers Advantage, LLC** (`fmadata-com`) -- search: no-surface, opt-out: blocked
 - [x] **First Orion, Inc.** (`firstorion-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Florida Court Records (CourtRecords.us network)** (`floridacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Florida Court Records (CourtRecords.us network)** (`floridacourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **Focus USA, Inc.** (`focus-usa-com`) -- search: no-surface, opt-out: blocked
 - [x] **FOO MONK LLC** (`instantly-ai`) -- search: no-surface, opt-out: undecided
 - [x] **Forager.Ai, LLC** (`forager-ai`) -- search: no-surface, opt-out: undecided
@@ -400,7 +400,7 @@ of those dicts against source-brokers.json).
 - [x] **Fraiser, LLC** (`fraiser-org`) -- search: no-surface, opt-out: undecided
 - [x] **FreeBackgroundCheck.org** (`freebackgroundcheck-org`) -- search: undecided, opt-out: no-surface
 - [x] **Freemium Data Services, LLC** (`reachdata-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **FreePeopleDirectory** (`freepeopledirectory-com`) -- search: UNMAPPED, opt-out: no-surface
+- [x] **FreePeopleDirectory** (`freepeopledirectory-com`) -- search: undecided, opt-out: no-surface
 - [x] **Freepeoplesearch.Com, LLC** (`freepeoplesearch-com`) -- search: blocked, opt-out: blocked
 - [x] **Freewheel Media Inc** (`freewheel-com`) -- search: no-surface, opt-out: blocked
 - [x] **Fullcontact, Inc.** (`fullcontact-com`) -- search: no-surface, opt-out: blocked
@@ -408,36 +408,36 @@ of those dicts against source-brokers.json).
 - [x] **Fushia Media, LLC.** (`fushiamedia-com`) -- search: no-surface, opt-out: no-surface
 - [x] **G2 Bankruptcy Risk Solutions, Inc.** (`g2risksolutions-com`) -- search: no-surface, opt-out: no-surface
 - [x] **General Information Solutions LLC** (`backgroundchecks-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **General Motors LLC** (`gm-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Genius Sports Group** (`geniussports-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Georgia Court Records (CourtRecords.us network)** (`georgiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **General Motors LLC** (`gm-com`) -- search: undecided, opt-out: blocked
+- [x] **Genius Sports Group** (`geniussports-com`) -- search: no-surface, opt-out: undecided
+- [x] **Georgia Court Records (CourtRecords.us network)** (`georgiacourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **GETEMAILS LLC** (`retention-com`) -- search: no-surface, opt-out: blocked
-- [ ] **GetVector, Inc.** (`vector-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **GetVector, Inc.** (`vector-co`) -- search: no-surface, opt-out: undecided
 - [x] **Giant Partners** (`giantpartners-com`) -- search: no-surface, opt-out: blocked
 - [x] **Glad I Know, Inc.** (`gladiknow-com`) -- search: no-surface, opt-out: undecided
 - [x] **Golookup** (`golookup-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Good Boy Studios, Inc** (`parade-pet`) -- search: no-surface, opt-out: undecided
 - [x] **GoodHire** (`goodhire-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **GovernmentRegistry** (`governmentregistry-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **GovernmentRegistry** (`governmentregistry-org`) -- search: undecided, opt-out: undecided
 - [x] **Granite Lists, LLC** (`granitelists-com`) -- search: no-surface, opt-out: undecided
 - [x] **Grassroots Analytics** (`grassrootsanalytics-com`) -- search: no-surface, opt-out: undecided
 - [x] **Grata Inc** (`grata-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Gravy Analytics** (`gravyanalytics-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Gravy Analytics** (`gravyanalytics-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Grayhair Software LLC** (`grayhairsoftware-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Graze Social PBC** (`graze-social`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Graze Social PBC** (`graze-social`) -- search: no-surface, opt-out: undecided
 - [x] **GREAT LAKES LIST Inc** (`greatlakeslists-com`) -- search: no-surface, opt-out: blocked
 - [x] **Grin Technologies Inc.** (`grin-co`) -- search: no-surface, opt-out: blocked
 - [x] **Growbots Inc** (`forms-gle`) -- search: no-surface, opt-out: undecided
-- [ ] **Growbots Inc.** (`growbots-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Growing Libraries, LLC** (`growinglibraries-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Growbots Inc.** (`growbots-com`) -- search: no-surface, opt-out: undecided
+- [x] **Growing Libraries, LLC** (`growinglibraries-com`) -- search: no-surface, opt-out: blocked
 - [x] **GUIDESTAR DIRECT CORP** (`carneydirect-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Gumgum, Inc.** (`gumgum-com`) -- search: no-surface, opt-out: blocked
 - [x] **Gunderson Direct** (`gundir-com`) -- search: no-surface, opt-out: no-surface
 - [x] **H1 Insights Inc.** (`h1-co`) -- search: no-surface, opt-out: undecided
-- [ ] **Haines & Company** (`haines-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Haines & Company** (`haines-com`) -- search: no-surface, opt-out: undecided
 - [x] **Harmon Research Group, LLC** (`harmonresearch-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Harte Hanks** (`hartehanks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Hawaii Court Records (CourtRecords.us network)** (`hawaiicourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Harte Hanks** (`hartehanks-com`) -- search: no-surface, opt-out: blocked
+- [x] **Hawaii Court Records (CourtRecords.us network)** (`hawaiicourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **Health Is Wealth Marketing LLC** (`pickmedicare-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Healthcare, Inc.** (`healthcare-com`) -- search: no-surface, opt-out: blocked
 - [x] **Healthlink Dimensions, LLC** (`healthlinkdimensions-com`) -- search: no-surface, opt-out: no-surface
