@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **684** / 969
-- Search leg mapped: 684 / 969
-- Opt-out leg mapped: 684 / 969
+- Fully mapped (both legs): **709** / 969
+- Search leg mapped: 709 / 969
+- Opt-out leg mapped: 709 / 969
 
 ## How to resume
 
@@ -677,33 +677,33 @@ of those dicts against source-brokers.json).
 - [x] **Nuwber** (`nuwber-com`) -- search: undecided, opt-out: undecided
 - [x] **Nymblr, Inc.** (`nymblr-com`) -- search: no-surface, opt-out: no-surface
 - [x] **OfficialUSA** (`officialusa-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Ohio Court Records (CourtRecords.us network)** (`ohiocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **OKCaller** (`okcaller-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Oklahoma Court Records (CourtRecords.us network)** (`oklahomacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **On Hold-America, Inc.** (`kycdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Onaudience Ltd** (`onaudience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Online Advertising Network Sp. z o.o.** (`oan-pl`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ONLINE MEDIA GROUP Inc.** (`omginc-xyz`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Ohio Court Records (CourtRecords.us network)** (`ohiocourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **OKCaller** (`okcaller-com`) -- search: undecided, opt-out: no-surface
+- [x] **Oklahoma Court Records (CourtRecords.us network)** (`oklahomacourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **On Hold-America, Inc.** (`kycdata-com`) -- search: no-surface, opt-out: blocked
+- [x] **Onaudience Ltd** (`onaudience-com`) -- search: no-surface, opt-out: blocked
+- [x] **Online Advertising Network Sp. z o.o.** (`oan-pl`) -- search: no-surface, opt-out: blocked
+- [x] **ONLINE MEDIA GROUP Inc.** (`omginc-xyz`) -- search: no-surface, opt-out: no-surface
 - [x] **OnPoint Data Strategy** (`onpointdatastrategy-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Open Dealer Exchange, LLC** (`700credit-com`) -- search: no-surface, opt-out: blocked
-- [ ] **OpenDataUSA** (`opendatausa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Opensend Inc** (`opensend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Openx Technologies, Inc.** (`openx-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Optimal Fusion** (`optimalfusion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Oracle Data Cloud (BlueKai)** (`oracle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Oregon Court Records (CourtRecords.us network)** (`oregoncourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Orgio, Inc.** (`theorg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ORIGIN8 Inc** (`pushint-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Outbrain Inc.** (`outbrain-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **OUTLOGIC LLC** (`outlogic-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Outward Media, Inc.** (`outwardmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Owneriq, Inc.** (`owneriq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Ownerly** (`ownerly-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Pacific East Research Inc** (`pacificeast-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PaeDae, Inc.** (`infillion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PARAMOUNT LISTS Inc** (`paramountdirectmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Parasol Media Inc.** (`parasolleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Partners Credit And Verification Solutions** (`partnerscredit-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **OpenDataUSA** (`opendatausa-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Opensend Inc** (`opensend-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Openx Technologies, Inc.** (`openx-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Optimal Fusion** (`optimalfusion-com`) -- search: no-surface, opt-out: blocked
+- [x] **Oracle Data Cloud (BlueKai)** (`oracle-com`) -- search: no-surface, opt-out: blocked
+- [x] **Oregon Court Records (CourtRecords.us network)** (`oregoncourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **Orgio, Inc.** (`theorg-com`) -- search: blocked, opt-out: out-of-scope
+- [x] **ORIGIN8 Inc** (`pushint-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Outbrain Inc.** (`outbrain-com`) -- search: no-surface, opt-out: undecided
+- [x] **OUTLOGIC LLC** (`outlogic-io`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Outward Media, Inc.** (`outwardmedia-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Owneriq, Inc.** (`owneriq-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Ownerly** (`ownerly-com`) -- search: undecided, opt-out: blocked
+- [x] **Pacific East Research Inc** (`pacificeast-com`) -- search: no-surface, opt-out: blocked
+- [x] **PaeDae, Inc.** (`infillion-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **PARAMOUNT LISTS Inc** (`paramountdirectmarketing-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Parasol Media Inc.** (`parasolleads-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Partners Credit And Verification Solutions** (`partnerscredit-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **PATHWAY VENTURES LLC** (`protectdataprivacy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Peekyou LLC** (`peekyou-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Pennsylvania Court Records (CourtRecords.us network)** (`pennsylvaniacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
