@@ -2185,7 +2185,7 @@
   },
   {
     "name": "CONSUMER CANVAS LLC",
-    "domain": null,
+    "domain": "consumercanvas.net",
     "category": "marketing",
     "opt_out_url": "https://privacyportal-eu.onetrust.com/webform/07a2e8c2-346a-4f58-865f-0d56c9baaff5/e6013ecc-3719-4f58-adb1-5121ea4797f8",
     "opt_out_method": "web-form",
@@ -2437,7 +2437,7 @@
   },
   {
     "name": "Datadojo CDP Inc.",
-    "domain": null,
+    "domain": "datadojo.ai",
     "category": "marketing",
     "opt_out_url": null,
     "opt_out_method": "email",
@@ -7323,7 +7323,7 @@
   },
   {
     "name": "Saleseer, Inc.",
-    "domain": null,
+    "domain": "saleseer.com",
     "category": "marketing",
     "opt_out_url": null,
     "opt_out_method": "email",
@@ -8107,7 +8107,7 @@
   },
   {
     "name": "TASK GENIE Inc",
-    "domain": null,
+    "domain": "datalane.com",
     "category": "marketing",
     "opt_out_url": null,
     "opt_out_method": "email",

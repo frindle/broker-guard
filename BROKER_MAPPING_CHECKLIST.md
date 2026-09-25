@@ -246,7 +246,7 @@ of those dicts against source-brokers.json).
 - [x] **Connext Digital, LLC** (`connextdigital-com`) -- search: no-surface, opt-out: undecided
 - [x] **Consider, Inc.** (`consider-com`) -- search: no-surface, opt-out: undecided
 - [x] **Consolidated Information Services Solutions LLC** (`universalcis-com`) -- search: no-surface, opt-out: undecided
-- [ ] **CONSUMER CANVAS LLC** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **CONSUMER CANVAS LLC** (`consumercanvas-net`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Contactout** (`contactout-com`) -- search: no-surface, opt-out: blocked
 - [x] **CONTEMPORARY INFORMATION CORP.** (`cicreports-com`) -- search: no-surface, opt-out: undecided
 - [x] **Contentgine Inc.** (`contentgine-com`) -- search: no-surface, opt-out: undecided
@@ -283,7 +283,7 @@ of those dicts against source-brokers.json).
 - [x] **DATA PARTNERS Inc** (`datapartners-com`) -- search: no-surface, opt-out: undecided
 - [x] **DataCrédito Experian Colombia** (`com-co`) -- search: no-surface, opt-out: undecided
 - [x] **Datadelivers LLC** (`datadelivers-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Datadojo CDP Inc.** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Datadojo CDP Inc.** (`datadojo-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Datafy LLC** (`datafy-com`) -- search: no-surface, opt-out: blocked
 - [x] **DATALINE Inc** (`datalinedata-com`) -- search: no-surface, opt-out: undecided
 - [x] **DATAMENTORS LLC** (`porchgroupmedia-com`) -- search: no-surface, opt-out: staged
@@ -825,7 +825,7 @@ of those dicts against source-brokers.json).
 - [ ] **Safegraph Inc.** (`safegraph-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Saferent Solutions, LLC** (`saferentsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Saha Ventures LLC** (`findtrueowner-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Saleseer, Inc.** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **Saleseer, Inc.** (`saleseer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Salesintel Research Inc.** (`salesintel-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **SALUTARY DATA LLC** (`salutarydata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Samba TV, Inc.** (`samba-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -903,7 +903,7 @@ of those dicts against source-brokers.json).
 - [ ] **Tandem Marketing, LLC** (`fhamortgagefinder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Tapad** (`tapad-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **TARGETSMART COMMUNICATIONS LLC** (`targetsmart-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **TASK GENIE Inc** (`broker`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [ ] **TASK GENIE Inc** (`datalane-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Teads** (`teads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **TECHTARGET Inc** (`zendesk-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **TechTarget, Inc.** (`informatechtarget-com`) -- search: UNMAPPED, opt-out: UNMAPPED
