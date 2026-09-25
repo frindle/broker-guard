@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **709** / 969
-- Search leg mapped: 709 / 969
-- Opt-out leg mapped: 709 / 969
+- Fully mapped (both legs): **735** / 969
+- Search leg mapped: 735 / 969
+- Opt-out leg mapped: 735 / 969
 
 ## How to resume
 
@@ -704,39 +704,39 @@ of those dicts against source-brokers.json).
 - [x] **PARAMOUNT LISTS Inc** (`paramountdirectmarketing-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Parasol Media Inc.** (`parasolleads-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Partners Credit And Verification Solutions** (`partnerscredit-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **PATHWAY VENTURES LLC** (`protectdataprivacy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Peekyou LLC** (`peekyou-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Pennsylvania Court Records (CourtRecords.us network)** (`pennsylvaniacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Pension Benefit Information, LLC** (`pbinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PATHWAY VENTURES LLC** (`protectdataprivacy-com`) -- search: no-surface, opt-out: undecided
+- [x] **Peekyou LLC** (`peekyou-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Pennsylvania Court Records (CourtRecords.us network)** (`pennsylvaniacourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **Pension Benefit Information, LLC** (`pbinfo-com`) -- search: blocked, opt-out: blocked
 - [x] **People Data Labs, Inc.** (`peopledatalabs-com`) -- search: no-surface, opt-out: recipe
-- [ ] **PeopleByName** (`peoplebyname-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Peopleconnect, Inc.** (`peopleconnect-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PeopleByName** (`peoplebyname-com`) -- search: undecided, opt-out: blocked
+- [x] **Peopleconnect, Inc.** (`peopleconnect-us`) -- search: no-surface, opt-out: out-of-scope
 - [x] **PeopleFinder.com** (`peoplefinder-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **PeopleFinders** (`peoplefinders-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Peoplefindersdaas** (`peoplefindersdaas-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PeopleLooker** (`peoplelooker-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PeopleSearch123** (`peoplesearch123-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PeopleSearchNow** (`peoplesearchnow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PeopleSearchUSA** (`peoplesearchusa-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PeopleFinders** (`peoplefinders-com`) -- search: undecided, opt-out: blocked
+- [x] **Peoplefindersdaas** (`peoplefindersdaas-com`) -- search: no-surface, opt-out: blocked
+- [x] **PeopleLooker** (`peoplelooker-com`) -- search: undecided, opt-out: blocked
+- [x] **PeopleSearch123** (`peoplesearch123-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **PeopleSearchNow** (`peoplesearchnow-com`) -- search: undecided, opt-out: blocked
+- [x] **PeopleSearchUSA** (`peoplesearchusa-org`) -- search: undecided, opt-out: out-of-scope
 - [x] **PeopleSmart** (`peoplesmart-com`) -- search: undecided, opt-out: blocked
 - [x] **Peoplewhiz** (`peoplewhiz-com`) -- search: undecided, opt-out: out-of-scope
-- [ ] **PeopleWin** (`peoplewin-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Perf Labs, Inc.** (`interseller-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Permutive, Inc** (`permutive-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PersonSearchers** (`personsearchers-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PeopleWin** (`peoplewin-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **Perf Labs, Inc.** (`interseller-io`) -- search: no-surface, opt-out: no-surface
+- [x] **Permutive, Inc** (`permutive-com`) -- search: no-surface, opt-out: no-surface
+- [x] **PersonSearchers** (`personsearchers-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **PhoneNumbers.org** (`phonenumbers-org`) -- search: undecided, opt-out: no-surface
-- [ ] **PimEyes** (`pimeyes-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PimEyes** (`pimeyes-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Pipl** (`pipl-com`) -- search: no-surface, opt-out: recipe
-- [ ] **Pitchbook Data, Inc.** (`pitchbook-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Place Exchange, Inc.** (`placeexchange-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PLACEIQ Inc** (`precisely-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Placer.ai** (`placer-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Plexuss, Inc.** (`plexuss-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Pitchbook Data, Inc.** (`pitchbook-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Place Exchange, Inc.** (`placeexchange-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **PLACEIQ Inc** (`precisely-com`) -- search: blocked, opt-out: blocked
+- [x] **Placer.ai** (`placer-ai`) -- search: no-surface, opt-out: no-surface
+- [x] **Plexuss, Inc.** (`plexuss-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Pludo Inc.** (`cashmereai-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Plunge, LLC** (`hsforms-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Plunge, LLC** (`plungedigital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Plural Marketing Solutions Inc.** (`plmrkg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PMG Worldwide, LLC** (`pmg-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Plunge, LLC** (`hsforms-com`) -- search: no-surface, opt-out: blocked
+- [x] **Plunge, LLC** (`plungedigital-com`) -- search: no-surface, opt-out: undecided
+- [x] **Plural Marketing Solutions Inc.** (`plmrkg-com`) -- search: no-surface, opt-out: no-surface
+- [x] **PMG Worldwide, LLC** (`pmg-com`) -- search: no-surface, opt-out: blocked
 - [ ] **Pop Acta Media, LLC** (`popacta-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Possiblenow Data Services** (`possiblenow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Postie** (`postie-com`) -- search: UNMAPPED, opt-out: UNMAPPED
