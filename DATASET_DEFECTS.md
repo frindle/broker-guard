@@ -44,22 +44,22 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-226 findings across 179 brokers.
+243 findings across 193 brokers.
 
 | scope | findings |
 | --- | --- |
-| broker-surface | 11 |
-| dataset | 132 |
-| unreachable | 83 |
+| broker-surface | 13 |
+| dataset | 145 |
+| unreachable | 85 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| unclassified | 88 |
-| parked-or-defunct | 84 |
-| dead-url | 20 |
-| broker-surface-defect | 12 |
+| unclassified | 96 |
+| parked-or-defunct | 86 |
+| dead-url | 22 |
+| broker-surface-defect | 15 |
+| rebrand-or-domain-change | 12 |
 | entity-mismatch | 10 |
-| rebrand-or-domain-change | 10 |
 | contact-address-oddity | 1 |
 | stale-200 | 1 |
 
@@ -1223,17 +1223,101 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified by browser render (Playwright, throwaway long-settle wrapper importing JS/UA from tools/probe_broker_forms.py) 2026-09-25, batch 33. DATASET DEFECT, of the kind the row's own note predicted: the recorded opt_out_url is the general privacy policy (https://www.plungedigital.com/privacy-policy/), which renders HTTP 200 at a 16s settle with ZERO forms and ZERO inputs -- only Osano cookie-consent internals. But the real surface is one link away and it is NOT the same one as this company's other row: the policy's 'opt out of the sale or sharing' and 'Do Not Sell/Share/Opt-Out' anchors BOTH point at https://my.datasubject.com/Azq9ITU2sQjNPKhSo/38050. A NEW VENDOR for this dataset: DataSubject (my.datasubject.com), which is an OSANO product -- the page's only control is a BUTTON class 'osano-location-select__open-button'. Rendered it at a 22s settle: HTTP 200, title 'Data Access Request', 1517 characters, cap[] and widget[] both EMPTY, ZERO forms and ZERO input/select/textarea elements. It is a PROGRESSIVE WIZARD that reveals its fields only after two choices, so there is nothing yet to transcribe: it first auto-detects jurisdiction ('We have automatically detected your jurisdiction. Since privacy rights differ based on where you live, please verify that this is accurate.' -- it offered 'Nevada, US', i.e. it geolocates the requester's IP and that will differ per run) and then asks 'Choose the type of request you want to submit' with options beginning 'Delete my personal information / Delete all pers[onal information]'. Filed UNDECIDED rather than out-of-scope deliberately: an Osano DataSubject wizard is very likely drivable and carries no captcha at this stage, but its actual fields, its submit target and whether it ends in an emailed token are all unknown, and calling it either way without clicking through would be a guess. NEXT PASS should drive the jurisdiction confirm and a request-type pick and transcribe what appears. ENTITY NOTE: same company as the hsforms-com row, but a DIFFERENT mechanism (that row is a HubSpot-hosted form behind invisible reCAPTCHA Enterprise), so the two rows are not redundant.
 
+### `possiblenow-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified by browser render 2026-09-25, batch 34. CLOUDFLARE TURNSTILE PRE-GATE -- the request form does not exist until a Turnstile challenge is passed. DATASET DEFECT FIRST: the recorded URL https://site.possiblenow.com/do-not-sell-my- personal-information-new returns HTTP 404 and renders a HubSpot knowledge-base 'Page not found' template whose title is the unrelated 'How do I set up an NPS survey?'. The real surface is https://www.possiblenow.com/do-not-sell-my-personal-information, HTTP 200, title 'Do Not Sell My Personal Information | PossibleNOW', 1017 characters. It serves a GATE, not a form: id=pfgForm, method POST, action the page itself -- input hidden name=pfg_nonce, input text name=website_url id=pfg_website_url with the label 'Leave this empty' (an explicit honeypot that must go in forbidden_selectors), input hidden name=cf-turnstile- response id=cf-chl-widget-<random>_response, and submit BUTTON id=pfgSubmit visible text 'Verify & Continue to Form'. widget[] confirms 'pfg-turnstile cf-turnstile' and cap[] confirms challenges.cloudflare.com/turnstile/v0/api.js. Everything past that button is unreachable without solving Turnstile, so the actual request fields could not be transcribed. Also present on the page: a HubSpot feedback widget and a newsletter form, and reCAPTCHA Enterprise with sitekey 6LdGZJsoAAAAAIwMJHRwqiAHA6A_6ZP6bTYpbgSX -- see supplier-io, the THIRD broker in this batch on that one sitekey, which is HubSpot's own shared default enterprise key. Documented alternatives: Privacy@PossibleNOW.com and 1-800-585-4888.
+
+### `predactiv-com`
+
+- **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified by browser render 2026-09-25, batch 34. RECAPTCHA v2 CHECKBOX on the real request surface, which is on a DIFFERENT DOMAIN than the dataset records. DATASET IMPRECISION: the recorded URL predactiv.com/privacy-policy/ is a 45083-character policy page with no request form (only a WordPress site search and an Osano consent widget). The policy points two ways: predactiv.com/do-not-sell-or-share-my-data/ and, for data- subject requests, sharethis.com/data-subject-privacy-request/ -- Predactiv's own notice reads 'Predactiv, Inc. and its U.S. based affiliate ShareThis'. (1) predactiv.com/do-not-sell-or-share-my- data/ renders HTTP 200, title 'Do Not Sell or Share My Data - Predactiv', 3038 characters, and has NO form -- only an off- layout BUTTON class=close-opt-out and an anchor reading 'Opt-Out of Data Collection via Predactiv's Sh...' with an EMPTY href, i.e. a click-only JS handler. That is OPEN POLICY QUESTION 2. (2) sharethis.com/data-subject-privacy-request/ renders HTTP 200, title 'Data Subject Privacy Request - ShareThis', 2468 characters, cap[] carries google.com/recaptcha/api.js, widget[] carries g-recaptcha, and the anchor/bframe child frames give SITEKEY 6Lfks2wUAAAAAArcvB9kU1CTZwJlkkgpr6B4NlJ0 at size=normal -- a visible checkbox. Transcribed anyway, and note that the request controls are NOT INSIDE ANY FORM ELEMENT: loose input type=radio name=type-of-request with values opt-out / deletion / correction, loose input text id=enter-email (label 'Email Address', NO name attribute), textarea name=g-recaptcha- response, and a 'Submit request' anchor with an EMPTY href -- a JS-assembled non-form. Page copy: 'This form may also be used to opt-out of our use of your hashed email address (HEM) to enable profiling, ad targeting or sale/share of your HEM.' DNS NOTE: sharethis.com first failed with ERR_CONNECTION_REFUSED because this host's resolver blackholes it to 0.0.0.0; it was reached by pinning chromium --host-resolver-rules to the address 1.1.1.1 returns (99.84.215.45). It is NOT a dead host.
+
+### `preferredcommunications-com`
+
+- **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-25, batch 34, probed on its own prober invocation because the URL contains consumer-opt-out. preferredcommunications.com/consumer-opt-out/ redirects to preferredcommunications.com/lander, HTTP 200, 576 characters, and serves a GoDaddy PARKED-DOMAIN page verbatim: 'preferredcommunications.com is parked free, courtesy of GoDaddy.com. Get This Domain', followed by GoDaddy's related- search topics ('Preferred Communications Llc', 'Preferred Communications Tinley Park', ...) and 'Copyright 1999-2026 GoDaddy, LLC'. No form, no controls, no operator site. DATASET DEFECT: recorded as a live consumer opt-out web-form. There is no opt-out mechanism at this domain.
+
+- **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified by browser render 2026-09-25, batch 34. preferredcommunications.com/consumer-opt-out/ redirects to preferredcommunications.com/lander and serves a GoDaddy PARKED- DOMAIN page: 'preferredcommunications.com is parked free, courtesy of GoDaddy.com. Get This Domain', with GoDaddy's own related-search topics and copyright notice. The operator no longer controls a live site here, so there is no search surface. DATASET DEFECT: the dataset records a live consumer opt-out web- form at this host.
+
+### `preqin-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-25, batch 34. EMAIL-ONLY, and the page the policy points at is EMPTY. Preqin's privacy policy at www.preqin.com/policies/privacy-policy is verbatim the 'BlackRock Privacy Notice', last revised 1 March 2025 (Preqin is now a BlackRock subsidiary) -- it carries no request form, only a OneTrust cookie preference centre (ot-group-id-C0002 Statistical Analytics, C0004 Marketing/Tracking/Profiling, C0011 Conversational). It directs requests to GroupPrivacy@BlackRock.com, to 12 Throgmorton Avenue, London EC2N 2DL, to a US phone line +1 855 371 0019, and to a data- rights page; and for opting out of sale it says in terms 'To opt out of all other sales, please email us at GroupPrivacy@BlackRock.com'. www.preqin.com/policies/data-rights was then rendered on its own at a 32-SECOND settle: HTTP 200, title 'Data rights | Preqin', and 1133 characters that are ENTIRELY site navigation and footer -- ZERO forms, zero controls, no body content at all. So the referenced rights page is inert and the only real mechanism is email. DATASET DEFECT: recorded as opt_out_method web-form.
+
 ### `privacycompliance-biz`
 
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23. https://privacycompliance.biz/databaseusa-opt-out-process/ returns a 404 ('Looks like you have taken a wrong turn'); the site itself is up and serves a WordPress 404 template with a working search box, so this is a dead PATH on a live host rather than a dead host. DATASET NOTE: the source row's opt-out URL no longer resolves to a page. Worth a look for a current DatabaseUSA opt-out path before writing this off -- the slug names a specific process that presumably moved rather than vanished.
 
+### `privateeye-com`
+
+- **scope:** dataset | **kind:** broker-surface-defect | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-25, batch 34, probed on its own prober invocation because the URL contains optout. THE OPT- OUT ROUTE IS BROKEN, and it announces it as a developer error. The dataset's https://www.privateeye.com/static/view/optout/ resolves to privateeye.com/removal, HTTP 200, and the SPA renders 65 characters: '404 Page Not Found / Did you forget to add the page to the router?' -- a framework's own developer- facing message, shipped to consumers. The site's homepage (rendered separately at 18s, 3020 characters) contains NO opt- out, removal, do-not-sell or privacy-choices link anywhere in its anchor set, so there is no other route to try. This is a variant of the dead/inert-control family already recorded for Meltwater, OpenX and Plexuss: a real, live, actively marketed people-search site ('database of 120+ billion public records') with an opt-out that does not exist. DATASET DEFECT: recorded as a live web-form opt-out.
+
 ### `privatereports-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > Two readings, not distinguished by this probe: the opt-out path redirects to search, or the opt-out flow BEGINS with a search to locate your record -- which is how several already-mapped brokers work. The second is likelier given the URL's /optOut/ prefix, and it matters because under that reading the automation would be running a search on Penn against a site that then has to be carried through to a removal step. Recording it as undecided rather than guessing. NEXT STEP: submit a search from the opt-out path and observe whether the result page offers a removal action; that single observation resolves this leg. DATASET NOTE: if the first reading is right, the source row's opt-out URL is stale.
+
+### `privco-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-25, batch 34. EMAIL-ONLY, no form. www.privco.com/privacy-policy renders HTTP 200, title 'PrivCo Privacy Policy', 19246 characters, last updated 2 July 2024; the only form on the page is a site-search input with no name attribute. The policy's own rights section routes every request -- marketing opt-out, access, amendment, portability, erasure -- to 'contact us using the details in Section 17', which are legal@privco.com and PrivCo Holding, Inc., 149 East 23rd Street, #1904, New York, NY 10010. No web form, no portal, no DSAR link. The dataset's #opt-out fragment is a heading anchor, not a control. Incidental detail from the policy worth recording because it is a volume claim from the broker itself: it reports a 2024 median response of 9 days and a mean of 9.6 days across 52,136 opt-out requests. DATASET DEFECT: recorded as opt_out_method web-form.
+
+### `propertyrecord-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified by browser render 2026-09-25, batch 34, probed on its own prober invocation because the URL contains opt-out. RECAPTCHA ENTERPRISE plus a typed-attestation gate plus per- record picking. DATASET DEFECT: the dataset records opt_out_method 'email' at the privacy-policy URL; the real surface is a web dashboard. https://dashboard.propertyrecord.com/opt-out returns HTTP 202 (not 200), title 'Property Record | Opt-Out', 1181 characters, and cap[] carries https://www.google.com/recaptcha/enterprise.js ?render=6LeuFXQtAAAAAGJaOvMrpuqBxSXQee1bre-PxPdE -- render= form, i.e. the invisible/score variant, with widget[] reporting EMPTY. Transcription: form id=backgroundCheckForm, method GET, action the page -- input type=search name=name id=nameSearch- input ('Full Name'), input type=search name=cityState id=cityStateSearch-input (REQUIRED, 'City or State'), submit BUTTON 'Search'. Form id=phoneForm, method GET -- input type=search name=phone id=phone-input ('Phone'), submit BUTTON 'Search'. Loose, outside any form: input type=search name=search-input id=optOutAddressSearch-input ('Search Any Address'); a modal with the all-caps FCRA prohibition text, an 'I AGREE' BUTTON, a TEXTAREA name=vt1-confirm id=vt1-confirm- input labelled 'Type I AGREE to confirm' and BUTTON id=vt1-agree-btn -- so the flow requires TYPING a literal attestation string before it will proceed. Past that, the user must locate and pick their own record out of results (three separate finders: name+city/state, address, phone). Blocked rather than out-of-scope because reCAPTCHA Enterprise is present on every visit, but note that the record-picking would independently make it out-of-scope. Page copy: 'This request will not remove your information from any public or private database that [we] pull information from' -- the bracketed [we] is in the live page, an unfilled template placeholder. ENTITY COLLISION CONFIRMED: dashboard.mypropertyrecs.com/opt-out (PropertyRecs) serves the SAME page -- same HTTP 202, same form ids backgroundCheckForm and phoneForm, same optOutAddressSearch- input, same vt1-confirm typed gate, same copy including the same [we] placeholder, and THE SAME reCAPTCHA ENTERPRISE SITEKEY 6LeuFXQtAAAAAGJaOvMrpuqBxSXQee1bre-PxPdE. One operator, two brands. Their marketing sites also share a byte-identical privacy-request-form component and privacy-choices dialog.
+
+### `propertyrecs-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified by browser render 2026-09-25, batch 34, probed on its own prober invocations because the URLs contain optout/opt-out. Same wall, same operator, same platform as propertyrecord-com -- see that entry for the full transcription and the shared reCAPTCHA Enterprise sitekey 6LeuFXQtAAAAAGJaOvMrpuqBxSXQee1bre- PxPdE. DATASET DEFECT: the recorded URL https://propertyrecs.com/optout returns HTTP 404, and so does the site's own footer target https://www.propertyrecs.com/opt- out; both 404 pages still render the global privacy-request-form component, which is what makes them look alive to a careless read. The working surface is https://dashboard.mypropertyrecs.com/opt-out, HTTP 202, title 'Property Recs | Opt-Out', 1252 characters, carrying reCAPTCHA Enterprise in render= (invisible) mode with widget[] EMPTY, the same three finders (form id=backgroundCheckForm with name=name id=nameSearch-input and REQUIRED name=cityState id=cityStateSearch-input; form id=phoneForm with name=phone id=phone-input; loose name=search-input id=optOutAddressSearch- input for any address), and the same 'Type I AGREE to confirm' TEXTAREA name=vt1-confirm / BUTTON id=vt1-agree-btn attestation gate before anything proceeds. Note the site links inconsistently to dashboard.propertyrecs.com and dashboard.mypropertyrecs.com. Separately present on every propertyrecs.com page: form id=privacy-request-form, method GET -- input email name=email id=privacy-request-email (REQUIRED), SELECT name=requestType id=privacy-request-type (REQUIRED, 4 options: a 'Select / Access / Correc...' placeholder then Access, Correction, Deletion -- there is NO do-not-sell option), radio name=privacy-behalf with values 'Myself' and 'Authorized agent', checkbox name=declare id=privacy-request-declare (REQUIRED), BUTTON id=privacy-request-submit-btn 'Submit'; plus a click-only JS toggle checkbox id=privacy-toggle-dnss labelled 'Do Not Sell or Share My Personal Information' in the 'YOUR PRIVACY CHOICES' dialog, which is OPEN POLICY QUESTION 2.
+
+### `prospectordatabase-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25, batch 34. DEAD HOST. www.prospectordatabase.com/privacy-center and the apex both fail with net::ERR_NAME_NOT_RESOLVED, and an authoritative lookup against 1.1.1.1 (bypassing this machine's resolver, which blackholes some adtech names to 0.0.0.0 and can fake this symptom) returns NO A record for either. Genuinely dead. DATASET DEFECT: recorded as a live 'privacy-center' web-form.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-25, batch 34. DEAD HOST. Both prospectordatabase.com and www.prospectordatabase.com fail with net::ERR_NAME_NOT_RESOLVED in the browser, and an authoritative lookup against 1.1.1.1 (deliberately bypassing this host's local resolver) returns NO A record for either name. Confirmed genuinely dead, not a locally blackholed name. No search surface.
+
+### `publicdatausa-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25, batch 34. DEAD HOST. publicdatausa.com fails with net::ERR_NAME_NOT_RESOLVED; 1.1.1.1 returns NO A record for publicdatausa.com or www.publicdatausa.com, while whois shows the domain still ACTIVE at NameCheap -- registered but unpublished, so the recorded https://publicdatausa.com/remove.php cannot be reached at all. DATASET DEFECT: recorded as a live web-form opt-out.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-25, batch 34. DEAD HOST. publicdatausa.com fails with net::ERR_NAME_NOT_RESOLVED in the browser; an authoritative lookup against 1.1.1.1 returns NO A record for publicdatausa.com or www.publicdatausa.com, while whois shows the domain itself still ACTIVE at NameCheap. Registered but unpublished -- no host to serve a search surface. DATASET DEFECT: the dataset records a live web-form at publicdatausa.com/remove.php.
+
+### `publicsearcher-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > Verified by browser render 2026-09-25, batch 34, probed on its own prober invocation because the URL contains optOut. FOURTH BRAND ON THE SHARED optOutLight PLATFORM -- batch 33 confirmed peoplesearch123.com, peoplesearchusa.org and personsearchers.com serving a byte-identical optOutLight form; publicsearcher.com makes four, one operator behind four brand names. DATASET DEFECT: the recorded https://www.publicsearcher.com/optOut/name/landing does not serve an opt-out at all -- it redirects to /nameSearch/landingPage, the SEARCH landing page. The real surface is https://www.publicsearcher.com/api/helper/optOutLight/search, HTTP 200, title 'PublicSearcher', 693 characters, cap[] and widget[] both EMPTY, ZERO loose controls. ONE form, id=pageForm, method POST, action that same URL, nine controls identical to the peoplesearch123-com transcription: input text name=fname (REQUIRED, First name), name=lname (REQUIRED, Last name), name=city (REQUIRED, City), SELECT name=state (REQUIRED, 51 options beginning Alabama with no placeholder, so a default is pre-selected), name=zip / name=phone / name=email all optional, input hidden name=captchaId (off-layout, EMPTY on load -- a captcha provisioned for a LATER stage even though this stage carries none), input submit id=pageFormSubmitBtn value SEARCH. Out-of-scope for the reason this bucket exists: it is a RECORD FINDER and the user must pick their own listing out of the results -- the page says so itself, 'Remove My Information / Enter the name and state in the form below to locate the record you would like to remove / START HERE - Enter the information about the person you want to remove.' Later stages (record pick, captcha, likely emailed confirmation) deliberately not driven. See peoplesearch123-com for the full entity finding. Also flags OPEN POLICY QUESTION 1.
+
+### `pubmatic-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified by browser render 2026-09-25, batch 34, with DNS pinned past this host's resolver (see below). pubmatic.com/legal/opt- out/ renders HTTP 200, title 'PubMatic Opt-Out | PubMatic', 4548 characters; the only forms are two copies of the site search (input name=s). PubMatic is a programmatic sell-side ad exchange -- no consumer record lookup exists anywhere on it. TOOLING GAP WORTH RECORDING: on a first pass both pubmatic.com and www.pubmatic.com failed with net::ERR_CONNECTION_REFUSED and resolved to 0.0.0.0, which reads exactly like a dead host. They are not dead -- this machine's resolver blackholes adtech domains, and 1.1.1.1 returns real Apple/AWS edge addresses (18.154.144.x). Any adtech row previously recorded as a dead host from an ERR_NAME_NOT_RESOLVED or ERR_CONNECTION_REFUSED on this machine should be re-checked against an external resolver before it is trusted.
 
 ### `pushint-com`
 
@@ -1244,6 +1328,18 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
 
   > Verified by browser render (Playwright, throwaway long-settle wrapper importing JS/UA from tools/probe_broker_forms.py) 2026-09-25, batch 32. DEAD DOMAIN. pushint.com does not resolve: dig returns NOTHING for both pushint.com and www.pushint.com, and Chromium fails net::ERR_NAME_NOT_RESOLVED on both https://pushint.com/manage-my-data (the row's opt_out_url) and https://pushint.com/. NXDOMAIN, not a timeout, not a TLS failure and not an anti-bot wall -- the name is gone from DNS entirely. This corroborates and completes the row's existing note that compliance@pushint.com hard-bounced on 2026-08-24 because the domain had no working mail server: by this batch it has no DNS record of any kind. ORIGIN8 Inc has no reachable surface of either sort.
+
+### `qualfon-com`
+
+- **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Verified by browser render 2026-09-25, batch 34. The dataset's URL is a rights explainer; the real portal is an Angular Material app on a separate host, with no captcha but no stable field names either. www.qualfon.com/privacy-policy/consumer- privacy-choices/ renders HTTP 200 at a 20s settle, title 'Consumer Privacy Choices & Data Privacy Options | Qualfon', and has NO request form -- only two copies of the Elementor site search and a Cookiebot dialog (whose own checkbox id=CybotCookiebotDialogBodyContentCheckboxPersonalInformation is labelled 'Do not sell or share my personal information' -- a click-only cookie control, OPEN POLICY QUESTION 2). Its 'Submit Request' anchor has an EMPTY href and is JS-driven; the page gives consumerprivacy@qualfon.com and (888) 380-2190, and routes to https://ccpa.qualfon.com/righttoknow. That portal renders HTTP 200, title 'ApplicationCcpa', 1079 characters, cap[] and widget[] both EMPTY -- NO captcha. Transcription of form class 'rightToKnowFrm ng-untouched ng-pristine', method GET: SEVEN text inputs carrying NO name attribute and only framework ids -- id=mat-input-0 ('First Name *'), mat-input-1 ('Last Name *'), mat-input-2 ('Address'), mat-input-3 ('City'), mat-input-4 ('Zip'), mat-input-5 ('Email *'), mat-input-6 ('Phone *'); then FOUR radio groups whose names are likewise positional framework artefacts -- name=mat-radio-group-0 (preferred contact method: Email=1 / Phone Call=2 / Both=3), name=mat-radio-group-1 (how to receive the information: Email=1 / Phone=2), name=mat-radio- group-2 (what to receive: 'The categories of Personal Information you have on file'=1 / 'The specific pieces of my Personal Information you have'=2), name=mat-radio-group-3 (Yes/No) and name=mat-radio-group-6 (Yes/No) -- note the gap in the group numbering, which is itself a warning that the numbering is not stable; then checkbox id=mat-checkbox-1-input ('I declare under penalty of perjury under the laws of th...') and a BUTTON 'Submit'. CUSTOM-CONTROL BLIND SPOT FIRING: the rendered page text lists a 'State' field between Last Name and Email, and NO select or input for it appears anywhere in the control list -- it is a mat-select, exactly the Angular Material control already confirmed invisible to this enumerator. Undecided: every field must be driven by positional framework id rather than name, a required field is missing from the enumeration, and this is the righttoknow path -- the do-not-sell path on the same host was not located.
+
+### `radaris-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-25, batch 34, the removal page probed on its own prober invocation because the URL contains remove. LITIGATION / ADVERSARIAL DOMAIN CONTROL -- second confirmed instance after peekyou-com, same plaintiff. https://radaris.com/page/how-to-remove renders HTTP 200 and serves NOT an opt-out but a court notice, identical to what the apex serves: title 'This Domain Has Been Transferred by Court Order - Radaris.com', text 'Atlas Data Privacy Corporation, et al. v. Radaris.com, et al., Superior Court of New Jersey, Law Division, Middlesex County, Docket No. MID-L-000847-24 ... Pursuant to a final judgment of the New Jersey Superior Court, the domain name radaris.com has been transferred to Atlas Data Privacy Corporation (Atlas) and is no longer under the control of its former operators', describing claims assigned by roughly 21,760 law-enforcement officers, prosecutors and other Daniel's Law covered persons, a suit filed 8 February 2024 and an Amended Complaint filed 27 May 2025. ZERO forms, ZERO controls, cap[] and widget[] empty. Radaris was expected to be one of the most hostile opt-out flows in this dataset -- heavy verification, possibly SMS or email gates -- and instead there is nothing here to opt out of, because the domain is now the adversary's. DATASET DEFECT: recorded as a live web-form opt-out at radaris.com/page/how-to-remove. Note that the former operator may still run the same data under other domains; nothing in this entry speaks to those.
 
 ### `reachdata-com`
 

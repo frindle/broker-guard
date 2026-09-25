@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **735** / 969
-- Search leg mapped: 735 / 969
-- Opt-out leg mapped: 735 / 969
+- Fully mapped (both legs): **764** / 969
+- Search leg mapped: 764 / 969
+- Opt-out leg mapped: 764 / 969
 
 ## How to resume
 
@@ -737,46 +737,46 @@ of those dicts against source-brokers.json).
 - [x] **Plunge, LLC** (`plungedigital-com`) -- search: no-surface, opt-out: undecided
 - [x] **Plural Marketing Solutions Inc.** (`plmrkg-com`) -- search: no-surface, opt-out: no-surface
 - [x] **PMG Worldwide, LLC** (`pmg-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Pop Acta Media, LLC** (`popacta-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Possiblenow Data Services** (`possiblenow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Postie** (`postie-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **POSTPILOT Inc** (`postpilot-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Predactiv** (`predactiv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Pop Acta Media, LLC** (`popacta-com`) -- search: no-surface, opt-out: undecided
+- [x] **Possiblenow Data Services** (`possiblenow-com`) -- search: no-surface, opt-out: blocked
+- [x] **Postie** (`postie-com`) -- search: no-surface, opt-out: blocked
+- [x] **POSTPILOT Inc** (`postpilot-com`) -- search: no-surface, opt-out: undecided
+- [x] **Predactiv** (`predactiv-com`) -- search: no-surface, opt-out: blocked
 - [x] **PREDICTIVE POP Inc** (`audigent-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Preferred Communications** (`preferredcommunications-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Preqin Ltd** (`preqin-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Preferred Communications** (`preferredcommunications-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Preqin Ltd** (`preqin-com`) -- search: no-surface, opt-out: no-surface
 - [x] **PRIVATE RECORDS LLC** (`privaterecords-net`) -- search: undecided, opt-out: out-of-scope
-- [ ] **PrivateEye** (`privateeye-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PrivateEye** (`privateeye-com`) -- search: undecided, opt-out: no-surface
 - [x] **PrivateNumberChecker** (`privatenumberchecker-com`) -- search: recipe, opt-out: blocked
-- [ ] **Privco Media LLC** (`privco-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ProdPro Inc** (`prodpro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Privco Media LLC** (`privco-com`) -- search: no-surface, opt-out: no-surface
+- [x] **ProdPro Inc** (`prodpro-com`) -- search: blocked, opt-out: undecided
 - [x] **Project Affinity, Inc** (`affinity-co`) -- search: no-surface, opt-out: no-surface
 - [x] **Project Applecart LLC** (`applecart-co`) -- search: no-surface, opt-out: blocked
-- [ ] **Property Reach LP** (`propertyreach-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Property Reach LP** (`propertyreach-com`) -- search: no-surface, opt-out: undecided
 - [x] **PropertyChecker** (`propertychecker-com`) -- search: undecided, opt-out: staged
-- [ ] **PropertyRadar, Inc.** (`propertyradar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PropertyRecord.com** (`propertyrecord-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PropertyRecs** (`propertyrecs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PropertyShark** (`propertyshark-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Prospector Database, LLC** (`prospectordatabase-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Proxima Platform** (`proximaplatform-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PublicDataUSA** (`publicdatausa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PropertyRadar, Inc.** (`propertyradar-com`) -- search: no-surface, opt-out: blocked
+- [x] **PropertyRecord.com** (`propertyrecord-com`) -- search: undecided, opt-out: blocked
+- [x] **PropertyRecs** (`propertyrecs-com`) -- search: undecided, opt-out: blocked
+- [x] **PropertyShark** (`propertyshark-com`) -- search: undecided, opt-out: blocked
+- [x] **Prospector Database, LLC** (`prospectordatabase-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Proxima Platform** (`proximaplatform-com`) -- search: no-surface, opt-out: blocked
+- [x] **PublicDataUSA** (`publicdatausa-com`) -- search: no-surface, opt-out: no-surface
 - [x] **PUBLICNSA LLC** (`bigdbm-com`) -- search: no-surface, opt-out: recipe
 - [x] **PublicRecords.info** (`publicrecords-info`) -- search: undecided, opt-out: out-of-scope
 - [x] **PublicRecords.us** (`publicrecords-us`) -- search: undecided, opt-out: out-of-scope
 - [x] **PublicRecords360** (`publicrecords360-com`) -- search: no-surface, opt-out: no-surface
 - [x] **PublicRecordsNow** (`publicrecordsnow-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **PublicSearcher** (`publicsearcher-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PUBMATIC Inc** (`pubmatic-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Pulsepoint, Inc.** (`pulsepoint-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PureCars** (`purecars-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **PwC Product Sales LLC** (`pwc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Quad/Graphics, Inc.** (`quad-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Quadrant Global Pte. Ltd.** (`quadrant-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Qualfon** (`qualfon-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Quantcast** (`quantcast-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Qurium Solutions, Inc.** (`supplier-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Radaris** (`radaris-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **PublicSearcher** (`publicsearcher-com`) -- search: blocked, opt-out: out-of-scope
+- [x] **PUBMATIC Inc** (`pubmatic-com`) -- search: no-surface, opt-out: undecided
+- [x] **Pulsepoint, Inc.** (`pulsepoint-com`) -- search: no-surface, opt-out: undecided
+- [x] **PureCars** (`purecars-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **PwC Product Sales LLC** (`pwc-com`) -- search: no-surface, opt-out: blocked
+- [x] **Quad/Graphics, Inc.** (`quad-com`) -- search: no-surface, opt-out: blocked
+- [x] **Quadrant Global Pte. Ltd.** (`quadrant-io`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Qualfon** (`qualfon-com`) -- search: no-surface, opt-out: undecided
+- [x] **Quantcast** (`quantcast-com`) -- search: no-surface, opt-out: undecided
+- [x] **Qurium Solutions, Inc.** (`supplier-io`) -- search: no-surface, opt-out: blocked
+- [x] **Radaris** (`radaris-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Rampedup, LLC.** (`rampedup-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **Rategain Adara, Inc.** (`adara-com`) -- search: no-surface, opt-out: undecided
 - [ ] **Ray Cdp, Inc.** (`rayinsights-com`) -- search: UNMAPPED, opt-out: UNMAPPED
