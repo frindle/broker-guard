@@ -4444,6 +4444,142 @@ NO_SEARCH_SURFACE = {
         "leg is closed because a search recipe cannot be written against "
         "a surface the broker does not offer."
     ),
+    "littlebrookmedia-com": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "lookup exists here. Little Brook Media (Big Brook Media, LLC) is "
+        "a direct-marketing and lead-generation firm -- co-registration "
+        "leads, call-transfer programs -- and the only input on any page "
+        "rendered is the footer opt-out form itself (see the optout_forms "
+        "entry). There is no people search and no site search. The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "oncoreleads-com": (
+        "Verified 2026-09-25 by rendering the homepage, /california- "
+        "privacy-rights/, /do_not_sell/ and /ccparequest/. No consumer- "
+        "facing lookup exists here. OnCore Leads (CO2 Ventures, LLC) "
+        "sells lead generation to businesses; not one of those four pages "
+        "carries a single form control of any kind, let alone a person "
+        "lookup. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "persistent-id": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "lookup exists here. Persistent.id sells an identity graph to "
+        "ecommerce brands -- its own homepage advertises '275M+ US "
+        "Consumers', '4B+ Emails' and '5B+ Web and Intent Signals' as "
+        "inventory -- and the rendered page carries no form at all; the "
+        "only inputs on the domain are in the embedded rights portal "
+        "described in the optout_forms entry. The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "crexi-com": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "PERSON lookup exists here, which is the distinction that matters "
+        "for this row. Crexi is a commercial real-estate marketplace and "
+        "it does carry a search -- #filter-location-input, 'Enter a "
+        "location or keywords', beside a 'Search' button -- but it "
+        "searches PROPERTY LISTINGS by location, not people. The 'Comps & "
+        "Records' product in its navigation is the only plausible "
+        "candidate for records about named individuals and it sits behind "
+        "'Sign in' (the guessed path /comps-and-records returns the "
+        "site's own 404). Same category as costar-com, minus the Akamai "
+        "wall. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "deepsync-com": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "lookup exists here. Deep Sync sells identity resolution and "
+        "audience activation to marketers; the rendered homepage has zero "
+        "forms and the only search-shaped control is an icon button "
+        "labelled 'Search' that opens a site search over its own "
+        "marketing pages. Its consumer-facing surface is the privacy "
+        "portal on privacy.deepsync.com, which is a request form, not a "
+        "lookup. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "creditsafe-com": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "PERSON lookup exists here. Creditsafe sells business credit and "
+        "risk intelligence -- 'fresh company and contact data on more "
+        "than 66 million companies in 13 countries' in its own words -- "
+        "and the lookup machinery on the homepage is company-shaped: "
+        "hidden #companyClaimForm and #business-index inputs, no person "
+        "search anywhere. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "crif-com": (
+        "Verified 2026-09-25 by rendering the homepage and /privacy- "
+        "policy/. No consumer-facing person lookup exists here. CRIF SpA "
+        "is a pan-EU credit-bureau and business-information group; the "
+        "single form on either page is #js-fv-quicksearch, an "
+        "input[name='q'] GETting to /search-results/ -- a site search "
+        "over CRIF's own marketing pages, which this module does not "
+        "count as a people search (same call as gumgum-com). The leg is "
+        "closed because a search recipe cannot be written against a "
+        "surface the broker does not offer."
+    ),
+    "criteo-com": (
+        "Verified 2026-09-25 by rendering the homepage and /privacy/ccpa- "
+        "privacy-policy/. No consumer-facing lookup exists here. Criteo "
+        "is a retargeting and commerce-media ad-tech company; the only "
+        "forms on its homepage are #searchform and #searchformMobile, "
+        "both input[name='s'] site searches over criteo.com itself. The "
+        "leg is closed because a search recipe cannot be written against "
+        "a surface the broker does not offer."
+    ),
+    "dataaxle-com": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "lookup exists here, despite Data Axle being one of the larger "
+        "compilers in this dataset. The only forms on the homepage are "
+        "two copies of a WordPress is-search-form (input[name='s']) over "
+        "data-axle.com's own pages, plus a HubSpot 'How can we help?' "
+        "sales form requiring a Company name. Its consumer surface is the "
+        "rights request form recorded under optout_forms. NOTE for the "
+        "dataset: dataaxle.com serves on www.data-axle.com -- the "
+        "hyphenated host -- which is where every live URL for this row "
+        "lives. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "forddirect-com": (
+        "Verified 2026-09-25 by rendering the homepage and /privacy. No "
+        "consumer-facing lookup exists here. FordDirect is a joint "
+        "venture selling marketing and inventory tooling to Ford dealers "
+        "and Lincoln retailers; neither page carries a single input -- "
+        "the only controls on the homepage are a nav toggle and two "
+        "carousel arrows. The leg is closed because a search recipe "
+        "cannot be written against a surface the broker does not offer."
+    ),
+    "dealersocket-com": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "lookup exists here. DealerSocket (now a Solera company) sells "
+        "dealership CRM and management software; the rendered homepage "
+        "has no forms, only navigation, carousel and OneTrust consent "
+        "controls. The leg is closed because a search recipe cannot be "
+        "written against a surface the broker does not offer."
+    ),
+    "dealerx-com": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "lookup exists here. DealerX sells identity-resolution and "
+        "marketing automation to dealerships and OEMs; the homepage "
+        "renders no forms at all (its only controls are nav toggles and "
+        "its home-grown cookie dialog). The leg is closed because a "
+        "search recipe cannot be written against a surface the broker "
+        "does not offer."
+    ),
+    "pii-ai": (
+        "Verified 2026-09-25 by rendering the site. No consumer-facing "
+        "lookup exists here. pii.ai serves PieEye, a privacy-compliance "
+        "SaaS selling cookie consent and DSAR handling to ecommerce "
+        "brands; the forms on its homepage are a 'Send Message' contact "
+        "form (with an invisible input[name='phone_number'] honeypot) and "
+        "its own cookie widget. The broker listed on this row is "
+        "Delivr.ai, whose data is reached only through the request portal "
+        "recorded under optout_forms. The leg is closed because a search "
+        "recipe cannot be written against a surface the broker does not "
+        "offer."
+    ),
 }
 
 
@@ -4741,6 +4877,40 @@ SEARCH_BLOCKED = {
         "marker to tell apart -- the wall arrives before the result does. "
         "A future recipe-writer would need to clear that check first; "
         "there is nothing behind it to transcribe until they do."
+    ),
+    "dehashed-com": (
+        "Verified 2026-09-25. DeHashed IS a lookup -- it indexes breach "
+        "corpora and invites you to 'search for usernames, email "
+        "addresses, IP addresses, and more' -- and it is walled by "
+        "REGISTRATION rather than by a bot check, which is why this is "
+        "blocked and not no-surface. Rendering "
+        "https://www.dehashed.com/search serves the same unauthenticated "
+        "marketing page as the homepage, with the nav offering only "
+        "'Login' and 'Register': there is no query input anywhere in the "
+        "DOM for a visitor without an account, so there is nothing to "
+        "transcribe and no hit/miss pair to tell apart. Same treatment as "
+        "the CourtRecords.us paywall rows (californiacourtrecords-us and "
+        "siblings). Worth noting for any recheck: the site is mid- "
+        "migration ('Welcome to 4.0 -- Please be patient as records are "
+        "gradually indexed over the coming weeks') and linked pages are "
+        "404ing, so the shape of the gate may change."
+    ),
+    "delawarecourtrecords-us": (
+        "Verified 2026-09-25, and resolved by IDENTITY with the network "
+        "rather than by driving the flow again. delawarecourtrecords.us "
+        "serves the CourtRecords.us white-label template: the same "
+        "#nameSearchForm POSTing to /search/loading/ with the same "
+        "firstName / lastName / city controls and a hidden state, under "
+        "'Instant Access to Civil and Criminal Court Records', observed "
+        "in this render. That is the identical surface already driven to "
+        "its end on californiacourtrecords-us and confirmed on "
+        "coloradocourtrecords-us and connecticutcourtrecords-us, where "
+        "the network's own FCRA notice states the wall: only a "
+        "preliminary people search runs, and records 'will only be "
+        "conducted and made available after you register for an account "
+        "or purchase a report'. Blocked by that registration paywall. See "
+        "californiacourtrecords-us for the full write-up; nothing on this "
+        "state site differs."
     ),
 }
 
@@ -6061,6 +6231,27 @@ SEARCH_UNDECIDED = {
         "(checkpeople, convex): the probe reports a control's DOM .type, "
         "in which a <button type=submit> and an <input type=submit> are "
         "indistinguishable. Read the tag, never infer it."
+    ),
+    "date-detective-app": (
+        "Reachability failure, 2026-09-25, and the cause is worth "
+        "recording precisely because it is not an anti-bot wall and not a "
+        "dead domain. Both https://date-detective.app/ and the host the "
+        "dataset records for the opt-out, https://mobile.date- "
+        "detective.app/, fail TLS from a real browser with "
+        "net::ERR_CERT_COMMON_NAME_INVALID. Reading the certificates "
+        "directly explains why: each host answers on 443 with an AZURE "
+        "APP SERVICE DEFAULT WILDCARD -- CN=*.msha- "
+        "slice-6-dm1-0-ase.p.azurewebsites.net for the apex and "
+        "CN=*.msha-slice-6-wus2-1-ase.p.azurewebsites.net for mobile, "
+        "both issued to Microsoft Corporation -- so the app is up but no "
+        "custom hostname binding or managed certificate was ever attached "
+        "to it. Same shape as the optout.prod.bidr.io row: a certificate "
+        "whose name does not match the host, distinguished from a DNS "
+        "failure. Nothing can be read through it, hence no verdict. The "
+        "dataset also records that privacy@date-detective.app hard- "
+        "bounced on 2026-08-21, so this row currently has no working "
+        "channel at all; a recheck is cheap (one TLS handshake) and "
+        "should be redone rather than re-researched."
     ),
 }
 
