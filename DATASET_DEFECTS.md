@@ -44,22 +44,22 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-169 findings across 134 brokers.
+189 findings across 150 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 11 |
-| dataset | 90 |
-| unreachable | 68 |
+| dataset | 104 |
+| unreachable | 74 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 69 |
-| unclassified | 56 |
+| parked-or-defunct | 75 |
+| unclassified | 67 |
 | dead-url | 17 |
-| broker-surface-defect | 10 |
-| entity-mismatch | 8 |
-| rebrand-or-domain-change | 7 |
+| broker-surface-defect | 11 |
+| entity-mismatch | 9 |
+| rebrand-or-domain-change | 8 |
 | contact-address-oddity | 1 |
 | stale-200 | 1 |
 
@@ -877,17 +877,113 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Monevo is a B2B credit-offer distribution platform (it hosts and distributes pre-qualified credit offers for 150+ lenders) with no consumer record lookup. Verified 2026-09-25, and see the opt- out leg for the dataset defect: monevo.us DOES NOT RESOLVE (ERR_NAME_NOT_RESOLVED for both www.monevo.us and monevo.us), monevo.com redirects to /uk/ which 404s at the HTTP level while rendering the UK marketing site, and that site's only links are 'Request demo' and 'Contact'. No search surface exists at any of the three hosts.
 
+### `namericanmedia-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31: there is NO dedicated opt-out surface, which also falsifies this row's recorded claim. DATASET DEFECT: the row records opt_out_method 'web-form' with opt_out_url https://namericanmedia.com/ -- the bare homepage. Rendered, that homepage has two forms and neither is an opt-out: a Divi theme site search (form.et-search-form, GET, input[name=s], with an off-layout submit), and a general-purpose Contact Form 7 enquiry form (wpcf7-form init, POST: your-name, your-email and your- subject all required, a your-message textarea, plus the usual _wpcf7, _wpcf7_version, _wpcf7_locale, _wpcf7_unit_tag, _wpcf7_container_post, _wpcf7_posted_data_hash and _wpcf7_recaptcha_response hidden fields). No privacy-choices, do-not-sell or DSAR link was surfaced anywhere. FOR COMPLETENESS, the contact form is itself behind invisible reCAPTCHA v3 (api.js ?render=6LeG3pMcAAAAAFyLBxCohNw6UDoPXGGL7RqN9FVP, the CF7 recaptcha module, the grecaptcha badge) -- but a generic 'send us a message' box is not an opt-out mechanism, so this is filed no-surface rather than blocked. The only real path is email, and note the recorded history: angelan@namericanmedia.com auto- replied 'no longer active' on 2026-08-21 and pointed to erinb@namericanmedia.com, which remains UNVERIFIED.
+
 ### `namesandfacts-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_BLOCKED`
 
   > Verified by browser render 2026-09-25, THREE times across two paths: namesandfacts.com/ and namesandfacts.com/do-not-sell-my- info both return HTTP 403 with Cloudflare's managed-challenge interstitial -- title 'Just a moment...', 265-character body reading 'Performing security verification', a hidden input[name=cf-turnstile-response] whose widget id is minted per load (cf-chl-widget-y41ou, -odzrt) and the Turnstile loader chal lenges.cloudflare.com/turnstile/v0/b/d76008a69eab/api.js?render= explicit. Three distinct Ray IDs (a40d05dc8982f1aa, a40d0d06680df1aa, a40d1281fb39f1aa), including one retry at 22s settle specifically to let the challenge clear, and the interstitial never yielded to the real page. The dataset notes for this row already record that the opt-out page 403s to curl and was only ever confirmed in a real human browser; that holds for the search leg too. This is the wall, named: Cloudflare Turnstile managed challenge on every visit.
 
+### `ncsolutions-com`
+
+- **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > BLOCKED BY BOTDETECT -- the eleventh confirmed instance of this exact wall in the dataset, and the eleventh time the automated captcha detector reported the page CLEAN. Verified by browser render (Playwright, 20s settle) 2026-09-25, batch 31. FIRST, A DATASET DEFECT: the recorded opt_out_url ncsolutions.com/do-not- sell-my-information/ does NOT serve a form -- it redirects to www.circana.com/post/circana-completes-acquisition-of- ncsolutions, a June 2025 PRESS RELEASE about Circana buying NCSolutions. A mechanical retry of the recorded URL would find a blog post and stop. The real surface is reachable only from a footer link on the Circana site: privacyportal.onetrust.com/webf orm/95580356-b46a-4234-8f47-d824de4dbbc6/4b4a98b3-c817-4708- b736-c2c6c739ee73, titled 'Circana Privacy Web Form', heading 'Do Not Sell My Information'. THE FORM, a OneTrust Angular DSAR webform (form.dsar-webform), all fields REQUIRED and all keyed by ID with NO name attribute: #firstNameDSARElement, #lastNameDSARElement, #emailDSARElement, #addressDSARElement, #cityDSARElement, #countryDSARElement and #stateDSARElement (both vt-autocomplete-trigger comboboxes, each with a 'Clear the ... field' button beside it), #zipDSARElement, and button#dsar- webform-submit-button 'Submit'. THE WALL: hidden input[name=BDC_VCID_angularBasicCaptcha], BDC_BackWorkaround_angularBasicCaptcha, BDC_Hs_angularBasicCaptcha and BDC_SP_angularBasicCaptcha, plus a visible input[name=captchaCode] labelled 'Captcha' whose class includes 'botde...'. cap[] IS EMPTY AND widget[] IS EMPTY -- BotDetect loads no third-party script and uses none of the classes the detector looks for, so this wall is invisible to it and must be read off the BDC_* field names every time.
+
+### `nebraskacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31. Probed as a single target on its own prober invocation, since the URL contains 'optout'. Same surface as the rest of the network: nebraskacourtrecords.us/optout renders the 'Your Privacy Choices' rights- INFORMATION page (title 'Your Privacy Choices - Nebraskacourtrecords.us', heading 'YOUR PRIVACY CHOICES', prose on rights under applicable law, Do Not Sell or Share, and honouring Global Privacy Control), behind the same TrustArc consent overlay. ZERO forms and ZERO inputs at a 12s settle -- the only controls are the three UserWay accessibility buttons, the eight TrustArc consent buttons and the trustarc-lang-select. Record removal is email-only to privacy@courtrecords.us, giving first name, last name, state and city. THREE NOTES. (1) DATASET DEFECT, same as every sibling: the row records opt_out_method 'web-form' at this URL; there is no form there. (2) As first seen on the M-state batch, these pages load google.com/recaptcha/api.js site-wide, so cap[] is NOT empty (two entries: the gstatic recaptcha__en.js release bundle and api.js). That is a reCAPTCHA script with nothing to guard -- widget[] is empty and there is no form -- and it does NOT make the row 'blocked'. (3) DELTA FROM THE MONTANA WRITE-UP: these eight N-state siblings served /optout directly with HTTP 200 and did NOT redirect to a trailing-slash /optout/ the way montanacourtrecords-us did.
+
+### `neighbor-report`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > DEAD DOMAIN -- no opt-out surface can exist because the host does not resolve for anyone. Verified at the DNS layer 2026-09-25, batch 31: Playwright net::ERR_NAME_NOT_RESOLVED, SERVFAIL from both 1.1.1.1 and 8.8.8.8, and Cloudflare's extended DNS error naming the cause outright -- 'at delegation neighbor.report.' / '78.27.225.33:53 returned REFUSED for neighbor.report A'. A +trace shows the .report registry delegating to ns1/ns2/ns3.mirohost.net, which refuse the zone they are delegated; the registration is still status ACTIVE, so this is a broken delegation, not an expiry. The recorded opt_out_url neighbor.report/remove was NOT fetched and could not have been -- and note that it is an action-shaped URL, so it must stay unfetched if the domain ever comes back. See the search-leg entry and officialusa-com for the paired finding: two rows in this dataset are dead behind the same mirohost.net nameservers at adjacent addresses.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > DEAD DOMAIN, verified at the DNS layer 2026-09-25, batch 31, and this one is worth distinguishing from an ordinary NXDOMAIN. Playwright returned net::ERR_NAME_NOT_RESOLVED for https://neighbor.report/. That is NOT a local resolver or WARP artefact: 1.1.1.1 and 8.8.8.8 both return SERVFAIL, and Cloudflare's extended DNS error says in as many words 'at delegation neighbor.report.' / '78.27.225.33:53 returned REFUSED for neighbor.report A'. A +trace shows the .report registry delegating the zone to ns1/ns2/ns3.mirohost.net, and those delegated authoritative servers REFUSE the zone they are delegated. The registration itself is still status ACTIVE, so this is a broken/abandoned delegation rather than an expiry -- the site is unreachable network-wide for everyone, not just from here. NOTE THE PAIR: officialusa-com, mapped in the same batch, fails in the IDENTICAL way from the same mirohost.net nameservers at the adjacent address 78.27.225.34, so two separate rows in this dataset are one operator's dead hosting. The dataset's claim that person pages exist at /person/<Last>-<id> is therefore unverifiable and moot.
+
 ### `netwisedata-com`
 
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_BLOCKED`
 
   > Verified 2026-09-25 by rendering netwisedata.com. DATASET DEFECT: the recorded opt_out_url https://www.netwisedata.com/consumer-privacy returns HTTP 404 with an empty body, with and without a trailing slash -- there is no page there and therefore no form on it. NetWise has been folded into Dun & Bradstreet: the apex now lands on https://www.dnb.com/en-us/products/dnb-id-graph-plus.html, the identity-graph product built on that data, and the only rights route on it is D&B's own footer 'Your Privacy Choices' pointing at the TrustArc form at submit- irm.trustarc.eu/services/validation/ba81b98f-... . That form is BLOCKED by invisible reCAPTCHA v3 (api.js?render=6LeUJoQa..., grecaptcha-badge, g-recaptcha-response), written up in full on the dnb-com and trustarc-eu rows. So the correct reading of this row today is: the NetWise-branded surface is gone, the successor surface exists and is challenged. privacy@netwisedata.com is recorded on the row and is the only channel that does not require solving a captcha; whether that mailbox still answers after the merge was not tested.
+
+### `nevadacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31. Probed as a single target on its own prober invocation, since the URL contains 'optout'. Same surface as the rest of the network: nevadacourtrecords.us/optout renders the 'Your Privacy Choices' rights- INFORMATION page (title 'Your Privacy Choices - Nevadacourtrecords.us', heading 'YOUR PRIVACY CHOICES', prose on rights under applicable law, Do Not Sell or Share, and honouring Global Privacy Control), behind the same TrustArc consent overlay. ZERO forms and ZERO inputs at a 12s settle -- the only controls are the three UserWay accessibility buttons, the eight TrustArc consent buttons and the trustarc- lang-select. Record removal is email-only to privacy@courtrecords.us, giving first name, last name, state and city. THREE NOTES. (1) DATASET DEFECT, same as every sibling: the row records opt_out_method 'web-form' at this URL; there is no form there. (2) As first seen on the M-state batch, these pages load google.com/recaptcha/api.js site-wide, so cap[] is NOT empty (two entries: the gstatic recaptcha__en.js release bundle and api.js). That is a reCAPTCHA script with nothing to guard -- widget[] is empty and there is no form -- and it does NOT make the row 'blocked'. (3) DELTA FROM THE MONTANA WRITE-UP: these eight N-state siblings served /optout directly with HTTP 200 and did NOT redirect to a trailing-slash /optout/ the way montanacourtrecords-us did.
+
+### `newhampshirecourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31. Probed as a single target on its own prober invocation, since the URL contains 'optout'. Same surface as the rest of the network: newhampshirecourtrecords.us/optout renders the 'Your Privacy Choices' rights- INFORMATION page (title 'Your Privacy Choices - Newhampshirecourtrecords.us', heading 'YOUR PRIVACY CHOICES', prose on rights under applicable law, Do Not Sell or Share, and honouring Global Privacy Control), behind the same TrustArc consent overlay. ZERO forms and ZERO inputs at a 12s settle -- the only controls are the three UserWay accessibility buttons, the eight TrustArc consent buttons and the trustarc-lang-select. Record removal is email-only to privacy@courtrecords.us, giving first name, last name, state and city. THREE NOTES. (1) DATASET DEFECT, same as every sibling: the row records opt_out_method 'web-form' at this URL; there is no form there. (2) As first seen on the M-state batch, these pages load google.com/recaptcha/api.js site-wide, so cap[] is NOT empty (two entries: the gstatic recaptcha__en.js release bundle and api.js). That is a reCAPTCHA script with nothing to guard -- widget[] is empty and there is no form -- and it does NOT make the row 'blocked'. (3) DELTA FROM THE MONTANA WRITE-UP: these eight N-state siblings served /optout directly with HTTP 200 and did NOT redirect to a trailing-slash /optout/ the way montanacourtrecords-us did.
+
+### `newjerseycourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31. Probed as a single target on its own prober invocation, since the URL contains 'optout'. Same surface as the rest of the network: newjerseycourtrecords.us/optout renders the 'Your Privacy Choices' rights- INFORMATION page (title 'Your Privacy Choices - Newjerseycourtrecords.us', heading 'YOUR PRIVACY CHOICES', prose on rights under applicable law, Do Not Sell or Share, and honouring Global Privacy Control), behind the same TrustArc consent overlay. ZERO forms and ZERO inputs at a 12s settle -- the only controls are the three UserWay accessibility buttons, the eight TrustArc consent buttons and the trustarc-lang-select. Record removal is email-only to privacy@courtrecords.us, giving first name, last name, state and city. THREE NOTES. (1) DATASET DEFECT, same as every sibling: the row records opt_out_method 'web-form' at this URL; there is no form there. (2) As first seen on the M-state batch, these pages load google.com/recaptcha/api.js site-wide, so cap[] is NOT empty (two entries: the gstatic recaptcha__en.js release bundle and api.js). That is a reCAPTCHA script with nothing to guard -- widget[] is empty and there is no form -- and it does NOT make the row 'blocked'. (3) DELTA FROM THE MONTANA WRITE-UP: these eight N-state siblings served /optout directly with HTTP 200 and did NOT redirect to a trailing-slash /optout/ the way montanacourtrecords-us did.
+
+### `newmexicocourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31. Probed as a single target on its own prober invocation, since the URL contains 'optout'. Same surface as the rest of the network: newmexicocourtrecords.us/optout renders the 'Your Privacy Choices' rights- INFORMATION page (title 'Your Privacy Choices - Newmexicocourtrecords.us', heading 'YOUR PRIVACY CHOICES', prose on rights under applicable law, Do Not Sell or Share, and honouring Global Privacy Control), behind the same TrustArc consent overlay. ZERO forms and ZERO inputs at a 12s settle -- the only controls are the three UserWay accessibility buttons, the eight TrustArc consent buttons and the trustarc-lang-select. Record removal is email-only to privacy@courtrecords.us, giving first name, last name, state and city. THREE NOTES. (1) DATASET DEFECT, same as every sibling: the row records opt_out_method 'web-form' at this URL; there is no form there. (2) As first seen on the M-state batch, these pages load google.com/recaptcha/api.js site-wide, so cap[] is NOT empty (two entries: the gstatic recaptcha__en.js release bundle and api.js). That is a reCAPTCHA script with nothing to guard -- widget[] is empty and there is no form -- and it does NOT make the row 'blocked'. (3) DELTA FROM THE MONTANA WRITE-UP: these eight N-state siblings served /optout directly with HTTP 200 and did NOT redirect to a trailing-slash /optout/ the way montanacourtrecords-us did.
+
+### `newyorkcourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31. Probed as a single target on its own prober invocation, since the URL contains 'optout'. Same surface as the rest of the network: newyorkcourtrecords.us/optout renders the 'Your Privacy Choices' rights- INFORMATION page (title 'Your Privacy Choices - Newyorkcourtrecords.us', heading 'YOUR PRIVACY CHOICES', prose on rights under applicable law, Do Not Sell or Share, and honouring Global Privacy Control), behind the same TrustArc consent overlay. ZERO forms and ZERO inputs at a 12s settle -- the only controls are the three UserWay accessibility buttons, the eight TrustArc consent buttons and the trustarc- lang-select. Record removal is email-only to privacy@courtrecords.us, giving first name, last name, state and city. THREE NOTES. (1) DATASET DEFECT, same as every sibling: the row records opt_out_method 'web-form' at this URL; there is no form there. (2) As first seen on the M-state batch, these pages load google.com/recaptcha/api.js site-wide, so cap[] is NOT empty (two entries: the gstatic recaptcha__en.js release bundle and api.js). That is a reCAPTCHA script with nothing to guard -- widget[] is empty and there is no form -- and it does NOT make the row 'blocked'. (3) DELTA FROM THE MONTANA WRITE-UP: these eight N-state siblings served /optout directly with HTTP 200 and did NOT redirect to a trailing-slash /optout/ the way montanacourtrecords-us did.
+
+### `nextroll-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NOT DECIDED, and deliberately so: the only opt-out NextRoll offers an ordinary visitor is a BARE CLICK-ONLY COOKIE OPT-OUT, which is OPEN POLICY QUESTION 2 (the dstillery-com / media-net / mogean-com shape) and is not this agent's call. Verified by browser render (Playwright, 16s settle) 2026-09-25, batch 31. DATASET DEFECT CONFIRMED, as this row's own note suspected: the recorded opt_out_url www.nextroll.com/privacy is NOT a form -- it is the Service Privacy Notice effective June 10 2026, 128,234 characters of prose, zero forms and zero inputs, cap[] and widget[] empty. THE TWO REAL SURFACES, both named in NextRoll's own portal copy (see relyance-ai): app.adroll.com/optout, a browser-cookie opt-out, and app.adroll.com/optout/email for the California CCPA-sale opt-out. NEITHER WAS FETCHED. Both URLs contain 'optout' and the standing caveat in tools/probe_broker_forms.py is that such a URL may be an action link that fires on mere navigation -- dstillery.com/optout did exactly that and opted the probe browser out on a bare GET. So the mechanism here is: no form to transcribe, a click that IS the opt-out, and no per-person identity involved, only the browser. The third path, the DSAR portal at nextroll- privacy.relyance.ai, is filed out-of-scope under relyance-ai because it demands an Advertiser Identifier (device/cookie ID). RESOLVE THIS ROW when question 2 is answered; do not resolve it by clicking.
+
+- **scope:** dataset | **kind:** entity-mismatch | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified by browser render (Playwright, 12-16s settle) 2026-09-25, batch 31. www.nextroll.com/privacy renders the NextRoll Service Privacy Notice, effective June 10 2026 -- 128,234 characters of policy prose with ZERO forms and zero inputs on it. cap[] and widget[] both empty. NextRoll (AdRoll) is a demand-side ad platform keyed to cookies and device identifiers, so there is no consumer-facing search surface even in principle. DATASET DEFECT CONFIRMED: the row's own note already suspected that opt_out_url pointed at a general privacy policy rather than a form, and that is exactly right -- the actual request surface is the separate relyance-ai row (nextroll-privacy.relyance.ai), and the ad opt-out is app.adroll.com/optout.
+
+### `northcarolinacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31. Probed as a single target on its own prober invocation, since the URL contains 'optout'. Same surface as the rest of the network: northcarolinacourtrecords.us/optout renders the 'Your Privacy Choices' rights- INFORMATION page (title 'Your Privacy Choices - Northcarolinacourtrecords.us', heading 'YOUR PRIVACY CHOICES', prose on rights under applicable law, Do Not Sell or Share, and honouring Global Privacy Control), behind the same TrustArc consent overlay. ZERO forms and ZERO inputs at a 12s settle -- the only controls are the three UserWay accessibility buttons, the eight TrustArc consent buttons and the trustarc-lang-select. Record removal is email-only to privacy@courtrecords.us, giving first name, last name, state and city. THREE NOTES. (1) DATASET DEFECT, same as every sibling: the row records opt_out_method 'web-form' at this URL; there is no form there. (2) As first seen on the M-state batch, these pages load google.com/recaptcha/api.js site-wide, so cap[] is NOT empty (two entries: the gstatic recaptcha__en.js release bundle and api.js). That is a reCAPTCHA script with nothing to guard -- widget[] is empty and there is no form -- and it does NOT make the row 'blocked'. (3) DELTA FROM THE MONTANA WRITE-UP: these eight N-state siblings served /optout directly with HTTP 200 and did NOT redirect to a trailing-slash /optout/ the way montanacourtrecords-us did.
+
+### `northdakotacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render (Playwright, 12s settle) 2026-09-25, batch 31. Probed as a single target on its own prober invocation, since the URL contains 'optout'. Same surface as the rest of the network: northdakotacourtrecords.us/optout renders the 'Your Privacy Choices' rights- INFORMATION page (title 'Your Privacy Choices - Northdakotacourtrecords.us', heading 'YOUR PRIVACY CHOICES', prose on rights under applicable law, Do Not Sell or Share, and honouring Global Privacy Control), behind the same TrustArc consent overlay. ZERO forms and ZERO inputs at a 12s settle -- the only controls are the three UserWay accessibility buttons, the eight TrustArc consent buttons and the trustarc-lang-select. Record removal is email-only to privacy@courtrecords.us, giving first name, last name, state and city. THREE NOTES. (1) DATASET DEFECT, same as every sibling: the row records opt_out_method 'web-form' at this URL; there is no form there. (2) As first seen on the M-state batch, these pages load google.com/recaptcha/api.js site-wide, so cap[] is NOT empty (two entries: the gstatic recaptcha__en.js release bundle and api.js). That is a reCAPTCHA script with nothing to guard -- widget[] is empty and there is no form -- and it does NOT make the row 'blocked'. (3) DELTA FROM THE MONTANA WRITE-UP: these eight N-state siblings served /optout directly with HTTP 200 and did NOT redirect to a trailing-slash /optout/ the way montanacourtrecords-us did.
+
+### `novalist-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified by browser render (Playwright, 12-16s settle) 2026-09-25, batch 31. NOVA LIST COMPANY NO LONGER EXISTS UNDER THAT NAME AND THIS ROW IS A DUPLICATE OF ANOTHER ROW IN THIS DATASET. novalist.com 302s to onpointdatastrategy.com, whose own site banner states 'News: NOVA and Sunrise Data Services have now merged into OnPoint Data Strategy.' onpointdatastrategy-com is a SEPARATE row in source-brokers.json and is mapped identically in this same batch -- one operator, two rows, so any per-row opt-out would be sent twice to the same company. The OnPoint site is a list-management / data-strategy / service- bureau B2B marketing site for non-profit fundraising data with no consumer lookup surface: zero search forms, and cap[]/widget[] show only the site-wide invisible reCAPTCHA v3 that belongs to the opt-out Gravity Form. DATASET DEFECT: this row's domain, name and (unverified) contact ckoch@novalist.com are all stale.
+
+### `numberville-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > DEAD DOMAIN -- no opt-out surface can exist because the host does not resolve for anyone. Verified 2026-09-25, batch 31. The recorded opt_out_url numberville.com/optout was probed as a single target on its own prober invocation (it contains 'optout' and could have fired on navigation); it returned net::ERR_NAME_NOT_RESOLVED, so nothing was actuated. 1.1.1.1 returns SERVFAIL with the extended error 'at delegation numberville.com.', a +trace shows .com delegating to dns1/dns2.registrar-servers.com (Namecheap BasicDNS), and querying dns1.registrar-servers.com directly for numberville.com A returns REFUSED -- delegated to a provider holding no zone for it. Distinct operator from the mirohost.net pair (neighbor- report, officialusa-com) that failed the same way in this batch, which is why all three are written up rather than one cross- referencing the others. The row has no opt_out_email, so there is no fallback, and the dataset already noted this site had no database of its own and merely forwarded phone lookups to ReversePhoneCheck.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > DEAD DOMAIN, verified at the DNS layer 2026-09-25, batch 31 -- a third variant of the same failure mode found in this batch, with a DIFFERENT operator, which is why it is worth writing down separately. Playwright returned net::ERR_NAME_NOT_RESOLVED for https://numberville.com/optout (probed as a single target on its own invocation, since the URL contains 'optout'). 1.1.1.1 returns SERVFAIL with the extended error 'at delegation numberville.com.'. A +trace shows the .com registry delegating to dns1.registrar-servers.com and dns2.registrar-servers.com -- Namecheap BasicDNS -- and querying dns1.registrar-servers.com directly for numberville.com A returns REFUSED, i.e. the domain is delegated to a DNS provider that holds no zone for it. Unreachable network-wide. The dataset already noted this row had no database of its own and merely redirected to ReversePhoneCheck for phone lookups; there is now not even that.
 
 ### `nuwber-com`
 
@@ -898,6 +994,22 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23 for a network reason, not a research one: nuwber.com failed to RESOLVE (net::ERR_NAME_NOT_RESOLVED) from a headless Chromium on this host, so no page was ever reached. Nuwber is a well-known people-search site, so a single DNS failure is not grounds for a no-surface call in either leg. Next pass: resolve the name from a different network first. See the opt-out leg's entry, which is unresolved for the same reason.
+
+### `nymblr-com`
+
+- **scope:** dataset | **kind:** broker-surface-defect | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > NO REACHABLE SURFACE: the whole site is in an infinite self- redirect loop, and the recorded email contact history is already broken. Verified 2026-09-25, batch 31. Playwright returned net::ERR_TOO_MANY_REDIRECTS for both https://www.nymblr.com/ and bare https://nymblr.com/; curl -I https://nymblr.com/ returns 'HTTP/2 301' with 'location: https://nymblr.com/' -- the origin redirects the URL to itself, behind Cloudflare. DNS is healthy (Cloudflare A records, Google Workspace MX), so unlike the three DNS-dead rows in this batch the domain is live and the WEB SERVER is the thing that is broken; a client that follows redirects will spin rather than 404, which is why this needed a browser and a HEAD request rather than a plain fetch. DATASET DEFECT ALREADY ON FILE AND NOW COMPOUNDED: the recorded opt_out_url is the bare homepage www.nymblr.com (never a form), and the earlier support@nimbler.com contact HARD-BOUNCED on 2026-08-21. The remaining privacy@nymblr.com is unverified but the MX records at least exist, so email is the only conceivable path for this registered CA broker (d/b/a Nimbler).
+
+### `officialusa-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > DEAD DOMAIN -- no opt-out surface can exist because the host does not resolve for anyone. Verified at the DNS layer 2026-09-25, batch 31: Playwright net::ERR_NAME_NOT_RESOLVED, SERVFAIL from 1.1.1.1 and 8.8.8.8, Cloudflare extended error 'at delegation officialusa.com.' / '78.27.225.34:53 returned REFUSED for officialusa.com A'. whois: status ACTIVE, registrar Internet Invest Ltd dba Imena.ua, name servers NS2.MIROHOST.NET and NS3.MIROHOST.NET -- the same refusing mirohost.net cluster that kills neighbor.report at 78.27.225.33, so two dataset rows are one operator's dead hosting. The recorded opt_out_url www.officialusa.com/opt-out was not fetched and could not be; the dataset's description of an 'Online removal tool' no longer corresponds to anything reachable. There is no opt_out_email on the row either, so there is no fallback.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > DEAD DOMAIN, verified at the DNS layer 2026-09-25, batch 31, in exactly the same way as neighbor-report and from the same operator's nameservers. Playwright returned net::ERR_NAME_NOT_RESOLVED for https://www.officialusa.com/; 1.1.1.1 and 8.8.8.8 both SERVFAIL; Cloudflare's extended error reads 'at delegation officialusa.com.' / '78.27.225.34:53 returned REFUSED for officialusa.com A'. whois shows the domain status ACTIVE, registrar Internet Invest Ltd dba Imena.ua, name servers NS2.MIROHOST.NET and NS3.MIROHOST.NET -- the same mirohost.net cluster that refuses neighbor.report at 78.27.225.33. So the delegated authoritative servers refuse their own zone and the site is unreachable network-wide, not merely from this machine. The dataset's 'Public-records directory. Online removal tool.' describes a site that no longer resolves.
 
 ### `outlastdfs-com`
 

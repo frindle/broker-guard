@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **658** / 969
-- Search leg mapped: 658 / 969
-- Opt-out leg mapped: 658 / 969
+- Fully mapped (both legs): **684** / 969
+- Search leg mapped: 684 / 969
+- Opt-out leg mapped: 684 / 969
 
 ## How to resume
 
@@ -648,35 +648,35 @@ of those dicts against source-brokers.json).
 - [x] **National Public Data** (`nationalpublicdata-com`) -- search: recipe, opt-out: blocked
 - [x] **NATIONAL STUDENT CLEARINGHOUSE** (`studentclearinghouse-org`) -- search: undecided, opt-out: no-surface
 - [x] **Nativo, Inc.** (`nativo-com`) -- search: no-surface, opt-out: blocked
-- [ ] **NC VENTURES LLC** (`ncsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **NCR Corporation** (`ncr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Nebraska Court Records (CourtRecords.us network)** (`nebraskacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Neighbor Report** (`neighbor-report`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **NC VENTURES LLC** (`ncsolutions-com`) -- search: no-surface, opt-out: blocked
+- [x] **NCR Corporation** (`ncr-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Nebraska Court Records (CourtRecords.us network)** (`nebraskacourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **Neighbor Report** (`neighbor-report`) -- search: no-surface, opt-out: no-surface
 - [x] **NeighborWho** (`neighborwho-com`) -- search: undecided, opt-out: undecided
-- [ ] **NeuStar, Inc.** (`home-neustar`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Nevada Court Records (CourtRecords.us network)** (`nevadacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **New England List Services** (`nelists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **New Gold Ventures LLC** (`thinkdatagroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **New Hampshire Court Records (CourtRecords.us network)** (`newhampshirecourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **New Jersey Court Records (CourtRecords.us network)** (`newjerseycourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **New Mexico Court Records (CourtRecords.us network)** (`newmexicocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **New York Court Records (CourtRecords.us network)** (`newyorkcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Nexsales Solutions Inc.** (`nexsales-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **NeuStar, Inc.** (`home-neustar`) -- search: no-surface, opt-out: blocked
+- [x] **Nevada Court Records (CourtRecords.us network)** (`nevadacourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **New England List Services** (`nelists-com`) -- search: undecided, opt-out: no-surface
+- [x] **New Gold Ventures LLC** (`thinkdatagroup-com`) -- search: no-surface, opt-out: blocked
+- [x] **New Hampshire Court Records (CourtRecords.us network)** (`newhampshirecourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **New Jersey Court Records (CourtRecords.us network)** (`newjerseycourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **New Mexico Court Records (CourtRecords.us network)** (`newmexicocourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **New York Court Records (CourtRecords.us network)** (`newyorkcourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **Nexsales Solutions Inc.** (`nexsales-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Next Wave Marketing Strategies, Inc** (`agedleadstore-com`) -- search: no-surface, opt-out: blocked
-- [ ] **NextRoll, Inc** (`nextroll-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Nextroll, Inc.** (`relyance-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Nexxen Inc.** (`nexxen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Nfocus Consulting Inc** (`n-focus-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **NextRoll, Inc** (`nextroll-com`) -- search: no-surface, opt-out: undecided
+- [x] **Nextroll, Inc.** (`relyance-ai`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Nexxen Inc.** (`nexxen-com`) -- search: no-surface, opt-out: blocked
+- [x] **Nfocus Consulting Inc** (`n-focus-com`) -- search: no-surface, opt-out: blocked
 - [x] **Nielsen** (`onetrust-com`) -- search: no-surface, opt-out: recipe
-- [ ] **North American Media LLC** (`namericanmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **North Carolina Court Records (CourtRecords.us network)** (`northcarolinacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **North Dakota Court Records (CourtRecords.us network)** (`northdakotacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Nosis Laboratorio de Investigación y Desarrollo S.A.** (`nosis-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **NOVA List Company, LLC** (`novalist-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Numberville** (`numberville-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **North American Media LLC** (`namericanmedia-com`) -- search: no-surface, opt-out: no-surface
+- [x] **North Carolina Court Records (CourtRecords.us network)** (`northcarolinacourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **North Dakota Court Records (CourtRecords.us network)** (`northdakotacourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **Nosis Laboratorio de Investigación y Desarrollo S.A.** (`nosis-com`) -- search: undecided, opt-out: blocked
+- [x] **NOVA List Company, LLC** (`novalist-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Numberville** (`numberville-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Nuwber** (`nuwber-com`) -- search: undecided, opt-out: undecided
-- [ ] **Nymblr, Inc.** (`nymblr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **OfficialUSA** (`officialusa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Nymblr, Inc.** (`nymblr-com`) -- search: no-surface, opt-out: no-surface
+- [x] **OfficialUSA** (`officialusa-com`) -- search: no-surface, opt-out: no-surface
 - [ ] **Ohio Court Records (CourtRecords.us network)** (`ohiocourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **OKCaller** (`okcaller-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Oklahoma Court Records (CourtRecords.us network)** (`oklahomacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -684,7 +684,7 @@ of those dicts against source-brokers.json).
 - [ ] **Onaudience Ltd** (`onaudience-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Online Advertising Network Sp. z o.o.** (`oan-pl`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **ONLINE MEDIA GROUP Inc.** (`omginc-xyz`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **OnPoint Data Strategy** (`onpointdatastrategy-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **OnPoint Data Strategy** (`onpointdatastrategy-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Open Dealer Exchange, LLC** (`700credit-com`) -- search: no-surface, opt-out: blocked
 - [ ] **OpenDataUSA** (`opendatausa-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Opensend Inc** (`opensend-com`) -- search: UNMAPPED, opt-out: UNMAPPED
