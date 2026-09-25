@@ -866,6 +866,155 @@ RECIPES = {
 # "fixes" the gap by writing a recipe against a page that cannot answer the
 # question. These are notes, not behaviour: nothing reads this at runtime.
 NO_SEARCH_SURFACE = {
+    # --- batch 23 of 2026-09-24: C sweep ---------------------------------
+    #
+    # Eleven of the sixteen close here, and the reason is the same one
+    # that has dominated this bucket all sweep: these are B2B data
+    # products. The data is real and often intimate, but it is sold to
+    # businesses through a sales team or a logged-in workbench, and the
+    # subject is given no lookup of their own. "No search surface" is a
+    # statement about the CONSUMER-FACING web, not about whether the
+    # broker can find you -- it certainly can.
+    #
+    # Two rows in this group, co-ke and com-co, are here for a different
+    # and more troubling reason, recorded in full in optout_forms: their
+    # broker ids are PUBLIC-SUFFIX MIS-PARSES, not domains. Whatever
+    # pipeline produced the dataset treated "co.ke" and "com.co" as bare
+    # registrable domains when they are in fact public suffixes, so these
+    # rows point at no host at all. They are closed here so the sweep is
+    # complete, but the honest verdict is that there is nothing to search
+    # because there is no broker -- see the collision warning in the
+    # opt-out entries before reusing these keys for anything.
+    "clearcompany-com": (
+        "Verified 2026-09-24. ClearCompany is an applicant-tracking and "
+        "HR-management platform sold to employers. Its public site is "
+        "marketing plus a customer login; the records it holds are "
+        "candidate and employee data submitted through ITS CUSTOMERS' "
+        "career sites, and it holds them as a processor on those "
+        "employers' behalf. No consumer-facing lookup exists and none "
+        "would be expected -- a candidate's data lives in a particular "
+        "employer's tenant, not in a global index this site could search."
+    ),
+    "clickagy-com": (
+        "Verified 2026-09-24. Clickagy is an audience/intent-data vendor "
+        "(now part of Claritas). Its data is behavioural and "
+        "device-scoped, keyed to advertising identifiers rather than to a "
+        "name, and it is delivered to advertisers through DSP "
+        "integrations, not through any page a person can query. There is "
+        "nothing name-searchable to expose.\n"
+        "\n"
+        "This is the second row this sweep where the absence of a search "
+        "surface is a direct consequence of DEVICE-SCOPED identity rather "
+        "than a choice about disclosure (adara-com was the first), which "
+        "is the open device-scoped-opt-out question and not something to "
+        "settle here."
+    ),
+    "clientcommand-com": (
+        "Verified 2026-09-24. Client Command sells in-market automotive "
+        "shopper data to car dealers. Every form on its site -- five of "
+        "them, all probed -- is a sales-contact form asking for Company "
+        "and Work Email; the recognised B2B-sales-form-as-opt-out tell. "
+        "No consumer lookup of any kind is offered, which is consistent "
+        "with a product whose buyers are dealerships and whose subjects "
+        "are not its audience."
+    ),
+    "co-ke": (
+        "No search surface as of 2026-09-24, because there is no host to "
+        "search. 'co.ke' is Kenya's second-level public suffix, not a "
+        "registrable domain; the dataset row is a parsing artifact. "
+        "Recorded so the sweep is complete. See the optout_forms entry for "
+        "the full defect write-up and the key-collision warning."
+    ),
+    "cognism-com": (
+        "Verified 2026-09-24. Cognism sells B2B contact data (work emails, "
+        "direct dials, job titles) to sales teams through a logged-in "
+        "platform and API. The public site is marketing plus a login; "
+        "there is no unauthenticated way to look yourself up, and the "
+        "privacy portal is the only subject-facing route.\n"
+        "\n"
+        "Recorded as no-surface rather than blocked because nothing walled "
+        "us off a search page -- there is no search page. Note the probe "
+        "limitation that affected the OPT-OUT leg here: Cognism's privacy "
+        "portal is a MineOS single-page app and the probe read the DOM "
+        "before it rendered (body length zero). That is a tooling gap, not "
+        "evidence about this leg."
+    ),
+    "com-co": (
+        "No search surface as of 2026-09-24, for the same reason as "
+        "co-ke: 'com.co' is a Colombian second-level public suffix, not a "
+        "registrable domain. No host, nothing to search, row closed for "
+        "completeness. See optout_forms for the defect write-up."
+    ),
+    "connectedinvestors-com": (
+        "Verified 2026-09-24. Connected Investors is a real-estate "
+        "investor network whose property and owner data sits behind "
+        "account registration; the public site offers marketing pages and "
+        "a sign-up, with no unauthenticated name lookup. The "
+        "owner-of-record data it aggregates is searchable only from inside "
+        "a paid seat.\n"
+        "\n"
+        "Recorded here rather than in BLOCKED after weighing it: the "
+        "registration wall is real, but unlike the CourtRecords.us case "
+        "there is no consumer-facing search route that we were stopped at "
+        "-- the lookup is an internal tool feature, not a public surface "
+        "with a gate on it. If a recheck finds an addressable public "
+        "search behind login, move this row to BLOCKED."
+    ),
+    "consumerdataprotect-com": (
+        "Verified 2026-09-24. Consumer Data Protect is an opt-out "
+        "SERVICE, not a data source -- it submits removal requests on a "
+        "customer's behalf. It holds no name-keyed index of its own to "
+        "search, so a search surface is not merely absent but "
+        "inapplicable.\n"
+        "\n"
+        "Kept in the dataset as a row because it does collect personal "
+        "data from its own customers, and its opt-out leg is real; see "
+        "optout_forms, including the load-bearing '?ref=' parameter and "
+        "the dual timing traps on that form."
+    ),
+    "cortera-com": (
+        "Verified 2026-09-24. Cortera sells BUSINESS credit and trade "
+        "payment data, now under Moody's. Its subjects are companies "
+        "rather than individuals, and its reports are delivered to "
+        "subscribers; there is no consumer name search and, for a "
+        "business-credit product, no reason to expect one.\n"
+        "\n"
+        "Recorded because it is a shared-surface family member worth "
+        "remembering: Cortera's subject-request route is an Alchemer "
+        "survey (id 8249180) that is the SAME survey alchemer-com uses. "
+        "That is a CORPORATE shared surface -- two Moody's properties "
+        "pointing at one intake -- not a white-label engine like "
+        "optOutLight, and the distinction matters when predicting which "
+        "other rows will collapse together."
+    ),
+    "credit-com": (
+        "Verified 2026-09-24. Credit.com is a consumer "
+        "credit-education and lead-generation site. It does not publish a "
+        "name-keyed index of third parties; what it holds is data on its "
+        "OWN registered users, reachable through an account, plus the "
+        "leads it passes to lenders. No public lookup surface exists.\n"
+        "\n"
+        "Only the SEARCH leg was ever missing here: credit-com's opt-out "
+        "leg is a shipped recipe (RECIPES in optout_forms, verified "
+        "2026-09-22 against its OneTrust DSAR webform). This batch "
+        "re-probed that form before noticing, and the re-read agreed with "
+        "the recipe in every particular, including its choice to refuse "
+        "the optional SSN-last-4 and date-of-birth boxes via "
+        "forbidden_selectors. See the batch-23 note in OPTOUT_BLOCKED for "
+        "why that duplicate write-up was deleted."
+    ),
+    "creditreform-de": (
+        "Verified 2026-09-24. Creditreform is a German credit reference "
+        "agency. Subject access runs through a Selbstauskunft request "
+        "under Art. 15 GDPR, handled by the regional Creditreform office "
+        "by post or its own portal; there is no public name-search page, "
+        "and German law routes the subject to a request rather than a "
+        "lookup.\n"
+        "\n"
+        "Flagging the scope question rather than deciding it: whether "
+        "non-US credit bureaus belong in this dataset at all is on the "
+        "open list with Penn. Mapped honestly in the meantime."
+    ),
     # --- batch 22 of 2026-09-24: B-C sweep, credit bureaus / adtech ------
     #
     # Two of these fourteen close for a reason this bucket has not had
@@ -4308,6 +4457,210 @@ NO_SEARCH_SURFACE = {
 #
 # Notes, not behaviour: nothing reads this at runtime.
 SEARCH_BLOCKED = {
+    # --- batch 23 of 2026-09-24: C sweep ---------------------------------
+    # Two of these are CourtRecords.us siblings settled by the recheck
+    # recorded below; the other two are walls of their own.
+    "coloradocourtrecords-us": (
+        "Verified 2026-09-24. Blocked by the same registration paywall as "
+        "californiacourtrecords-us, and confirmed to be the same surface "
+        "rather than merely a similar one: coloradocourtrecords.us carries "
+        "the identical #nameSearchForm posting to /search/loading/ with "
+        "the same firstName / lastName / city / state controls, observed "
+        "in the markup.\n"
+        "\n"
+        "The network's FCRA notice states the wall in its own words: "
+        "'CourtRecords.us will conduct only a preliminary people search "
+        "... and a search of any records will only be conducted and made "
+        "available after you register for an account or purchase a "
+        "report.' The California test drove that flow to its end and got "
+        "search theatre -- an abbreviated name and a list of courts, no "
+        "results. See californiacourtrecords-us for the full write-up.\n"
+        "\n"
+        "Dismiss the TrustArc consent overlay first if rechecking."
+    ),
+    "connecticutcourtrecords-us": (
+        "Verified 2026-09-24. Identical to coloradocourtrecords-us and "
+        "californiacourtrecords-us: same #nameSearchForm, same "
+        "/search/loading/ action, same field set, same registration "
+        "paywall on the results, same TrustArc overlay. Recorded "
+        "separately only because the dataset lists the fifty network sites "
+        "as fifty rows. See californiacourtrecords-us for the full "
+        "write-up."
+    ),
+    "classmates-com": (
+        "Verified 2026-09-24 by browser render. Blocked by "
+        "AUTHENTICATION: the member-facing routes redirect to "
+        "secure.classmates.com/auth/login, which carries password, "
+        "magic-link and Facebook sign-in forms and a rendered reCAPTCHA. "
+        "No unauthenticated name lookup was reachable.\n"
+        "\n"
+        "The dataset's own note agrees and adds the detail that matters "
+        "for a recipe: 'Name search is not URL-addressable.' Even past the "
+        "login there would be no stable URL to drive, which is a second, "
+        "independent obstacle -- a search recipe needs an addressable "
+        "query, not just a reachable page.\n"
+        "\n"
+        "Recorded as blocked rather than no-surface because Classmates "
+        "plainly DOES hold name-keyed records and plainly does let "
+        "somebody search them -- yearbook profiles are the product. What "
+        "it does not do is let the subject look without an account. The "
+        "opt-out leg is walled the same way and is the more troubling of "
+        "the two; see optout_forms."
+    ),
+    "clustal-org": (
+        "Verified 2026-09-24. Blocked before any content was served: "
+        "www.clustal.org answered HTTP 403 with a Cloudflare bot-"
+        "verification interstitial ('Just a moment...', 'Performing "
+        "security verification ... protect against malicious bots', Ray ID "
+        "present, __cf_chl_rt_tk challenge token appended to the URL).\n"
+        "\n"
+        "Worth flagging that a search surface is known to exist even "
+        "though it was not seen: the dataset's opt-out note describes it "
+        "step by step -- 'Go to Clustal.org and look for your information "
+        "in the top search bar. Click on \"view full record\" to grab the "
+        "URL.' So there is a top-bar name search and a per-record detail "
+        "page behind it. That also makes the two legs coupled: the opt-out "
+        "needs a record URL that only this search can produce, so "
+        "unblocking the search is a precondition for the opt-out, not "
+        "merely a nice-to-have.\n"
+        "\n"
+        "To resolve: recheck from the deployment host; a residential "
+        "address may pass the challenge that this one did not."
+    ),
+    # --- recheck of 2026-09-24: three rows moved here from UNDECIDED ----
+    #
+    # These three were left undecided in batches 21 and 22 for an honest
+    # reason -- the search form had been found and its selectors recorded,
+    # but no result page had been reached, so nothing could be said about
+    # what happens on submit. The recheck was cheap and settled all three,
+    # and both of the walls it found are worth naming.
+    #
+    # WALL 1, Cloudflare Turnstile, on the optOutLight white-label engine
+    # (backgroundcheckers-net and checksecrets-com). Requesting the search
+    # route directly returns a page with a body length of ZERO and a
+    # single first-party Turnstile frame. That is the clearest possible
+    # answer to the question batch 21 left open, and it retires the note
+    # there that a captcha "was not observed": it is observed now.
+    #
+    # WALL 2, a REGISTRATION PAYWALL, on the CourtRecords.us network. This
+    # is a kind of wall this dict has not held before -- not a bot check
+    # and not a 403, but a search that runs, answers, and deliberately
+    # shows the consumer nothing. It is recorded here rather than as
+    # no-surface because a surface plainly exists and was driven; what it
+    # withholds is the result. Anyone extending this module should expect
+    # more of these: for a paid people-search site, the free search is a
+    # sales funnel, and its job is to prove a record EXISTS without
+    # showing it.
+    "backgroundcheckers-net": (
+        "Verified 2026-09-24, then RECHECKED the same day, which changed "
+        "the verdict from no-verdict to blocked.\n"
+        "\n"
+        "The surface is real and fully mapped: on www.backgroundcheckers."
+        "net, input#firstName, input#lastName, a state select#state and a "
+        "submit #perform-search reading 'FREE SEARCH', behind an FCRA "
+        "'I AGREE' notice modal. All three inputs map onto resolve_fields "
+        "with nothing left over, so this would be a recipe but for the "
+        "wall.\n"
+        "\n"
+        "BLOCKED by Cloudflare Turnstile. The first pass could only say "
+        "that the site served Turnstile on its OPT-OUT route and that "
+        "whether it fired on search was unobserved -- which, per the "
+        "standing rule, is not a licence to call it unguarded. The "
+        "recheck requested the search route directly (/name/search with "
+        "fname/lname) and got back a page of length ZERO whose only "
+        "content is a frame at /assets/common/captcha/turnstile. The "
+        "search is gated.\n"
+        "\n"
+        "Note for any captcha detector: Turnstile is served from a "
+        "FIRST-PARTY path here, not from challenges.cloudflare.com, so "
+        "matching on the vendor hostname would miss it.\n"
+        "\n"
+        "Same engine as checksecrets-com -- see that entry. The opt-out "
+        "leg is separately blocked on the same captcha plus an "
+        "email-confirmation hop this SMTP-send-only repo cannot read."
+    ),
+    "checksecrets-com": (
+        "Verified 2026-09-24 and rechecked the same day; blocked for "
+        "exactly the same reason as backgroundcheckers-net, because it is "
+        "exactly the same site under a different name.\n"
+        "\n"
+        "The surface: #email-form on /optOut/name/landing with "
+        "input#First-Name (\"Enter person's First Name\"), "
+        "input#Last-Name, a select named 'field', and a submit reading "
+        "'FREE SEARCH', behind the same FCRA 'I AGREE' modal.\n"
+        "\n"
+        "BLOCKED by Cloudflare Turnstile, confirmed the same way: "
+        "requesting /name/search directly returns a zero-length body "
+        "whose only content is a frame at /assets/common/captcha/"
+        "turnstile. Requesting /name/landing with query parameters loads "
+        "the same Turnstile frame alongside the form.\n"
+        "\n"
+        "The white-label identity is established in optout_forms under "
+        "checksecrets-com: identical FCRA notice text word for word, "
+        "identical 'I AGREE' gate, identical /api/helper/optOutLight/"
+        "search removal path, identical #pageForm field list, different "
+        "companies on the dataset rows (TRUTH NOW LLC vs "
+        "BackgroundCheckers). The recheck confirms the engine extends to "
+        "the search leg and to the captcha posture.\n"
+        "\n"
+        "This is the payoff the engine observation predicted, and it is "
+        "worth stating as a result rather than a hope: ONE recheck "
+        "settled TWO dataset rows, and would settle any further sibling "
+        "domains the same way. Identifying the engine before working "
+        "domains individually is now a measured saving, not a guess.\n"
+        "\n"
+        "One difference to carry: the third control differs per tenant (a "
+        "'field' select here, a state select on backgroundcheckers-net), "
+        "so a shared recipe would have to read it at runtime rather than "
+        "template it."
+    ),
+    "californiacourtrecords-us": (
+        "Verified 2026-09-24 and rechecked the same day. The recheck "
+        "settled this row and, with it, the whole fifty-site "
+        "CourtRecords.us network.\n"
+        "\n"
+        "THE SURFACE EXISTS AND WAS DRIVEN. The home page carries "
+        "#nameSearchForm, POST to /search/loading/, with input#firstName "
+        "and input#lastName required, an optional city, a hidden state, "
+        "and a bank of ten unnamed record-type checkboxes (Felonies, "
+        "Misdemeanors, Incarcerations, Arrests & Warrants, Bankruptcies, "
+        "Judgments, Tax Liens, Property Liens, Contract Disputes, Traffic "
+        "Offences, Small Claims, Lawsuits). A search was submitted and "
+        "answered with HTTP 200.\n"
+        "\n"
+        "BLOCKED by a REGISTRATION PAYWALL, and the shape of it is the "
+        "finding. What comes back is a 'Searching...' page: it echoes the "
+        "query as an ABBREVIATED name ('Searching All Available Public "
+        "Records on John S.') and then lists scores of California "
+        "Superior Courts and Courts of Appeal as 'Data Source'. There are "
+        "no results on it, no form, and no server-side redirect -- it is "
+        "search THEATRE, staged to look like work in progress. The site's "
+        "own FCRA notice says what is actually happening: 'CourtRecords.us "
+        "will conduct only a preliminary people search of the information "
+        "you provide and ... a search of any records will only be "
+        "conducted and made available after you register for an account "
+        "or purchase a report.'\n"
+        "\n"
+        "So the question batch 22 left open -- is the free search a usable "
+        "self-lookup or a teaser? -- is answered: it is a teaser. A "
+        "consumer cannot learn from it whether they are listed, which is "
+        "the only thing this module's search leg exists to establish.\n"
+        "\n"
+        "Recorded as blocked rather than no-surface because the surface is "
+        "real, reachable and was successfully driven; the wall is on the "
+        "results, not on the form. That is a new wall for this dict and is "
+        "described in the header above.\n"
+        "\n"
+        "Two operational notes. A TrustArc consent overlay ('AGREE & "
+        "PROCEED') sits over the site and should be dismissed first. And "
+        "this is ONE OF FIFTY per-state sites whose pages are "
+        "byte-similar, so this single test stands for all of them -- the "
+        "second white-label family settled by one recheck in this pass.\n"
+        "\n"
+        "The opt-out leg is separately closed as mailbox-only, and the "
+        "two legs are coupled: the removal email is per-record, so it "
+        "needs a record identity this search will not give up."
+    ),
     "zoominfo-com": (
         "Verified 2026-09-23: the probed page answers 403 with no body, so "
         "no surface could be read. Worth a note beyond the usual, because "
@@ -4406,124 +4759,38 @@ SEARCH_BLOCKED = {
 # Notes, not behaviour: nothing reads this at runtime. A broker listed here is
 # simply absent from RECIPES, which is what actually prevents a search.
 SEARCH_UNDECIDED = {
-    # --- batch 22 of 2026-09-24: B-C sweep, credit bureaus / adtech ------
-    # Both rows are people-search sites belonging to WHITE-LABEL NETWORKS,
-    # and that is the thing to carry away from this batch: resolving
-    # either one resolves many domains at once. See optout_forms under
-    # checksecrets-com for the evidence that these are engines rather than
-    # resemblances.
-    "checksecrets-com": (
-        "NO VERDICT 2026-09-24, and this row is worth more than one site.\n"
+    # --- batch 23 of 2026-09-24: C sweep ---------------------------------
+    "clustrmaps-com": (
+        "Undecided as of 2026-09-24. clustrmaps.com refused the TCP "
+        "connection on three separate attempts (plain HTTP tried as well "
+        "as HTTPS, per the standing rule about not calling a host dead "
+        "from one scheme); no page, no status line, no TLS handshake.\n"
         "\n"
-        "OBSERVED on www.checksecrets.com/optOut/name/landing: "
-        "#email-form, GET to /name/landing, with input#First-Name "
-        "(\"Enter person's First Name\"), input#Last-Name, a select "
-        "named 'field', and a submit reading 'FREE SEARCH'. Behind an 'I "
-        "AGREE' FCRA notice modal.\n"
+        "This is undecided rather than blocked because a refused "
+        "connection tells us nothing about whether a search surface "
+        "exists. It is not a bot check, a 403 or a paywall -- it is an "
+        "absent listener, which could equally be an outage, a "
+        "geo/ASN-level drop of this host, or a site that is gone. The "
+        "difference matters: BLOCKED asserts we saw a wall, and we did "
+        "not.\n"
         "\n"
-        "This is the SAME ENGINE as backgroundcheckers-net (batch 21): "
-        "identical FCRA notice text word for word, identical 'I AGREE' "
-        "gate, identical /api/helper/optOutLight/search removal path, "
-        "identical #pageForm field list. The dataset files them under "
-        "different companies (TRUTH NOW LLC vs BackgroundCheckers). One "
-        "search recipe written against this engine would very likely serve "
-        "both and any other sibling domains -- which is the argument for "
-        "identifying the engine BEFORE spending a research slot per "
-        "domain.\n"
-        "\n"
-        "The same three gaps as its sibling stop a recipe today: the "
-        "I AGREE gate must be an explicit first step; whether the "
-        "platform's Cloudflare Turnstile fires on the search submit was "
-        "not observed, so 'no bot check' cannot be claimed; and no result "
-        "page was reached, so there is no success marker. Note the search "
-        "form here differs slightly from backgroundcheckers-net's (a "
-        "'field' select rather than a state select), so the engine is "
-        "themed per tenant even where the flow is identical -- a shared "
-        "recipe would need to read the third control at runtime.\n"
-        "\n"
-        "To resolve: click I AGREE on ONE of the two sites, run a single "
-        "search, record the result-page markers and any challenge, then "
-        "check whether the other site's result page matches."
-    ),
-    "californiacourtrecords-us": (
-        "NO VERDICT 2026-09-24. A search exists, the FCRA gate in front of "
-        "it was read in full, and what it says is the reason for no "
-        "verdict.\n"
-        "\n"
-        "The notice modal states: 'You understand that by clicking \"I "
-        "Agree\", CourtRecords.us will conduct only a PRELIMINARY people "
-        "search of the information you provide and that a search of any "
-        "records will only be conducted and made available AFTER YOU "
-        "REGISTER FOR AN ACCOUNT OR PURCHASE A REPORT.' So there are two "
-        "different surfaces wearing one name: a free preliminary search "
-        "whose depth is unknown, and the real record search behind "
-        "registration and payment.\n"
-        "\n"
-        "That distinction decides the row and could not be settled without "
-        "running it. If the preliminary search returns enough to confirm a "
-        "person is listed, it is a usable self-lookup and this becomes a "
-        "recipe. If it returns only a teaser designed to sell a report, it "
-        "is a paywall and belongs in no-surface alongside the other "
-        "credentialed vendors. Guessing between those would be inventing a "
-        "finding.\n"
-        "\n"
-        "Two further notes. The search form itself was not captured on "
-        "either page probed -- both /optout/ and /do-not-sell-share-my-"
-        "personal-information/ are rights-information pages, and a "
-        "TrustArc consent overlay ('AGREE & PROCEED') sits over the site, "
-        "so a recheck should dismiss that first. And this is ONE OF FIFTY "
-        "per-state sites in the CourtRecords.us white-label network, so "
-        "the result of that single test applies to all of them.\n"
-        "\n"
-        "The opt-out leg is separately closed as mailbox-only, and note "
-        "the coupling: the removal email is per-record, so it needs "
-        "whatever this search returns."
+        "What the dataset asserts, for whoever rechecks: ClustrMaps "
+        "publishes name- and address-keyed residence records, so a search "
+        "surface is very likely. To resolve: retry from the deployment "
+        "host. If it answers there, this row and the opt-out leg both "
+        "resolve in one pass; if it refuses there too, the next question "
+        "is whether the domain still resolves and serves anyone at all, "
+        "which would be a dataset defect rather than a mapping verdict."
     ),
     # --- batch 21 of 2026-09-24: A-B sweep, marketing / people-search ----
     #
-    # Both rows here are the opposite of the usual undecided: the surface
-    # was FOUND, rendered, and its selectors recorded. What is missing in
-    # each case is the result page -- what a hit looks like, what a miss
-    # looks like, and what fires on submit. A search recipe needs that to
-    # have a success marker at all, and inventing one would be exactly the
-    # fabrication this sweep must not commit. Each entry below therefore
-    # records the selectors that WERE observed, so the recheck is cheap.
-    "backgroundcheckers-net": (
-        "NO VERDICT 2026-09-24, and this is a promising row rather than a "
-        "dead one. A real consumer lookup exists and was rendered.\n"
-        "\n"
-        "OBSERVED on www.backgroundcheckers.net: input#firstName ('First "
-        "name'), input#lastName ('Last name'), a state select#state, and a "
-        "submit #perform-search labelled 'FREE SEARCH'. Those three inputs "
-        "map onto resolve_fields (first_name, last_name, state) with "
-        "nothing left over.\n"
-        "\n"
-        "THREE THINGS STOP A RECIPE TODAY, and a recheck should settle all "
-        "three in one pass:\n"
-        "  1. AN FCRA AGE/USE GATE FIRST. The page opens with a modal "
-        "     notice -- 'BackgroundCheckers does not provide consumer "
-        "     reports and is not a consumer reporting agency under the "
-        "     Fair Credit Reporting Act' -- and a submit button reading "
-        "     'I AGREE' that must be clicked before the search is usable. "
-        "     A recipe needs that as an explicit first step; it is a "
-        "     certification about how the results will be used, so it "
-        "     should be an acknowledged step rather than a click buried "
-        "     in a selector list.\n"
-        "  2. CAPTCHA ON SUBMIT IS UNCONFIRMED. The homepage render showed "
-        "     no live challenge, but this site DOES serve Cloudflare "
-        "     Turnstile elsewhere -- the opt-out route renders it from a "
-        "     first-party path, /assets/common/captcha/turnstile.html. "
-        "     Whether it fires on the search submit was not observed, and "
-        "     per the standing rule this cannot be called 'no bot check' "
-        "     from what was seen.\n"
-        "  3. NO RESULT PAGE WAS REACHED, so there is no success marker "
-        "     and no way to distinguish a hit from a miss.\n"
-        "\n"
-        "To resolve: click I AGREE, run one search for a profile with a "
-        "known listing, and record the result-page markers plus whatever "
-        "challenge appears. The opt-out leg is separately blocked (see "
-        "optout_forms) on captcha plus an email-confirmation hop."
-    ),
+    # This batch originally left TWO rows undecided for the same reason:
+    # the surface was found and its selectors recorded, but the result
+    # page was not reached, so there was no success marker. The recheck
+    # was run on 2026-09-24 and settled one of them --
+    # backgroundcheckers-net moved to SEARCH_BLOCKED once Cloudflare
+    # Turnstile was confirmed on its search route. blockshopper-com
+    # remains here because its question is different in kind.
     "blockshopper-com": (
         "NO VERDICT 2026-09-24. A search surface exists and was rendered, "
         "but it is not obviously the right KIND of search, which is why no "

@@ -44,18 +44,18 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-119 findings across 90 brokers.
+124 findings across 95 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 9 |
-| dataset | 49 |
+| dataset | 54 |
 | unreachable | 61 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
 | parked-or-defunct | 62 |
-| unclassified | 21 |
+| unclassified | 26 |
 | dead-url | 14 |
 | broker-surface-defect | 8 |
 | entity-mismatch | 7 |
@@ -231,11 +231,41 @@ expired certificate gets renewed, a suspended host comes back).
 
   > DATASET DEFECT, verified 2026-09-23: the row's opt_out_url https://www.civisanalytics.com/privacy-policy/supplemental- privacy-notice/ returns HTTP 404 ('The page you are looking for doesn't exist'), serving only a cookie banner. This is a circular dead end, because the dataset notes record that dataprotection@civisanalytics.com replied that they cannot process requests until THIS form is completed -- the form they point at no longer exists. Not fixed in data/source- brokers.json, only recorded here. Next step for a researcher: locate the supplemental notice at its current path under civisanalytics.com/privacy-policy and quote the real request surface back to that mailbox.
 
+### `clustrmaps-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > What the dataset asserts, for whoever rechecks: ClustrMaps publishes name- and address-keyed residence records, so a search surface is very likely. To resolve: retry from the deployment host. If it answers there, this row and the opt-out leg both resolve in one pass; if it refuses there too, the next question is whether the domain still resolves and serves anyone at all, which would be a dataset defect rather than a mapping verdict.
+
+### `co-ke`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > DATASET DEFECT, and a different cause from the ones logged so far. The row's domain field is the literal string 'co.ke' -- Kenya's public suffix, not a domain. The company's actual domain is metropol.co.ke. Because this module keys everything by a slug derived from the domain, the permanent key for Metropol is 'co-ke', which is both wrong and collision-prone: ANY other Kenyan broker added later would slug to the same key and silently overwrite this row.
+
+### `coloradocourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > DATASET DEFECT, inherited by every site in the network: the row records opt_out_method 'web-form' with verification_step 'CAPTCHA required on the opt-out form'. There is no form and therefore no captcha on it.
+
+### `com-co`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > DATASET DEFECT, identical in kind to co-ke: the row's domain field is the literal string 'com.co', Colombia's public suffix, not a domain. The registrable domain is datacredito.com.co. The permanent key for this row is therefore 'com-co', which is wrong and would collide with any other Colombian broker added later. Two instances of public-suffix mis-parsing in one batch; see co-ke for the full note.
+
 ### `completemailinglists-com`
 
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > DATASET DEFECT, verified 2026-09-23: the row's opt_out_url https://www.completemailinglists.com/node/3697 returns HTTP 404. What is behind it is worth recording: the 404 page is a half- finished template whose navigation still reads 'Menu Item One / Menu Item Two / Menu Item Three', so the site appears to have been rebuilt without its rights pages being carried across. Its sibling completemedicallists.com DOES publish a working CCPA form at /ccpa.php, so the obvious next step is to check whether completemailinglists.com serves the same /ccpa.php form -- if it does, this row resolves immediately. Not fixed in data/source- brokers.json. Dataset contact: ewoolf@completemailinglists.com.
+
+### `connecticutcourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Same dataset defect as its siblings: 'web-form' with a CAPTCHA recorded on a form that does not exist.
 
 ### `contacts411-com`
 
