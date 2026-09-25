@@ -44,21 +44,21 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-124 findings across 95 brokers.
+160 findings across 128 brokers.
 
 | scope | findings |
 | --- | --- |
-| broker-surface | 9 |
-| dataset | 54 |
-| unreachable | 61 |
+| broker-surface | 11 |
+| dataset | 85 |
+| unreachable | 64 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| parked-or-defunct | 62 |
-| unclassified | 26 |
-| dead-url | 14 |
-| broker-surface-defect | 8 |
-| entity-mismatch | 7 |
+| parked-or-defunct | 65 |
+| unclassified | 53 |
+| dead-url | 17 |
+| broker-surface-defect | 10 |
+| entity-mismatch | 8 |
 | rebrand-or-domain-change | 5 |
 | contact-address-oddity | 1 |
 | stale-200 | 1 |
@@ -295,11 +295,45 @@ expired certificate gets renewed, a suspended host comes back).
 
   > DATASET DEFECT, verified 2026-09-23: the row's opt_out_url https://datalinedata.com/privacy-portal/ returns HTTP 404, so the recorded surface is gone. One genuinely useful detail came out of the render anyway: the site's reCAPTCHA Enterprise is BROKEN -- its challenge frame reports 'This site is exceeding reCAPTCHA Enterprise free quota' -- which means any form on this domain may be unsubmittable for everyone right now, not just for this tool. Anyone returning here should check that before concluding a form is walled against them specifically. Next step: find the live privacy portal (the footer offers only 'Request a Demo'). Dataset contact: psobel@datalinedata.com, a personal address.
 
+### `date-detective-app`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-25 -- nothing could be read, for the reason written up under search_forms.SEARCH_UNDECIDED['date- detective-app']: the dataset's opt-out host mobile.date- detective.app fails TLS from a real browser (net::ERR_CERT_COMMON_NAME_INVALID) because it answers on 443 with an Azure App Service default wildcard certificate (CN=*.msha-slice-6-wus2-1-ase.p.azurewebsites.net, issued to Microsoft Corporation) rather than a certificate for its own name; the apex does the same with the dm1 slice. The recorded opt_out_url is /investigate-opt-out?origin=website, which by this module's standing caveat is exactly the shape that can ACT on navigation -- it was requested once, deliberately and alone, and it never got as far as a handshake, so nothing was fired and nothing was read. Combined with the dataset's note that privacy@date-detective.app hard-bounced on 2026-08-21, this row has no working channel at all right now. Recheck is a single TLS handshake; if a custom binding appears, probe the opt-out URL one at a time again.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > Reachability failure, 2026-09-25, and the cause is worth recording precisely because it is not an anti-bot wall and not a dead domain. Both https://date-detective.app/ and the host the dataset records for the opt-out, https://mobile.date- detective.app/, fail TLS from a real browser with net::ERR_CERT_COMMON_NAME_INVALID. Reading the certificates directly explains why: each host answers on 443 with an AZURE APP SERVICE DEFAULT WILDCARD -- CN=*.msha- slice-6-dm1-0-ase.p.azurewebsites.net for the apex and CN=*.msha-slice-6-wus2-1-ase.p.azurewebsites.net for mobile, both issued to Microsoft Corporation -- so the app is up but no custom hostname binding or managed certificate was ever attached to it. Same shape as the optout.prod.bidr.io row: a certificate whose name does not match the host, distinguished from a DNS failure. Nothing can be read through it, hence no verdict. The dataset also records that privacy@date-detective.app hard- bounced on 2026-08-21, so this row currently has no working channel at all; a recheck is cheap (one TLS handshake) and should be redone rather than re-researched.
+
+### `dealersocket-com`
+
+- **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > Verified 2026-09-25, and it is the GUMGUM WRONG-REQUEST-TYPE PROBLEM again, this time without a captcha to hide behind. DealerSocket's footer 'Do not sell my personal data' goes to Solera's group DSAR portal (globaldsar.solera.com/webform/20bbc57b-.../1eafe8e0-..., headed 'DealerSocket, LLC (US)'), which rendered fully: a required 'Request:' autocomplete, required Full Name and Email, and optional country code, phone, country, address, city, state, zip and a details textarea. No captcha script and no captcha element were seen on this render. TWO REASONS IT IS OUT OF SCOPE ANYWAY. First, the form opens with a required identity question, 'I am or was:', whose options are Job Applicant, Employee, Contacted by the company, Employed by a Vendor, Employed by your Customer, Other. A person whose data DealerSocket holds because a car dealership fed it into their CRM is none of those; 'Contacted by the company' is a guess and 'Other' is an admission that the form was not built for them. Picking one on a user's behalf asserts a relationship they did not state. Second, mechanically: not one control on that form has a name attribute -- they are Angular components addressed only by id (requestTypesDSARElement, firstNameDSARElement, emailDSARElement, ...) and the request type and state are comboboxes with 'Clear the ... field' buttons rather than selects, so 'Request:' has to be chosen from a popup list this pass never opened. The page does offer a documented human channel: a toll-free number, (855) 839-8020, stated for California do-not-sell requests. The dataset's opt_out_url for this row (/privacy-policy/) is the policy that links here.
+
+### `deepsync-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-25, and this row is a DATASET DEFECT worth reading before trusting any 'no CAPTCHA' note in source- brokers.json. The row records verification_step as 'identity verified after submission via dynamically-generated knowledge questions (no CAPTCHA on the form itself)'. Rendering privacy.deepsync.com shows a CLOUDFLARE TURNSTILE on the form itself: challenges.cloudflare.com/turnstile/v0/api.js is loaded and a .cf-turnstile element is in the DOM. That is precisely the 2026-09-23 accurateappend/atdata failure repeating in the source data, and it is why this leg is blocked. The form is otherwise a good one -- #pii_form POSTing to /request/opt-out/submit, request_type radios ('opt_out', 'deceased', 'representative'), first_name, last_name, repeatable emails[] and phone fields, a primary address with a 50-state select, and a step-by-step PDF guide -- so if the Turnstile is ever cleared this is a strong staging candidate. Navigation to the portal root rendered the form and did not submit anything. Deep Sync also layers post- submission knowledge-based identity questions on top, which would be a second, independent reason this cannot run unattended.
+
 ### `degree-me`
 
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23: the domain serves nothing. degree.me has NS delegation to AWS Route53 (ns-1086.awsdns-07.org, ns-1685.awsdns-18.co.uk, ns-236.awsdns-29.com, ns-918.awsdns-50.net) but NO A or AAAA record resolves, confirmed by dig both ways, and curl returns http_code 000. This looks like a dormant registration tied to ACE Agents Inc. / academixdirect.com. It sits here rather than under NO_SEARCH_SURFACE because a domain that does not resolve today may resolve tomorrow; recheck resolution before deciding.
+
+### `dehashed-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-25, because the site is mid-rewrite and the recorded surface is simply gone. https://www.dehashed.com/optout returns a genuine HTTP 404 rendering DeHashed's own '404 / Page not found' template -- not a wall, not a redirect. DATASET DEFECT: this row records opt_out_method 'web-form' at that URL; there is no page there, so there is no form and no captcha on it. The 404's own 'Quick Navigation' links were followed and /faq 404s as well, and the homepage banner explains the state of things: 'Welcome to 4.0 -- Please be patient as records are gradually indexed over the coming weeks'. A site whose own navigation 404s is not evidence that a removal route does not exist, which is why this is undecided rather than no-surface; the plausible routes (a support ticket, or removal from inside an account) both sit behind the registration wall recorded on the search leg. The dataset's support@dehashed.com is the only channel that can be tried today. Recheck once 4.0 settles.
+
+### `delawarecourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering /optout/ and /do-not-sell- share-my-personal-information/ and reading both in full. There is no opt-out form, and this row is the same page-for-page as californiacourtrecords-us, coloradocourtrecords-us and connecticutcourtrecords-us -- see the California entry for the full write-up. /optout/ ('Your Privacy Choices') is a rights explainer that points at the do-not-sell page; the do-not-sell page splits into two routes and neither is a form: cookie-level opt-out goes to the TrustArc cookie preferences dialog, and RECORD removal is email-only -- 'please submit your request by emailing privacy@courtrecords.us... Please include your first name, last name, state, and city in your request so that we can identify the appropriate record'. Mailbox-only, hence this bucket. DATASET DEFECT: the row records opt_out_method 'web- form' with verification_step 'CAPTCHA required on the opt-out form'. There is no form. reCAPTCHA api.js does load on both pages, which is exactly how a static skim would manufacture that claim. The same booby trap is present here too -- 'Submitting this form will result in the removal of only the specific records you select', left over from a form that is not on the page -- and the request is per-record: 'If you have additional records appearing on our website, each record must be submitted separately.'
 
 ### `digdevdirect-com`
 
@@ -343,6 +377,12 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23, and this is the first row in the sweep where the right answer is that THE BROKER HAS LEFT THE BUSINESS. emerges.com still serves a site advertising 'watercraft, aircraft, voter and snowmobile registrations with pilot, hunting and fishing licenses', and its nav still carries 'REMOVE ME/OPT OUT' pointing at a Google Form. Following that form to its full address (docs.google.com/forms/d/e/1FAIpQLSdi3KjEPMsVnXQL- KllxvgOQWxvLpLfuz30-Z_eqXDHGEbX6w) redirects to /closedform, which says, in the broker's own words: 'eMerges Opt Out is now Disabled. *As of July 1, 2025 eMerges ceased operating as a List Broker. 1) eMerges is not acquiring, processing, publishing or selling any lists either directly or indirectly and including but not limited to government records. 2) eMerges has ceased operating its entire list business therefore this opt out resource has been disabled effective 20260223.' So there is no surface, and uniquely there is nothing that a surface would accomplish. Recorded as no-surface rather than blocked or undecided because the absence is deliberate, dated, and explained by the broker. DATASET NOTE, flagged and not acted on: this row is arguably retired rather than mapped, and a defunct broker in a 969-row checklist is worth distinguishing from a live one with no form. That is a decision about the dataset's shape, not about this broker, so it is left to a human. Note also, in passing, that the surviving evidence is a Google Form -- the same pattern as clay-com, which is still open pending aria-labelledby resolution.
 
+### `endgame-io`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering endgame.io/privacy in full. There is no opt-out form -- the page renders zero forms and zero inputs -- and the policy instead prescribes a mailbox with per- request SUBJECT LINES, which is unusually specific and worth recording verbatim for anyone writing to them: deletion is 'please email privacy@endgame.io with the subject Forget me', correction is the same address 'with the subject Personal Information Correction', and 'if you wish to opt out of the sale or sharing of your personal information, please email privacy@endgame.io with the subject Personal Information Sharing Opt-Out'. legal@endgame.io is also published. Mailbox-only, hence this bucket. DATASET DEFECT: the row records opt_out_method 'web-form' at /privacy and no opt_out_email; it should carry privacy@endgame.io. Scope note that explains the shape of this row: Endgame processes business contacts' data as a service provider on its customers' instructions and says the customer's own notice governs, so a request here may be forwarded rather than actioned; the only browser-level route the policy offers is the DAA's aboutads.info/choices, which is this dataset's optout-aboutads-info row and not an Endgame channel.
+
 ### `experian-com`
 
 - **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -355,11 +395,29 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-23. www.exploreatlas.io/privacy returns HTTP 200 whose body reads 'This page couldn't be found. You may not have access, or it might have been deleted or moved.' That phrasing is a Notion or Super-style hosted-site message rather than a web-server 404, so the page was published at some point and has since been unpublished, deleted or made private. Recorded as undecided rather than no-surface for two reasons. The site itself was not examined beyond the recorded privacy path, so a rights page may exist elsewhere on the domain. And the row has a bigger question hanging over it than a missing page. DATASET DEFECT, flagged not fixed: the row's domain is exploreatlas.io but its contact is SCOTT@HUNTCLUB.COM -- a personal address at an unrelated company. Hunt Club sells recruiting services; Atlas is a separate product name. Either the row conflates two companies, or Atlas is a Hunt Club property and the dataset records the parent's contact without saying so. As with the forms.gle row in the previous batch, acting on it risks sending a person's opt-out to a company that holds nothing about them. Establishing which company this row is about is the first step, before any further page-hunting.
 
+### `familysearch-org`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-25 by browser render, and blocked for the same reason as the search leg. The recorded opt-out URL https://www.familysearch.org/en/legal/privacy answers 200 with an entirely empty main document (title '', zero characters, zero forms); what actually renders is an Imperva/Incapsula child frame titled 'Captcha Required' loading js.hcaptcha.com/1/api.js with an h-captcha widget and both g-recaptcha-response and h-captcha-response textareas. The privacy notice itself was never readable, so whether FamilySearch offers a form, an account-gated removal or a mailbox could not be observed at all -- but the wall is on every visit, which is what this bucket is for. DATASET NOTE: the row records opt_out_method 'web-form' on a page no browser here has ever seen; treat that claim as unverified.
+
+### `faraday-ai`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-25, and it is the SAME failure that gave this workstream its per-target timeout: https://faraday.ai/privacy-options WEDGES THE BROWSER. Probed deliberately in a small run for exactly this reason, and the target hit TargetTimeout after the 75-second budget with nothing recorded -- no status, no title, no text -- reproducing on the .ai domain what www.faraday.io/privacy-options did twice on 2026-09-23 (the incident that made frame.evaluate hang forever and lost eight already-probed targets). The fixes held: the run was capped at 75s and the other targets in it were written out intact, so the cost this time was one row, not sixteen. DATASET NOTE: the row's own note already warns that opt_out_url may be a general privacy page rather than a consumer opt-out form; that remains unverified either way. Anyone retrying should expect the wedge and read the page some other way.
+
 ### `flashintel-ai`
 
 - **scope:** dataset | **kind:** entity-mismatch | **from:** `optout_forms.OPTOUT_BLOCKED`
 
   > Verified 2026-09-23. The dataset's flashintel.ai/dont-sell-my- information redirects to www.FLASHLABS.ai/dont-sell-my- information -- a rebrand the dataset does not record, flagged here and left unfixed. The dataset's contact for the row, legal@myflashcloud.com, is a third distinct name again. The form is real: Full Name, Current Company, Profile URL and Business Email, all four required, under a 'Submit Request' button. Blocked by reCAPTCHA -- a g-recaptcha-response textarea inside the form with both api2/anchor and api2/bframe frames attached. Worth recording even past the captcha, because it is a second, independent obstacle of a kind this sweep keeps meeting: the form asks for PROFILE URL and CURRENT COMPANY, both required. This is a B2B contact enrichment product, so the record it holds is keyed to a professional profile rather than to a household. resolve_fields has no source for either, and a profile URL is not something the tool could infer -- the user would have to supply it. Same shape as the MAID-keyed brokers (complementics, collectivedata, datafy, factori): the identifier the broker files you under is not one this codebase collects.
+
+### `floridacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering /optout and reading it in full. There is no opt-out form, and this row is page-for-page the same as californiacourtrecords-us, coloradocourtrecords-us, connecticutcourtrecords-us and delawarecourtrecords-us -- see the California entry for the full write-up. /optout renders 'Your Privacy Choices', a rights explainer with zero form controls that points at courtrecords.us/do-not-sell-share-my- personal-information/; record removal on the network is email- only to privacy@courtrecords.us with first name, last name, state and city, and is per-record. Probed as a potential bare- GET action link because the URL contains 'optout': it is NOT one -- navigation rendered an ordinary page and nothing fired, consistent with the same check on the sibling sites. DATASET DEFECT: this row records opt_out_method 'web-form' with 'CAPTCHA required on the opt-out form', on a form that does not exist here.
 
 ### `force-com`
 
@@ -379,6 +437,18 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-23, and this row has TWO dataset defects stacked on each other. Both are flagged here and neither is fixed. FIRST: the row's domain is 'forms.gle'. That is Google's URL shortener, not a broker. Slugged, it becomes the key forms-gle, which identifies no company and will collide with any other row whose opt-out happens to be a Google Form. The row's real subject is whatever company the form belongs to. SECOND, and worse: the form does not belong to the company the row names. The dataset's contact is privacy@REALEFLOW.com. The form at forms.gle/S7vW6zXPwgtnZ9ZF9 is titled 'GROWBOTS OPT-OUT REQUEST FORM' and its text is Growbots' throughout -- 'we will remove the profile and business information linked to this email from our database'. Realeflow sells real-estate investor leads; Growbots sells B2B sales prospecting. They are unrelated. Either the URL was copied into the wrong row or the email was, and there is no way to tell which from here. Acting on it would send a person's opt-out to a company that may hold nothing about them, while leaving the company that does hold something untouched. That alone makes it unsafe to automate. For the record, the Growbots form itself is a Google Form (mG61Hd, entry.1596228221) with a single required text input and the usual hidden fvv / fbzx / pageHistory / submissionTimestamp apparatus. Its labels are carried by aria-labelledby rather than by label elements, the same gap already recorded for clay-com and factori-ai -- the probe cannot read the question text, so which field is which is inferred, not observed. The form also states an out-of-band hop: 'upon filing one and CONFIRMING YOUR EMAIL, we will remove the profile'. Resolving this row starts with establishing which company it is actually about.
 
+### `foundryco-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > OUT OF SCOPE, verified 2026-09-25 by browser render: the only do-not-sell actuator Foundry publishes is a JAVASCRIPT-ONLY CONSENT MODAL with no URL. The footer link on every page, labelled 'California: Do Not Sell My Information', has href 'javascript:window._sp_.usnat.loadPrivacyManagerModal(1316752)' -- a Sourcepoint US-National privacy manager invoked by function call against a numeric property id. There is no page to navigate to, no form element to transcribe and nothing to POST; a sibling link 'Privacy Settings' calls window._sp_.gdpr.loadPrivacyManagerModal(868952, 'vendors') the same way. That is the modal-wizard case this dict exists for, and it is also browser-scoped consent rather than record deletion. DATASET DEFECT, flagged and not fixed: the recorded opt_out_url foundryco.com/idg-privacy-policy/ REDIRECTS to /privacy-policy/ (the IDG-era path is gone, as is the IDG name -- the company trades as FoundryCo, Inc. now). For the record- level rights, both the privacy policy and the separate CCPA notice at foundryco.com/ccpa/ -- which confirms 'Foundry is registered as a data broker under the CCPA' -- decline to give a form at all: each right ends with 'please contact us using the contact details provided below' / 'in Section 1', i.e. a prose contact route via foundryco.com/contact-us/. Note also foundryco.com/california-privacy-rights/ is a genuine 404, so do not record that path. No captcha was seen anywhere, which is immaterial while there is no form.
+
+### `freepeopledirectory-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_UNDECIDED`
+
+  > A REAL, UNWALLED, URL-ADDRESSABLE-LOOKING SEARCH FORM, transcribed 2026-09-25 by browser render, which directly contradicts this row's dataset note. https://www.freepeopledirectory.com/ carries form#form- submit.name-form, METHOD=GET with action on the site root, holding input#fname 'First Name', input#lname 'Last Name' and input#address 'City & State' (name attribute address_data) plus button#submit-button 'SEARCH'. No captcha script, no captcha element. DATASET DEFECT: the row claims 'Results load behind a Spokeo-style city/state wizard, so not URL-addressable' -- there is no wizard on the entry page, just a three-field GET. Left undecided because the results page was not driven, so the results host, the hit and no-hit markers and any count pattern are all still unknown, and this is a Spokeo-network property whose results may well be gated the way Spokeo's are. The opt- out leg is already settled (NO_OPTOUT_SURFACE).
+
 ### `fullcontact-com`
 
 - **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `optout_forms.OPTOUT_BLOCKED`
@@ -391,6 +461,12 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-23: fusedleads.com could not be loaded at all. The navigation failed with net::ERR_CERT_DATE_INVALID -- the site's TLS certificate is expired or not yet valid. That is worth distinguishing carefully from the other failure modes in this module. It is NOT a DNS failure (the name resolved), NOT a refused connection (the handshake got far enough to present a certificate), and NOT an anti-bot wall (a wall serves a challenge page, which reads fine). The host is up and answering; its certificate is simply out of date. Every ordinary visitor is seeing the same browser interstitial, so this is a broker whose site is effectively unreachable to the public rather than one defending itself against automation. It is undecided rather than closed because certificates get renewed, often within days, and the site behind it is unexamined. A retry in a week is the whole next step. If it is still expired then, that is worth saying out loud in any escalation: a data broker whose opt-out channel is unreachable because it has not renewed a certificate is not offering one. The dataset records this row as email- method with greg@fusedleads.com, which at least does not depend on the website.
 
+### `georgiacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering /optout. Identical in every respect to floridacourtrecords-us and the rest of the CourtRecords.us network: same 'Your Privacy Choices' rights explainer with no form, same pointer to courtrecords.us/do-not- sell-share-my-personal-information/, same email-only per-record removal to privacy@courtrecords.us, and the same dataset defect ('web-form' plus a CAPTCHA recorded on a form that is not there). Navigating the /optout URL fired nothing. See californiacourtrecords-us for the full write-up.
+
 ### `getivydata-com`
 
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -400,6 +476,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT 2026-09-23: getivydata.com does not resolve (ERR_NAME_NOT_RESOLVED), so nothing can be said about any surface. UNREACHABLE for the defects list.
+
+### `governmentregistry-org`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Verified 2026-09-25 by rendering https://www.governmentregistry.org/opt-out on its own (the URL contains 'opt-out'; it is not a bare-GET action link, nothing fired). The page is titled 'Opt out of GovernmentRegistry' and headed 'Your Privacy Choices' / 'Remove my Personal Information', and it carries a form -- but the form's submit button reads SEARCH, not Submit, and its fields are input#firstName (required), input#lastName (required), input#city named town, and select#state limited to NINETEEN states (California, Colorado, Connecticut, Delaware, Indiana and the rest of the comprehensive-privacy-law states), against the 52-option state list on the site's own people-search form. So removal here appears to begin by finding your record and then picking it, which is the out-of-scope shape -- but that was not driven, so it is recorded as what was actually seen. No captcha script and no captcha element on the page. DATASET DEFECT: the row claims fields 'name, city, state; email optional for confirmation' -- there is no email field on this form at all. Privacy contact privacy@cisnationwide.com (Accucom / CIS Nationwide) remains the stated alternative.
 
 ### `granitelists-com`
 
@@ -419,11 +501,29 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23. grin.co/data-privacy-form/ returns HTTP 200 but the body is a Cloudflare interstitial -- title 'One moment, please...', text 'Please wait while your request is being verified...'. No form, no fields, nothing else in the DOM. This is the shape that most deserves care in this module, because it lies twice. The status code says success. The page renders without error. A probe that only checked for HTTP 200 and then counted form elements would report 'page loads fine, no opt-out form present' and the row would be closed as no-surface -- a conclusion that is exactly backwards, since the URL is named data-privacy-form and the form is almost certainly sitting behind the challenge. Recorded as blocked rather than undecided because the obstacle is deliberate and persistent: Cloudflare's managed challenge is aimed at precisely the kind of headless automation this tool performs, and waiting longer does not resolve it. The only honest statement about what is behind it is that nothing has been seen. The dataset records no opt-out email for this row, so there is no fallback channel to offer a user. A human with an ordinary browser will pass the challenge without noticing it, so the page is reachable to people and not to this tool -- worth saying plainly if the row is ever surfaced in a report.
 
+### `growbots-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-25, because the recorded page renders EMPTY. https://www.growbots.com/do-not-sell-my-info/ answers 200 with the correct title ('Do Not Sell My Info - Growbots') and then serves no content: the entire document is 763 characters, all of it the site nav, the footer link list and a cookie banner, with zero forms, zero inputs, no email address and not one sentence about how to make a request. No captcha script and no captcha element either -- the page is not walled, it is hollow. DATASET DEFECT: the row records opt_out_method 'web- form' pointing at this URL; there is no form on it. Undecided rather than no-surface because a WordPress page whose body failed to render is a defect to recheck, not a confirmed dead end.
+
 ### `gumgum-com`
 
 - **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_BLOCKED`
 
   > Verified 2026-09-23. GumGum's privacy policy has no form of its own; its 'DO NOT SELL', 'Do not Sell' and 'Exercise Your Rights' links all point to the same OneTrust DSAR webform on privacyportal-cdn.onetrust.com. That form was rendered and read. Blocked by reCAPTCHA -- api.js loaded, a g-recaptcha-response textarea inside the form, and both an anchor and a BFRAME attached, the latter meaning the checkbox-with-puzzle variant. THE WRONG-REQUEST-TYPE PROBLEM, and a clear-cut instance of it. The form is headed 'SUBJECT ACCESS FORM' and its first required question is 'I am a (an)' with the options: Prospective Employee, Client, Employee, Visitor, Other. THERE IS NO OPTION FOR A PERSON WHOSE DATA THE COMPANY COLLECTED THROUGH ADVERTISING -- which is everyone this dataset is concerned with. A consumer opting out of GumGum's ad targeting has never been its employee, client or prospective employee, and calling themselves a 'Visitor' asserts a relationship to gumgum.com that they very likely do not have. This is a generic HR-oriented OneTrust template pressed into service as an advertising-privacy channel, and picking any of its options would mean a recipe choosing a characterisation on the user's behalf. Recorded as blocked on the captcha, which is decisive on its own, but the request-type problem would independently keep it out of STAGED_RECIPES. Remaining fields are conventional: First Name, Last Name, Email, Country and a required Request Details textarea, with a request-type multi-select offering Opt out / Update Data / Info Request / Data Deletion / Object to Processing. Note the policy also links the NAI consumer opt-out, which is not GumGum's surface. talbert@gumgum.com is the dataset contact -- a personal address.
+
+### `hartehanks-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-25 by browser render, and the recorded URL is dead. https://www.hartehanks.com/privacy/preferences 404s and lands on /newsroom/, and /privacy-policy/ 404s outright; the live documents are /privacy-highlights-march-2026/ and /privacy- statement-march-2026/, and both send the reader to a 'Preferences page' / 'Don't Sell My Info' link at https://privacy-in-action.hartehanks.com/. That host redirects to a OneTrust DSAR webform (privacyportal.onetrust.com/webform/a 1cc801d-a1ae-42ce-9f6b-2d394bf3e318/a4bc240d-e37d-427e-82b7- 1969417aacc0/, 'Welcome to the Harte Hanks Privacy Webform!') which is a real and thorough form -- subject type, salutation, required First Name and Last Name, middle name, company, required Country, Address, City, Postal Code, Email and Phone Number, optional State and additional email -- and it is CAPTCHA-WALLED: google.com/recaptcha/api.js loads explicitly, a g-recaptcha-response textarea sits in the form, and a child frame renders the visible 'I'm not a robot' reCAPTCHA v2 checkbox. DATASET DEFECT: the row claims 'Preferences webform verified live 2026-09-22' against a URL that 404s; the form is real but it is at a different host and it is behind a checkbox captcha. privacy@hartehanks.com and +1-800-541-5594 are offered as alternatives.
+
+### `hawaiicourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering /optout. Identical to floridacourtrecords-us and georgiacourtrecords-us -- 'Your Privacy Choices' rights explainer, no form, pointer to the network do-not-sell page, email-only per-record removal to privacy@courtrecords.us, same dataset defect recording a 'web- form' with a CAPTCHA that does not exist here. Navigating the /optout URL fired nothing. See californiacourtrecords-us for the full write-up.
 
 ### `healthlinkdimensions-com`
 
@@ -449,11 +549,29 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23. /opt-out-california-residents/ contains NO form element. What it contains is a list of links to OTHER companies' opt-out pages: undertone.com/opt-out/, thenai.org/opt-out/, Google's analytics opt-out, optout.privacyrights.info, and perion.com/ccpa/ -- Perion being Hivestack's parent. None of those is Hivestack's surface. The NAI and Google links suppress ad targeting across participating networks and do nothing to what Hivestack holds; the Undertone and Perion links belong to sibling companies. Offering any of them would be offering a remedy that does not address the complaint, the same reasoning already applied to fourleafdata- com and gundir-com. A DEFECT ON THE PAGE ITSELF, worth recording: the link labelled 'Your Privacy Choices' -- the one a person would click first, since it is the statutory phrase -- has an EMPTY href. It goes nowhere. Clicking it does nothing at all and gives no error, so a visitor would reasonably assume the page was broken or that they had already opted out. So the only route this company publishes for itself is privacy@hivestack.com, recorded in the dataset. Closed as no- surface because the absence is established rather than merely unobserved.
 
+### `homedata-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-25. DATASET CLAIM FALSIFIED: the row says 'homedata.com itself now serves generic deepsync.com content', and it serves nothing at all. homedata.com and www.homedata.com both RESOLVE (15.197.142.173, an AWS Global Accelerator address) but the TCP connection never completes: Playwright timed out at 30s on domcontentloaded on both hostnames, and curl -L timed out at 25s with HTTP 000. Only privacy.homedata.com (54.185.236.12) answers, and it redirects to DeepSync's privacy portal. So there is no page under this domain to carry a lookup surface. Independently, DeepSync is a B2B identity-resolution and audience vendor that sells to marketers and offers no consumer- facing people search, so a working apex would not change this leg.
+
+### `idahocourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering https://idahocourtrecords.us/optout/ on its own, one target at a time under the bare-GET action-link caveat. Navigating it fired nothing: it is the network's 'Your Privacy Choices' rights EXPLAINER, HTTP 200, about 6.8k of text, and it carries NO form and NO input of any kind. Its only routes off the page are the network do-not-sell page (courtrecords.us/do-not-sell-share-my- personal-information/), this row's own /do-not-sell-share-my- personal-information/ mirror, and email-only per-record removal to privacy@courtrecords.us. Identical to floridacourtrecords-us, georgiacourtrecords-us and hawaiicourtrecords-us; see californiacourtrecords-us for the full write-up. DATASET DEFECT, flagged and not fixed: the row records opt_out_method 'web-form' at idahocourtrecords.us/optout plus 'CAPTCHA required on the opt-out form', and there is no form on that page at all. One nuance worth recording against the earlier siblings' write-ups: this page DOES load Google's recaptcha api.js site-wide (cap[] reports it), but there is no captcha widget and nothing to submit -- the script is inert here, so the recorded CAPTCHA claim is still wrong, just not because reCAPTCHA is absent from the page's asset list.
+
 ### `idengine-com`
 
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
 
   > Verified 2026-09-23. idengine.com is a PARKED DOMAIN LISTED FOR SALE. The recorded opt-out path /dnsmpi/ redirects into GoDaddy's aftermarket and returns an Akamai 'Access Denied' for 'http://forsale.godaddy.com/forsale/idengine.com'. There is no site behind the name. This is the most complete form of absence in the module, and distinct from its neighbours: reachdata-com had not launched yet, emerges-com had shut down, granitelists- com is suspended and may return. A domain in a for-sale listing has been given up by its owner, and may shortly belong to someone entirely unrelated. That last point is the reason this is worth more than one line. The dataset records NO opt-out email for this row, so the URL was the only channel -- and if the domain is bought, /dnsmpi/ could later resolve to a live page belonging to a different company. A tool that retried this row mechanically could then submit a person's name and address to a stranger. Any future recheck of parked-domain rows should confirm OWNERSHIP, not merely that a page has appeared.
+
+### `illinoiscourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering https://illinoiscourtrecords.us/optout/ on its own, one target at a time under the bare-GET action-link caveat. Navigating it fired nothing: it is the network's 'Your Privacy Choices' rights EXPLAINER, HTTP 200, about 6.8k of text, and it carries NO form and NO input of any kind. Its only routes off the page are the network do-not-sell page (courtrecords.us/do-not-sell-share-my- personal-information/), this row's own /do-not-sell-share-my- personal-information/ mirror, and email-only per-record removal to privacy@courtrecords.us. Identical to floridacourtrecords-us, georgiacourtrecords-us and hawaiicourtrecords-us; see californiacourtrecords-us for the full write-up. DATASET DEFECT, flagged and not fixed: the row records opt_out_method 'web-form' at illinoiscourtrecords.us/optout plus 'CAPTCHA required on the opt-out form', and there is no form on that page at all. One nuance worth recording against the earlier siblings' write-ups: this page DOES load Google's recaptcha api.js site-wide (cap[] reports it), but there is no captcha widget and nothing to submit -- the script is inert here, so the recorded CAPTCHA claim is still wrong, just not because reCAPTCHA is absent from the page's asset list.
 
 ### `imprintanalytics-io`
 
@@ -465,11 +583,39 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT 2026-09-23: TLS handshake fails outright (ERR_SSL_VERSION_OR_CIPHER_MISMATCH), so no HTTP request is ever made. Server misconfiguration on their side.
 
+### `indianacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering https://indianacourtrecords.us/optout/ on its own, one target at a time under the bare-GET action-link caveat. Navigating it fired nothing: it is the network's 'Your Privacy Choices' rights EXPLAINER, HTTP 200, about 6.8k of text, and it carries NO form and NO input of any kind. Its only routes off the page are the network do-not-sell page (courtrecords.us/do-not-sell-share-my- personal-information/), this row's own /do-not-sell-share-my- personal-information/ mirror, and email-only per-record removal to privacy@courtrecords.us. Identical to floridacourtrecords-us, georgiacourtrecords-us and hawaiicourtrecords-us; see californiacourtrecords-us for the full write-up. DATASET DEFECT, flagged and not fixed: the row records opt_out_method 'web-form' at indianacourtrecords.us/optout plus 'CAPTCHA required on the opt-out form', and there is no form on that page at all. One nuance worth recording against the earlier siblings' write-ups: this page DOES load Google's recaptcha api.js site-wide (cap[] reports it), but there is no captcha widget and nothing to submit -- the script is inert here, so the recorded CAPTCHA claim is still wrong, just not because reCAPTCHA is absent from the page's asset list.
+
+### `info`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > OUT OF SCOPE, verified 2026-09-25 by rendering the URL on its own under the bare-GET action-link caveat (the hostname begins 'optout.'); navigating it fired nothing, it waits for selections. Read the search leg first: this row is a DATASET DEFECT whose domain field is the string 'info.' and whose company name was, by its own notes, 'inferred from domain'. Its recorded opt_out_url 'https://optout.aboutads.info.' -- stray trailing dot and all -- is the Digital Advertising Alliance's WebChoices tool, which belongs to the DAA and to no broker on this list. Rendered live it is HTTP 200, title 'WebChoices', and it describes itself as a way to 'control the collection and use of data for interest-based advertising ON THIS BROWSER': the visitor ticks boxes next to individual participating companies and presses 'Submit your choices', and the result is a set of per-browser opt-out cookies. That is out of scope three times over -- it is browser-scoped rather than record-scoped, it requires picking companies out of a list, and it is not this row's broker's own channel because this row has no identifiable broker. Nothing here can be automated on a person's behalf, and the row should be deleted or re-sourced rather than researched again.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > DATASET DEFECT, verified 2026-09-25, and the leg is closed because the row identifies no broker. The row's domain field is the literal string 'info.' -- a trailing-dot fragment, not a domain -- which slugifies to the meaningless broker_id 'info' and will collide with any other row whose domain is mangled the same way. Its name field is 'Info', described in its own notes as 'company name inferred from domain'. Its recorded opt_out_url is 'https://optout.aboutads.info.' which, with the stray dot removed, is the Digital Advertising Alliance's WebChoices tool -- an industry-wide browser cookie utility, not a broker's site. There is therefore no company here whose search surface could be found, and nothing to render beyond the DAA tool itself (verified live, HTTP 200, title 'WebChoices'). Flagged, not fixed: this row should be deleted or re-sourced rather than researched further.
+
 ### `information-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > NEXT STEP, concretely: fetch /privacy-rights/ and transcribe whatever it serves. Deliberately not doing that from the stale URL's redirect chain here, because the two buttons post rather than link, so what /privacy-rights/ shows may depend on which button was pressed -- and guessing which is how a recipe ends up filing a copy request when the user asked for deletion. DATASET NOTE: the source row's opt-out URL is wrong.
+
+### `inmar-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > BLOCKED BY BOTDETECT, verified 2026-09-25 by browser render -- and the detector missed it again, exactly as it did on FinThrive in batch 26, so this is the second recorded instance of the same blind spot. DATASET DEFECT, flagged and not fixed: the row's opt_out_url is inmar.com/about/privacy-policy, a policy page with no request form on it (its three forms are all the Drupal site search), and inmar.com/do-not-sell-my-personal-information is a genuine HTTP 404. The policy's own 'EXERCISING YOUR PRIVACY RIGHTS' section gives two channels: calling 844-392-1073, and a link it labels simply 'webform' pointing at privacyportal.onetru st.com/webform/fa9f2f77-33ff-473b-ae55-579e2e693a91/b9c860bc- cc13-4db1-b995-395c9fcbe3c7. That form -- 'Resident Right to Access OR Deletion Request Form', scoped to residents of nineteen named states -- is real: required input#formField20DSARElement 'I am submitting this request as:', required input#firstNameDSARElement, required input#lastNameDSARElement, required input#emailDSARElement, required input#countryDSARElement, required input#stateDSARElement, a country-code input and a REQUIRED input#phoneNumberDSARElement, submitted by button#dsar-webform- submit-button. Its captcha is BotDetect, which loads no recognizable captcha script and so left cap[] and widget[] EMPTY on this render: the only tell is the field names inside the form -- hidden BDC_VCID_angularBasicCaptcha, BDC_BackWorkaround_..., BDC_Hs_..., BDC_SP_... plus a visible input[name=captchaCode] labelled 'Captcha'. A clean-looking cap[] on a OneTrust webform must never again be read as captcha-free. Also note the form offers only access and deletion -- no do-not-sell option -- and that the policy covers only inmar.com, pointing separately at an OwnerIQ notice (inmar.com/about/privacy-policy/owneriq) for the advertising business. privacy@inmar.com is published.
+
+### `inmatessearcher-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > OUT OF SCOPE, verified 2026-09-25 by probing each URL on its own under the bare-GET action-link caveat; neither fired anything. TWO findings, and the first is a DATASET DEFECT: the recorded opt-out URL inmatessearcher.com/optOut/name/landing does NOT serve an opt-out form. It serves, byte for byte, the site's ordinary people-search landing page -- the same form#email-form asking a person's First Name, Last Name and state, the same 'FREE SEARCH' button, the same Cloudflare Turnstile frame -- because the Angular app falls through to the search route. Flagged, not fixed. The REAL opt-out entry point is the footer link 'Do Not Sell Or Share My Personal Info' (and its twin 'Limit The Use of My Sensitive Personal Info'), both pointing at https://www.inmatessearcher.com/api/helper/optOutLight/search. Rendered, that URL is a page titled 'Remove My Information' instructing 'Enter the name and state in the form below to LOCATE THE RECORD you would like to remove', and it holds form#pageForm POSTing to itself with required input[name=fname] 'First name', required input[name=lname] 'Last name', required input[name=city] 'City', required select[name=state] (51 options), optional input[name=zip], optional input[name=phone], optional input[name=email], a hidden input[name=captchaId], and input#pageFormSubmitBtn labelled 'SEARCH'. Out of scope for three stacked reasons, any one sufficient: (1) it is a RECORD- PICKING flow -- the first step searches, and the person must then identify their own listing out of the results, which this codebase will not do; (2) the hidden captchaId field means a captcha is wired into the submission path even where none rendered on step one, and the site's search side is behind Turnstile besides; (3) the dataset records an email confirmation link as required to finalize, an out-of-band hop. support@inmatessearcher.com is the published address; operator is Truth Now LLC, the same operator as sealedrecords.net.
 
 ### `integratedmedicaldata-com`
 
@@ -491,6 +637,12 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-23: the dataset's URL 404s and no other path was probed. A background-screening CRA, so any 'search' is a file disclosure gated behind identity verification rather than a public index -- same distinction as innovis-com above. DATASET NOTE: stale URL.
 
+### `iowacourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering https://iowacourtrecords.us/optout/ on its own, one target at a time under the bare-GET action-link caveat. Navigating it fired nothing: it is the network's 'Your Privacy Choices' rights EXPLAINER, HTTP 200, about 6.8k of text, and it carries NO form and NO input of any kind. Its only routes off the page are the network do-not-sell page (courtrecords.us/do-not-sell-share-my- personal-information/), this row's own /do-not-sell-share-my- personal-information/ mirror, and email-only per-record removal to privacy@courtrecords.us. Identical to floridacourtrecords-us, georgiacourtrecords-us and hawaiicourtrecords-us; see californiacourtrecords-us for the full write-up. DATASET DEFECT, flagged and not fixed: the row records opt_out_method 'web-form' at iowacourtrecords.us/optout plus 'CAPTCHA required on the opt- out form', and there is no form on that page at all. One nuance worth recording against the earlier siblings' write-ups: this page DOES load Google's recaptcha api.js site-wide (cap[] reports it), but there is no captcha widget and nothing to submit -- the script is inert here, so the recorded CAPTCHA claim is still wrong, just not because reCAPTCHA is absent from the page's asset list.
+
 ### `jdmlistservices-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -500,6 +652,34 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT 2026-09-23: only the dataset's opt-out path was probed and it 404s on a live host. No search surface was looked for. DATASET NOTE: stale URL.
+
+### `jigyasaanalytics-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > OUT OF SCOPE, verified 2026-09-25 by browser render. DATASET DEFECT, flagged and not fixed: the row's opt_out_url is jigyasaanalytics.com/contact-us, a contact page rather than the opt-out surface -- though unusually the page does name the real one. That page states 'Please note that Jigyasa Analytics LLC no longer operates as a data broker' and then 'To submit data deletion requests please fill out our Opt Out Form (California -CCPA, Texas, Vermont and all other states)', linking https://form.jotform.com/240995854286170. Rendered, that is a genuine multi-page JotForm titled 'Opt Out Form' posting to submit.jotform.com/submit/240995854286170, and it is transcribed in full: PAGE ONE is an identity gate -- input#input_15 (name=q15_pleaseAuthenticate) labelled 'Please authenticate your ID by entering your email addr[ess]', a 'Send Verification Code' button, a numeric code input, and 'RESEND CODE' / 'CHANGE EMAIL' buttons; subsequent pages, present in the DOM but off-layout until reached, ask required q2_fullName_1[first] and [last], q17_email, required q4_phone_3[full], and a required address block q5_address_4[addr_line1] / [addr_line2] / [city] / [state] / [postal], ending at a 'Review and Submit' button, with JotForm's usual jsExecutionTracker, submitSource, submitDate and buildDate hidden fields. No captcha script and no captcha widget were seen anywhere on it. It is out of scope for the reason the very first field states: the flow CANNOT PROCEED until a verification code emailed to the person is typed back into the form, an out-of-band, multi-step email-token exchange this codebase does not do. Worth flagging for a human pass: apart from that gate this form is clean, and a person driving it by hand would have no obstacle.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-25 by browser render. jigyasaanalytics.com is an analytics consulting firm (synthetic data, publishing, financial services). The home page carries no form and no input at all. Its /contact-us page states, in its own words, 'Please note that Jigyasa Analytics LLC no longer operates as a data broker' -- recorded here as a broker-surface claim the dataset does not reflect, flagged and not fixed, since the company still publishes the opt-out form described on the other leg. Either way there is no consumer lookup surface.
+
+### `kalibrate-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > BLOCKED BY BOTDETECT, verified 2026-09-25 by browser render -- the third instance of this detector blind spot recorded so far (FinThrive in batch 26, inmar-com in this batch), and the second where a OneTrust webform reported an EMPTY cap[] for the frame that actually holds the captcha. The recorded URL kalibrate.com/data-subject-access-request-form/ REDIRECTS to https://kalibrate.com/dsr-form/ -- a small dataset defect, flagged and not fixed. That page embeds a OneTrust DSAR webform in a child frame at privacyportal-uk.onetrust.com/webform/6e95a3 45-1222-4957-a118-93d60494951b/390b0718-0304-49af-9629- 7cb64a946019, and the parent page reports zero forms of its own apart from the site search, so a main-frame-only read would call this page empty. The embedded form is real and demanding: required input#countryDSARElement 'Country', required input#stateDSARElement 'State', required input#firstNameDSARElement, required input#lastNameDSARElement, required input#addressDSARElement 'Street Address', optional input#address2DSARElement, required input#cityDSARElement, required input#zipDSARElement 'Zip/Postal Code', required input#emailDSARElement, optional textarea#requestDetailsDSARElement, an input[type=file]#vt-file- select-input-1 'Select a File', and button#dsar-webform-submit- button 'Submit'. Its captcha is BotDetect, visible only as hidden BDC_VCID_angularBasicCaptcha / BDC_BackWorkaround_ / BDC_Hs_ / BDC_SP_angularBasicCaptcha plus input[name=captchaCode] labelled 'Captcha'. Separately, kalibrate.com runs reCAPTCHA v3 sitewide through Contact Form 7 (render key 6LcXQEQsAAAAAIGu1ZVeg26CG94g92ZZytsvD5iM) and leaves a textarea#g-recaptcha-response-100000 loose on the DSR page, so there are two independent bot checks in play.
+
+### `kansascourtrecords-us`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering https://kansascourtrecords.us/optout/ on its own, one target at a time under the bare-GET action-link caveat. Navigating it fired nothing: it is the network's 'Your Privacy Choices' rights EXPLAINER, HTTP 200, about 6.8k of text, and it carries NO form and NO input of any kind. Its only routes off the page are the network do-not-sell page (courtrecords.us/do-not-sell-share-my- personal-information/), this row's own /do-not-sell-share-my- personal-information/ mirror, and email-only per-record removal to privacy@courtrecords.us. Identical to floridacourtrecords-us, georgiacourtrecords-us and hawaiicourtrecords-us; see californiacourtrecords-us for the full write-up. DATASET DEFECT, flagged and not fixed: the row records opt_out_method 'web-form' at kansascourtrecords.us/optout plus 'CAPTCHA required on the opt-out form', and there is no form on that page at all. One nuance worth recording against the earlier siblings' write-ups: this page DOES load Google's recaptcha api.js site-wide (cap[] reports it), but there is no captcha widget and nothing to submit -- the script is inert here, so the recorded CAPTCHA claim is still wrong, just not because reCAPTCHA is absent from the page's asset list.
+
+### `kaspr-io`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > BLOCKED BY RECAPTCHA, verified 2026-09-25 by browser render, and it took a DELIBERATELY LONGER WAIT to see at all -- read the tooling note, it generalises. DATASET DEFECT, flagged and not fixed: the row records the privacy policy as the opt-out URL. The real surface, linked from both the home page and the policy as 'Do Not Sell My Information', is a Mine (saymine.io) privacy centre at https://kaspr.privacy.saymine.io/kaspr. TOOLING NOTE: at the prober's standard 2.5s settle this page reports HTTP 200 with document.body.innerText of length ZERO, no forms and no captcha -- indistinguishable from an empty page, and exactly the false-clean reading rule 1 exists to prevent. At 12s it is a full Angular DSR form (78kB of HTML). Titled 'Kaspr's Data Subject Request Form', it asks: Country (required, defaulted to United States); a required 'I would like to' choice of Right to edit / Get a copy of my data / Delete my data -- note there is NO do-not-sell or opt-out-of-sale option; then required First name, Last name, BUSINESS EMAIL, JOB TITLE, COMPANY NAME, BUSINESS MOBILE NUMBER and 'Your public LinkedIn link'; a required certification checkbox; a required relationship choice (Consumer / Employee / Authorized Agent); and Submit. The wall is a reCAPTCHA frame attached to the page (google.com/recaptcha/api2/anchor, sitekey 6LdpfrsaAAAAAKQQr6_BI1r_6-nn-FzTtVJU5t-L). Even past it this is the flashintel / B2B-profile shape already recorded elsewhere: job title, company and a public LinkedIn URL are all REQUIRED and resolve_fields has no source for any of them, so the identifier this broker files a person under is not one this codebase collects. privacy@kaspr.io with the subject 'Opt-out Kaspr' remains the published email channel.
 
 ### `kbmg-com`
 
@@ -629,6 +809,12 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-24: HTTP 403 from Cloudflare. m1-data.com/unsubscribe/ returned the block page 'Sorry, you have been blocked ... You are unable to access secureservercdn2.net'. No content was retrieved. UNREACHABLE for the defects list.
 
+### `mailinglists-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > BLOCKED BY INVISIBLE RECAPTCHA ENTERPRISE, verified 2026-09-25 by browser render. DATASET DEFECT, flagged and not fixed: the row's opt_out_url is the company's general privacy-policy page. The actual surface is a footer link reading 'DO NOT SELL MY PERSONAL INFORMATION FORM' on the home page, pointing at a shared HubSpot form -- 41b1vr.share-na2.hsforms.com/2mF48cI- GSjaSTP9FG8gkjA -- and that form is real and well-scoped for this codebase: required input[name='0-1/firstname'] 'First Name', required input[name='0-1/lastname'], required input[type=email][name='0-1/email'], optional input[name='0-1/address'] 'Street Address', '0-1/city', '0-1/state' 'State/Region', '0-1/country', a tel field backed by hidden input[name='0-1/phone'], two name='0-1/consumer_privacy_request_type' radios (the visible page labels the first 'Do Not Sell...'), and a REQUIRED checkbox name='0-1/consumer_privacy_request_confirmation' 'I confirm that I am submitting this request for myself'; submit is button id ...-15 'Submit', with hidden hs_context. Element ids are per- render GUIDs prefixed 9c9cc5b8-8281-42f6-a407-2f61c7c18288, so a driver must key on name, not id. The wall: google.com/recaptcha/enterprise.js (sitekey 6Lfsit8ZAAAAAKdtNnFH8HrpgF-JzgzfjHlxxNVK, badge=inline), a grecaptcha-badge, BOTH textarea[name=g-recaptcha-response] and hidden input#hs-recaptcha-response inside the form, and the enterprise anchor and bframe frames attached. This is the growinglibraries-com shape again: a complete, honest, fully transcribed form whose only obstacle is an INVISIBLE enterprise captcha with no visible widget. Promote it the day this codebase can answer one.
+
 ### `marketops-com`
 
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -648,6 +834,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT 2026-09-24. The request timed out on two separate attempts -- no response at all, not a rejection. Nothing about a search surface was observed.
+
+### `netwisedata-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-25 by rendering netwisedata.com. DATASET DEFECT: the recorded opt_out_url https://www.netwisedata.com/consumer-privacy returns HTTP 404 with an empty body, with and without a trailing slash -- there is no page there and therefore no form on it. NetWise has been folded into Dun & Bradstreet: the apex now lands on https://www.dnb.com/en-us/products/dnb-id-graph-plus.html, the identity-graph product built on that data, and the only rights route on it is D&B's own footer 'Your Privacy Choices' pointing at the TrustArc form at submit- irm.trustarc.eu/services/validation/ba81b98f-... . That form is BLOCKED by invisible reCAPTCHA v3 (api.js?render=6LeUJoQa..., grecaptcha-badge, g-recaptcha-response), written up in full on the dnb-com and trustarc-eu rows. So the correct reading of this row today is: the NetWise-branded surface is gone, the successor surface exists and is challenged. privacy@netwisedata.com is recorded on the row and is the only channel that does not require solving a captcha; whether that mailbox still answers after the merge was not tested.
 
 ### `nuwber-com`
 
@@ -674,6 +866,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
 
   > NO VERDICT as of 2026-09-23, and the surface was found only because the site leaks it. parade.pet is a single-page app: every path, including ones that return HTTP 404, serves the same shell, and that shell contains every form the app will ever show. Enumerating them turns up signUpForm, loginForm, phoneNumberForm, smsCode, emailCodeForm -- and, decisively, form#optOutLoginForm, an email box with a Login button. So an opt-out flow exists and is reachable, which the visible site never advertises; the homepage FAQ item 'How do I delete my account and remove my ...' links only to an on-page accordion, and an 'Opt out of marketing' link points at '#'. It is undecided because the flow is GATED ON AN EMAILED CODE. optOutLoginForm takes an email and logs you in; emailCodeForm then asks for a code delivered out of band. Nothing beyond that step was observed, so the fields that carry the actual request are unknown. Same shape as forager-ai in the previous batch and as the shipped ADVANCEDBACKGROUNDCHECKS recipe, so not out of scope in principle. One caution for whoever continues: because the SPA serves all forms at all times, PRESENCE OF A FORM IN THE DOM DOES NOT MEAN IT IS ON SCREEN. A recipe here must assert the opt-out view is actually displayed before filling anything, or it will type into a hidden login box and report success. DATASET NOTE, flagged not fixed: this row's domain is parade.pet but its contact is hello@goodboystudios.com -- the operator's name, not the site's.
+
+### `perion-com`
+
+- **scope:** broker-surface | **kind:** broker-surface-defect | **from:** `optout_forms.OPTOUT_OUT_OF_SCOPE`
+
+  > OUT OF SCOPE, verified 2026-09-25 by browser render, for two independent reasons -- and with a broker-surface defect worth reporting on its own. FIRST, the only actuator Perion publishes is a PER-BROWSER COOKIE. perion.com/opt-out/ ('OPT-OUT TOOL') states it plainly: 'Perion offers an opt-out cookie for those that wish to opt-out of Perion IBA activities... If you have multiple Internet browsers or users on the same computer, you will need to perform the opt-out operation for each browser... If you or your anti-virus or other software deletes the opt-out cookies from your computer, if you re-install your browser, or if you delete your cookies, then you will need to repeat the process.' There is no form on that page at all -- the page's only controls are the Cookiebot consent dialog and a 'Click here to Opt-Out' actuator -- and it also routes to the NAI and DAA industry tools and to tools.google.com/dlpage/gaoptout. A cookie set in a throwaway automation browser opts out nothing that belongs to the person. SECOND, the identifier: perion.com/ccpa/ says Perion files people under Mobile Advertising IDs and that 'we often receive requests from users identifying themselves via an e-mail address, name or other direct identifiers, however as our offerings do not include the collection or processing of this type of information (rather, device identifiers such as MAIDs) we are not able to identify the user' -- the same MAID- keyed dead end already recorded for complementics, collectivedata, datafy and factori. THIRD, THE DEFECT: the CCPA notice tells the reader eight times to 'submit the DSR' or 'fill in the DSR', and NO DSR FORM IS LINKED ANYWHERE. Every anchor on /ccpa/, /legal/ and /opt-out/ was enumerated; the only thing resembling one is an UNREPLACED COOKIEBOT TEMPLATE PLACEHOLDER, a link whose text is the literal '[#DSR_FORM_URL_TEXT#]' pointing at 'https://perion.com/ccpa/[#DSR_FORM_URL#]' (and the same broken link again on /legal/ and /opt-out/), alongside a literal '[#IABV2SETTINGS#]'. This is the identical misconfiguration already recorded for illumin / acuityads -- same vendor, same unset variable -- which makes it a Cookiebot- deployment pattern worth checking for on every Cookiebot site in the dataset, not a one-off. The data-broker registrant is the affiliate Hivestack Inc.; the notice's own metrics table reports zero requests of every kind received from Californians, which is what an unlinked DSR form would produce. Shine-the-Light requests go to an email address the notice gives in prose.
 
 ### `privacycompliance-biz`
 
@@ -704,6 +902,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_BLOCKED`
 
   > FCRA-REGULATED BACKGROUND SCREENING -- see the category note above NO_OPTOUT_SURFACE in this module for why this whole class gets no recipe. Verified 2026-09-23: the recorded do-not-sell URL never renders -- smartmove.us serves a Cloudflare interstitial ('Performing security verification ... This page is displayed while the website verifies you are not a bot', Ray ID a3fd3ab4892b31a9) and redirects with a __cf_chl_rt_tk challenge token. So the page is walled as well as being in the exempt class. SmartMove is TransUnion's landlord-facing tenant- screening product; a report is pulled by a landlord with the applicant's consent, and the consumer's recourse is the FCRA channel rather than this link. DATASET NOTE: the row is named 'CTAM Leadshare Corp.' with contact zell@ctam.com, which matches neither TransUnion nor SmartMove -- flagged, not fixed.
+
+### `socialgist-ai`
+
+- **scope:** dataset | **kind:** entity-mismatch | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25 by rendering socialgist.ai and its /privacy- and-terms in full. There is no opt-out form. The policy is a long, genuinely detailed US-state rights notice -- right to know, delete, correct, opt out of sales, non-discrimination, for residents of California and a dozen other states -- and every one of those rights routes to a mailbox, privacy@socialgist.com (info@socialgist.com is the general address; note both are on socialgist.COM while this row's id comes from the .ai domain). The only link on the entire privacy page is Google's own analytics opt-out at tools.google.com/dlpage/gaoptout, which is not a Socialgist channel. Mailbox-only, hence this bucket -- same call as crif-com. DATASET DEFECT: the row records opt_out_method 'web-form' at this URL and no opt_out_email; there is no form here, and the published address should be on the row. One thing that materially shapes what a request can even ask for, and the reason a name-and-address recipe would not fit this broker anyway: Socialgist holds personal information only as it appears inside collected social Content, keyed to handles and usernames, and the policy says so -- it will not process requests that do not let it link the request to applicable records in the Content, i.e. it wants the handles, and it verifies identity before acting.
 
 ### `socialgist-com`
 
@@ -738,6 +942,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.SEARCH_UNDECIDED`
 
   > NO VERDICT 2026-09-23: connection to https://trufactor.io/ timed out after 30s with no response at all -- not a challenge page, not an error page, nothing. TruFactor was an SK Telecom-backed mobile-data venture; a dead host is a plausible end state, but a single timeout is not evidence of that and no such conclusion is recorded here. Retry before treating this row as anything.
+
+### `trustarc-eu`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified 2026-09-25 by rendering the URL this row records, which resolves and is the real surface: submit-irm.trustarc.eu/service s/validation/ba81b98f-997d-4216-b4cc-d64cf261b082 renders 'Data Subject Request Form' -- correct for the row, since the broker here is Dun & Bradstreet and TrustArc merely hosts the form (the same URL is what dnb.com and the absorbed netwisedata.com both link as 'Your Privacy Choices'). The form is complete: three required single-line inputs, each shadowed by a hidden twin of the same GUID name, data-category checkboxes 'Consumer Data' / 'Business Data' / 'Professional Contact Data', an optional 'Eyeota Cookie ID (optional, see details below)', a button#add- more-single-line-btn repeater and further GUID-named inputs. BLOCKED by INVISIBLE reCAPTCHA v3: google.com/recaptcha/api.js?r ender=6LeUJoQaAAAAAAAYuHIlzgY0JwxfTErqtLAzBwBD is loaded and grecaptcha-badge, grecaptcha-logo, grecaptcha-error and g-recaptcha-response are all in the DOM -- nothing a human visitor sees, and everything a recipe would fail on. Two structural notes for whoever revisits: every control is addressed by GUID (id='00000000-0000-0000-0000-000000001001', name='bb2c6098-...'), some of which are TrustArc's stable well- known ids and some per-deployment, so selectors would have to be verified against a fresh render; and the DATASET NOTE on this row is wrong in a harmless direction -- it calls the URL a 'general privacy-policy page (not necessarily a dedicated consumer opt-out form)' when it is in fact the dedicated form. The EU DPO address eudpo@dnb.com on the dnb-com row is the mailbox alternative.
 
 ### `winwithoptimal-com`
 
