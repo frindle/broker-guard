@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **634** / 969
-- Search leg mapped: 634 / 969
-- Opt-out leg mapped: 634 / 969
+- Fully mapped (both legs): **658** / 969
+- Search leg mapped: 658 / 969
+- Opt-out leg mapped: 658 / 969
 
 ## How to resume
 
@@ -618,36 +618,36 @@ of those dicts against source-brokers.json).
 - [x] **Metropol Credit Reference Bureau Limited** (`co-ke`) -- search: no-surface, opt-out: no-surface
 - [x] **MH Sub I, LLC** (`internetbrands-com`) -- search: no-surface, opt-out: blocked
 - [x] **Michigan Court Records (CourtRecords.us network)** (`michigancourtrecords-us`) -- search: blocked, opt-out: no-surface
-- [ ] **MicroBilt** (`microbilt-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Mightyrep** (`mightyrep-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Milestone Marketing Solutions** (`milestonemarketingsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MINERVA BI Inc** (`minerva-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **MicroBilt** (`microbilt-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **Mightyrep** (`mightyrep-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Milestone Marketing Solutions** (`milestonemarketingsolutions-com`) -- search: no-surface, opt-out: undecided
+- [x] **MINERVA BI Inc** (`minerva-io`) -- search: no-surface, opt-out: undecided
 - [x] **Minnesota Court Records (CourtRecords.us network)** (`minnesotacourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **Mississippi Court Records (CourtRecords.us network)** (`mississippicourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **Missouri Court Records (CourtRecords.us network)** (`missouricourtrecords-us`) -- search: blocked, opt-out: no-surface
-- [ ] **Mobile Technology Corporation** (`onspotdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Mobilewalla, Inc.** (`mobilewalla-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Modernize, Inc.** (`securiti-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Modfx Labs Private Limited** (`modfxlabs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Mogean, Inc.** (`mogean-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Monevo, Inc.** (`monevo-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Monocl** (`definitivehc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Mobile Technology Corporation** (`onspotdata-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Mobilewalla, Inc.** (`mobilewalla-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Modernize, Inc.** (`securiti-ai`) -- search: no-surface, opt-out: blocked
+- [x] **Modfx Labs Private Limited** (`modfxlabs-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Mogean, Inc.** (`mogean-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Monevo, Inc.** (`monevo-us`) -- search: no-surface, opt-out: undecided
+- [x] **Monocl** (`definitivehc-com`) -- search: no-surface, opt-out: undecided
 - [x] **Montana Court Records (CourtRecords.us network)** (`montanacourtrecords-us`) -- search: blocked, opt-out: no-surface
-- [ ] **Moody's Corporation** (`moodys-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MovingLeads (First Movers Advantage, LLC)** (`movingleads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MugshotLook** (`mugshotlook-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Mugshots.com** (`mugshots-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MULTIMEDIA LISTS, INC.** (`multimedialists-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **MyHeritage** (`myheritage-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Moody's Corporation** (`moodys-com`) -- search: no-surface, opt-out: blocked
+- [x] **MovingLeads (First Movers Advantage, LLC)** (`movingleads-com`) -- search: no-surface, opt-out: blocked
+- [x] **MugshotLook** (`mugshotlook-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **Mugshots.com** (`mugshots-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **MULTIMEDIA LISTS, INC.** (`multimedialists-com`) -- search: blocked, opt-out: blocked
+- [x] **MyHeritage** (`myheritage-com`) -- search: undecided, opt-out: blocked
 - [x] **MyLife** (`mylife-com`) -- search: recipe, opt-out: out-of-scope
-- [ ] **Names and Facts** (`namesandfacts-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Narvar, Inc.** (`narvar-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **National Consumer Telecom & Utilities Exchange, Inc.** (`nctue-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **National Data Analytics, LLC** (`publicdatacheck-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **National Opinion Institute, LLC** (`nationalopinioninstitute-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Names and Facts** (`namesandfacts-com`) -- search: blocked, opt-out: blocked
+- [x] **Narvar, Inc.** (`narvar-com`) -- search: no-surface, opt-out: blocked
+- [x] **National Consumer Telecom & Utilities Exchange, Inc.** (`nctue-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **National Data Analytics, LLC** (`publicdatacheck-com`) -- search: undecided, opt-out: blocked
+- [x] **National Opinion Institute, LLC** (`nationalopinioninstitute-com`) -- search: no-surface, opt-out: blocked
 - [x] **National Public Data** (`nationalpublicdata-com`) -- search: recipe, opt-out: blocked
-- [ ] **NATIONAL STUDENT CLEARINGHOUSE** (`studentclearinghouse-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Nativo, Inc.** (`nativo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **NATIONAL STUDENT CLEARINGHOUSE** (`studentclearinghouse-org`) -- search: undecided, opt-out: no-surface
+- [x] **Nativo, Inc.** (`nativo-com`) -- search: no-surface, opt-out: blocked
 - [ ] **NC VENTURES LLC** (`ncsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **NCR Corporation** (`ncr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Nebraska Court Records (CourtRecords.us network)** (`nebraskacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED

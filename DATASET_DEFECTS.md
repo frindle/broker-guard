@@ -44,22 +44,22 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-165 findings across 131 brokers.
+169 findings across 134 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 11 |
-| dataset | 86 |
+| dataset | 90 |
 | unreachable | 68 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
 | parked-or-defunct | 69 |
-| unclassified | 54 |
+| unclassified | 56 |
 | dead-url | 17 |
 | broker-surface-defect | 10 |
 | entity-mismatch | 8 |
-| rebrand-or-domain-change | 5 |
+| rebrand-or-domain-change | 7 |
 | contact-address-oddity | 1 |
 | stale-200 | 1 |
 
@@ -860,6 +860,28 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
 
   > Verified by browser render (Playwright, 11-13s settle) 2026-09-25. www.mediasourcesolutions.com IS GONE. Every path on it, including the bare domain and the do-not-share URL from the notes, 302s to /cgi-sys/suspendedpage.cgi and serves a 103-character body reading 'Account Suspended / This Account has been suspended. / Contact your hosting provider for more information.' -- the cPanel suspension page. Probed twice in the same batch (root and the rights URL) with the same result. This is a dead site, not an anti-bot wall: status 200, no captcha, no challenge, no frames, nothing to render. No search surface can exist on a suspended host.
+
+### `minerva-io`
+
+- **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > NO VERDICT as of 2026-09-25: same gated shape as hightouch-com and definitivehc-com. Verified by browser render at 12s settle: preferences.minerva.io redirects to preferences.minerva.io/ and renders a DataGrail 'Privacy Request Center' (document.title is literally 'Privacy Request Center | DataGrail') that GATES its form behind two pickers before any request field exists. The rendered page contains NO <form> at all and exactly four controls: #privacy-request-center-country-picker and #privacy- request-center-region-picker, both MUI Autocomplete text inputs labelled 'Country of residence' and 'State of residence', each with a keyboard_arrow_down toggle button. No captcha script and no captcha widget AT THIS STAGE, which per the standing rule says nothing about the stage after it. What a future recipe- writer needs: drive both Autocompletes (they are not <select>), record the request-type choices and field set that appear, and re-check for a captcha THEN. The dataset notes corroborate that this is the only accepted channel: Minerva replied that privacy@minervadata.xyz is being deprecated in favour of privacy@minerva.io but that email requests 'will not be processed' either way -- only this webform or +1 (234) 595-3394.
+
+### `monevo-us`
+
+- **scope:** dataset | **kind:** rebrand-or-domain-change | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > DATASET DEFECT, flagged here and deliberately NOT fixed in data/source-brokers.json, plus a real form at a different host. Verified 2026-09-25. (1) The row's domain is DEAD: monevo.us does not resolve, ERR_NAME_NOT_RESOLVED for both www.monevo.us and the bare monevo.us, so the recorded opt_out_url www.monevo.us/privacy-portal cannot be reached at all. (2) The obvious substitute is also gone: www.monevo.com redirects to www.monevo.com/uk/ and BOTH /privacy-portal and /uk/privacy- policy return the site's 404 page ('The page you are looking for has moved or does not exist'). (3) What does exist is the UK entity's form, and it is clean. app.monevo.co.uk/privacy-policy (linked from the /uk/ footer) renders a consent-revocation form at 12s settle with NO captcha script and NO captcha widget: input[type=email][name=emailAddress][id=emailAddress] labelled 'Email address', not marked required; three checkboxes, name/id communicationRevoke, analyzeRevoke and shareRevoke; submit button reading 'Send'. SEMANTICS CHECKED, and they are the right way round -- the fields are named *Revoke, so ticking them withdraws consent rather than granting it, which is the opposite of the marriott-com trap. WHY THIS IS STILL UNDECIDED rather than a transcription to promote: that form belongs to Monevo Limited, the UK entity under the FCA and the ICO, and this row is 'Monevo, Inc.', the US entity whose own domain no longer resolves. Whether the UK form reaches the US entity's records is not something the page says, and guessing would be worse than an honest undecided. The dataset's usasupport@monevo.com is the only US-facing channel left on file and was not tested. What a future pass needs: establish whether Monevo, Inc. still operates, and under what domain.
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Monevo is a B2B credit-offer distribution platform (it hosts and distributes pre-qualified credit offers for 150+ lenders) with no consumer record lookup. Verified 2026-09-25, and see the opt- out leg for the dataset defect: monevo.us DOES NOT RESOLVE (ERR_NAME_NOT_RESOLVED for both www.monevo.us and monevo.us), monevo.com redirects to /uk/ which 404s at the HTTP level while rendering the UK marketing site, and that site's only links are 'Request demo' and 'Contact'. No search surface exists at any of the three hosts.
+
+### `namesandfacts-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_BLOCKED`
+
+  > Verified by browser render 2026-09-25, THREE times across two paths: namesandfacts.com/ and namesandfacts.com/do-not-sell-my- info both return HTTP 403 with Cloudflare's managed-challenge interstitial -- title 'Just a moment...', 265-character body reading 'Performing security verification', a hidden input[name=cf-turnstile-response] whose widget id is minted per load (cf-chl-widget-y41ou, -odzrt) and the Turnstile loader chal lenges.cloudflare.com/turnstile/v0/b/d76008a69eab/api.js?render= explicit. Three distinct Ray IDs (a40d05dc8982f1aa, a40d0d06680df1aa, a40d1281fb39f1aa), including one retry at 22s settle specifically to let the challenge clear, and the interstitial never yielded to the real page. The dataset notes for this row already record that the opt-out page 403s to curl and was only ever confirmed in a real human browser; that holds for the search leg too. This is the wall, named: Cloudflare Turnstile managed challenge on every visit.
 
 ### `netwisedata-com`
 
