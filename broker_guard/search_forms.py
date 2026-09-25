@@ -5040,6 +5040,181 @@ NO_SEARCH_SURFACE = {
         "business email, job title, company and LinkedIn URL: the record "
         "is keyed to a professional profile."
     ),
+    "consumercanvas-net": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "Row keyed by domain for the first time this batch: it carried "
+        "domain=null and collided with three other keyless rows on the "
+        "literal slug 'broker'. The domain, consumercanvas.net, comes "
+        "from its own opt_out_email and is confirmed (www resolves to "
+        "23.185.0.3 and serves a WordPress site titled 'Consumer Canvas "
+        "LLC'; the apex has no A record, only MX to inbound-smtp.us- "
+        "east-1.amazonaws.com). The only form on the site is WordPress "
+        "content search (form.form-searchform, GET to /, single input "
+        "name=s) -- site-content search, not a people lookup. Consumer "
+        "Canvas is MRI-Simmons' data-enrichment and syndicated-audience "
+        "product, sold to marketers; there is no consumer-facing record "
+        "search to drive. No captcha."
+    ),
+    "datadojo-ai": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "Another of the four formerly keyless rows; domain datadojo.ai "
+        "taken from its own opt_out_email and confirmed. NOTE THE "
+        "REBRAND, which the dataset does not record: datadojo.ai 302s to "
+        "renshudata.com and every page titles itself 'Renshu Data'. Same "
+        "Shopify IP 23.227.38.65. The only forms are Shopify furniture -- "
+        "a contact form (contact[name], contact[email], contact[body]) "
+        "and a store search (GET /search, name=q, placeholder 'Search our "
+        "store...'). No people search, no consumer record lookup, no "
+        "captcha. DataDojo CDP is a website-visitor identification pixel "
+        "sold to ecommerce brands."
+    ),
+    "saleseer-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "Third of the four formerly keyless rows; domain saleseer.com "
+        "from its own opt_out_email, confirmed live (200). Rendered at "
+        "12s, not 2.5s, because the first pass reported zero forms on a "
+        "2.4KB body. There are genuinely none on the homepage. Saleseer "
+        "is a Houston B2B life-sciences data business (oncology clinical "
+        "data, ClinicalPath) selling to pharma; the only form anywhere is "
+        "the /contact-us/ sales enquiry (WPForms 211, required "
+        "First/Last/Company/Email plus a required 'I would like to learn "
+        "more about' select), behind invisible reCAPTCHA v3. Nothing "
+        "resembling a consumer record search exists."
+    ),
+    "datalane-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "Fourth of the four formerly keyless rows. The dataset row is "
+        "named 'TASK GENIE Inc' with no domain and david@datalane.com as "
+        "its only identifier; Task Genie Inc does business as DataLane "
+        "(confirmed against the Texas data-broker registry and ZoomInfo, "
+        "which files DataLane under Task Genie Inc), so the key is "
+        "datalane-com. datalane.com serves 200 behind Cloudflare. No "
+        "forms at all on the homepage at a 12s settle -- the only call to "
+        "action is /book-a-demo. DataLane sells structured contact data "
+        "on LOCAL BUSINESSES and their decision makers to sales teams; "
+        "there is no consumer-record search surface. No captcha."
+    ),
+    "keymarketingcorp-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "www.keymarketingcorp.com is a B2B list-services and modelling "
+        "shop (CRM Solutions / Customer Acquisition / List Services / "
+        "Modeling & Analytics). No search form of any kind on the "
+        "homepage; the only two links out are /request_information and "
+        "the rights page. reCAPTCHA is loaded site-wide but there is "
+        "nothing here to search."
+    ),
+    "keywordconnects-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "keywordconnects.com sells homeowner leads to home-improvement "
+        "advertisers. Rendered at 12s specifically because the 2.5s pass "
+        "showed a Marketo form (#mktoForm_1012) with zero controls -- at "
+        "12s it is STILL empty, so the Marketo embed never populates; "
+        "either way it is a marketing-contact form, not a search. No "
+        "other form, no people lookup, no captcha."
+    ),
+    "rbarrel-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "rbarrel.com (RainBarrel, Knower Tech USA) sells location-based "
+        "advertising audiences. The only forms on the homepage are two "
+        "copies of the Finsweet cookie preference widget (#cookie- "
+        "preferences, three off-layout checkboxes marketing-2 / "
+        "personalization-2 / analytics-2). No search surface -- the "
+        "product is a MAID and hashed-email audience database, not a "
+        "queryable people index."
+    ),
+    "komodohealth-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "komodohealth.com carries exactly two forms: a site-content "
+        "search overlay (form.oms-search--form, GET to /, input oms- "
+        "search--input, both controls off-layout until the overlay opens) "
+        "and a HubSpot 'Subscribe to Insights' email capture. Komodo "
+        "Health sells de-identified healthcare claims analytics to life "
+        "sciences; there is no patient or consumer record lookup a person "
+        "could run on themselves. No captcha on either form."
+    ),
+    "kontextdata-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "kontextdata.com is a single-screen site -- 170 characters of "
+        "body text, re-rendered at 12s to be sure it was not an SPA "
+        "shell, and it is not; that is the whole page. Text reads "
+        "'Consented, shopping-focused consumer insights' plus four footer "
+        "links. No forms whatsoever, so no search surface. No captcha."
+    ),
+    "l2-data-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "l2-data.com (Labels & Lists / L2 Political, voter and consumer "
+        "data) exposes a WordPress site search (#searchform, GET to /, "
+        "input name=s, both controls off-layout) and a Gravity Form "
+        "marketing enquiry (#gform_19). Site-content search is not a "
+        "record lookup, and the voter files themselves are sold, not "
+        "searchable. Invisible reCAPTCHA v3 is wired into the Gravity "
+        "forms sitewide (gravityformsrecaptcha 2.2.2, gf_invisible "
+        "ginput_recaptchav3, grecaptcha-badge present) but is irrelevant "
+        "to the search leg because there is no search to drive."
+    ),
+    "lbdigitaldata-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "lbdigitaldata.com is a Squarespace brochure site for LB Digital "
+        "Data, a registered DBA of Stirista LLC. One form: a newsletter "
+        "email capture (form.newsletter-form, POST, input name=email), "
+        "behind reCAPTCHA ENTERPRISE (recaptcha/enterprise.js, site key "
+        "6LdDFQwjAAAAAPigEvvPgEVbb7QBm-TkVJdDTlAv, badge and a "
+        "g-recaptcha-response textarea in the DOM, anchor frame present). "
+        "No search surface -- the audience data is sold, not queryable."
+    ),
+    "monitorbase-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "www.monitorbase.com (Lender Feed LLC, trading as MonitorBase) "
+        "sells mortgage borrower-intent alerts to loan officers. Zero "
+        "forms on the homepage at a 12s settle; every control is a nav "
+        "toggle. No consumer-facing search. No captcha on the homepage."
+    ),
+    "lighthouselist-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "lighthouselist.com (a registered DBA of Stirista LLC) redirects "
+        "to www and serves a brochure page with no forms at all -- one "
+        "'OK' cookie button is the only control. No search surface. Its "
+        "single privacy link goes to the shared Stirista portal at "
+        "unsubscribe.stirista.com."
+    ),
+    "listkit-io": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "listkit.io sells B2B prospect lists (cold-email contact data). "
+        "The public homepage carries no form at all -- controls are a "
+        "volume range slider and two embedded video players (Wistia, "
+        "YouTube) -- and the searchable contact database is behind the "
+        "app login at app.listkit.io. There is therefore no public search "
+        "surface to drive, and nothing a person could query about "
+        "themselves. No captcha on the public page."
+    ),
+    "liveintent-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "liveintent.com (now part of Zeta) carries a large Marketo demo- "
+        "request form (mktoForm_1380: FirstName, LastName, Email, "
+        "Company, Title, Country and Job_Role__c all required, plus 26 "
+        "Secondary_Opportunity__c interest checkboxes and 13 hidden UTM "
+        "fields) and a WordPress site search (input name=s). The two "
+        "loose 'Enter first name' / 'Enter last name' inputs belong to "
+        "that same Marketo widget, NOT to a people search -- worth "
+        "stating because they read like one in a raw dump. No consumer "
+        "record lookup. No captcha."
+    ),
+    "lob-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "www.lob.com sells direct-mail automation and address "
+        "verification to businesses via API. No forms on the homepage at "
+        "a 12s settle. Address verification is an authenticated API "
+        "product, not a public people search, and there is no consumer- "
+        "facing lookup. No captcha."
+    ),
+    "lotame-com": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "www.lotame.com (now an Epsilon/Publicis property) carries two "
+        "HubSpot forms (portal 1867366) -- a newsletter subscribe and a "
+        "contact capture -- and nothing else. Lotame sells addressable "
+        "audience segments and identity resolution; the data is licensed "
+        "to buyers, not searchable by a consumer. No captcha."
+    ),
 }
 
 
@@ -5584,6 +5759,38 @@ SEARCH_BLOCKED = {
         "Recorded separately only because the dataset lists the fifty "
         "network sites as fifty rows; nothing here is specific to Kansas. "
         "See californiacourtrecords-us for the full write-up."
+    ),
+    "kentuckycourtrecords-us": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "Blocked by the same registration paywall as the rest of the "
+        "CourtRecords.us network, and confirmed to be the SAME surface "
+        "rather than merely a similar one: kentuckycourtrecords.us "
+        "carries the identical #nameSearchForm posting to "
+        "/search/loading/ with the same controls in the same order -- "
+        "firstName (required), lastName (required), city, a hidden state "
+        "prefilled 'KY', twelve off-layout checkboxes all named 'check', "
+        "and the Submit input. Same TrustArc consent overlay, same "
+        "trustarc-lang-select. See californiacourtrecords-us for the full "
+        "write-up of driving that flow to its end and getting search "
+        "theatre: an abbreviated name and a list of courts, no results, "
+        "with records gated behind account registration or a report "
+        "purchase. Dismiss the TrustArc overlay first if rechecking."
+    ),
+    "louisianacourtrecords-us": (
+        "Verified by browser render (Playwright, 12s settle) 2026-09-25. "
+        "Blocked by the same registration paywall as the rest of the "
+        "CourtRecords.us network, and confirmed to be the SAME surface "
+        "rather than merely a similar one: louisianacourtrecords.us "
+        "carries the identical #nameSearchForm posting to "
+        "/search/loading/ with the same controls in the same order -- "
+        "firstName (required), lastName (required), city, a hidden state "
+        "prefilled 'LA', twelve off-layout checkboxes all named 'check', "
+        "and the Submit input. Same TrustArc consent overlay, same "
+        "trustarc-lang-select. See californiacourtrecords-us for the full "
+        "write-up of driving that flow to its end and getting search "
+        "theatre: an abbreviated name and a list of courts, no results, "
+        "with records gated behind account registration or a report "
+        "purchase. Dismiss the TrustArc overlay first if rechecking."
     ),
 }
 
