@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **836** / 969
-- Search leg mapped: 836 / 969
-- Opt-out leg mapped: 836 / 969
+- Fully mapped (both legs): **855** / 969
+- Search leg mapped: 855 / 969
+- Opt-out leg mapped: 855 / 969
 
 ## How to resume
 
@@ -874,30 +874,30 @@ of those dicts against source-brokers.json).
 - [x] **Sovrn, Inc.** (`sovrn-com`) -- search: no-surface, opt-out: undecided
 - [x] **Specialists Marketing Services, Inc.** (`sms-inc-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Spectrum Mailing Lists** (`spectrummailinglists-com`) -- search: blocked, opt-out: blocked
-- [ ] **SPEEDEON DATA LLC** (`speedeondata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **SPEEDEON DATA LLC** (`speedeondata-com`) -- search: blocked, opt-out: blocked
 - [x] **Spokeo** (`spokeo-com`) -- search: recipe, opt-out: out-of-scope
-- [ ] **Spy Dialer, Inc.** (`spydialer-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Spycloud, Inc.** (`spycloud-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **STACKADAPT Inc** (`stackadapt-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Staircase, Inc.** (`staircase-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Start.Io Inc.** (`start-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Statara Solutions LLC** (`statara-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Spy Dialer, Inc.** (`spydialer-com`) -- search: undecided, opt-out: blocked
+- [x] **Spycloud, Inc.** (`spycloud-com`) -- search: no-surface, opt-out: undecided
+- [x] **STACKADAPT Inc** (`stackadapt-com`) -- search: no-surface, opt-out: undecided
+- [x] **Staircase, Inc.** (`staircase-co`) -- search: no-surface, opt-out: no-surface
+- [x] **Start.Io Inc.** (`start-io`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Statara Solutions LLC** (`statara-com`) -- search: no-surface, opt-out: no-surface
 - [x] **StateRecords.org** (`staterecords-org`) -- search: undecided, opt-out: recipe
-- [ ] **Statsocial, Inc.** (`statsocial-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Statsocial, Inc.** (`statsocial-com`) -- search: no-surface, opt-out: blocked
 - [x] **Stefan Certic** (`flashintel-ai`) -- search: no-surface, opt-out: blocked
-- [ ] **STEP2SUCCESS Marketing** (`step2successmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **STEPPINGBLOCKS Inc** (`steppingblocks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **STEP2SUCCESS Marketing** (`step2successmarketing-com`) -- search: no-surface, opt-out: undecided
+- [x] **STEPPINGBLOCKS Inc** (`steppingblocks-com`) -- search: no-surface, opt-out: blocked
 - [x] **Sterling** (`sterlingcheck-com`) -- search: no-surface, opt-out: undecided
-- [ ] **STERLING DATA COMPANY LLC** (`sterling-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Strata Company** (`gostrata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Strategic Data Intelligence** (`strategicdataintelligence-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Strategic Information Resources** (`strategicinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Structure** (`structure-ac`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **STERLING DATA COMPANY LLC** (`sterling-ai`) -- search: no-surface, opt-out: blocked
+- [x] **Strata Company** (`gostrata-com`) -- search: no-surface, opt-out: undecided
+- [x] **Strategic Data Intelligence** (`strategicdataintelligence-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Strategic Information Resources** (`strategicinfo-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Structure** (`structure-ac`) -- search: no-surface, opt-out: no-surface
 - [x] **Summit Resources, LLC** (`clientcommand-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Swarm Holdings, Inc.** (`theswarm-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Swoop.Com, Inc.** (`swoop-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Swordfish AI Inc.** (`swordfish-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Sync.me** (`sync-me`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Swarm Holdings, Inc.** (`theswarm-com`) -- search: no-surface, opt-out: blocked
+- [x] **Swoop.Com, Inc.** (`swoop-com`) -- search: no-surface, opt-out: undecided
+- [x] **Swordfish AI Inc.** (`swordfish-ai`) -- search: blocked, opt-out: blocked
+- [x] **Sync.me** (`sync-me`) -- search: undecided, opt-out: blocked
 - [ ] **T-MOBILE USA Inc** (`t-mobile-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **TABOOLA Inc** (`taboola-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Tandem Marketing, LLC** (`fhamortgagefinder-com`) -- search: UNMAPPED, opt-out: UNMAPPED

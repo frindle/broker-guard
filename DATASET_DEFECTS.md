@@ -44,18 +44,18 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-249 findings across 197 brokers.
+250 findings across 198 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 13 |
 | dataset | 146 |
-| unreachable | 90 |
+| unreachable | 91 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
 | unclassified | 97 |
-| parked-or-defunct | 91 |
+| parked-or-defunct | 92 |
 | dead-url | 22 |
 | broker-surface-defect | 15 |
 | rebrand-or-domain-change | 12 |
@@ -1408,6 +1408,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_BLOCKED`
 
   > Verified 2026-09-23. The dataset's opt_out_url (/help- center/privacy) is a readable privacy policy with no inputs; the real surface is the 'Do Not Sell My Personal Information' link it repeats five times, pointing at /help-center/privacy- requests. That is also exactly what SpyFly's own support reply (recorded in the dataset note, 2026-08-24) told the requester to use. Requesting that page returns HTTP 403 and a Cloudflare interstitial -- 'Performing security verification ... This website verifies you are not a bot', challenges.cloudflare.com loaded, Ray ID a3fd4f7d8c2531a9. The form never renders, so there is nothing to transcribe. Note the shape of it: the policy page serves fine and only the request page is challenged, which is the same asymmetry seen on several brokers this pass -- the reading is open and the acting is walled. privacyinfo@spyfly.com is on file as a human channel if the wall holds.
+
+### `strategicinfo-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25, batch 37: the company is defunct and the domain is listed for sale, so there is no opt-out surface and no recipient. Same evidence as search_forms.NO_SEARCH_SURFACE, restated because each leg gets its own verdict: https and www both hang to TCP timeout (Playwright 45s twice, curl 25s twice), while plain http answers instantly with a 302 to https://www.hug edomains.com/domain_profile.cfm?d=strategicinfo.com; WHOIS shows registrar TurnCommerce DBA NameBright.com with NameBrightDNS nameservers and a Registrar Registration Expiration Date of 2026-09-17, already past. DNS is NOT the culprit -- the A record resolves at both the local resolver and 1.1.1.1. Consistent with the dataset's note that jdrziak@strategicinfo.com hard-bounced 2026-08-24. Nobody to send a request to.
 
 ### `take5mg-com`
 
