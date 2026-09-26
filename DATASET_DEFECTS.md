@@ -44,18 +44,18 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-243 findings across 193 brokers.
+249 findings across 197 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 13 |
-| dataset | 145 |
-| unreachable | 85 |
+| dataset | 146 |
+| unreachable | 90 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| unclassified | 96 |
-| parked-or-defunct | 86 |
+| unclassified | 97 |
+| parked-or-defunct | 91 |
 | dead-url | 22 |
 | broker-surface-defect | 15 |
 | rebrand-or-domain-change | 12 |
@@ -1347,11 +1347,43 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified 2026-09-23. reachdata.com has not launched. The site is a single placeholder page reading 'Coming Soon!!' over a pitch for a sales-and-recruiting contact-list product, with no form element on it beyond a menu toggle and a cookie Accept -- the mailing-list signup the copy invites is not even wired up. The dataset records no opt-out URL, no opt-out email and an opt_out_method of 'unknown' for this row (Freemium Data Services, LLC), which is consistent: there is nothing to opt out of yet and nowhere to do it. Recorded as no-surface rather than undecided because the state is unambiguous and self-described. It is worth a recheck if the dataset is ever refreshed, though -- a pre-launch broker is the one category that can turn into a live one without warning, which is the opposite of emerges-com elsewhere in this module, a broker that has shut down.
 
+### `rooftopdigital-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25, batch 36. FALSIFIED DATASET CLAIM, established by DNS after the blackhole cross-check rather than by a failed fetch: rooftopdigital.com (Rooftop Digital, LLC) answers NOERROR at 1.1.1.1 but publishes NO A record for the apex and NO A record for www, on Cloudflare nameservers (ali.ns.cloudflare.com, hans.ns.cloudflare.com). The domain is registered and hosts nothing, so the recorded opt_out_method 'web-form' at rooftopdigital.com/privacy-policy/ cannot be true; the row also records no opt_out_email. Its dataset note already warned that the URL was a generic privacy-policy page from the CA DROP registry import -- it is worse than generic, it is unreachable. No web surface; California residents would have to go through the CA DROP portal.
+
+### `salutarydata-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified by browser render (Playwright, throwaway long-settle wrapper importing JS/UA from tools/probe_broker_forms.py, 15s settle, its own prober invocation) 2026-09-25, batch 36. HUBSPOT SHARED-SITEKEY FAMILY, INSTANCE #5, plus a dataset host defect and a field a consumer should not have to supply. Host defect: the recorded www.salutarydata.com CNAMEs to www.cdn.cloudflare.net, which does not resolve (ERR_NAME_NOT_RESOLVED) -- the APEX salutarydata.com serves the page. The form is a HubSpot embed in a js.hsforms.net child frame (portal 4977753, form id 855fd332-8e1f-4adc-a861-e5f0b0a1767d) and its captcha is reCAPTCHA ENTERPRISE with sitekey 6LdGZJsoAAAAAIwMJHRwqiAHA6A_6ZP6bTYpbgSX -- HubSpot's default enterprise key, now seen on five brokers in this dataset (yello- co and three others before it). The parent page's own cap[] shows google.com/recaptcha/enterprise.js with the HubSpot onload hook, and both the parent and the frame carry grecaptcha-badge plus a hidden g-recaptcha-response. Required fields, all marked with an asterisk: 0-1/firstname 'First Name*', 0-1/lastname 'Last Name*', 0-1/work_email 'Email*', 0-1/company 'CURRENT EMPLOYER NAME*', 0-2/address 'Street*', 0-2/city 'City*', 0-2/state 'State*', 0-2/zip 'Zip*'. Note the second-order problem even if the captcha fell: a consumer opt-out keyed on WORK email and CURRENT EMPLOYER NAME is the same 'field a private individual cannot honestly supply' pattern as the Title+Company case, and the page says so -- 'please provide your name, work email address, current employer name, and employer address'. Two other HubSpot forms on the page are ordinary sales contact forms.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified by browser render (Playwright, throwaway long-settle wrapper importing JS/UA from tools/probe_broker_forms.py, 15s settle) 2026-09-25, batch 36. DATASET HOST DEFECT FIRST: the recorded URL uses www.salutarydata.com, whose CNAME points at www.cdn.cloudflare.net which does not resolve (ERR_NAME_NOT_RESOLVED); the APEX salutarydata.com works and was used. salutarydata.com (SALUTARY DATA LLC) sells B2B contact records; the site's only query box is the WordPress site search (name=s). No people search.
+
+### `sawyerlists-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25, batch 36. sawyerlists.com (Sawyer Lists, LLC) is NXDOMAIN at 1.1.1.1 (externally cross-checked against this machine's blackhole problem; genuinely dead -- no apex, no www) and Playwright returns ERR_NAME_NOT_RESOLVED. The dataset records no opt_out_url and no opt_out_email. No surface of any kind.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified 2026-09-25, batch 36. DNS cross-checked locally and against 1.1.1.1 (the blackhole check): sawyerlists.com (Sawyer Lists, LLC) is NXDOMAIN at 1.1.1.1 -- no apex A record, no www -- and Playwright confirms ERR_NAME_NOT_RESOLVED. Dead domain, and the dataset records no opt_out_url or opt_out_email for the row. Nothing to search.
+
 ### `saymine-io`
 
 - **scope:** dataset | **kind:** entity-mismatch | **from:** `search_forms.NO_SEARCH_SURFACE`
 
   > Verified 2026-09-23: this row's domain is not a broker at all. saymine.io is Mine, a privacy-request SERVICE; the dataset URL cognism.privacy.saymine.io/cognism is Mine's hosted privacy centre for a DIFFERENT company, Cognism. Flagging as a probable dataset defect: the row should almost certainly be keyed on cognism.com, with saymine.io as the opt-out host. Either way Mine publishes no people-search surface, and the Cognism database is a paid B2B product queried behind a login.
+
+### `smacomm-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified 2026-09-25, batch 36. HOST-WIDE UNREACHABLE, and deliberately distinguished from an anti-bot wall: smacomm.com resolves to the same address locally and at 1.1.1.1 (13.223.25.84, so not this machine's blackhole), but nothing ever answers. The recorded opt_out_url smacomm.com/do-not-sell/ was probed on its own invocation twice (15s and 20s settles) and Playwright's Page.goto exceeded its 45s navigation timeout both times; the bare homepage did the same on a third attempt; curl timed out at 30s on the homepage and 40s on the do-not-sell path, both returning HTTP 000. No challenge page, no 403, no bytes at all -- the dataset's claim of a web-form opt-out cannot be exercised. Worth a re-probe in a later batch in case this is a prolonged outage rather than an abandoned host.
 
 ### `smartmove-us`
 
