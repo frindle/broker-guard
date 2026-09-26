@@ -7820,6 +7820,156 @@ NO_SEARCH_SURFACE = {
         "verified credentials, which this tool must not automate, not by "
         "typing a stranger's name into a box. No search surface."
     ),
+    "throtle-io": (
+        "Verified by browser render 2026-09-25. Throtle is a B2B "
+        "identity-resolution vendor (consumer graph, HCP graph, tag, "
+        "crosswalks, onboarding and activation) selling to healthcare "
+        "marketers. There is no consumer lookup anywhere on throtle.io -- "
+        "no name box, no records surface, nothing that answers 'is this "
+        "person in your data'. Its data reaches buyers through the "
+        "platform, so a presence check has no honest target. Recorded "
+        "alongside the opt-out entry, which is where the live findings "
+        "for this row are."
+    ),
+    "tinuiti-com": (
+        "Verified by browser render 2026-09-25. Tinuiti is a performance- "
+        "marketing AGENCY: it buys media and manages accounts for brands, "
+        "and the only forms on tinuiti.com are a site search and a "
+        "Gravity Forms newsletter/contact form (gform_114). No consumer- "
+        "facing lookup of any kind, so nothing to probe for presence. See "
+        "the opt-out entry for the rights channel."
+    ),
+    "fetcher-ai": (
+        "Verified by browser render 2026-09-25. Tiplinks Inc trades as "
+        "Fetcher, a recruiting-automation platform: candidate profiles "
+        "are sourced and surfaced INSIDE a logged-in recruiter workbench "
+        "at app.fetcher.ai, and every route but /opt-out redirects to a "
+        "login. There is no public people-search index to query, so a "
+        "presence check is impossible without an employer account this "
+        "repo will not create. The row's real finding is on the opt-out "
+        "leg."
+    ),
+    "tl1mkt-com": (
+        "Verified by browser render 2026-09-25. TL1MKT sells US Hispanic "
+        "audience SEGMENTS (35,000+ segments, programmatic activation on "
+        "CTV, digital, mobile, social, radio and OOH) built from social "
+        "logins and email-based identifiers. The site is a four-page "
+        "Astro brochure -- audiences, how it works, about, contact -- "
+        "with no lookup surface at all. Nothing to search."
+    ),
+    "towerdata-com": (
+        "Verified by browser render 2026-09-25, and this row is a "
+        "DUPLICATE OF AN ALREADY-MAPPED BROKER. "
+        "https://www.towerdata.com/company/privacy- policy 301s to "
+        "https://atdata.com/privacy-policy/ -- TowerData is AtData, the "
+        "same company under its current name, and this dataset already "
+        "carries it as atdata-com. DATASET DEFECT: two rows, one "
+        "operator; flagged and not fixed here because de-duplicating the "
+        "969-row dataset is Penn's call, not this sweep's. On the merits "
+        "the search leg closes the same way as atdata-com's: an email- "
+        "intelligence product sold to businesses, no consumer lookup."
+    ),
+    "traackr-com": (
+        "Verified by browser render 2026-09-25. Traackr is an influencer- "
+        "marketing platform whose creator database lives behind a "
+        "customer login; the public site's only forms are its own site "
+        "search (GET /search?query=). No consumer presence-check surface. "
+        "The live finding for this row is on the opt-out leg, which is a "
+        "real captcha-free form."
+    ),
+    "trestleiq-com": (
+        "Verified by browser render 2026-09-25. Trestle sells "
+        "identity/phone verification APIs to developers; everything "
+        "behind portal.trestleiq.com is account-gated and the public "
+        "pages are documentation and pricing. No consumer lookup surface. "
+        "See the opt-out entry for the TrustSuperset DSR portal it routes "
+        "rights requests to."
+    ),
+    "triplelift-com": (
+        "Verified by browser render 2026-09-25. TripleLift is an SSP/ad- "
+        "tech platform keyed on what it calls Digital Identifiers -- "
+        "cookie and device identifiers, not names. Its own user-rights "
+        "page says that to honour a request it needs the requester to "
+        "SUPPLY those identifiers, which is the same shape as saying "
+        "there is no name-addressable index. Nothing to search."
+    ),
+    "trueblueanalytics-org": (
+        "Verified by browser render 2026-09-25. True Blue Analytics is a "
+        "political/advocacy data shop with a three-page Squarespace site "
+        "(our services, who we are, contact us) and no lookup surface. "
+        "Its only real form is the do-not-sell form described on the opt- "
+        "out leg."
+    ),
+    "trueopulence-com": (
+        "Verified by browser render 2026-09-25. True Opulence Corporation "
+        "sells a CRM (campaigns, calendar and tasks, analytics, lead "
+        "conversion, live chat) -- the personal data it holds belongs to "
+        "its customers' contacts and is reachable only inside a tenant "
+        "login. The public site carries one form, a newsletter signup. No "
+        "presence-check surface."
+    ),
+    "truedata-co": (
+        "Verified by browser render 2026-09-25. TrueData sells identity "
+        "graph and audience data to advertisers; the public site is "
+        "marketing plus a login, and the only consumer-facing page is the "
+        "opt-out request form (see the opt-out leg). No lookup surface."
+    ),
+    "tunnldata-com": (
+        "Verified by browser render 2026-09-25. Tunnl builds audience "
+        "segments for political and advocacy advertising and sells them "
+        "into DSPs; there is no public record lookup. Its consumer-facing "
+        "surface is the Ethyca privacy center described on the opt-out "
+        "leg."
+    ),
+    "twinedata-com": (
+        "HOST UNREACHABLE, checked 2026-09-25. twinedata.com RESOLVES -- "
+        "69.163.224.8, a DreamHost address, confirmed against dig "
+        "@1.1.1.1 so this is NOT one of this machine's DNS-blackholed "
+        "false negatives -- but nothing answers on it: Chromium times out "
+        "after 30s on https://twinedata.com/ and curl times out after 25s "
+        "on http://twinedata.com/. The dataset already records "
+        "bmorgan@twinedata.com as hard-bounced (2026-08-21). DATASET "
+        "DEFECT: this row has no reachable surface of any kind and no "
+        "working contact; flagged and not fixed. Distinguish the failure "
+        "mode from a bot wall: there is no HTTP response at all, not a "
+        "403."
+    ),
+    "tymaxmedia-com": (
+        "HOST ALIVE, APPLICATION BROKEN, checked 2026-09-25. "
+        "tymaxmedia.com resolves (192.185.187.49) and the web server "
+        "answers, but every path returns HTTP 500: / and /ccpa.php alike, "
+        "over plain http. Over https the connection fails before that "
+        "with ERR_CERT_COMMON_NAME_INVALID -- a shared-hosting "
+        "certificate that does not cover this name. The dataset also "
+        "records privacyofficer@datacomplianceportal.com as hard-bounced "
+        "(2026-08-23). DATASET DEFECT: no working surface and no working "
+        "contact; flagged and not fixed. No search surface can exist "
+        "while the application 500s."
+    ),
+    "unacast-com": (
+        "Verified by browser render 2026-09-25. Unacast sells "
+        "location/movement data keyed on mobile advertising identifiers; "
+        "the public site is product marketing, pricing and HubSpot sales "
+        "forms. There is no name-keyed lookup, and its own rights form "
+        "asks the requester for a Mobile Advertising ID, which is the "
+        "tell that no name-addressable index exists to search. See the "
+        "opt-out leg."
+    ),
+    "unearthcampaigns-com": (
+        "Verified by browser render 2026-09-25. Unearth Campaigns builds "
+        "digital advocacy tooling (peer-to-peer messaging, list building) "
+        "for campaigns; the site is products/customers/company marketing "
+        "with no lookup surface. See the opt-out leg for the broken "
+        "rights link."
+    ),
+    "unitedone-com": (
+        "Verified by browser render 2026-09-25. United One Resources is a "
+        "nationwide mortgage-support and title-services vendor: its work "
+        "product is ordered by lenders, and unitedone.com is a corporate "
+        "brochure with no form other than embedded video controls. No "
+        "consumer lookup surface, and no rights page either -- see the "
+        "opt-out leg."
+    ),
 }
 
 
@@ -9327,6 +9477,103 @@ SEARCH_BLOCKED = {
         "Access to Civil and Criminal Court Records' and carries a LOGIN "
         "link -- and NOT re-submitted, since a reconnaissance pass must "
         "not submit. See californiacourtrecords-us for the full write-up."
+    ),
+    "tracersinfo-com": (
+        "Verified by browser render and by curl 2026-09-25, and the two "
+        "hosts in this row behave differently. (1) tracersinfo.com itself "
+        "is effectively empty: https:// fails with "
+        "ERR_SSL_UNRECOGNIZED_NAME_ALERT (the server has no certificate "
+        "for this name), and http:// answers HTTP 200 with a 114-BYTE "
+        "body -- no title, no links, no markup worth the name. (2) The "
+        "live product site is www.tracers.com, and every request to it "
+        "answers HTTP 403 behind a Cloudflare MANAGED-CHALLENGE "
+        "interstitial (title 'Just a moment...', "
+        "challenges.cloudflare.com/turnstile/v0/b/d76008a69eab/api.js, "
+        "render=explicit, Ray ID logged). That is a wall on the front "
+        "door, not on a form, so no presence check is reachable. Tracers "
+        "is in any case a login-gated investigative platform sold to skip "
+        "tracers, attorneys and collectors. DATASET DEFECT: the row's "
+        "domain is the near-dead tracersinfo.com and its recorded contact "
+        "compliance@tracersinfo.com hard-bounced (2026-08-21); the "
+        "operating domain is tracers.com. Flagged and not fixed."
+    ),
+    "truepeoplesearch-net": (
+        "Verified by browser render 2026-09-25: WALLED ON EVERY PATH. "
+        "Both https://www.truepeoplesearch.net/ and its /removal page "
+        "answer HTTP 403 behind a Cloudflare managed-challenge "
+        "interstitial (title 'Just a moment...', 'Performing security "
+        "verification', "
+        "challenges.cloudflare.com/turnstile/v0/b/d76008a69eab/api.js "
+        "with render=explicit). Nothing of the site's own markup is "
+        "served, so the dataset's claim that it mirrors the "
+        "TruePeopleSearch engine could not be tested and the note that a "
+        "results path is 'not confirmed URL- addressable' stays "
+        "unconfirmed. Distinguish this from the mapped "
+        "truepeoplesearch.com recipe: that is a DIFFERENT host and this "
+        ".net domain is not reachable by this tool at all. The same wall "
+        "closes the opt-out leg."
+    ),
+    "truthrecord-org": (
+        "Verified by browser render 2026-09-25. truthrecord.org is an "
+        "Angular people-search front on the same white-label engine as "
+        "weinform.org, and its search landing page is captcha-walled at "
+        "the door: the recorded opt_out_url "
+        "https://www.truthrecord.org/optOut/name/landing renders a SEARCH "
+        "form (firstName, lastName, a 52-option state select including "
+        "'All States') whose action is /name_search/landing_page, and the "
+        "page loads a FIRST-PARTY Cloudflare Turnstile frame at /assets/c "
+        "ommon/captcha/turnstile.html?sitekey=0x4AAAAAAAGIEMkbVUAvV5l_ -- "
+        "the same sitekey as backgroundcheckers.net, checksecrets.com, "
+        "mugshotlook.com, inmatessearcher.com, peoplesearch123.com and "
+        "publicsearcher.com, which is how this tenancy was identified. "
+        "Note for any captcha detector: served from the broker's own "
+        "path, so matching only on challenges.cloudflare.com misses it. "
+        "Note also that none of the form's inputs carries a name "
+        "attribute (ids only, Angular ng-* classes), so even past the "
+        "wall a recipe must address them by id. DATASET DEFECT: a URL "
+        "under /optOut/ that is actually a search page -- the same trap "
+        "mugshotlook.com sprang in batch 38, where it 301'd to the search "
+        "page instead; flagged and not fixed."
+    ),
+    "unite4heritage-org": (
+        "DOMAIN REBRAND plus a wall, verified by browser render "
+        "2026-09-25. https://www.unite4heritage.org/ now 301s to "
+        "https://unpan.org/, which presents itself as UNPAN, 'a unified "
+        "people intelligence network' claiming 301M people, 340M phone "
+        "numbers, 305M email addresses, 118M addresses, 442M social "
+        "profiles, 28M businesses and 140M criminal records. Its two "
+        "search forms (header and hero) are GET to / with first name, "
+        "last name, city and state, and -- worth recording -- NONE of "
+        "their inputs has a name attribute, only ids (#header-search- "
+        "first-name, #search-first-name and siblings), so a future recipe "
+        "must address them by id. BLOCKED anyway: a second visit to "
+        "unpan.org/opt-out answered HTTP 403 behind a Cloudflare managed- "
+        "challenge interstitial, and the challenge is site-wide rather "
+        "than per-form. DATASET DEFECT: the row is keyed to the old "
+        "unite4heritage.org domain and its notes describe the old find- "
+        "your-URL-then-paste-it flow; the live brand is unpan.org. "
+        "Flagged and not fixed."
+    ),
+    "weinform-org": (
+        "DATASET CLAIM FALSIFIED as to category, verified by browser "
+        "render 2026-09-25. This row is filed as 'marketing', but "
+        "https://www.weinform.org/ is a PEOPLE-SEARCH SITE: the same "
+        "Angular white-label engine as truthrecord.org, with the "
+        "identical FCRA notice ('WeInform does not provide consumer "
+        "reports...'), the same criminal- "
+        "record/address/phone/property/civil-judgment pitch, and the same "
+        "FIRST-PARTY Cloudflare Turnstile frame at /assets/common/captcha "
+        "/turnstile.html?sitekey=0x4AAAAAAAGIEMkbVUAvV5l_ that every "
+        "other tenant of this platform serves. BLOCKED on that wall. Also "
+        "recorded: the footer carries two 'Do Not Sell My Info' links "
+        "plus a 'Remove My Information' link that adds a query parameter "
+        "the other tenants do not show, "
+        "/api/helper/optOutLight/search?type=r. DATASET DEFECT: wrong "
+        "category on the row, and the dataset's required_fields ('full "
+        "legal name, email address') describes the opt-out form rather "
+        "than anything about search. Flagged and not fixed. Same operator "
+        "as truthrecord-org -- see that row and the opt-out entries for "
+        "both."
     ),
 }
 
@@ -11548,6 +11795,35 @@ SEARCH_UNDECIDED = {
         "tab's query is actually run, so the name search depends on "
         "[name=searchByType] carrying the right value -- which was NOT "
         "established, because nothing was submitted."
+    ),
+    "ufind-name": (
+        "SURFACE CONFIRMED AND BOTH-WAYS DISCRIMINATING, held UNDECIDED "
+        "for one honest reason. Verified 2026-09-25. ufind.name carries a "
+        "plain search form (form#search, GET to /search, "
+        "input[name=q]#name required, button.btn-primary) repeated three "
+        "times on the page, and no captcha guards SEARCH (the hCaptcha on "
+        "this site is on /opt-out only). Two probes by URL: "
+        "/search?q=John+Smith answers 302 to /John+Smith, which is HTTP "
+        "200, 253KB, titled 'John Smith: 400 records - Addresses, Phone "
+        "Numbers, Cars' and prints 'John Smith - we found 400 people "
+        "search records: 50 addresses & phone numbers, 25 John Smith's "
+        "cars, 64 real estate objects, 202 CVs and social profiles' above "
+        "real listing rows (name, street address, county, phone) with no "
+        "paywall. /search?q=Zylphrenna+Quixbottom answers a 9.5KB page "
+        "titled 'Google Search Results - People Finder' printing 'Google "
+        "Search Results: Zylphrenna Quixbottom' and a row of social- "
+        "network links, with no records and no count -- a clean miss "
+        "page, and NOT a 404. So the markers are there for the taking: "
+        "hit on 'people search records', miss on 'Google Search "
+        "Results:', count_pattern r'we found ([0-9,]+) people search "
+        "records'.  WHY NOT A RECIPE YET: both probes above were URL- "
+        "BUILT, and this module's rule is that results are reached by "
+        "SUBMITTING the form, never by string-building a URL. Promoting "
+        "this needs one run that types into form#search in a browser and "
+        "reads both pages that way, and a check that the hit page does "
+        "not also contain the miss marker. That is a short job and this "
+        "entry exists so whoever does it does not start from nothing. The "
+        "opt-out leg is separately blocked."
     ),
 }
 

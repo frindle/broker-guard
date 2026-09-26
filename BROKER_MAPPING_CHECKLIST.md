@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **884** / 969
-- Search leg mapped: 884 / 969
-- Opt-out leg mapped: 884 / 969
+- Fully mapped (both legs): **907** / 969
+- Search leg mapped: 907 / 969
+- Opt-out leg mapped: 907 / 969
 
 ## How to resume
 
@@ -919,32 +919,32 @@ of those dicts against source-brokers.json).
 - [x] **The Open Data People, Inc.** (`openpeoplesearch-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **The People Searchers LLC** (`peoplesearcher-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **The Work Number (Equifax)** (`theworknumber-com`) -- search: no-surface, opt-out: out-of-scope
-- [ ] **THROTLE Inc** (`throtle-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Tinuiti, Inc.** (`tinuiti-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Tiplinks Inc** (`fetcher-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **TL1MKT SL SL** (`tl1mkt-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Towerdata** (`towerdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Traackr, Inc.** (`traackr-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Tracers Information Specialists, Inc.** (`tracersinfo-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **THROTLE Inc** (`throtle-io`) -- search: no-surface, opt-out: blocked
+- [x] **Tinuiti, Inc.** (`tinuiti-com`) -- search: no-surface, opt-out: blocked
+- [x] **Tiplinks Inc** (`fetcher-ai`) -- search: no-surface, opt-out: blocked
+- [x] **TL1MKT SL SL** (`tl1mkt-com`) -- search: no-surface, opt-out: blocked
+- [x] **Towerdata** (`towerdata-com`) -- search: no-surface, opt-out: blocked
+- [x] **Traackr, Inc.** (`traackr-com`) -- search: no-surface, opt-out: undecided
+- [x] **Tracers Information Specialists, Inc.** (`tracersinfo-com`) -- search: blocked, opt-out: blocked
 - [x] **TransUnion Marketing** (`transunion-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Trestle Solutions Inc.** (`trestleiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Triplelift, Inc.** (`triplelift-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **True Blue Analytics** (`trueblueanalytics-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **True Opulence Corporation** (`trueopulence-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Truedata Solutions, Inc.** (`truedata-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Trestle Solutions Inc.** (`trestleiq-com`) -- search: no-surface, opt-out: blocked
+- [x] **Triplelift, Inc.** (`triplelift-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **True Blue Analytics** (`trueblueanalytics-org`) -- search: no-surface, opt-out: blocked
+- [x] **True Opulence Corporation** (`trueopulence-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Truedata Solutions, Inc.** (`truedata-co`) -- search: no-surface, opt-out: blocked
 - [x] **TruePeopleSearch** (`truepeoplesearch-com`) -- search: recipe, opt-out: undecided
-- [ ] **TruePeopleSearch.net** (`truepeoplesearch-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **TruePeopleSearch.net** (`truepeoplesearch-net`) -- search: blocked, opt-out: blocked
 - [x] **TRUTH NOW LLC** (`checksecrets-com`) -- search: blocked, opt-out: blocked
 - [x] **TruthFinder** (`truthfinder-com`) -- search: undecided, opt-out: out-of-scope
-- [ ] **TruthRecord** (`truthrecord-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Tunnl, LLC** (`tunnldata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Twine Data, Inc** (`twinedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Tymax Media** (`tymaxmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **uFind.Name** (`ufind-name`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Unacast, Inc.** (`unacast-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Unearth Campaigns LLC** (`unearthcampaigns-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Unite 4Heritage** (`unite4heritage-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **United One Resources, Inc.** (`unitedone-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **TruthRecord** (`truthrecord-org`) -- search: blocked, opt-out: out-of-scope
+- [x] **Tunnl, LLC** (`tunnldata-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Twine Data, Inc** (`twinedata-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Tymax Media** (`tymaxmedia-com`) -- search: no-surface, opt-out: no-surface
+- [x] **uFind.Name** (`ufind-name`) -- search: undecided, opt-out: blocked
+- [x] **Unacast, Inc.** (`unacast-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Unearth Campaigns LLC** (`unearthcampaigns-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Unite 4Heritage** (`unite4heritage-org`) -- search: blocked, opt-out: blocked
+- [x] **United One Resources, Inc.** (`unitedone-com`) -- search: no-surface, opt-out: no-surface
 - [x] **United States Phone Book** (`unitedstatesphonebook-com`) -- search: recipe, opt-out: undecided
 - [ ] **Unity Technologies SF** (`unity-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Unmask, LLC** (`unmask-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -988,7 +988,7 @@ of those dicts against source-brokers.json).
 - [ ] **VRTCAL Markets Inc** (`vrtcal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Warmly, Inc** (`warmly-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Washington Court Records (CourtRecords.us network)** (`washingtoncourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **WE INFORM LLC** (`weinform-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **WE INFORM LLC** (`weinform-org`) -- search: blocked, opt-out: out-of-scope
 - [ ] **WealthEngine, Inc.** (`wealthengine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Wealthfeed, Inc.** (`wealthfeed-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Webbula, LLC** (`webbula-com`) -- search: UNMAPPED, opt-out: UNMAPPED
