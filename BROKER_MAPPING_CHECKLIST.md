@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **855** / 969
-- Search leg mapped: 855 / 969
-- Opt-out leg mapped: 855 / 969
+- Fully mapped (both legs): **884** / 969
+- Search leg mapped: 884 / 969
+- Opt-out leg mapped: 884 / 969
 
 ## How to resume
 
@@ -828,49 +828,49 @@ of those dicts against source-brokers.json).
 - [x] **Saleseer, Inc.** (`saleseer-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Salesintel Research Inc.** (`salesintel-io`) -- search: no-surface, opt-out: no-surface
 - [x] **SALUTARY DATA LLC** (`salutarydata-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Samba TV, Inc.** (`samba-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Samba TV, Inc.** (`samba-tv`) -- search: no-surface, opt-out: blocked
 - [x] **Sawyer Lists, LLC** (`sawyerlists-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Sbfe, LLC** (`sbfe-org`) -- search: no-surface, opt-out: no-surface
 - [x] **Scalable Commerce, LLC** (`kidslivesafe-com`) -- search: undecided, opt-out: blocked
 - [x] **Scanbuy, Inc** (`scanbuy-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **SCHUFA Holding AG** (`schufa-de`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **SCHUFA Holding AG** (`schufa-de`) -- search: no-surface, opt-out: no-surface
 - [x] **Scileads Ltd** (`scileads-com`) -- search: no-surface, opt-out: undecided
 - [x] **Scraping Robot, LLC** (`scrapingrobot-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Scryer, Inc.** (`reonomy-com`) -- search: no-surface, opt-out: blocked
-- [ ] **SealedRecords** (`sealedrecords-net`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **SealedRecords** (`sealedrecords-net`) -- search: blocked, opt-out: out-of-scope
 - [x] **Seamless Contacts, Inc.** (`seamless-ai`) -- search: no-surface, opt-out: undecided
 - [x] **Search America LLC** (`locateplus-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Searchbug** (`searchbug-com`) -- search: undecided, opt-out: out-of-scope
 - [x] **SearchPeopleFree** (`searchpeoplefree-com`) -- search: recipe, opt-out: undecided
-- [ ] **SearchQuarry** (`searchquarry-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **SearchQuarry** (`searchquarry-com`) -- search: blocked, opt-out: blocked
 - [x] **SearchUSAPeople** (`searchusapeople-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **SecretInfo** (`secretinfo-org`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **SecretInfo** (`secretinfo-org`) -- search: blocked, opt-out: out-of-scope
 - [x] **Semasio, Inc.** (`semasio-com`) -- search: no-surface, opt-out: undecided
 - [x] **Semcasting.com** (`semcasting-com`) -- search: no-surface, opt-out: blocked
-- [ ] **SentiLink Corp** (`sentilink-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **SentiLink Corp** (`sentilink-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Service 1St Information Solutions LLC** (`srv1st-com`) -- search: no-surface, opt-out: no-surface
 - [x] **SG360** (`sg360-com`) -- search: no-surface, opt-out: undecided
 - [x] **Share Local Media, Inc** (`sharelocalmedia-com`) -- search: no-surface, opt-out: blocked
 - [x] **Sharethrough Inc.** (`sharethrough-com`) -- search: no-surface, opt-out: undecided
 - [x] **SHEERID Inc** (`sheerid-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Shopalyst Technologies** (`shopalyst-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **SignalHire** (`signalhire-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Similarweb Ltd.** (`similarweb-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Shopalyst Technologies** (`shopalyst-com`) -- search: no-surface, opt-out: no-surface
+- [x] **SignalHire** (`signalhire-com`) -- search: undecided, opt-out: undecided
+- [x] **Similarweb Ltd.** (`similarweb-com`) -- search: no-surface, opt-out: no-surface
 - [x] **SIMIO CLOUD LLC** (`simiocloud-com`) -- search: no-surface, opt-out: blocked
 - [x] **Site Impact** (`siteimpact-com`) -- search: no-surface, opt-out: blocked
 - [x] **Skipmasher, Inc.** (`skipsmasher-com`) -- search: no-surface, opt-out: blocked
 - [x] **Skyhook Holding, Inc.** (`skyhook-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Slashdot Media, LLC** (`slashdotmedia-com`) -- search: no-surface, opt-out: no-surface
 - [x] **SMA Communications, LLC.** (`smacomm-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **SmartBackgroundChecks** (`smartbackgroundchecks-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Smartclip** (`smartclip-tv`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **SmartBackgroundChecks** (`smartbackgroundchecks-com`) -- search: undecided, opt-out: blocked
+- [x] **Smartclip** (`smartclip-tv`) -- search: no-surface, opt-out: undecided
 - [x] **SNOVIO Inc** (`snov-io`) -- search: no-surface, opt-out: blocked
 - [x] **SOCIAL CATFISH LLC** (`socialcatfish-com`) -- search: undecided, opt-out: blocked
 - [x] **Source Path Digital** (`sourcepathdigital-com`) -- search: no-surface, opt-out: blocked
 - [x] **Sourceit Technologies, Inc** (`sourceitmarketing-com`) -- search: no-surface, opt-out: undecided
 - [x] **Sourcescrub LLC** (`sourcescrub-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **South Carolina Court Records (CourtRecords.us network)** (`southcarolinacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **South Dakota Court Records (CourtRecords.us network)** (`southdakotacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **South Carolina Court Records (CourtRecords.us network)** (`southcarolinacourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **South Dakota Court Records (CourtRecords.us network)** (`southdakotacourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **Sovrn, Inc.** (`sovrn-com`) -- search: no-surface, opt-out: undecided
 - [x] **Specialists Marketing Services, Inc.** (`sms-inc-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Spectrum Mailing Lists** (`spectrummailinglists-com`) -- search: blocked, opt-out: blocked
@@ -898,27 +898,27 @@ of those dicts against source-brokers.json).
 - [x] **Swoop.Com, Inc.** (`swoop-com`) -- search: no-surface, opt-out: undecided
 - [x] **Swordfish AI Inc.** (`swordfish-ai`) -- search: blocked, opt-out: blocked
 - [x] **Sync.me** (`sync-me`) -- search: undecided, opt-out: blocked
-- [ ] **T-MOBILE USA Inc** (`t-mobile-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **TABOOLA Inc** (`taboola-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Tandem Marketing, LLC** (`fhamortgagefinder-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Tapad** (`tapad-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **TARGETSMART COMMUNICATIONS LLC** (`targetsmart-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **T-MOBILE USA Inc** (`t-mobile-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **TABOOLA Inc** (`taboola-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Tandem Marketing, LLC** (`fhamortgagefinder-com`) -- search: no-surface, opt-out: undecided
+- [x] **Tapad** (`tapad-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **TARGETSMART COMMUNICATIONS LLC** (`targetsmart-com`) -- search: no-surface, opt-out: blocked
 - [x] **TASK GENIE Inc** (`datalane-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Teads** (`teads-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **TECHTARGET Inc** (`zendesk-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **TechTarget, Inc.** (`informatechtarget-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Telefi LLC** (`telefi-app`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Telesign Corporation** (`telesign-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Tennessee Court Records (CourtRecords.us network)** (`tennesseecourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Terminus Software, Inc.** (`terminusplatform-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Texas Court Records (CourtRecords.us network)** (`texascourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Teads** (`teads-com`) -- search: no-surface, opt-out: undecided
+- [x] **TECHTARGET Inc** (`zendesk-com`) -- search: no-surface, opt-out: undecided
+- [x] **TechTarget, Inc.** (`informatechtarget-com`) -- search: no-surface, opt-out: undecided
+- [x] **Telefi LLC** (`telefi-app`) -- search: no-surface, opt-out: no-surface
+- [x] **Telesign Corporation** (`telesign-com`) -- search: no-surface, opt-out: blocked
+- [x] **Tennessee Court Records (CourtRecords.us network)** (`tennesseecourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **Terminus Software, Inc.** (`terminusplatform-com`) -- search: no-surface, opt-out: undecided
+- [x] **Texas Court Records (CourtRecords.us network)** (`texascourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **ThatsThem** (`thatsthem-com`) -- search: recipe, opt-out: recipe
 - [x] **THE ALESCO GROUP LLC** (`alescodata-com`) -- search: no-surface, opt-out: blocked
-- [ ] **The Data Group** (`thedatagroup-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **The Nielsen Company** (`nielsen-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **The Data Group** (`thedatagroup-com`) -- search: no-surface, opt-out: blocked
+- [x] **The Nielsen Company** (`nielsen-com`) -- search: no-surface, opt-out: undecided
 - [x] **The Open Data People, Inc.** (`openpeoplesearch-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **The People Searchers LLC** (`peoplesearcher-com`) -- search: undecided, opt-out: out-of-scope
-- [ ] **The Work Number (Equifax)** (`theworknumber-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **The Work Number (Equifax)** (`theworknumber-com`) -- search: no-surface, opt-out: out-of-scope
 - [ ] **THROTLE Inc** (`throtle-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Tinuiti, Inc.** (`tinuiti-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Tiplinks Inc** (`fetcher-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
