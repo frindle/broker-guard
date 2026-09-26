@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **764** / 969
-- Search leg mapped: 764 / 969
-- Opt-out leg mapped: 764 / 969
+- Fully mapped (both legs): **793** / 969
+- Search leg mapped: 793 / 969
+- Opt-out leg mapped: 793 / 969
 
 ## How to resume
 
@@ -777,39 +777,39 @@ of those dicts against source-brokers.json).
 - [x] **Quantcast** (`quantcast-com`) -- search: no-surface, opt-out: undecided
 - [x] **Qurium Solutions, Inc.** (`supplier-io`) -- search: no-surface, opt-out: blocked
 - [x] **Radaris** (`radaris-com`) -- search: no-surface, opt-out: no-surface
-- [ ] **Rampedup, LLC.** (`rampedup-io`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Rampedup, LLC.** (`rampedup-io`) -- search: no-surface, opt-out: blocked
 - [x] **Rategain Adara, Inc.** (`adara-com`) -- search: no-surface, opt-out: undecided
-- [ ] **Ray Cdp, Inc.** (`rayinsights-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Reach Marketing LLC** (`reachmarketing-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **REAL INTENT Inc.** (`realintent-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Realeflow LLC** (`realeflow-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Reality Media, Inc.** (`realitydebtsolutions-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Realsource, Inc** (`realsourcedata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Ray Cdp, Inc.** (`rayinsights-com`) -- search: no-surface, opt-out: blocked
+- [x] **Reach Marketing LLC** (`reachmarketing-com`) -- search: no-surface, opt-out: no-surface
+- [x] **REAL INTENT Inc.** (`realintent-co`) -- search: no-surface, opt-out: blocked
+- [x] **Realeflow LLC** (`realeflow-com`) -- search: no-surface, opt-out: blocked
+- [x] **Reality Media, Inc.** (`realitydebtsolutions-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Realsource, Inc** (`realsourcedata-com`) -- search: no-surface, opt-out: blocked
 - [x] **RecordsFinder** (`recordsfinder-com`) -- search: undecided, opt-out: recipe
-- [ ] **Recruitbot, Inc.** (`recruitbot-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Recsolu Inc.** (`yello-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Redbird Direct LLC** (`redbirddirect-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Redi-Data Inc.** (`redidata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Redmob Limited Liability Company** (`redmob-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Refinitiv US LLC** (`refinitiv-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Regis24** (`regis24-de`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Recruitbot, Inc.** (`recruitbot-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Recsolu Inc.** (`yello-co`) -- search: no-surface, opt-out: blocked
+- [x] **Redbird Direct LLC** (`redbirddirect-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Redi-Data Inc.** (`redidata-com`) -- search: no-surface, opt-out: blocked
+- [x] **Redmob Limited Liability Company** (`redmob-io`) -- search: no-surface, opt-out: undecided
+- [x] **Refinitiv US LLC** (`refinitiv-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Regis24** (`regis24-de`) -- search: no-surface, opt-out: no-surface
 - [x] **Regulatory Datacorp, Inc.** (`alchemer-com`) -- search: no-surface, opt-out: blocked
-- [ ] **Rehold** (`rehold-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **REKLAIM LTD** (`reklaimyours-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Relpro, Inc.** (`relpro-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Rent Risk LLC** (`rentrisk-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Resonate** (`resonate-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **RESONATE Networks, Inc.** (`reson8-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Results Only Consulting And Advertising** (`rocadvertising-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Reunion.com** (`reunion-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Revcontent** (`revcontent-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Reveal Mobile Inc** (`revealmobile-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Rehold** (`rehold-com`) -- search: no-surface, opt-out: no-surface
+- [x] **REKLAIM LTD** (`reklaimyours-com`) -- search: no-surface, opt-out: undecided
+- [x] **Relpro, Inc.** (`relpro-com`) -- search: no-surface, opt-out: blocked
+- [x] **Rent Risk LLC** (`rentrisk-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Resonate** (`resonate-com`) -- search: no-surface, opt-out: undecided
+- [x] **RESONATE Networks, Inc.** (`reson8-com`) -- search: no-surface, opt-out: undecided
+- [x] **Results Only Consulting And Advertising** (`rocadvertising-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Reunion.com** (`reunion-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **Revcontent** (`revcontent-com`) -- search: no-surface, opt-out: undecided
+- [x] **Reveal Mobile Inc** (`revealmobile-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Reveal Phone Owner** (`revealphoneowner-com`) -- search: recipe, opt-out: recipe
-- [ ] **Revelio Labs, Inc.** (`reveliolabs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Revoptimal, LLC** (`revoptimal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Rhetorik Limited** (`rhetorik-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Rhode Island Court Records (CourtRecords.us network)** (`rhodeislandcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Rich Media LLC** (`richmediallc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Revelio Labs, Inc.** (`reveliolabs-com`) -- search: no-surface, opt-out: undecided
+- [x] **Revoptimal, LLC** (`revoptimal-com`) -- search: no-surface, opt-out: blocked
+- [x] **Rhetorik Limited** (`rhetorik-com`) -- search: no-surface, opt-out: blocked
+- [x] **Rhode Island Court Records (CourtRecords.us network)** (`rhodeislandcourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **Rich Media LLC** (`richmediallc-com`) -- search: blocked, opt-out: blocked
 - [x] **Riv Data Corp.** (`carpe-io`) -- search: no-surface, opt-out: no-surface
 - [ ] **Rocketreach, LLC** (`rocketreach-co`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [x] **ROOFTOP DIGITAL LLC** (`consumerdataprotect-com`) -- search: no-surface, opt-out: blocked
