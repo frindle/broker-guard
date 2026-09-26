@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **907** / 969
-- Search leg mapped: 907 / 969
-- Opt-out leg mapped: 907 / 969
+- Fully mapped (both legs): **939** / 969
+- Search leg mapped: 939 / 969
+- Opt-out leg mapped: 939 / 969
 
 ## How to resume
 
@@ -946,40 +946,40 @@ of those dicts against source-brokers.json).
 - [x] **Unite 4Heritage** (`unite4heritage-org`) -- search: blocked, opt-out: blocked
 - [x] **United One Resources, Inc.** (`unitedone-com`) -- search: no-surface, opt-out: no-surface
 - [x] **United States Phone Book** (`unitedstatesphonebook-com`) -- search: recipe, opt-out: undecided
-- [ ] **Unity Technologies SF** (`unity-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Unmask, LLC** (`unmask-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Upcell, LLC** (`upcell-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Uplead** (`uplead-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **UPS Capital Corporation** (`upscapital-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **US DATA CORPORATION** (`usdatacorporation-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **US Marketing Group** (`usmarketinggrp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **US Records** (`usrecords-net`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **US Search** (`ussearch-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Usa Official** (`usa-official-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **USA People Search** (`usa-people-search-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Usadata, Inc.** (`usadata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Unity Technologies SF** (`unity-com`) -- search: no-surface, opt-out: blocked
+- [x] **Unmask, LLC** (`unmask-com`) -- search: blocked, opt-out: blocked
+- [x] **Upcell, LLC** (`upcell-io`) -- search: no-surface, opt-out: undecided
+- [x] **Uplead** (`uplead-com`) -- search: no-surface, opt-out: blocked
+- [x] **UPS Capital Corporation** (`upscapital-com`) -- search: no-surface, opt-out: staged
+- [x] **US DATA CORPORATION** (`usdatacorporation-com`) -- search: no-surface, opt-out: blocked
+- [x] **US Marketing Group** (`usmarketinggrp-com`) -- search: blocked, opt-out: blocked
+- [x] **US Records** (`usrecords-net`) -- search: undecided, opt-out: blocked
+- [x] **US Search** (`ussearch-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **Usa Official** (`usa-official-com`) -- search: no-surface, opt-out: no-surface
+- [x] **USA People Search** (`usa-people-search-com`) -- search: undecided, opt-out: out-of-scope
+- [x] **Usadata, Inc.** (`usadata-com`) -- search: no-surface, opt-out: no-surface
 - [x] **Uspeoplesearch.Com, LLC** (`uspeoplesearch-com`) -- search: blocked, opt-out: blocked
 - [x] **USPhonebook** (`usphonebook-com`) -- search: recipe, opt-out: undecided
-- [ ] **USWarrants** (`uswarrants-org`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Utah Court Records (CourtRecords.us network)** (`utahcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Valassis Communications, Inc. (an RRD company)** (`rrd-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Valpak** (`valpak-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Veeva Systems Inc.** (`veeva-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Vendelux** (`vendelux-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Venntel, Inc.** (`venntel-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **VENPATH Inc** (`venpath-net`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **VentiveIQ LLC** (`ventiveiq-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Veraset LLC** (`veraset-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Verecor** (`verecor-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **VerifyRecords.com** (`verifyrecords-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Veripages** (`veripages-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Verisk Marketing Solutions** (`verisk-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Vermont Court Records (CourtRecords.us network)** (`vermontcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **USWarrants** (`uswarrants-org`) -- search: undecided, opt-out: blocked
+- [x] **Utah Court Records (CourtRecords.us network)** (`utahcourtrecords-us`) -- search: blocked, opt-out: no-surface
+- [x] **Valassis Communications, Inc. (an RRD company)** (`rrd-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Valpak** (`valpak-com`) -- search: no-surface, opt-out: undecided
+- [x] **Veeva Systems Inc.** (`veeva-com`) -- search: no-surface, opt-out: blocked
+- [x] **Vendelux** (`vendelux-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Venntel, Inc.** (`venntel-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **VENPATH Inc** (`venpath-net`) -- search: no-surface, opt-out: no-surface
+- [x] **VentiveIQ LLC** (`ventiveiq-com`) -- search: no-surface, opt-out: blocked
+- [x] **Veraset LLC** (`veraset-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Verecor** (`verecor-com`) -- search: no-surface, opt-out: no-surface
+- [x] **VerifyRecords.com** (`verifyrecords-com`) -- search: undecided, opt-out: staged
+- [x] **Veripages** (`veripages-com`) -- search: undecided, opt-out: blocked
+- [x] **Verisk Marketing Solutions** (`verisk-com`) -- search: no-surface, opt-out: undecided
+- [x] **Vermont Court Records (CourtRecords.us network)** (`vermontcourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [ ] **Versium Analytics, Inc** (`versium-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Vertify, Inc** (`vertify-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Viant Technology LLC** (`viantinc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Videoamp, Inc.** (`videoamp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Virginia Court Records (CourtRecords.us network)** (`virginiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Virginia Court Records (CourtRecords.us network)** (`virginiacourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [ ] **Virtual Marketing LLC** (`fusion92-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Visitiq.Io** (`visitiq-io`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Vistar Media, Inc.** (`vistarmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
@@ -987,24 +987,24 @@ of those dicts against source-brokers.json).
 - [x] **VoterRecords** (`voterrecords-com`) -- search: blocked, opt-out: blocked
 - [ ] **VRTCAL Markets Inc** (`vrtcal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Warmly, Inc** (`warmly-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Washington Court Records (CourtRecords.us network)** (`washingtoncourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Washington Court Records (CourtRecords.us network)** (`washingtoncourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **WE INFORM LLC** (`weinform-org`) -- search: blocked, opt-out: out-of-scope
 - [ ] **WealthEngine, Inc.** (`wealthengine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Wealthfeed, Inc.** (`wealthfeed-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Webbula, LLC** (`webbula-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **West Publishing Corporation** (`thomsonreuters-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **West Virginia Court Records (CourtRecords.us network)** (`westvirginiacourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **West Virginia Court Records (CourtRecords.us network)** (`westvirginiacourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **Whitepages** (`whitepages-com`) -- search: recipe, opt-out: out-of-scope
 - [ ] **Wholesale Mail** (`domymail-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Whoodle, LLC** (`whoodle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Wiland Inc** (`wiland-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Windfall Data, Inc.** (`windfall-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **WINR Data B.V.** (`winrdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Wisconsin Court Records (CourtRecords.us network)** (`wisconsincourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Wisconsin Court Records (CourtRecords.us network)** (`wisconsincourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [ ] **Wisdom Media Group LLC** (`wisdommediagroupllc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Wiza, Inc.** (`wiza-co`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Wunderkind Corporation** (`wunderkind-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Wyoming Court Records (CourtRecords.us network)** (`wyomingcourtrecords-us`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Wyoming Court Records (CourtRecords.us network)** (`wyomingcourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [ ] **Xactus, LLC** (`xactus-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Xad, Inc.** (`groundtruth-com`) -- search: UNMAPPED, opt-out: UNMAPPED
 - [ ] **Xcelerated Data LLC** (`xcelerated-com`) -- search: UNMAPPED, opt-out: UNMAPPED
