@@ -44,22 +44,22 @@ expired certificate gets renewed, a suspended host comes back).
 
 ## Summary
 
-289 findings across 229 brokers.
+299 findings across 238 brokers.
 
 | scope | findings |
 | --- | --- |
 | broker-surface | 13 |
-| dataset | 184 |
-| unreachable | 92 |
+| dataset | 192 |
+| unreachable | 94 |
 
 | kind (keyword guess) | findings |
 | --- | --- |
-| unclassified | 121 |
-| parked-or-defunct | 94 |
-| dead-url | 30 |
+| unclassified | 126 |
+| parked-or-defunct | 96 |
+| dead-url | 32 |
 | broker-surface-defect | 15 |
+| entity-mismatch | 13 |
 | rebrand-or-domain-change | 13 |
-| entity-mismatch | 12 |
 | contact-address-oddity | 3 |
 | stale-200 | 1 |
 
@@ -344,6 +344,12 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
 
   > Third parked domain in the module, after idengine-com and logiq-com, and worth one distinction: this is FREE PARKING rather than an auction listing. The registration is still held, so the owner has not necessarily given the name up -- a business that let its site lapse while keeping the domain looks exactly like this. That makes a future recheck slightly more likely to find something than it would be for an auction listing, and it does not change the present answer, which is that Media Direct publishes nothing here at all.
+
+### `domymail-com`
+
+- **scope:** dataset | **kind:** entity-mismatch | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-26: No surface, and the row itself looks like a dataset false positive. domymail.com does not serve valid TLS -- https fails net::ERR_CERT_AUTHORITY_INVALID -- and over http it renders a single-screen brochure for 'Wholesale Mail', a print and mailing shop at 1401 Beaudry Blvd, Hudson, WI 54016. The entire body is a service pitch, a login/signup pair and the line 'Need Assistance? E-mail: scott@domymail.com or mark@domymail.com'. There is no privacy page, no opt-out page, no rights language and no form of any kind. DATASET DEFECT: the recorded opt_out_email is jenny@helmerprinting.com -- a DIFFERENT COMPANY's domain, which neither appears on nor is linked from domymail.com; the only published addresses are the two above. A print shop with no consumer database is also a poor fit for this dataset at all, which is worth flagging alongside the mailbox correction.
 
 ### `dynata-com`
 
@@ -1651,11 +1657,39 @@ expired certificate gets renewed, a suspended host comes back).
 
   > Verified by browser render (Playwright, throwaway long-settle wrapper importing JS/UA from tools/probe_broker_forms.py, 14s settle) 2026-09-25, batch 40. NO VERDICT, because the recorded surface is gone and its replacement could not be located this pass -- written down rather than rounded to a decided-looking bucket. The recorded opt_out_url https://marketing.verisk.com/privacy-center/ does not exist: the marketing subdomain redirects to the corporate root and the path lands on https://www.verisk.com/privacy-center/ answering HTTP 404 ('404 Page | Verisk'). Rendering https://marketing.verisk.com/ alone likewise lands on https://www.verisk.com/ (HTTP 200) -- so the whole Verisk Marketing Solutions microsite the dataset points at has been folded into the corporate site. A guess at the obvious replacement path, /privacy-notices/, also answered HTTP 404, and neither the 404 page nor the homepage exposed a single privacy or do-not-sell link in its rendered anchors. DATASET DEFECT: stale opt_out_url on a live company; flagged and not fixed. NEXT STEP for whoever picks this up, and deliberately not attempted here so as not to invent a finding: locate Verisk's current consumer-rights page from the CPPA/CA DROP registry filing rather than by guessing paths, since the registry is where the rights URL is legally attested. The recorded vmsprivacy@verisk.com remains a human channel in the meantime.
 
+### `vertify-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-26: Mailbox-only, and a dataset defect. vertify.com carries no opt-out form; the rendered privacy policy (last updated 2025-01-05, about 18k characters) routes every right through one sentence: 'Requests for any of the foregoing should be submitted via email to: privacy@vertify.com.' The policy also asserts 'We will not sell your Personal Data, and have not done so over the last 12 months', so Vertify may hold nothing sellable to opt out OF. DATASET DEFECT: the recorded opt_out_email is gpineda@vertify.com, a named individual, where the published channel is the role address privacy@vertify.com -- prefer the role address.
+
+### `wealthengine-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-26: Mailbox-and-phone only, and a dataset defect. wealthengine.com/privacy-policy/ 301s to altrata.com/privacy-policy, confirming the Altrata acquisition the dataset already notes. The rendered policy serves ZERO forms of any kind -- the only links on it are 'Let's connect' sales CTAs -- and the whole rights section resolves to two channels: 'Email: piprivacy@altrata.com' and 'Toll free number for California residents: +1 877 314 5147', the latter surfaced on the page as a 'Do Not Sell' link. DATASET DEFECT: the recorded opt_out_email is privacy@altrata.com; the address the live policy actually publishes is piprivacy@altrata.com ('pi' for personal information). Also worth correcting in the row: opt_out_method is recorded as email while verification_step still reads as though a form existed -- there is no form.
+
 ### `weinform-org`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `search_forms.SEARCH_BLOCKED`
 
   > DATASET CLAIM FALSIFIED as to category, verified by browser render 2026-09-25. This row is filed as 'marketing', but https://www.weinform.org/ is a PEOPLE-SEARCH SITE: the same Angular white-label engine as truthrecord.org, with the identical FCRA notice ('WeInform does not provide consumer reports...'), the same criminal- record/address/phone/property/civil-judgment pitch, and the same FIRST-PARTY Cloudflare Turnstile frame at /assets/common/captcha /turnstile.html?sitekey=0x4AAAAAAAGIEMkbVUAvV5l_ that every other tenant of this platform serves. BLOCKED on that wall. Also recorded: the footer carries two 'Do Not Sell My Info' links plus a 'Remove My Information' link that adds a query parameter the other tenants do not show, /api/helper/optOutLight/search?type=r. DATASET DEFECT: wrong category on the row, and the dataset's required_fields ('full legal name, email address') describes the opt-out form rather than anything about search. Flagged and not fixed. Same operator as truthrecord-org -- see that row and the opt-out entries for both.
+
+### `whoodle-com`
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-26: The domain is gone. whoodle.com fails net::ERR_NAME_NOT_RESOLVED under a real browser on the apex -- no A record, not merely no mail. This EXTENDS the dataset's existing note, which recorded only that support@whoodle.com hard-bounced on 2026-08-24 because the MX lookup failed: the failure is not confined to mail, the whole host no longer resolves. With no site, no form, no mailbox and no alternate domain recorded anywhere in the row, there is no opt-out channel to describe and nothing a later probe could recover. This is the DNS-blackhole shape already seen elsewhere in the sweep, in its completest form.
+
+- **scope:** unreachable | **kind:** parked-or-defunct | **from:** `search_forms.NO_SEARCH_SURFACE`
+
+  > Verified by browser render 2026-09-26: whoodle.com no longer resolves: net::ERR_NAME_NOT_RESOLVED on the apex under a real browser, extending the dataset's earlier finding that its MX lookup failed. The whole domain is gone, not just its mail. There is nothing left to search.
+
+### `winrdata-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_UNDECIDED`
+
+  > Verified by browser render 2026-09-26: NO VERDICT, plus a dataset defect. The recorded opt_out_url www.winrdata.com/privacy-policy-us/ is a hard HTTP 404 ('Page not found - WINR Data'), and /privacy/ redirects to an unrelated blog post (/privacy-first-approach-to-us-expansion/). The live page is www.winrdata.com/privacy-policy/, which is form-free but explicit: 'WINR Data holds information about people so businesses can resolve and verify identities and prevent fraud. You have rights over that information -- and this page is where you use them', with two links, 'Make a privacy request' and 'Open the privacy request form', both pointing at privacy.winrcorp.com -- note the DIFFERENT APEX, winrcorp.com rather than winrdata.com, which is worth carrying in the row. That host is a DataGrail Privacy Request Center and it serves zero forms on arrival: the request form mounts only after 'Select your country', so the surface is a multi-step portal gated behind a country choice. This is the same late-mounting SPA-portal failure already written up for DataGrail and MineOS tenants, and the same fix applies -- drive the country select, then read the field set. Until then the field list is unknown, so no verdict. No opt-out mailbox is published; info@winrdata.com is a general enquiry address only.
 
 ### `winwithoptimal-com`
 
@@ -1669,6 +1703,24 @@ expired certificate gets renewed, a suspended host comes back).
 
   > NO VERDICT as of 2026-09-23, and the reason is a tangle in the dataset row rather than anything the broker has done. DATASET DEFECT, flagged and NOT fixed: the row is named 'Efunds Corporation', keyed to worldpay.com, with chexsystems.compliance@fisglobal.com as the contact. Those are three different things. eFunds is the company behind CHEXSYSTEMS, the banking consumer reporting agency that decides whether someone can open a checking account. Worldpay is a payments processor. Both passed through FIS ownership, which is how they came to share a row, but the consumer-facing reporting product is not on worldpay.com at all -- and ChexSystems, like earlywarning-com in this module, is an FCRA agency whose file is not something a consumer can opt out of. What was actually found at the recorded domain: worldpay.com carries 'Do not sell or share my personal information' pointing at privacy.worldpay.com, which resolves to /policies and is a Transcend-powered privacy centre ('Powered by Transcend') offering 'Make a Privacy Request' and 'View Past Requests'. It is a single-page app -- /request 404s WITHIN it, so the request flow opens from the button rather than from a URL, and nothing could be transcribed without driving it. Next steps, in order, because they are two different jobs: (1) drive the Transcend portal from the button, enumerate the request-type options and the fields, and re-check for a captcha at that stage -- none is loaded on the landing page, which proves nothing; (2) decide whether this row should be re-keyed to chexsystems.com, and if so whether it belongs with earlywarning-com as an FCRA agency with no opt-out rather than here.
 
+### `wunderkind-co`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-26: Instructions, not a form. Both the dataset URL www.wunderkind.co/privacy/opt-out-of-data- processing/ and the page it links as 'Do Not Sell or Share My Data', /privacy/data-request-instructions/, render only HubSpot SITE-SEARCH forms (input[name='term'] to /hs-search-results, both a burger and a header instance) -- no request form, no captcha, no child frame with controls. The instructions page is titled 'Data Subject Request Instructions' and what it actually instructs is a mailbox: 'If you're seeking to make a request to correct or port your data, please send us an email at to privacyrequests@wunderkind.co' (their typo). It also warns that much of what Wunderkind processes is owned by its retail clients as controllers, so requests may be forwarded to the client rather than actioned by Wunderkind. DATASET NOTE: the row carries privacy@wunderkind.co; the address the live page publishes is privacyrequests@wunderkind.co -- prefer the published one, or use both.
+
+### `xcelerated-com`
+
+- **scope:** dataset | **kind:** dead-url | **from:** `optout_forms.OPTOUT_BLOCKED`
+
+  > Verified by browser render 2026-09-26: Turnstile, and a dataset defect that hid a good form. The recorded opt_out_url www.xcelerated.com/general-5 is a hard HTTP 404; the 404 page's own footer carries the correct link, 'Do Not Sell or Share My Info' to xcelerated.com/unsubscribe/. That page is a real, purpose-built opt-out: a WordPress Fluent Forms form (#fluentform_3) with names[first_name], names[last_name], input_text 'Your Address', input_text_1 'Your Apt / Suite', input_text_2 'Your City', a 54-option 'Your State' select[name='dropdown'], input_text_3 'Your Zip Code', email, a phone field with an intl-tel-input country button, and required request-type checkbox[] values including 'Sale of personal information' -- everything required except the apt line and the state select. It is blocked by Cloudflare Turnstile: the form carries div.ff-el-turnstile.cf-turnstile and the page loads challenges.cloudflare.com/turnstile/v0/api.js?render=explicit. Note also that a street address and ZIP are required here and are not on profile.Identity, so even without Turnstile this would need a wider profile. privacy@xcelerated.com is the recorded parallel channel.
+
+### `xome-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-26: Mailbox-and-phone only, and a dataset defect. www.xome.com/privacy-policy (effective 2026-08-20, about 33k characters, read in full) serves ZERO forms; its single privacy link is an in-page anchor to section 8, 'Do Not Sell or Share My Personal Information', which contains prose and no controls. Every right in the policy routes to the same two channels -- 'To exercise the rights listed above, please contact us at privacy@xome.com or call (800) 758-8052' -- repeated for CCPA/CPRA sale-and-share opt-out, deletion, the FCRA section 624 affiliate-marketing opt-out, the Nevada opt-out and ValueYourHome.com. DATASET DEFECT: the recorded opt_out_email is licensing@xome.com, a business- licensing inbox that appears nowhere in the privacy policy; the published channel is privacy@xome.com (Xome Inc. Privacy Team, 8950 Cypress Waters Blvd, Coppell TX 75019). Also material to expectations: the policy says that for anyone who is not a Xome customer, 'at most, we only have aggregated consumer data that cannot be reasonably linked to you or your household' -- so a request may correctly return no match.
+
 ### `zendesk-com`
 
 - **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.OPTOUT_UNDECIDED`
@@ -1678,4 +1730,10 @@ expired certificate gets renewed, a suspended host comes back).
 - **scope:** dataset | **kind:** unclassified | **from:** `search_forms.NO_SEARCH_SURFACE`
 
   > Verified by browser render (Playwright, throwaway long-settle wrapper importing JS/UA from tools/probe_broker_forms.py, 12-18s settle) 2026-09-26, batch 38. DATASET DEFECT FIRST, because the row's key is misleading: this row is named 'TECHTARGET Inc' and its domain field is zendesk.com, which is not TechTarget's domain and not the domain of the company whose data is at issue -- see the opt-out leg for the full account. The broker is TechTarget (now Informa TechTarget), a B2B media and intent-data business. Its own site www.informatechtarget.com and the request host techtarget.zendesk.com were both enumerated explicitly over input/select/textarea/[contenteditable]/[role=textbox]/[role=com bobox]: the former's only controls are the site content search (input[name=s][id=s-header]) and two editorial segment selects, the latter's belong to the request form itself. No people lookup anywhere. No search surface. (Zendesk Inc., the software vendor whose host this id was derived from, is NOT a row in this dataset and has not been assessed.)
+
+### `zs-com`
+
+- **scope:** dataset | **kind:** unclassified | **from:** `optout_forms.NO_OPTOUT_SURFACE`
+
+  > Verified by browser render 2026-09-26: Mailbox-only, and a dataset defect. The recorded opt_out_url www.zs.com/data-request 302s to /compliance/california-privacy-notice, which is an explainer of about 11.6k characters with ZERO forms, zero links and no captcha -- the only child frame is the cookie banner. Every path it names is the same address: 'To exercise your privacy rights or make inquiries about your personal data, please email us at dataprivacy@zs.com', restated as 'please submit a verifiable consumer request to us by e-mailing us at dataprivacy@zs.com' and again in the contact block. That matches the dataset's dataprivacy@zs.com, so the mailbox is right; what is wrong is opt_out_method, recorded as 'web-form' when no web form exists, and opt_out_url, which points at a path that only redirects. ZS Associates is a management consultancy rather than a list seller, which is consistent with there being no consumer- facing request tooling at all.
 

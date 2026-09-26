@@ -27,9 +27,9 @@ of those dicts against source-brokers.json).
 ## Progress
 
 - Total brokers: **969**
-- Fully mapped (both legs): **939** / 969
-- Search leg mapped: 939 / 969
-- Opt-out leg mapped: 939 / 969
+- Fully mapped (both legs): **969** / 969
+- Search leg mapped: 969 / 969
+- Opt-out leg mapped: 969 / 969
 
 ## How to resume
 
@@ -975,41 +975,41 @@ of those dicts against source-brokers.json).
 - [x] **Veripages** (`veripages-com`) -- search: undecided, opt-out: blocked
 - [x] **Verisk Marketing Solutions** (`verisk-com`) -- search: no-surface, opt-out: undecided
 - [x] **Vermont Court Records (CourtRecords.us network)** (`vermontcourtrecords-us`) -- search: blocked, opt-out: no-surface
-- [ ] **Versium Analytics, Inc** (`versium-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Vertify, Inc** (`vertify-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Viant Technology LLC** (`viantinc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Videoamp, Inc.** (`videoamp-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Versium Analytics, Inc** (`versium-com`) -- search: no-surface, opt-out: undecided
+- [x] **Vertify, Inc** (`vertify-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Viant Technology LLC** (`viantinc-com`) -- search: no-surface, opt-out: blocked
+- [x] **Videoamp, Inc.** (`videoamp-com`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Virginia Court Records (CourtRecords.us network)** (`virginiacourtrecords-us`) -- search: blocked, opt-out: no-surface
-- [ ] **Virtual Marketing LLC** (`fusion92-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Visitiq.Io** (`visitiq-io`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Vistar Media, Inc.** (`vistarmedia-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **VISUAL VISITOR LLC** (`visualvisitor-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Virtual Marketing LLC** (`fusion92-com`) -- search: no-surface, opt-out: undecided
+- [x] **Visitiq.Io** (`visitiq-io`) -- search: no-surface, opt-out: undecided
+- [x] **Vistar Media, Inc.** (`vistarmedia-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **VISUAL VISITOR LLC** (`visualvisitor-com`) -- search: no-surface, opt-out: no-surface
 - [x] **VoterRecords** (`voterrecords-com`) -- search: blocked, opt-out: blocked
-- [ ] **VRTCAL Markets Inc** (`vrtcal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Warmly, Inc** (`warmly-ai`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **VRTCAL Markets Inc** (`vrtcal-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Warmly, Inc** (`warmly-ai`) -- search: no-surface, opt-out: out-of-scope
 - [x] **Washington Court Records (CourtRecords.us network)** (`washingtoncourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **WE INFORM LLC** (`weinform-org`) -- search: blocked, opt-out: out-of-scope
-- [ ] **WealthEngine, Inc.** (`wealthengine-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Wealthfeed, Inc.** (`wealthfeed-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Webbula, LLC** (`webbula-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **West Publishing Corporation** (`thomsonreuters-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **WealthEngine, Inc.** (`wealthengine-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Wealthfeed, Inc.** (`wealthfeed-com`) -- search: no-surface, opt-out: blocked
+- [x] **Webbula, LLC** (`webbula-com`) -- search: no-surface, opt-out: blocked
+- [x] **West Publishing Corporation** (`thomsonreuters-com`) -- search: no-surface, opt-out: blocked
 - [x] **West Virginia Court Records (CourtRecords.us network)** (`westvirginiacourtrecords-us`) -- search: blocked, opt-out: no-surface
 - [x] **Whitepages** (`whitepages-com`) -- search: recipe, opt-out: out-of-scope
-- [ ] **Wholesale Mail** (`domymail-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Whoodle, LLC** (`whoodle-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Wiland Inc** (`wiland-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Windfall Data, Inc.** (`windfall-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **WINR Data B.V.** (`winrdata-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Wholesale Mail** (`domymail-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Whoodle, LLC** (`whoodle-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Wiland Inc** (`wiland-com`) -- search: no-surface, opt-out: blocked
+- [x] **Windfall Data, Inc.** (`windfall-com`) -- search: no-surface, opt-out: undecided
+- [x] **WINR Data B.V.** (`winrdata-com`) -- search: no-surface, opt-out: undecided
 - [x] **Wisconsin Court Records (CourtRecords.us network)** (`wisconsincourtrecords-us`) -- search: blocked, opt-out: no-surface
-- [ ] **Wisdom Media Group LLC** (`wisdommediagroupllc-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Wiza, Inc.** (`wiza-co`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Wunderkind Corporation** (`wunderkind-co`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Wisdom Media Group LLC** (`wisdommediagroupllc-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Wiza, Inc.** (`wiza-co`) -- search: no-surface, opt-out: blocked
+- [x] **Wunderkind Corporation** (`wunderkind-co`) -- search: no-surface, opt-out: no-surface
 - [x] **Wyoming Court Records (CourtRecords.us network)** (`wyomingcourtrecords-us`) -- search: blocked, opt-out: no-surface
-- [ ] **Xactus, LLC** (`xactus-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Xad, Inc.** (`groundtruth-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Xcelerated Data LLC** (`xcelerated-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Xome Leads LLC** (`xome-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Yobi Ventures, LLC** (`yobi-ventures`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Zeta Global Corp.** (`zetaglobal-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **Zipstorm LLC** (`seekout-com`) -- search: UNMAPPED, opt-out: UNMAPPED
-- [ ] **ZS ASSOCIATES Inc** (`zs-com`) -- search: UNMAPPED, opt-out: UNMAPPED
+- [x] **Xactus, LLC** (`xactus-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Xad, Inc.** (`groundtruth-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Xcelerated Data LLC** (`xcelerated-com`) -- search: no-surface, opt-out: blocked
+- [x] **Xome Leads LLC** (`xome-com`) -- search: no-surface, opt-out: no-surface
+- [x] **Yobi Ventures, LLC** (`yobi-ventures`) -- search: no-surface, opt-out: out-of-scope
+- [x] **Zeta Global Corp.** (`zetaglobal-com`) -- search: no-surface, opt-out: blocked
+- [x] **Zipstorm LLC** (`seekout-com`) -- search: no-surface, opt-out: out-of-scope
+- [x] **ZS ASSOCIATES Inc** (`zs-com`) -- search: no-surface, opt-out: no-surface

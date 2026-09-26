@@ -8205,6 +8205,210 @@ NO_SEARCH_SURFACE = {
         "DROP registry, which is a further reason no public name search "
         "exists. Nothing to query for a presence check."
     ),
+    "versium-com": (
+        "Verified by browser render 2026-09-26: versium.com is a B2B "
+        "identity-graph and data-enrichment vendor (data cleansing, "
+        "enrichment, audience creation, an API and an MCP server). The "
+        "ccpa-opt-out page and the marketing site expose no consumer name "
+        "lookup of any kind; the only search-shaped thing on the site is "
+        "a HubSpot chat widget. Nothing to query for a presence check."
+    ),
+    "vertify-com": (
+        "Verified by browser render 2026-09-26: Vertify is a customer- "
+        "data integration/iPaaS platform sold to revenue teams, not a "
+        "people-search site. The rendered privacy policy and site carry "
+        "no form at all, let alone a consumer lookup, and the policy "
+        "states Vertify does not sell personal data. Nothing to query."
+    ),
+    "viantinc-com": (
+        "Verified by browser render 2026-09-26: Viant is a programmatic "
+        "DSP (Household ID / ipredictive). Its privacy center renders "
+        "only the corporate site search (input[name=s] to the site root) "
+        "-- no consumer record lookup exists."
+    ),
+    "videoamp-com": (
+        "Verified by browser render 2026-09-26: VideoAmp is a TV/cross- "
+        "screen measurement company keyed on device and advertising "
+        "identifiers. No consumer-facing lookup; the only interactive "
+        "surface is a Ketch consent banner and a privacy portal that "
+        "needs a mailed magic link to enter."
+    ),
+    "fusion92-com": (
+        "Verified by browser render 2026-09-26: Fusion92 (Virtual "
+        "Marketing LLC) is a full-service agency. The only form on the "
+        "site is the privacy-choices request form itself; there is no "
+        "consumer record search."
+    ),
+    "visitiq-io": (
+        "Verified by browser render 2026-09-26: VisitIQ sells website- "
+        "visitor identity resolution to B2B marketers. No public consumer "
+        "lookup; the data-rights page renders no controls at all under a "
+        "real browser."
+    ),
+    "vistarmedia-com": (
+        "Verified by browser render 2026-09-26: Vistar Media is a DOOH "
+        "advertising platform keyed on mobile advertiser IDs. The only "
+        "search on the privacy-choices page is the HubSpot site search "
+        "(input[name=term] to /hs-search-results)."
+    ),
+    "visualvisitor-com": (
+        "Verified by browser render 2026-09-26: Visual Visitor sells "
+        "anonymous-website-visitor identification to B2B sales teams. No "
+        "consumer lookup surface; its own 'Do Not Sell My Info' page "
+        "renders no content beyond site navigation."
+    ),
+    "vrtcal-com": (
+        "Verified by browser render 2026-09-26: VRTCAL is a mobile/CTV ad "
+        "exchange operating at the device and browser level. No consumer "
+        "record lookup; its opt-out page reports only a cookie-scoped "
+        "opt-out status for the current browser."
+    ),
+    "warmly-ai": (
+        "Verified by browser render 2026-09-26: Warmly is a B2B "
+        "signal/intent platform for sales teams. The only form is the "
+        "consumer-rights request form; no consumer lookup."
+    ),
+    "wealthengine-com": (
+        "Verified by browser render 2026-09-26: WealthEngine is now part "
+        "of Altrata; wealthengine.com/privacy-policy/ redirects to "
+        "altrata.com/privacy-policy. Wealth-screening data is sold to "
+        "nonprofits and financial firms through a licensed platform "
+        "behind a login -- there is no public consumer name lookup, and "
+        "the rendered policy page carries no form of any kind."
+    ),
+    "wealthfeed-com": (
+        "Verified by browser render 2026-09-26: WealthFeed sells "
+        "wealth/intent signals to advisors via a paid platform "
+        "(portal.wealthfeed.com). No public consumer lookup; the only "
+        "public form is the opt-out form itself."
+    ),
+    "webbula-com": (
+        "Verified by browser render 2026-09-26: Webbula sells email "
+        "hygiene and audience data to marketers. No consumer lookup "
+        "surface is reachable: every request from this host gets an HTTP "
+        "500 proxy-detection page rather than the site. Probe egress for "
+        "this batch was a Cloudflare WARP tunnel (warp=on, gateway=on, "
+        "egress 104.28.x.x), which is relevant wherever a site answered "
+        "with proxy detection rather than a bot challenge."
+    ),
+    "thomsonreuters-com": (
+        "Verified by browser render 2026-09-26: West Publishing / Thomson "
+        "Reuters does operate a people-search product (CLEAR), but it is "
+        "a credentialed, contract-only investigative platform for law "
+        "enforcement, legal and insurance users -- not a public consumer "
+        "lookup, and much of the underlying data is FCRA-regulated. "
+        "thomsonreuters.com itself offers no name search; /ccpa-dsar "
+        "redirects straight to a OneTrust DSAR webform."
+    ),
+    "domymail-com": (
+        "Verified by browser render 2026-09-26: Wholesale Mail "
+        "(domymail.com) is a small Wisconsin print and mailing shop. The "
+        "entire site is a one-page brochure plus a login; there is no "
+        "consumer lookup and no database surface at all. Its presence in "
+        "a data-broker dataset looks like a false positive -- see the "
+        "opt-out leg for the matching mailbox defect."
+    ),
+    "whoodle-com": (
+        "Verified by browser render 2026-09-26: whoodle.com no longer "
+        "resolves: net::ERR_NAME_NOT_RESOLVED on the apex under a real "
+        "browser, extending the dataset's earlier finding that its MX "
+        "lookup failed. The whole domain is gone, not just its mail. "
+        "There is nothing left to search."
+    ),
+    "wiland-com": (
+        "Verified by browser render 2026-09-26: Wiland sells predictive "
+        "audiences to brands and nonprofits. The only form served on "
+        "wiland.com/privacy-choices/ is a Gravity Forms B2B sales enquiry "
+        "('Start the Conversation!'); no consumer lookup exists."
+    ),
+    "windfall-com": (
+        "Verified by browser render 2026-09-26: Windfall sells consumer "
+        "wealth/propensity data to businesses. The only form rendered "
+        "anywhere on its privacy-choices page is a HubSpot blog-subscribe "
+        "box. No consumer lookup."
+    ),
+    "winrdata-com": (
+        "Verified by browser render 2026-09-26: WINR Data B.V. sells "
+        "identity resolution, verification and address intelligence to "
+        "businesses (KYC, fraud, linkage). No consumer lookup; the site's "
+        "only request surface is a DataGrail privacy portal on a separate "
+        "host."
+    ),
+    "wisdommediagroupllc-com": (
+        "Verified by browser render 2026-09-26: Wisdom Media Group is a "
+        "small Ohio media agency. The site is four pages (home, services, "
+        "contact, unsubscribe) with no consumer lookup of any kind."
+    ),
+    "wiza-co": (
+        "Verified by browser render 2026-09-26: Wiza sells B2B contact "
+        "data (work emails and phones) scraped around LinkedIn. Any "
+        "lookup is behind a paid login; the public site exposes only the "
+        "opt-out form. Nothing public to query."
+    ),
+    "wunderkind-co": (
+        "Verified by browser render 2026-09-26: Wunderkind is an "
+        "identity-resolution and triggered-messaging vendor for "
+        "retailers. Its privacy pages render only HubSpot site-search "
+        "forms (input[name=term] to /hs-search-results); no consumer "
+        "record lookup exists."
+    ),
+    "xactus-com": (
+        "Verified by browser render 2026-09-26: Xactus is a mortgage- "
+        "verification bureau and the rendered privacy policy states its "
+        "services are FCRA-exempt B2B offerings sold under contract ('We "
+        "do not sell services to non B2B consumers'). Reports are pulled "
+        "by lenders, never by a consumer through a public form, so there "
+        "is no search surface and FCRA is a further reason none exists."
+    ),
+    "groundtruth-com": (
+        "Verified by browser render 2026-09-26: Xad / GroundTruth (now "
+        "part of ZeroToOne.AI) bases its systems on mobile advertising "
+        "identifiers rather than names or emails, by its own published "
+        "design. The only form on /privacy-rights/ is the WordPress site "
+        "search (input[name=s]). There is no name to look up."
+    ),
+    "xcelerated-com": (
+        "Verified by browser render 2026-09-26: Xcelerated Data sells "
+        "postal and email marketing lists to businesses. No consumer "
+        "lookup; the only public form is the opt-out form at "
+        "/unsubscribe/."
+    ),
+    "xome-com": (
+        "Verified by browser render 2026-09-26: Xome runs real-estate "
+        "marketplace and valuation products (xome.com, "
+        "ValueYourHome.com). Its searches are for PROPERTIES, not people, "
+        "and the rendered privacy policy says that for non-customers it "
+        "holds 'at most aggregated consumer data that cannot be "
+        "reasonably linked to you or your household'. No consumer record "
+        "lookup."
+    ),
+    "yobi-ventures": (
+        "Verified by browser render 2026-09-26: Yobi sells privacy- "
+        "preserving behavioural/ML audience products. yobi.ventures now "
+        "redirects into yobi.ai and neither host offers a consumer lookup "
+        "-- only sales forms and the opt-out form."
+    ),
+    "zetaglobal-com": (
+        "Verified by browser render 2026-09-26: Zeta Global is a "
+        "marketing cloud with a large consumer identity graph, but the "
+        "public site exposes no name lookup. Its /rights-request/ page "
+        "offers only a 'Personal Data Viewer' scoped to the pseudonymous "
+        "identifiers on the visiting device, which is a device self- "
+        "inspection tool, not a searchable people index."
+    ),
+    "zs-com": (
+        "Verified by browser render 2026-09-26: ZS Associates is a "
+        "management-consulting firm. The site has no consumer lookup; "
+        "zs.com/data-request redirects to a California privacy notice "
+        "with no form on it."
+    ),
+    "seekout-com": (
+        "Verified by browser render 2026-09-26: Zipstorm / SeekOut is a "
+        "recruiting talent-search engine. It genuinely indexes people, "
+        "but every lookup is behind a paid recruiter login -- there is no "
+        "unauthenticated public name search to drive, and the public "
+        "privacy-choices page exposes only the rights form."
+    ),
 }
 
 
