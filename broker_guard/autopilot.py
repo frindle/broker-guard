@@ -622,6 +622,12 @@ def run_optout_submission_pass(identities: list, cfg) -> dict:
                     extra={"error": type(exc).__name__})
         existing = []
 
+    # A failed attempt that filled nothing never reached the broker (no
+    # browser, a missing profile field, the page never loaded), so it has not
+    # spent the request and must not block the next pass from retrying.
+    existing = [r for r in existing
+                if not (r.get("outcome") == review_mod.OUTCOME_FAILED and not r.get("fields"))]
+
     counts = {"attempted": 0, "skipped_existing": 0, "submission_disabled": 0, "errors": 0}
     for identity in identities:
         for broker_id in optout_forms_mod.supported_broker_ids():

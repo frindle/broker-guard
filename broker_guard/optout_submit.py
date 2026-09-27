@@ -54,6 +54,7 @@ the real Playwright import happens only inside ``start()``, and
 drives the whole fill/detect/bail/dry-run flow against a fake page object
 with Playwright uninstalled, and **never** touches a real broker's form.
 """
+import concurrent.futures
 import logging
 from datetime import datetime, timezone
 
@@ -593,7 +594,20 @@ def run_attempt(broker_id: str, identity, cfg, dry_run=None, alert_sink=None) ->
     caller (the web UI's run button) does not have to know that recipe-rot
     alerting exists. A caller that passes one explicitly -- or a test with a
     ``cfg`` that has no alerting settings on it at all -- is respected.
+
+    The attempt always runs on a fresh worker thread. Playwright's sync API
+    refuses to start on a thread that already runs one ("using Playwright
+    Sync API inside the asyncio loop"), and the autopilot's submission pass
+    calls this from the scan thread, where the scan's PlaywrightChecker is
+    still open -- so every scheduled attempt used to fail as "no browser
+    available" without ever opening a page.
     """
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(_run_attempt, broker_id, identity, cfg,
+                           dry_run, alert_sink).result()
+
+
+def _run_attempt(broker_id, identity, cfg, dry_run, alert_sink) -> dict:
     recipe = optout_forms.recipe_for(broker_id)
     if alert_sink is None:
         try:
