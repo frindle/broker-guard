@@ -127,8 +127,6 @@ def _redact(message):
     return target.redact_reason(message)
 
 
-# Model-drafted; NOT yet read by a human.
-DRAFT_UNCONFIRMED = True
 
 CASES = [
     # -- the defect itself: error + reason -> redacted reason + kind --------
