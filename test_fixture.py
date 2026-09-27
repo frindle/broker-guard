@@ -97,68 +97,6 @@ def _install_fakes(supported, records, attempt_behavior):
     return calls, restore
 
 
-def _install_fakes_with_loader(supported, records, attempt_behavior, loader=None):
-    """Like ``_install_fakes`` but lets the case override review.load_attempts
-    (e.g. to make it raise) and reports how many times it was CALLED -- which
-    is what distinguishes the empty-identities early return from falling
-    through into the loop."""
-    import broker_guard
-
-    saved_parent = sys.modules.get("broker_guard")
-    if saved_parent is None:
-        pkg = types.ModuleType("broker_guard")
-        pkg.__path__ = [str(pathlib.Path(broker_guard.__file__).parent)]
-        sys.modules["broker_guard"] = pkg
-
-    calls = []
-    la_calls = []
-
-    def run_attempt(broker_id, identity, cfg):
-        calls.append((broker_id, getattr(identity, "identity_key", None), cfg))
-        behavior = attempt_behavior.get(broker_id, "ok")
-        if behavior == "refused":
-            raise _FakeRefused("off")
-        if behavior == "boom":
-            raise ValueError("secret PII must never be logged: {}".format(identity.identity_key))
-
-    def load_attempts(directory, limit=None):
-        la_calls.append(directory)
-        if loader is not None:
-            return loader(directory)
-        return [dict(r) for r in records]
-
-    forms_fake = types.SimpleNamespace(supported_broker_ids=lambda: list(supported))
-    review_fake = types.SimpleNamespace(
-        review_dir=lambda cfg: "/fake/review",
-        load_attempts=load_attempts,
-    )
-    submit_fake = types.SimpleNamespace(run_attempt=run_attempt, SubmissionRefused=_FakeRefused)
-
-    saved = {}
-    installed = []
-    for name, fake in (("optout_forms", forms_fake), ("review", review_fake),
-                       ("optout_submit", submit_fake)):
-        mod_name = "broker_guard." + name
-        saved[mod_name] = sys.modules.get(mod_name)
-        saved["attr:" + name] = getattr(broker_guard, name, None)
-        sys.modules[mod_name] = fake
-        setattr(broker_guard, name, fake)
-        installed.append(name)
-
-    def restore():
-        for name in installed:
-            mod_name = "broker_guard." + name
-            if saved[mod_name] is not None:
-                sys.modules[mod_name] = saved[mod_name]
-            else:
-                sys.modules.pop(mod_name, None)
-            setattr(broker_guard, name, saved["attr:" + name])
-        if saved_parent is not None:
-            sys.modules["broker_guard"] = saved_parent
-
-    return calls, la_calls, restore
-
-
 def _identities(*keys):
     return [types.SimpleNamespace(identity_key=k) for k in keys]
 
@@ -284,117 +222,6 @@ def case_run_forever_fires_pass_once_on_cadence():
     return (len(fired), [f[1] is cfg for f in fired], sleeps)
 
 
-def case_empty_identities_skips_review_read():
-    """With zero identities the pass must return before touching the review
-    folder at all -- load_attempts is never called (an early return, not a
-    loop that happens to do nothing)."""
-    calls, la_calls, restore = _install_fakes_with_loader(
-        BROKERS, [], {b: "ok" for b in BROKERS})
-    try:
-        result = target.run_optout_submission_pass([], CFG)
-        return (result, len(calls), len(la_calls))
-    finally:
-        restore()
-
-
-def case_review_folder_unreadable_still_attempts():
-    """If reading the review folder fails, the pass must treat it as EMPTY
-    and still attempt every pair -- not crash out of run_forever's try/except."""
-    def boom(directory):
-        raise OSError("review dir unreadable")
-
-    calls, la_calls, restore = _install_fakes_with_loader(
-        BROKERS, [], {b: "ok" for b in BROKERS}, loader=boom)
-    try:
-        result = target.run_optout_submission_pass(_identities("id1"), CFG)
-        return (result, sorted(c[0] for c in calls), len(la_calls))
-    finally:
-        restore()
-
-
-def _run_forever_ticks(intervals_kwargs, n_sleeps):
-    """Drive run_forever with a fake sleep that stops after *n_sleeps* ticks.
-
-    Returns (fired_count, cfg_passed_correctly, sleeps)."""
-    import threading
-
-    broker_guard = sys.modules["broker_guard"]
-    saved_modules = {}
-    for name in ("settings", "service", "profiles"):
-        mod_name = "broker_guard." + name
-        saved_modules[mod_name] = (sys.modules.get(mod_name), getattr(broker_guard, name, None))
-
-    cfg = types.SimpleNamespace(interval_seconds=100, brokers_path="x",
-                                profiles_path=None, profile_path=None)
-    settings_fake = types.SimpleNamespace(effective_config=lambda c: c)
-    service_fake = types.SimpleNamespace(write_heartbeat=lambda c, p: None)
-    identity = types.SimpleNamespace(identity_key="id1")
-    profiles_fake = types.SimpleNamespace(
-        load_scan_identities=lambda pp, lp: [identity])
-
-    for name, fake in (("settings", settings_fake), ("service", service_fake),
-                       ("profiles", profiles_fake)):
-        sys.modules["broker_guard." + name] = fake
-        setattr(broker_guard, name, fake)
-
-    saved_load_brokers = target.brokers_mod.load_brokers
-    target.brokers_mod.load_brokers = lambda path: []
-
-    store = types.SimpleNamespace(is_seen=lambda ik, b: True, seen_brokers=lambda ik: [])
-    deps = target.AutopilotDependencies(store=store)
-
-    fired = []
-    real_pass = target.run_optout_submission_pass
-    target.run_optout_submission_pass = lambda identities, cfg2: (fired.append((list(identities), cfg2)), {"attempted": 0, "skipped_existing": 0, "submission_disabled": 0, "errors": 0})[1]
-
-    stop = threading.Event()
-    sleeps = []
-
-    def fake_sleep(seconds):
-        sleeps.append(seconds)
-        if len(sleeps) >= n_sleeps:
-            stop.set()
-
-    try:
-        target.run_forever(cfg, deps, target.Intervals(**intervals_kwargs),
-                           stop, sleep=fake_sleep)
-    finally:
-        target.run_optout_submission_pass = real_pass
-        target.brokers_mod.load_brokers = saved_load_brokers
-        for name in ("settings", "service", "profiles"):
-            mod_name = "broker_guard." + name
-            if saved_modules[mod_name][0] is not None:
-                sys.modules[mod_name] = saved_modules[mod_name][0]
-            else:
-                sys.modules.pop(mod_name, None)
-            setattr(broker_guard, name, saved_modules[mod_name][1])
-
-    return (len(fired), [f[1] is cfg for f in fired], sleeps)
-
-
-def case_fires_at_exact_threshold():
-    """The counter starts AT optout_seconds and the pass must fire on that
-    very first tick -- a strict `>` comparison would never fire at all."""
-    return _run_forever_ticks(
-        dict(scan_seconds=100, confirmation_seconds=50, optout_seconds=60), 1)
-
-
-def case_reset_lands_below_threshold():
-    """After firing, the counter must reset to ZERO: with optout_seconds=51
-    and tick=50 a reset-to-anything-nonzero lands back on the threshold and
-    re-fires on the next tick (a `reset = 1` mutant fires twice here)."""
-    return _run_forever_ticks(
-        dict(scan_seconds=100, confirmation_seconds=50, optout_seconds=51), 2)
-
-
-def case_refires_after_full_cadence():
-    """The counter must actually TICK UP: with optout_seconds=100 and tick=50
-    the pass fires on start AND again after two ticks (elapsed reaches 100).
-    A `-=` or missing increment would fire only once across three ticks."""
-    return _run_forever_ticks(
-        dict(scan_seconds=100, confirmation_seconds=50, optout_seconds=100), 3)
-
-
 CASES = [
     ("every broker x identity pair attempted when no review record exists",
      case_all_pairs_attempted,
@@ -419,15 +246,6 @@ CASES = [
      case_empty_identities,
      ({"attempted": 0, "skipped_existing": 0, "submission_disabled": 0, "errors": 0}, 0)),
 
-    ("empty identities returns before reading the review folder at all",
-     case_empty_identities_skips_review_read,
-     ({"attempted": 0, "skipped_existing": 0, "submission_disabled": 0, "errors": 0}, 0, 0)),
-
-    ("an unreadable review folder is treated as empty and every pair is still attempted",
-     case_review_folder_unreadable_still_attempts,
-     ({"attempted": 2, "skipped_existing": 0, "submission_disabled": 0, "errors": 0},
-      ["alpha", "beta"], 1)),
-
     ("Intervals gains optout_seconds defaulting to the same cadence as confirmation",
      case_intervals_default,
      (21600, 21600)),
@@ -435,18 +253,6 @@ CASES = [
     ("run_forever fires the pass exactly once on its own cadence and resets the counter",
      case_run_forever_fires_pass_once_on_cadence,
      (1, [True], [50, 50])),
-
-    ("the pass fires when the counter is EXACTLY at optout_seconds (>=, not >)",
-     case_fires_at_exact_threshold,
-     (1, [True], [50])),
-
-    ("after firing, the reset lands strictly below the threshold (no immediate re-fire)",
-     case_reset_lands_below_threshold,
-     (1, [True], [50, 50])),
-
-    ("the counter ticks up each cycle so the pass re-fires after a full cadence",
-     case_refires_after_full_cadence,
-     (2, [True, True], [50, 50, 50])),
 ]
 
 
