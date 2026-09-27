@@ -119,6 +119,17 @@ def _non_error_with_reason():
             "error_kind": e.get("error_kind")}
 
 
+def _hit_after_error_merge():
+    """An errored leg first (with reason), then a HIT leg: hit outranks error,
+    so the entry is no longer an error and must not keep the stale reason."""
+    p = target.ScanProgress()
+    p.record_outcome("b1", "error", errors=1, reason="ERR_TIMED_OUT after 30s")
+    p.record_outcome("b1", "hit", hits=1)
+    e = p.brokers[target.entry_key(None, "b1")]
+    return {"outcome": e["outcome"], "reason": e.get("reason"),
+            "error_kind": e.get("error_kind")}
+
+
 def _classify(message):
     return target.classify_error(message)
 
@@ -164,6 +175,10 @@ CASES = [
      _merge_after_error,
      {"outcome": "error", "reason": "ERR_TIMED_OUT after 30s",
       "error_kind": "timeout"}),
+
+    ("rank-merge: a hit leg after an errored leg drops reason AND error_kind",
+     _hit_after_error_merge,
+     {"outcome": "hit", "reason": None, "error_kind": None}),
 
     # -- regression: no-reason callers see exactly the old entry shape ------
     ("no reason -> entry has none of the new keys (old shape preserved)",

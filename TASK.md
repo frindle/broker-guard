@@ -37,7 +37,7 @@ a new module-level function `classify_error(message)->str` returning exactly one
 Matching is case-insensitive; `None`/empty message -> `'other'`. Non-error outcomes
 never get `reason`/`error_kind` keys (even if a reason was passed), and a retry
 (`replace=True`) that is no longer an error must not keep a stale reason. Both the
-replace path AND the rank-merge path must carry reason when they record an error. On the rank-merge path, a later non-error leg (e.g. a clean SERP leg) merged into an entry whose outcome is STILL error keeps that entry's reason and error_kind; they are removed only when the entry's outcome is no longer error.
+replace path AND the rank-merge path must carry reason when they record an error. On the rank-merge path, a later non-error leg (e.g. a clean SERP leg) merged into an entry whose outcome is STILL error keeps that entry's reason and error_kind; they are removed only when the entry's outcome is no longer error. A hit (which outranks error) merged after an errored leg makes the outcome hit, so reason and error_kind must be removed.
 Existing callers that pass no reason behave exactly as before.
 
 Add two module-level functions:
