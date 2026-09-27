@@ -120,6 +120,7 @@ def case_page_action_unchanged():
     return (pa is sentinel_pa) and (closers == [sentinel_closer])
 
 
+
 CASES = [
     ("playwright ON + URL set -> no SearxClient built at all", case_gate_on_url_set, True),
     ("playwright OFF + URL set -> SearxClient still built (regression)", case_gate_off_url_set, True),
