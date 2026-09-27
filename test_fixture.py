@@ -51,8 +51,6 @@ def _raises_value_error(fn):
     return "did not raise"
 
 
-# Model-drafted; NOT yet read by a human.
-DRAFT_UNCONFIRMED = True
 
 CASES = [
     # --- regression: both keywords absent -> byte-identical to today's argv --
