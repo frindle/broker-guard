@@ -127,6 +127,9 @@ def _redact(message):
     return target.redact_reason(message)
 
 
+# Model-drafted; NOT yet read by a human.
+DRAFT_UNCONFIRMED = True
+
 CASES = [
     # -- the defect itself: error + reason -> redacted reason + kind --------
     ("error with a DNS message stores redacted URL and kind 'dns'",
@@ -154,9 +157,10 @@ CASES = [
      {"outcome": "checked", "reason": None, "error_kind": None}),
 
     # -- merge path: clean leg after errored leg drops the stale reason ------
-    ("rank-merge: clean leg after errored leg keeps outcome but drops reason",
+    ("rank-merge: clean leg after errored leg keeps the error AND its reason",
      _clean_after_error_merge,
-     {"outcome": "error", "reason": None, "error_kind": None}),
+     {"outcome": "error", "reason": "ERR_TIMED_OUT after 30s",
+      "error_kind": "timeout"}),
 
     ("rank-merge path also carries reason (clean leg then errored leg)",
      _merge_after_error,

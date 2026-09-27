@@ -102,7 +102,7 @@ NEW_MERGE = '''            elif OUTCOME_RANK[outcome] >= OUTCOME_RANK[entry["out
                 entry["outcome"] = outcome
             if outcome == "error" and reason:
                 entry.update({"reason": redact_reason(reason), "error_kind": classify_error(reason)})
-            else:
+            elif entry["outcome"] != "error":
                 entry.pop("reason", None)
                 entry.pop("error_kind", None)
             entry["hits"] += max(0, int(hits or 0))'''
