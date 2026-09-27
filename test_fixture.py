@@ -39,6 +39,18 @@ def _has_config(argv, path):
     return argv[-2:] == ["--config", path] and argv.count("--config") == 1
 
 
+def _raises_value_error(fn):
+    """True iff *fn* raises ValueError (the fixture's main() would otherwise
+    count ANY exception as a failure)."""
+    try:
+        fn()
+    except ValueError:
+        return True
+    except Exception as e:
+        return "raised {} instead of ValueError".format(type(e).__name__)
+    return "did not raise"
+
+
 CASES = [
     # --- regression: both keywords absent -> byte-identical to today's argv --
     ("send baseline unchanged (no config/profile)",
@@ -49,6 +61,11 @@ CASES = [
     ("send emits exactly ['--config', path] when config_path given",
      lambda: _has_config(target.build_eraser_cmd("acme", {}, config_path="/etc/eraser/config.yaml"), "/etc/eraser/config.yaml"),
      True),
+
+    # --- default limit must be exactly 50 -----------------------------------
+    ("status with no limit kw uses the documented default of 50",
+     lambda: target.build_eraser_status_cmd(),
+     ["eraser", "status", "--limit", "50"]),
 
     ("status baseline unchanged (no config)",
      lambda: target.build_eraser_status_cmd(limit=10),
@@ -83,6 +100,15 @@ CASES = [
     ("dict eraser_profile still used when kw absent (regression)",
      lambda: target.build_eraser_cmd("acme", {"eraser_profile": "dictprof"}),
      ["eraser", "send", "--broker", "acme", "--profile", "dictprof"]),
+
+    # --- invalid dict eraser_profile must be rejected, not emitted ----------
+    ("invalid dict eraser_profile (path traversal) raises ValueError",
+     lambda: _raises_value_error(lambda: target.build_eraser_cmd("acme", {"eraser_profile": "../evil"})),
+     True),
+
+    ("invalid dict eraser_profile (flag injection) raises ValueError",
+     lambda: _raises_value_error(lambda: target.build_eraser_cmd("acme", {"eraser_profile": "--config=/etc/passwd"})),
+     True),
 
     # --- no-PII rule: profile dict values never leak into argv --------------
     ("no PII from profile dict appears in send argv",
