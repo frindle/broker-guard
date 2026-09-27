@@ -466,7 +466,7 @@ def build_detection(cfg: Config) -> tuple:
     closers = []
 
     searx_search = None
-    if cfg.searxng_url:
+    if cfg.searxng_url and not cfg.playwright_enabled:
         try:
             searx_search = SearxClient(
                 cfg.searxng_url, timeout_s=cfg.searxng_timeout_s, auth=cfg.searxng_auth,
