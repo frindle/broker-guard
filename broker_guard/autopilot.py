@@ -592,10 +592,62 @@ def has_id_documents_on_file(cfg: Config) -> bool:
     )
 
 
+def run_optout_submission_pass(identities: list, cfg) -> dict:
+    """Automated opt-out FORM submission pass -- the same action the /review
+    page's button triggers, but on the sweep's own cadence so no human has to
+    click anything.
+
+    Pure orchestration: for every (identity, broker) pair it dedupes against
+    the review folder (the existing audit trail -- one attempt per broker per
+    identity, whatever its outcome, never resubmitted) and otherwise calls
+    ``optout_submit.run_attempt`` (which owns all real browser interaction).
+    ``SubmissionRefused`` is the NORMAL state when opt-out submission is
+    switched off: it is counted as ``submission_disabled``, logged at debug
+    only, and never treated as an error. Any other exception is counted under
+    ``errors`` with a warning that names only the broker id and the exception
+    TYPE (never the message or any field value -- review.py's PII-logging
+    discipline) and the pass moves on to the next pair instead of aborting.
+
+    Returns ``{'attempted': n, 'skipped_existing': n,
+    'submission_disabled': n, 'errors': n}``.
+    """
+    from broker_guard import optout_forms as optout_forms_mod
+    from broker_guard import review as review_mod
+    from broker_guard import optout_submit as optout_submit_mod
+
+    try:
+        existing = review_mod.load_attempts(review_mod.review_dir(cfg))
+    except Exception as exc:  # unreadable audit trail -> treat as empty, never skip
+        log.warning("review records unreadable; treating as empty",
+                    extra={"error": type(exc).__name__})
+        existing = []
+
+    counts = {"attempted": 0, "skipped_existing": 0, "submission_disabled": 0, "errors": 0}
+    for identity in identities:
+        for broker_id in optout_forms_mod.supported_broker_ids():
+            if any(r.get("broker_id") == broker_id and r.get("identity_key") == identity.identity_key
+                   for r in existing):
+                counts["skipped_existing"] += 1
+                continue
+            try:
+                optout_submit_mod.run_attempt(broker_id, identity, cfg)
+                counts["attempted"] += 1
+            except optout_submit_mod.SubmissionRefused:
+                # The expected state when submission is disabled -- not an error.
+                log.debug("opt-out submission refused for broker %s", broker_id)
+                counts["submission_disabled"] += 1
+            except Exception as exc:
+                log.warning("opt-out submission failed for broker %s (%s)",
+                            broker_id, type(exc).__name__)
+                counts["errors"] += 1
+    return counts
+
+
 @dataclass
 class Intervals:
     scan_seconds: int = 86400
     confirmation_seconds: int = 21600  # check for replies more often than a full re-scan
+    optout_seconds: int = 21600  # automated opt-out form submissions, same cadence as confirmation
 
 
 def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals",
@@ -675,6 +727,7 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     tick_seconds = max(1, min(scan_seconds, intervals.confirmation_seconds))
     elapsed_since_scan = scan_seconds
     elapsed_since_confirmation = intervals.confirmation_seconds
+    elapsed_since_optout = intervals.optout_seconds
 
     # service.main()'s headless loop calls service.write_heartbeat every
     # cycle, so health.heartbeat_stale has real data to read -- this loop
@@ -758,11 +811,22 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
                                extra={"error": "{}: {}".format(type(exc).__name__, exc)})
             elapsed_since_confirmation = 0
 
+        # Not gated on cfg.optout_submit_enabled: with it off every real
+        # attempt is a fast, harmless SubmissionRefused catch.
+        if elapsed_since_optout >= intervals.optout_seconds:
+            try:
+                run_optout_submission_pass(_scan_identities(), cfg)
+            except Exception as exc:
+                log.exception("autopilot opt-out submission pass failed",
+                               extra={"error": "{}: {}".format(type(exc).__name__, exc)})
+            elapsed_since_optout = 0
+
         if stop.is_set():
             break
         sleep(tick_seconds)
         elapsed_since_scan += tick_seconds
         elapsed_since_confirmation += tick_seconds
+        elapsed_since_optout += tick_seconds
 
 
 def main(argv=None) -> int:  # pragma: no cover - thin CLI wrapper, exercised manually
