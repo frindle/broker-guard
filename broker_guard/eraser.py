@@ -25,11 +25,20 @@ def _validated_id(value, label: str) -> str:
     return normalized
 
 
+def _optional_config_args(config_path: str | None) -> list[str]:
+    """Emit eraser's global ``--config`` flag, or nothing when unset/empty."""
+    if not isinstance(config_path, str) or not config_path:
+        return []
+    return ["--config", config_path]
+
+
 def build_eraser_cmd(
     broker_id: str,
     profile: dict,
     eraser_bin: str = "eraser",
     dry_run: bool = False,
+    config_path: str | None = None,
+    profile_id: str | None = None,
 ) -> list[str]:
     """Return the argv list that asks eraser to send an opt-out to *broker_id*.
 
@@ -37,6 +46,11 @@ def build_eraser_cmd(
     key (optional) is used -- an eraser profile *id*, not any PII. The command
     is always a list (never a shell string), so no quoting/injection path
     exists.
+
+    *config_path* (optional) points at the eraser config file to load via the
+    global ``--config`` flag; without it eraser falls back to its default
+    ``$HOME/.eraser/config.yaml``. *profile_id* (optional) names an eraser
+    profile directly and takes precedence over the dict's ``eraser_profile``.
     """
     normalized = _validated_id(broker_id, "broker_id")
     if not isinstance(eraser_bin, str) or not eraser_bin.strip():
@@ -48,19 +62,22 @@ def build_eraser_cmd(
 
     if not isinstance(profile, dict):
         raise ValueError("profile must be a dict")
-    eraser_profile = profile.get("eraser_profile")
-    if eraser_profile is not None:
-        if not _PROFILE_ID_RE.match(str(eraser_profile).strip().lower()):
-            raise ValueError(f"invalid eraser_profile: {eraser_profile!r}")
-        cmd += ["--profile", str(eraser_profile).strip().lower()]
-    return cmd
+    if profile_id is not None:
+        cmd += ["--profile", _validated_id(profile_id, "profile_id")]
+    else:
+        eraser_profile = profile.get("eraser_profile")
+        if eraser_profile is not None:
+            if not _PROFILE_ID_RE.match(str(eraser_profile).strip().lower()):
+                raise ValueError(f"invalid eraser_profile: {eraser_profile!r}")
+            cmd += ["--profile", str(eraser_profile).strip().lower()]
+    return cmd + _optional_config_args(config_path)
 
 
-def build_eraser_status_cmd(eraser_bin: str = "eraser", limit: int = 50) -> list[str]:
+def build_eraser_status_cmd(eraser_bin: str = "eraser", limit: int = 50, config_path: str | None = None) -> list[str]:
     """argv for ``eraser status`` -- used to re-verify what was actually sent."""
     if not isinstance(limit, int) or limit <= 0:
         raise ValueError("limit must be a positive int")
-    return [eraser_bin, "status", "--limit", str(limit)]
+    return [eraser_bin, "status", "--limit", str(limit)] + _optional_config_args(config_path)
 
 
 def _optional_profile_args(profile_id: str | None) -> list[str]:
@@ -69,7 +86,7 @@ def _optional_profile_args(profile_id: str | None) -> list[str]:
     return ["--profile", _validated_id(profile_id, "profile_id")]
 
 
-def build_eraser_monitor_cmd(eraser_bin: str = "eraser", profile_id: str | None = None) -> list[str]:
+def build_eraser_monitor_cmd(eraser_bin: str = "eraser", profile_id: str | None = None, config_path: str | None = None) -> list[str]:
     """argv for ``eraser monitor`` -- IMAP inbox scan for broker replies.
 
     Per ``vendor/eraser/docs/commands.md`` this command takes NO per-broker
@@ -80,10 +97,10 @@ def build_eraser_monitor_cmd(eraser_bin: str = "eraser", profile_id: str | None 
     """
     if not isinstance(eraser_bin, str) or not eraser_bin.strip():
         raise ValueError("eraser_bin must be a non-empty string")
-    return [eraser_bin, "monitor"] + _optional_profile_args(profile_id)
+    return [eraser_bin, "monitor"] + _optional_profile_args(profile_id) + _optional_config_args(config_path)
 
 
-def build_eraser_fill_cmd(eraser_bin: str = "eraser", profile_id: str | None = None) -> list[str]:
+def build_eraser_fill_cmd(eraser_bin: str = "eraser", profile_id: str | None = None, config_path: str | None = None) -> list[str]:
     """argv for ``eraser fill`` -- browser-automates opt-out forms.
 
     Per ``vendor/eraser/docs/commands.md`` this command also takes NO
@@ -97,7 +114,7 @@ def build_eraser_fill_cmd(eraser_bin: str = "eraser", profile_id: str | None = N
     """
     if not isinstance(eraser_bin, str) or not eraser_bin.strip():
         raise ValueError("eraser_bin must be a non-empty string")
-    return [eraser_bin, "fill"] + _optional_profile_args(profile_id)
+    return [eraser_bin, "fill"] + _optional_profile_args(profile_id) + _optional_config_args(config_path)
 
 
 def parse_eraser_result(stdout: str, returncode: int) -> dict:
