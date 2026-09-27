@@ -44,6 +44,15 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+    # Resolve through Cloudflare, never the LAN resolver. The LAN DNS runs
+    # ad/tracker blocklists, and a data-broker checker is exactly the thing
+    # that must reach ad-tech and people-search domains: under the LAN
+    # resolver criteo/taboola/tapad/pubmatic/liveintent/information.com all
+    # came back NXDOMAIN and the scan logged them as failed checks.
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
+
     # Only meaningful when BG_SERVE_WEB=true below. If nothing binds
     # BG_WEB_PORT inside the container (the default), publishing it exposes
     # nothing -- but comment this block out entirely if you want zero
