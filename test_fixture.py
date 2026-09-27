@@ -57,6 +57,41 @@ def _retry_after_error():
             "error_kind": e.get("error_kind")}
 
 
+def _retry_error_with_reason():
+    """A retry (replace=True) that IS still an error and carries a reason."""
+    p = target.ScanProgress()
+    p.record_outcome("b1", "error", errors=1,
+                     reason="GET https://x.example/search?q=jane+doe failed")
+    p.record_outcome("b1", "error", errors=1, replace=True,
+                     reason="ERR_NAME_NOT_RESOLVED for x.example")
+    e = p.brokers[target.entry_key(None, "b1")]
+    return {"outcome": e["outcome"], "reason": e.get("reason"),
+            "error_kind": e.get("error_kind")}
+
+
+def _retry_non_error_with_reason():
+    """A retry (replace=True) that is NOT an error but a reason was passed."""
+    p = target.ScanProgress()
+    p.record_outcome("b1", "error", errors=1,
+                     reason="ERR_NAME_NOT_RESOLVED for x.example")
+    p.record_outcome("b1", "checked", replace=True,
+                     reason="https://x.example/search?q=jane+doe")
+    e = p.brokers[target.entry_key(None, "b1")]
+    return {"outcome": e["outcome"], "reason": e.get("reason"),
+            "error_kind": e.get("error_kind")}
+
+
+def _clean_after_error_merge():
+    """An errored leg first (with reason), then a clean leg (rank merge)."""
+    p = target.ScanProgress()
+    p.record_outcome("b1", "error", errors=1,
+                     reason="ERR_TIMED_OUT after 30s")
+    p.record_outcome("b1", "checked")
+    e = p.brokers[target.entry_key(None, "b1")]
+    return {"outcome": e["outcome"], "reason": e.get("reason"),
+            "error_kind": e.get("error_kind")}
+
+
 def _merge_after_error():
     """A clean SERP leg first, then an errored browser leg (rank merge)."""
     p = target.ScanProgress()
@@ -105,6 +140,23 @@ CASES = [
     ("retry (replace=True) that is no longer an error drops the stale reason",
      _retry_after_error,
      {"outcome": "checked", "reason": None, "error_kind": None}),
+
+    # -- replace path: a retry that IS still an error carries its own reason -
+    ("retry (replace=True) that is still an error stores redacted reason + kind",
+     _retry_error_with_reason,
+     {"outcome": "error",
+      "reason": "ERR_NAME_NOT_RESOLVED for x.example",
+      "error_kind": "dns"}),
+
+    # -- replace path: non-error retry must not store keys even with a reason -
+    ("retry (replace=True) that is checked never stores reason/error_kind",
+     _retry_non_error_with_reason,
+     {"outcome": "checked", "reason": None, "error_kind": None}),
+
+    # -- merge path: clean leg after errored leg drops the stale reason ------
+    ("rank-merge: clean leg after errored leg keeps outcome but drops reason",
+     _clean_after_error_merge,
+     {"outcome": "error", "reason": None, "error_kind": None}),
 
     ("rank-merge path also carries reason (clean leg then errored leg)",
      _merge_after_error,

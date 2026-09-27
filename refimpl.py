@@ -25,7 +25,7 @@ HELPERS = r'''def classify_error(message: str | None) -> str:
     ``'refused'``, ``'blocked'`` or ``'other'``; matching is
     case-insensitive, and a missing/empty message is ``'other'``.
     """
-    if not message:
+    if not message:  # relevance: unobservable
         return "other"
     m = str(message).lower()
     if any(k in m for k in ("err_name_not_resolved", "nxdomain",
