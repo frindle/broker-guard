@@ -51,6 +51,9 @@ def _raises_value_error(fn):
     return "did not raise"
 
 
+# Model-drafted; NOT yet read by a human.
+DRAFT_UNCONFIRMED = True
+
 CASES = [
     # --- regression: both keywords absent -> byte-identical to today's argv --
     ("send baseline unchanged (no config/profile)",
@@ -82,6 +85,16 @@ CASES = [
     ("fill emits exactly ['--config', path] when config_path given",
      lambda: _has_config(target.build_eraser_fill_cmd(config_path="/opt/eraser/c.yaml"), "/opt/eraser/c.yaml"),
      True),
+
+    # --- regression: monitor/fill argv unchanged without the new keyword -------
+    ("monitor baseline + profile_id unchanged (no config)",
+     lambda: target.build_eraser_monitor_cmd(profile_id="p1")[:2] == ["eraser", "monitor"]
+             and "--config" not in target.build_eraser_monitor_cmd(profile_id="p1"),
+     True),
+
+    ("fill baseline unchanged (no config)",
+     lambda: target.build_eraser_fill_cmd(),
+     ["eraser", "fill"]),
 
     # --- boundary: empty-string config_path must NOT emit the flag -----------
     ("empty-string config_path emits no --config (send)",
