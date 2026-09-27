@@ -24,13 +24,14 @@ import json
 import logging
 import os
 import re
+import secrets
 import tempfile
 import threading
 import urllib.parse
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from broker_guard import brokers as brokers_mod
@@ -614,7 +615,7 @@ def _scan_result_row_html(row: dict) -> str:
 
 
 @app.get("/brokers", response_class=HTMLResponse)
-def brokers_page(identity: str = "", cfg: Config = Depends(get_config),
+def brokers_page(identity: str = "", notice: str = "", cfg: Config = Depends(get_config),
                   jobs: dict = Depends(get_jobs)):
     """Two cards, two different questions -- deliberately not merged:
 
@@ -702,7 +703,7 @@ def brokers_page(identity: str = "", cfg: Config = Depends(get_config),
     <span class="muted" style="font-size:13px;">Profile</span>{picker}
   </div>
 </div>
-<div class="card">
+{removal_banner}<div class="card">
   <div class="section-label">Tracked listings -- who was found where, and removal status</div>
   <div class="toolbar">
     <input type="text" id="searchBox" placeholder="Search brokers..." oninput="filterRows()">
@@ -880,6 +881,7 @@ function pollScanResults() {{
 </script>
 """.format(
         count=len(rows), rows_html=rows_html, picker=picker,
+        removal_banner=_removal_banner(notice),
         scope_label=(" for {}".format(html.escape(selected["name"])) if selected
                      else " across every profile"),
         scan_line=html.escape(scan_line), scan_rows_html=scan_rows_html,
@@ -1033,10 +1035,51 @@ def get_status(job_id: str | None = None, brokers: bool = False,
             "scan": scan}
 
 
+# Outcome of a "Send removal now" click, shown once on the /brokers page it
+# redirects back to. Keyed by a random token so eraser's output (which can
+# echo profile details) never goes into a URL.
+_REMOVAL_NOTICES: dict[str, dict] = {}
+_REMOVAL_NOTICES_MAX = 50
+
+
 @app.post("/brokers/{broker_id}/remove")
-def remove_broker(broker_id: str, identity_key: str = Form(""),
-                   cfg: Config = Depends(get_config),
-                   bridge: EraserBridge = Depends(get_eraser_bridge)):
+def remove_broker_route(request: Request, broker_id: str, identity_key: str = Form(""),
+                        cfg: Config = Depends(get_config),
+                        bridge: EraserBridge = Depends(get_eraser_bridge)):
+    """The button on /brokers is a plain form POST, so a browser gets the
+    outcome as a banner on the page it came from; API callers (no text/html
+    in Accept) keep getting the JSON result and HTTP error codes."""
+    if "text/html" not in request.headers.get("accept", ""):
+        return remove_broker(broker_id, identity_key, cfg, bridge)
+    try:
+        result = remove_broker(broker_id, identity_key, cfg, bridge)
+        notice = {"broker_id": broker_id, "ok": bool(result.get("success")),
+                  "detail": str(result.get("detail") or "")}
+    except HTTPException as exc:
+        notice = {"broker_id": broker_id, "ok": False, "detail": str(exc.detail)}
+    token = secrets.token_urlsafe(12)
+    while len(_REMOVAL_NOTICES) >= _REMOVAL_NOTICES_MAX:
+        _REMOVAL_NOTICES.pop(next(iter(_REMOVAL_NOTICES)))
+    _REMOVAL_NOTICES[token] = notice
+    return RedirectResponse(url="/brokers?notice=" + token, status_code=303)
+
+
+def _removal_banner(token: str) -> str:
+    notice = _REMOVAL_NOTICES.pop(token, None) if token else None
+    if not notice:
+        return ""
+    headline = ("Removal request sent to {}." if notice["ok"]
+                else "Removal for {} failed.").format(html.escape(notice["broker_id"]))
+    detail = html.escape(notice["detail"][:600])
+    return ('<div class="card" style="margin-bottom:18px;border-left:4px solid {};">'
+            '<strong>{}</strong>{}</div>').format(
+        "var(--ok, #4a7c59)" if notice["ok"] else "var(--danger, #b3261e)",
+        headline,
+        '<pre style="white-space:pre-wrap;margin:8px 0 0;font-size:13px;">{}</pre>'.format(detail)
+        if detail else "")
+
+
+def remove_broker(broker_id: str, identity_key: str, cfg: Config, bridge: EraserBridge):
     """Manual, on-demand removal for one broker -- independent of the
     automated new-appearance trigger in service.submit_removals. A human (or
     the /freeze-style UI) can ask for a specific broker to be re-sent at any

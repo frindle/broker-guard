@@ -286,6 +286,36 @@ def test_manual_remove_when_eraser_unavailable_is_503(client):
     assert resp.status_code == 503
 
 
+_BROWSER = {"accept": "text/html,application/xhtml+xml,*/*;q=0.8"}
+
+
+def test_manual_remove_from_browser_redirects_to_brokers_with_banner_once(client):
+    webui.app.dependency_overrides[webui.get_eraser_bridge] = lambda: _FakeBridge(success=False)
+    resp = client.post("/brokers/alpha/remove", headers=_BROWSER, follow_redirects=False)
+    assert resp.status_code == 303
+    location = resp.headers["location"]
+    assert location.startswith("/brokers?notice=")
+    assert "nope" not in location          # eraser output never goes in the URL
+
+    page = client.get(location).text
+    assert "Removal for alpha failed." in page and "nope" in page
+    assert "Removal for alpha failed." not in client.get(location).text   # shown once
+
+
+def test_manual_remove_from_browser_when_eraser_unavailable_still_redirects(client):
+    webui.app.dependency_overrides[webui.get_eraser_bridge] = lambda: _FakeBridge(available=False)
+    resp = client.post("/brokers/alpha/remove", headers=_BROWSER)
+    assert resp.status_code == 200
+    assert "Removal for alpha failed." in resp.text
+    assert "eraser binary not available" in resp.text
+
+
+def test_manual_remove_from_browser_success_banner(client):
+    webui.app.dependency_overrides[webui.get_eraser_bridge] = lambda: _FakeBridge(success=True)
+    resp = client.post("/brokers/alpha/remove", headers=_BROWSER)
+    assert "Removal request sent to alpha." in resp.text
+
+
 class _FakeExposureClient:
     def __init__(self, breaches):
         self.breaches = breaches
