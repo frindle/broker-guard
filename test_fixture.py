@@ -34,10 +34,12 @@ class _FakeRefused(RuntimeError):
     matters -- the split between this and a generic Exception is)."""
 
 
-def _install_fakes(supported, records, attempt_behavior):
+def _install_fakes(supported, records, attempt_behavior, load_error=None):
     """Point broker_guard.optout_forms / .review / .optout_submit at fakes.
 
     *attempt_behavior* maps broker_id -> "ok" | "refused" | "boom".
+    *load_error*, if given, is raised by review.load_attempts (to drive the
+    "review folder unreadable -> treat as empty" path).
     Returns (calls_list, restore_fn).
     """
     import broker_guard
@@ -65,10 +67,15 @@ def _install_fakes(supported, records, attempt_behavior):
         if behavior == "boom":
             raise ValueError("secret PII must never be logged: {}".format(identity.identity_key))
 
+    def load_attempts(directory, limit=None):
+        if load_error is not None:
+            raise load_error
+        return [dict(r) for r in records]
+
     forms_fake = types.SimpleNamespace(supported_broker_ids=lambda: list(supported))
     review_fake = types.SimpleNamespace(
         review_dir=lambda cfg: "/fake/review",
-        load_attempts=lambda directory, limit=None: [dict(r) for r in records],
+        load_attempts=load_attempts,
     )
     submit_fake = types.SimpleNamespace(run_attempt=run_attempt, SubmissionRefused=_FakeRefused)
 
@@ -157,10 +164,10 @@ def case_intervals_default():
     return (iv.optout_seconds, iv.confirmation_seconds)
 
 
-def case_run_forever_fires_pass_once_on_cadence():
-    """run_forever must call run_optout_submission_pass exactly once across
-    two ticks: it fires when its counter reaches optout_seconds and then
-    RESETS (a missing reset would fire it again on the next tick)."""
+def _drive_run_forever(intervals, stop_after_sleeps):
+    """Run run_forever with faked deps and a stub run_optout_submission_pass,
+    stopping after *stop_after_sleeps* ticks. Returns
+    (fire_count, [each fire got the real cfg?], sleeps)."""
     import threading
 
     broker_guard = sys.modules["broker_guard"]
@@ -197,17 +204,11 @@ def case_run_forever_fires_pass_once_on_cadence():
 
     def fake_sleep(seconds):
         sleeps.append(seconds)
-        if len(sleeps) >= 2:
+        if len(sleeps) >= stop_after_sleeps:
             stop.set()
 
     try:
-        # scan=100, confirmation=50 -> tick 50. Like the other counters,
-        # elapsed_since_optout starts AT its interval (fires once on start);
-        # with optout_seconds=60 it must NOT fire again after reset+tick(50).
-        target.run_forever(cfg, deps, target.Intervals(scan_seconds=100,
-                                                       confirmation_seconds=50,
-                                                       optout_seconds=60),
-                           stop, sleep=fake_sleep)
+        target.run_forever(cfg, deps, intervals, stop, sleep=fake_sleep)
     finally:
         target.run_optout_submission_pass = real_pass
         target.brokers_mod.load_brokers = saved_load_brokers
@@ -220,6 +221,48 @@ def case_run_forever_fires_pass_once_on_cadence():
             setattr(broker_guard, name, saved_modules[mod_name][1])
 
     return (len(fired), [f[1] is cfg for f in fired], sleeps)
+
+
+def case_run_forever_fires_pass_once_on_cadence():
+    """run_forever must call run_optout_submission_pass exactly once across
+    two ticks: it fires when its counter reaches optout_seconds and then
+    RESETS (a missing reset would fire it again on the next tick)."""
+    # scan=100, confirmation=50 -> tick 50. Like the other counters,
+    # elapsed_since_optout starts AT its interval (fires once on start);
+    # with optout_seconds=60 it must NOT fire again after reset+tick(50).
+    return _drive_run_forever(
+        target.Intervals(scan_seconds=100, confirmation_seconds=50, optout_seconds=60),
+        stop_after_sleeps=2)
+
+
+def case_run_forever_refires_by_accumulation():
+    """The counter must ACCUMULATE upward by tick_seconds and re-fire when it
+    crosses optout_seconds AGAIN. tick=50, optout=100 -> fires on start, then
+    only after two more ticks (50+50) climb back to the boundary. Over 4 ticks
+    that is exactly two fires. This pins three things a plausible-wrong loop
+    would get wrong and the once-on-start case cannot see:
+      * the accumulator direction (`+=`, not `-=` or no-op) -- with anything
+        but += the counter never returns to the boundary, so it fires once;
+      * the boundary comparison (`>=`, not `>`) -- with `>` the first fire
+        slips to a later tick and only one fire lands in the window;
+      * the reset to 0 -- without it the second fire's timing shifts.
+    """
+    return _drive_run_forever(
+        target.Intervals(scan_seconds=100, confirmation_seconds=50, optout_seconds=100),
+        stop_after_sleeps=4)
+
+
+def case_review_load_error_treated_as_empty():
+    """If review.load_attempts raises (folder unreadable), the pass must treat
+    the audit trail as EMPTY -- never skip, never crash -- and attempt every
+    pair. Deleting the `existing = []` recovery line turns this into a crash."""
+    calls, restore = _install_fakes(BROKERS, [], {b: "ok" for b in BROKERS},
+                                    load_error=OSError("review dir unreadable"))
+    try:
+        result = target.run_optout_submission_pass(_identities("id1"), CFG)
+        return (result, sorted((c[0], c[1]) for c in calls))
+    finally:
+        restore()
 
 
 CASES = [
@@ -253,6 +296,15 @@ CASES = [
     ("run_forever fires the pass exactly once on its own cadence and resets the counter",
      case_run_forever_fires_pass_once_on_cadence,
      (1, [True], [50, 50])),
+
+    ("run_forever RE-fires only after the counter accumulates back to the boundary",
+     case_run_forever_refires_by_accumulation,
+     (2, [True, True], [50, 50, 50, 50])),
+
+    ("review folder unreadable -> treated as empty, every pair attempted, no crash",
+     case_review_load_error_treated_as_empty,
+     ({"attempted": 2, "skipped_existing": 0, "submission_disabled": 0, "errors": 0},
+      [("alpha", "id1"), ("beta", "id1")])),
 ]
 
 
