@@ -107,6 +107,7 @@ Every mutation takes ``self._lock``; ``snapshot()`` returns a plain dict
 copy taken under that same lock, so a reader can never observe a half
 updated set of counters.
 """
+import re
 import threading
 from datetime import datetime, timezone
 
@@ -347,7 +348,7 @@ class ScanProgress:
                 self.identity_keys.append(identity_key)
 
     def record_outcome(self, broker_id, outcome: str, hits: int = 0, errors: int = 0,
-                       replace: bool = False) -> None:
+                       replace: bool = False, reason: str | None = None) -> None:
         """Record ONE (profile, broker) outcome: the aggregate counters AND
         the per-broker map, under a single acquisition of the lock.
 
@@ -363,6 +364,17 @@ class ScanProgress:
         which is the whole point of retrying -- and the aggregate counters
         are left alone, because re-checking a broker does not make it a
         second broker.
+
+        ``reason`` (optional) is the failure message for an ``error``
+        outcome: WHY this broker errored (DNS? cert? rate-limited?). It is
+        stored REDACTED -- every URL reduced to its origin, because search
+        URLs carry the user's name/phone/email in their query strings --
+        plus a coarse ``error_kind`` from :func:`classify_error`, so
+        /brokers can say which of ~827 failures are retryable. Non-error
+        outcomes never store either key, and an entry whose outcome is no
+        longer ``error`` (a clean retry, or a hit outranking the error)
+        drops both again. Callers that pass no reason see exactly the old
+        entry shape.
         """
         _check_outcome(outcome)
         with self._lock:
@@ -374,12 +386,16 @@ class ScanProgress:
                 return
             if replace:
                 key = entry_key(self.identity_key, broker_id)
-                self.brokers[key] = {
+                entry = {
                     "broker_id": str(broker_id), "outcome": outcome,
                     "hits": max(0, int(hits or 0)), "errors": max(0, int(errors or 0)),
                     "checked_at": self.updated_at, "phase": self.phase,
                     "identity_key": self.identity_key, "retried": True,
                 }
+                if outcome == "error" and reason is not None:
+                    entry["reason"] = redact_reason(reason)
+                    entry["error_kind"] = classify_error(reason)
+                self.brokers[key] = entry
                 return
             # Keyed per (profile, broker): the same broker checked for two
             # profiles is two independent results, and merging them through
@@ -393,6 +409,16 @@ class ScanProgress:
                 self.brokers[key] = entry
             elif OUTCOME_RANK[outcome] >= OUTCOME_RANK[entry["outcome"]]:
                 entry["outcome"] = outcome
+            # reason/error_kind belong to an ERROR: this leg is one and
+            # carries a message -> store it (redacted); the entry's outcome
+            # is no longer error (a hit outranked it, or a clean retry) ->
+            # drop any stale pair; otherwise leave whatever is there.
+            if outcome == "error" and reason is not None:
+                entry.update({"reason": redact_reason(reason),
+                              "error_kind": classify_error(reason)})
+            elif entry["outcome"] != "error":
+                entry.pop("reason", None)
+                entry.pop("error_kind", None)
             entry["hits"] += max(0, int(hits or 0))
             entry["errors"] += max(0, int(errors or 0))
             entry["checked_at"] = self.updated_at
@@ -514,6 +540,62 @@ class ScanProgress:
             self.record_outcome(broker_id, outcome, hits, errors)
 
         return _observe
+
+
+#: A URL in a failure message, reduced to its origin (``scheme://host``):
+#: the path/query/fragment are exactly where search URLs carry the user's
+#: name/phone/email, so they must never reach /brokers verbatim.
+#: The host is group 2; the trailing ``\S*`` swallows whatever follows it --
+#: path, query and fragment -- so sub() can replace the whole URL with just
+#: its origin.
+_URL_RE = re.compile(r"\b([A-Za-z][A-Za-z0-9+.\-]*)://([A-Za-z0-9\-._~%]+)\S*")
+
+
+def _reduce_url(match: "re.Match") -> str:
+    return "{}://{}".format(match.group(1), match.group(2))
+
+#: classify_error's buckets, in precedence order: the FIRST bucket with a
+#: keyword present wins (a message can mention several -- "timed out after
+#: ERR_CONNECTION_RESET" is still one kind of failure).
+_ERROR_KINDS = (
+    ("dns", ("err_name_not_resolved", "nxdomain", "name or service not known",
+             "getaddrinfo")),
+    ("ssl", ("err_cert_", "ssl", "certificate")),
+    ("timeout", ("timeout", "err_timed_out", "timed out")),
+    ("refused", ("err_connection_refused", "err_connection_reset",
+                 "err_connection_closed", "connection refused")),
+    ("blocked", ("http 403", "403", "429", "captcha", "cloudflare",
+                 "access denied")),
+)
+
+
+def classify_error(message: str | None) -> str:
+    """Coarse, retryable-or-not bucket for a failure message.
+
+    Case-insensitive keyword match against :data:`_ERROR_KINDS`; ``None`` or
+    an empty/unrecognised message is ``'other'`` -- the honest answer when
+    there is nothing to classify.
+    """
+    if not message:
+        return "other"
+    lowered = str(message).lower()
+    for kind, keywords in _ERROR_KINDS:
+        if any(keyword in lowered for keyword in keywords):
+            return kind
+    return "other"
+
+
+def redact_reason(message: str | None) -> str | None:
+    """A failure message safe to store on a /brokers entry.
+
+    Every URL is reduced to its origin (``scheme://host`` -- path, query and
+    fragment removed, because search URLs carry the user's name/phone/email),
+    then truncated to 300 chars so one pathological error cannot bloat the
+    snapshot. ``None`` in, ``None`` out.
+    """
+    if message is None:
+        return None
+    return _URL_RE.sub(_reduce_url, str(message))[:300]
 
 
 def _check_outcome(outcome: str) -> None:
