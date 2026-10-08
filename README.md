@@ -1,9 +1,41 @@
 # broker-guard
 
-Self-hosted data-broker **monitoring + auto-removal + auto-escalation** loop
-(self-hostable equivalent of the Incogni/Cloaked monitoring layer). Watches for
-a person's own identity re-appearing across people-search / data-broker sites,
-drives removals, and escalates when brokers miss statutory deadlines.
+Self-hosted data-broker **removal service**: it watches for your identity on
+people-search and data-broker sites, files the opt-outs for you, tracks each
+one to a final state, and tells you plainly what only you can finish. Nothing
+leaves your own hardware except the opt-out submission itself: no paid
+service, no third-party CAPTCHA solver, no inbox access.
+
+## What it does for each of the ~970 brokers
+
+Every broker in `data/source-brokers.json` ends up in exactly one bucket (the
+dashboard shows the live split; `broker_guard/parity.py` computes it from the
+code and the dataset, it is not typed in):
+
+| bucket | what happens | how |
+|---|---|---|
+| **Handled automatically** | filed with no action from you | a live form recipe (hand-verified, promoted, or learned and approved), or an opt-out **email** to a role address on the broker's own domain, with CCPA / Nevada statute text |
+| **Needs you** | broker-guard prepares a packet, you finish it | phone or SMS verification, mailed or notarized letters (printable), KBA, an SSN / DOB / unredacted-ID demand, account-only sites, "pick your own record" pages. See **Needs you** (`/manual`) |
+| **Coming** | not automatic yet, but the machinery exists | staged recipes awaiting one dry run, bot-walled forms for the real-browser/CAPTCHA pipeline, undecided forms for the assisted filler, redacted-ID forms awaiting a recipe |
+| **No opt-out exists** | nothing to do | the broker offers no removal path |
+
+"Handled automatically" counts what is **wired**. Every live channel defaults to
+dry-run (fill and photograph, or compose without sending) until you switch it on.
+
+### Policies (decided 2026-10-08)
+
+* **CAPTCHAs** are solved by a self-hosted chain (native pass, faster-whisper
+  audio, a local vision model), then handed to you on your phone over noVNC.
+  Only the CAPTCHA's own image or audio ever reaches a solver.
+* **ID documents**: only a **redacted** copy (name and address visible; number,
+  photo, DOB and barcode blacked out) is ever sent. The original never leaves
+  the box.
+* **Email**: send-only over SMTP. broker-guard never reads your inbox;
+  confirmation links and replies reach you as ntfy notifications and you click
+  them yourself.
+* **Real browser on your home IP**: headful Chromium under Xvfb with a
+  persistent profile and its native user agent; an optional patchright /
+  rebrowser build behind a flag.
 
 ## Pipeline
 profile -> brokers -> serpwatch -> playwright_checks -> state -> alert -> eraser_bridge -> health -> escalation -> orchestrator -> scheduler
@@ -37,8 +69,9 @@ profile -> brokers -> serpwatch -> playwright_checks -> state -> alert -> eraser
   and search-query strings are stripped before anything is written)
 - **retry**: exponential backoff with full jitter for flaky network calls
 - **searx_client**: real SearXNG HTTP client (the `searx_search` callable)
-- **browser**: real headless-Chromium `page_action` (READ-only: it reads page
-  text and matches identity terms; it never fills or submits a form)
+- **browser**: real-browser presence check (`page_action`): reads page text
+  and matches identity terms; it never fills or submits a form (filling lives
+  in `optout_submit`)
 - **eraser_bridge**: real `eraser` subprocess invocation (`shell=False`, argv
   list, strict broker-id allowlist, always timeout-bounded, dry-run by default)
 - **sinks**: alert sinks -- append-only JSONL file and an optional webhook
@@ -49,8 +82,16 @@ profile -> brokers -> serpwatch -> playwright_checks -> state -> alert -> eraser
 - **webui**: the dashboard routes -- identity, brokers/status, on-demand
   scan/removal, breach-exposure panel, credit-freeze tracker
 - **autopilot**: the kind-aware decision loop (`automatable`/`captcha` ->
-  auto-send, `photo_id`/`kba` -> queued for a human) plus periodic
-  confirmation and reappearance re-scanning
+  auto-send, `photo_id` -> auto-send once a redacted ID is on file, else queued; and
+  `kba` -> queued for a human) plus the opt-out submission, email and recipe
+  health passes, and periodic confirmation and reappearance re-scanning
+- **optouts / notify**: the per-broker opt-out state machine and ntfy
+  notifications
+- **optout_email / smtp_transport**: the statute-text email channel
+- **captcha / browser_launch**: the CAPTCHA chain and the single browser launcher
+- **recipe_store / platforms / assisted**: learned recipes and the approval ladder
+- **idredact**: local ID redaction and the redacted-only loader
+- **parity / manual_packets**: the dashboard score and the Needs-you packets
 
 ## Redacted ID upload
 
@@ -334,16 +375,16 @@ switched on — presses Submit on your behalf.
 
 Because of that, four things must all be true before anything is sent:
 
-1. `BG_OPTOUT_SUBMIT_ENABLED=true` (default `false`). This is **not** wired
-   into the autopilot scan loop — a scan never submits anything. Runs are
-   started by hand from the **Opt-out review** page.
+1. `BG_OPTOUT_SUBMIT_ENABLED=true` (default `false`). With it on, the
+   autopilot's opt-out submission pass works through the state table (see
+   below); runs can also be started by hand from the **Opt-out review** page.
 2. `BG_OPTOUT_SUBMIT_DRY_RUN=false` (default `true`). While true, the form is
    filled and photographed but Submit is never pressed.
 3. The broker has a hand-verified recipe in `broker_guard/optout_forms.py`.
    That allow-list is the safety boundary: there is no "guess the form from
-   the URL" fallback. Currently five brokers, each one opened and read by
-   hand: **CONSUMER CANVAS LLC**, **Nielsen**, **bolttech**, **Credit.com**
-   and **L.S Mobile Apps Holdings Ltd**.
+   the URL" fallback. The allow-list is `optout_forms.RECIPES` (hand-verified
+   and promoted recipes) plus learned recipes you have approved on
+   **Learned recipes**; the exact count is on the dashboard.
 4. `BG_PLAYWRIGHT_ENABLED=true` and the image was built with
    `INSTALL_BROWSERS=true` (the default).
 
@@ -375,7 +416,7 @@ The selectors for reCAPTCHA v2 and image CAPTCHAs are exercised against fakes
 only. Before trusting the channel, run a few brokers in dry run with
 `BG_CAPTCHA_ENABLED=true` and read the review screenshots.
 
-For the five originally supported brokers this changes the outcome from "always
+For the originally supported brokers this changes the outcome from "always
 stops" to "solved or handed to you": Consumer Canvas, Nielsen and Credit.com
 carry a BotDetect image CAPTCHA, bolttech uses reCAPTCHA v2, and L.S Mobile
 Apps draws its own security code on a canvas (that one has no selector the
@@ -586,6 +627,21 @@ is proxied. `tools/reprobe_blocked.py` re-loads every `OPTOUT_BLOCKED` and
 `SEARCH_BLOCKED` page (GET only, no PII, no submit) and reports which walls were
 fingerprint false positives:
 `docker compose exec broker-guard python tools/reprobe_blocked.py`.
+
+## Needs you and the parity score
+
+The dashboard card and `/manual` are the honest part of the picture. `/manual`
+lists every row broker-guard will not or cannot finish, grouped by why, with
+your name, addresses, emails and phones pre-filled and the exact steps. Mailed
+and notarized requests have a **Printable letter** (`/manual/<id>/letter`)
+built from the same statute text as the email channel (Nevada NRS 603A.345,
+California CCPA, or a generic request), with a notary acknowledgment block for
+notarized ones. Packets contain your PII and are rendered only on the
+authenticated UI; nothing is stored or sent.
+
+The score (`broker_guard/parity.py`) is computed on every dashboard load from
+`RECIPES`, the email-eligibility rules and the structured out-of-scope
+verdicts, so it moves when a recipe is promoted or a channel is wired.
 
 ## Reuse (do not reimplement)
 - Removal engine: **eraser** (vendored under `vendor/eraser/`), called via CLI.

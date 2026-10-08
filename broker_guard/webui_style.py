@@ -88,6 +88,9 @@ NAV_ITEMS = (
     # Recipes learned from live forms by the assisted filler, waiting for
     # a human to look at the dry-run screenshot and approve them.
     ("recipes", "/recipes", "Learned recipes"),
+    # The manual tail, stated plainly: what only you can finish, each with
+    # its pre-filled values and (for mailed/notarized ones) a printable letter.
+    ("manual", "/manual", "Needs you"),
     ("freeze", "/freeze", "Credit freeze"),
     # The runtime knobs that used to be editable ONLY as env vars in the
     # tracked docker-compose.yml -- and therefore silently reverted by every

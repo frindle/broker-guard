@@ -40,6 +40,8 @@ from broker_guard import eraser as eraser_mod
 from broker_guard import eraser_config as eraser_config_mod
 from broker_guard import exposure as exposure_mod
 from broker_guard import freeze as freeze_mod
+from broker_guard import manual_packets as manual_mod
+from broker_guard import parity as parity_mod
 from broker_guard import optout_forms
 from broker_guard import optout_submit
 from broker_guard import optouts as optouts_mod
@@ -362,6 +364,8 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
         stop_attrs = " disabled"
     stop_label = "Stopping..." if scan.get("stop_requested") else "Stop scan"
 
+    parity_card = _parity_card_html()
+
     body = """
 <div class="page-head">
   <div><h1>Removals</h1><div class="muted" id="scanline">{scan_line}</div></div>
@@ -371,6 +375,7 @@ def index(cfg: Config = Depends(get_config), jobs: dict = Depends(get_jobs)):
   </div>
 </div>
 <div class="chips">{chips}</div>
+{parity_card}
 <div class="grid-main">
   <div class="card"><h2>Removals submitted over time</h2>{area}</div>
   <div class="card">
@@ -451,6 +456,7 @@ function runScanNow() {{
 </script>
 """.format(
         scan_line=scan_line, chips=chips, area=area, notif_html=notif_html,
+        parity_card=parity_card,
         stackbar=style.stacked_bar(kind_segments), kind_legend=kind_legend,
         donut=donut, action_legend=action_legend,
         scan_btn_attrs=scan_btn_attrs, scan_btn_label=scan_btn_label,
@@ -458,6 +464,102 @@ function runScanNow() {{
     )
 
     return style.render_page("Dashboard", "dashboard", body, action_needed_count=action_needed)
+
+
+_PARITY_COLORS = {"automated": "#2e9e6b", "needs_you": "#d9822b",
+                  "pipeline": "#5b7fd6", "no_surface": "#9aa0a6"}
+_PARITY_LABELS = {"automated": "Handled automatically", "needs_you": "Needs you",
+                  "pipeline": "Coming (not yet automatic)", "no_surface": "No opt-out exists"}
+
+
+def _parity_card_html() -> str:
+    """The dashboard's honesty card: automated share vs needs-you share of every
+    broker row, computed from the code and dataset (see ``parity``)."""
+    try:
+        score = parity_mod.compute(parity_mod.load_source())
+    except (OSError, ValueError):
+        return ""
+    stack = style.stacked_bar([(_PARITY_COLORS[b], score.counts[b], _PARITY_LABELS[b])
+                                for b in parity_mod.BUCKETS])
+    legend = "".join(style.legend_row(_PARITY_COLORS[b], _PARITY_LABELS[b], score.counts[b])
+                     for b in parity_mod.BUCKETS)
+    return """
+<div class="card" style="margin-bottom:18px;">
+  <div class="section-label">Parity with a paid removal service</div>
+  <h2>{auto:.0%} handled automatically &middot; {need:.0%} needs you</h2>
+  {stack}{legend}
+  <div class="muted">Of {total} brokers. &ldquo;Handled automatically&rdquo; counts what is wired
+  (a live form recipe or an eligible opt-out email); every channel stays dry-run until you switch
+  it on. <a href="/manual">See what needs you</a>.</div>
+</div>""".format(auto=score.share("automated"), need=score.share("needs_you"),
+                 stack=stack, legend=legend, total=score.total)
+
+
+def _manual_rows_and_identity(cfg):
+    try:
+        identity = profile_mod.load_profile(cfg.profile_path)
+    except (OSError, ValueError):
+        return None, None
+    try:
+        return parity_mod.load_source(), identity
+    except (OSError, ValueError):
+        return None, identity
+
+
+@app.get("/manual", response_class=HTMLResponse)
+def manual_page(cfg: Config = Depends(get_config)):
+    """The manual tail: every row only you can finish, with the values pre-filled."""
+    rows, identity = _manual_rows_and_identity(cfg)
+    if rows is None or identity is None:
+        body = ('<div class="page-head"><h1>Needs you</h1></div><p class="muted">Save your '
+                'profile and make sure the broker dataset is present first.</p>')
+        return style.render_page("Needs you", "manual", body)
+    packets = manual_mod.build_packets(rows, identity)
+    sections = []
+    for kind, title in manual_mod.KIND_TITLES.items():
+        group = [p for p in packets if p["kind"] == kind]
+        if not group:
+            continue
+        items = []
+        for p in group:
+            steps = "".join("<li>{}</li>".format(html.escape(t)) for t in p["steps"])
+            fill = "".join(
+                "<div><strong>{}</strong>: {}</div>".format(
+                    html.escape(k), html.escape(", ".join(v) if isinstance(v, list) else str(v)))
+                for k, v in p["prefilled"].items() if v)
+            link = ('<a href="{u}" target="_blank" rel="noopener noreferrer">Open the opt-out page</a>'
+                    .format(u=html.escape(p["url"], quote=True))
+                    if p["url"].startswith(("http://", "https://")) else "")
+            letter = ('<a href="/manual/{b}/letter" target="_blank">Printable letter</a>'.format(
+                b=html.escape(p["broker_id"], quote=True)) if p["has_letter"] else "")
+            items.append('<details><summary>{n}</summary><ol>{steps}</ol>{fill}<p>{link} {letter}'
+                         '</p></details>'.format(n=html.escape(p["name"]), steps=steps, fill=fill,
+                                                  link=link, letter=letter))
+        sections.append('<div class="card"><h2>{t} ({c})</h2>{i}</div>'.format(
+            t=html.escape(title), c=len(group), i="".join(items)))
+    body = ('<div class="page-head"><h1>Needs you</h1></div><p class="muted">These are the '
+            'removals broker-guard cannot or will not finish for you. Each has the values '
+            'pre-filled; mailed and notarized ones have a printable letter.</p>{}').format(
+                "".join(sections) or '<p class="muted">Nothing is waiting on you.</p>')
+    return style.render_page("Needs you", "manual", body)
+
+
+@app.get("/manual/{broker_id}/letter", response_class=HTMLResponse)
+def manual_letter(broker_id: str, cfg: Config = Depends(get_config)):
+    rows, identity = _manual_rows_and_identity(cfg)
+    if rows is None or identity is None:
+        raise HTTPException(status_code=404, detail="profile or dataset missing")
+    for packet in manual_mod.build_packets(rows, identity):
+        if packet["broker_id"] == broker_id and packet["has_letter"]:
+            row = next(r for r in rows if parity_mod.row_id(r) == broker_id)
+            text = manual_mod.render_letter_text(row, identity, packet["kind"])
+            page = ('<!doctype html><meta charset="utf-8"><title>Letter</title>'
+                    '<pre style="font:14px/1.5 Georgia,serif;white-space:pre-wrap;max-width:48em;'
+                    'margin:2em auto">{}</pre>').format(html.escape(text))
+            resp = HTMLResponse(page)
+            resp.headers["Cache-Control"] = "no-store"
+            return resp
+    raise HTTPException(status_code=404, detail="no letter for that broker")
 
 
 # --- /brokers + /status : presence and removal status -----------------------
