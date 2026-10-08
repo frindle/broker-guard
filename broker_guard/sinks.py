@@ -85,6 +85,67 @@ class WebhookAlertSink:
             return False
 
 
+class NtfySink:
+    """Publish a notification to a self-hosted ntfy topic (JSON publish API).
+
+    Reads ``title`` / ``message`` from the notification and, when present, an
+    ``ntfy`` dict ``{priority, tags, click}`` -- ``click`` is the tap-through
+    deep link. JSON publishing (POST to the server root) rather than header
+    publishing, so a non-latin-1 title cannot break the request. The topic and
+    token are credentials-adjacent and are never logged.
+    """
+
+    def __init__(self, url: str, topic: str, token: str | None = None,
+                 timeout_s: int = 10, session=None, attempts: int = 3, sleep=None):
+        self.url = (url or "").rstrip("/")
+        self.topic = topic
+        self.token = token
+        self.timeout_s = timeout_s
+        self.attempts = attempts
+        self._sleep = sleep
+        self.session = session or (requests.Session() if requests else None)
+
+    def payload(self, notification: dict) -> dict:
+        extra = notification.get("ntfy") or {}
+        body = {
+            "topic": self.topic,
+            "title": str(notification.get("title") or "broker-guard")[:250],
+            "message": str(notification.get("message") or "")[:3900],
+            "priority": int(extra.get("priority") or 3),
+        }
+        if extra.get("tags"):
+            body["tags"] = list(extra["tags"])
+        if extra.get("click"):
+            body["click"] = extra["click"]
+        return body
+
+    def __call__(self, notification: dict) -> bool:
+        if not self.url or not self.topic or self.session is None:
+            return False
+        body = self.payload(notification)
+        headers = {"User-Agent": "broker-guard/1.0"}
+        if self.token:
+            headers["Authorization"] = "Bearer " + self.token
+
+        def post():
+            response = self.session.post(self.url, json=body, timeout=self.timeout_s,
+                                         headers=headers)
+            status = getattr(response, "status_code", 200)
+            if status >= 400:
+                raise RuntimeError(f"ntfy returned HTTP {status}")
+            return True
+
+        kwargs = {"attempts": self.attempts, "retry_on": _RETRYABLE + (RuntimeError,),
+                  "description": "alert.ntfy"}
+        if self._sleep is not None:
+            kwargs["sleep"] = self._sleep
+        try:
+            return with_retry(post, **kwargs)
+        except RetryExhausted as exc:
+            log.error("ntfy publish failed", extra={"error": str(exc.__cause__ or exc)})
+            return False
+
+
 class CompositeAlertSink:
     """The ``alert_sink`` handed to ``orchestrator.run_cycle``.
 
@@ -164,14 +225,27 @@ class CompositeAlertSink:
         return {"delivered": delivered, "notification": notification}
 
 
+def build_ntfy_sink(cfg):
+    """An ``NtfySink`` when both URL and topic are configured, else ``None``."""
+    url = getattr(cfg, "ntfy_url", None)
+    topic = getattr(cfg, "ntfy_topic", None)
+    if not url or not topic:
+        return None
+    return NtfySink(url, topic, getattr(cfg, "ntfy_token", None),
+                    attempts=getattr(cfg, "max_retries", 3) or 1)
+
+
 def build_alert_sink(cfg) -> CompositeAlertSink:
     from broker_guard.recipe_health import DriftLedger
 
     sinks = [FileAlertSink(cfg.alert_log_path)]
     if cfg.alert_webhook_url:
         sinks.append(WebhookAlertSink(cfg.alert_webhook_url, attempts=cfg.max_retries or 1))
-    # No new destination: recipe-drift alerts ride the SAME two sinks (the
-    # JSON-lines alert log, and the operator's webhook if they set
-    # BG_ALERT_WEBHOOK_URL). The ledger only decides how OFTEN they are sent.
+    ntfy = build_ntfy_sink(cfg)
+    if ntfy is not None:
+        sinks.append(ntfy)
+    # No new destination: recipe-drift alerts ride the SAME sinks (the
+    # JSON-lines alert log, the operator's webhook and ntfy if configured).
+    # The ledger only decides how OFTEN they are sent.
     path = getattr(cfg, "recipe_drift_path", "") or ""
     return CompositeAlertSink(sinks, drift_ledger=DriftLedger(path) if path else None)

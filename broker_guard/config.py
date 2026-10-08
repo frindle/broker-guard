@@ -59,6 +59,7 @@ SECRET_ENV_KEYS = (
     "BG_ALERT_WEBHOOK_URL",
     "BG_SEARXNG_AUTH",
     "BG_CRYPTO_KEY",
+    "BG_NTFY_TOKEN",
 )
 
 
@@ -164,6 +165,15 @@ class Config:
 
     alert_webhook_url: str | None = None
     alert_log_path: str = "logs/alerts.jsonl"
+    # Self-hosted ntfy (Unraid Community Apps). Base URL + topic; the token is
+    # only for an ntfy with auth enabled. Empty url or topic = ntfy is off.
+    # ``public_base_url`` is the address Penn's PHONE reaches the dashboard on
+    # (the Cloudflare Access hostname); it is what turns a notification into a
+    # tappable deep link. Without it notifications carry no link.
+    ntfy_url: str | None = None
+    ntfy_topic: str | None = None
+    ntfy_token: str | None = field(default=None, repr=False)
+    public_base_url: str | None = None
     # Bookkeeping for recipe-drift alerts: which (broker, leg) pairs have
     # already been reported, so a recipe that has been broken for a week
     # does not re-notify every cycle for a week. Not presence state -- see
@@ -255,7 +265,8 @@ class Config:
         """A dict of this config safe to log: secrets replaced with a marker."""
         out = {}
         for key, value in self.__dict__.items():
-            if key in ("captcha_api_key", "searxng_auth", "alert_webhook_url", "crypto_key"):
+            if key in ("captcha_api_key", "searxng_auth", "alert_webhook_url", "crypto_key",
+                       "ntfy_token"):
                 out[key] = "<set>" if value else None
             else:
                 out[key] = value
@@ -289,6 +300,10 @@ def load_config(env=None) -> Config:
         searxng_min_interval_s=_env_float(env, "BG_SEARXNG_MIN_INTERVAL_S", 2.0),
         searxng_jitter_s=_env_float(env, "BG_SEARXNG_JITTER_S", 1.0),
         alert_webhook_url=_env_str(env, "BG_ALERT_WEBHOOK_URL"),
+        ntfy_url=_env_str(env, "BG_NTFY_URL"),
+        ntfy_topic=_env_str(env, "BG_NTFY_TOPIC"),
+        ntfy_token=_env_str(env, "BG_NTFY_TOKEN"),
+        public_base_url=_env_str(env, "BG_PUBLIC_URL"),
         eraser_bin=_env_str(env, "BG_ERASER_BIN", "eraser"),
         eraser_enabled=_env_bool(env, "BG_ERASER_ENABLED", False),
         eraser_dry_run=_env_bool(env, "BG_ERASER_DRY_RUN", True),
@@ -329,6 +344,8 @@ def load_config(env=None) -> Config:
                                      os.path.join(cfg.log_dir, "recipe-drift.json"))
     _require_http_url("BG_SEARXNG_URL", cfg.searxng_url)
     _require_http_url("BG_ALERT_WEBHOOK_URL", cfg.alert_webhook_url)
+    _require_http_url("BG_NTFY_URL", cfg.ntfy_url)
+    _require_http_url("BG_PUBLIC_URL", cfg.public_base_url)
 
     if cfg.interval_seconds < 60:
         raise ConfigError("BG_INTERVAL_SECONDS must be at least 60 (be polite to brokers)")

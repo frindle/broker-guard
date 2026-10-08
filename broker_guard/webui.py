@@ -41,6 +41,7 @@ from broker_guard import exposure as exposure_mod
 from broker_guard import freeze as freeze_mod
 from broker_guard import optout_forms
 from broker_guard import optout_submit
+from broker_guard import optouts as optouts_mod
 from broker_guard import profile as profile_mod
 from broker_guard import progress as progress_mod
 from broker_guard import profiles as profiles_mod
@@ -1911,6 +1912,9 @@ def settings_post(
     searxng_min_interval_s: str = Form(""),
     searxng_jitter_s: str = Form(""),
     alert_webhook_url: str = Form(""),
+    ntfy_url: str = Form(""),
+    ntfy_topic: str = Form(""),
+    public_base_url: str = Form(""),
     eraser_enabled: str = Form(""),
     eraser_dry_run: str = Form(""),
     optout_submit_enabled: str = Form(""),
@@ -1940,6 +1944,9 @@ def settings_post(
         "searxng_min_interval_s": searxng_min_interval_s,
         "searxng_jitter_s": searxng_jitter_s,
         "alert_webhook_url": alert_webhook_url,
+        "ntfy_url": ntfy_url,
+        "ntfy_topic": ntfy_topic,
+        "public_base_url": public_base_url,
         "eraser_enabled": eraser_enabled,
         "eraser_dry_run": eraser_dry_run,
         "optout_submit_enabled": optout_submit_enabled,
@@ -2044,7 +2051,7 @@ def _attempt_row_html(record: dict) -> str:
     )
 
     return """
-<div class="card attempt">
+<div class="card attempt" id="attempt-{rid_anchor}">
   <div class="attempt-head">
     <div>
       <strong>{broker}</strong>
@@ -2057,6 +2064,7 @@ def _attempt_row_html(record: dict) -> str:
   {shot}
 </div>
 """.format(
+        rid_anchor=html.escape(str(record.get("id", ""))),
         broker=html.escape(str(record.get("broker_name") or record.get("broker_id") or "?")),
         when=html.escape(format_scan_timestamp(record.get("started_at")) or ""),
         dry=" · dry run" if record.get("dry_run") else "",
@@ -2203,12 +2211,140 @@ def review_run(broker_id: str = Form(...), mode: str = Form("dry"),
     # manual-action item already surfaces: as a needs_review broker_status,
     # which webui._action_needed_count already counts into the nav badge.
     status = review_mod.status_for_outcome(record.get("outcome"))
-    if status:
-        conn = state_mod.init_db(cfg.state_path)
-        try:
-            state_mod.StateStore(conn).set_status(
-                identity.identity_key, broker_id, status, _utcnow_iso())
-        finally:
-            conn.close()
+    conn = state_mod.init_db(cfg.state_path)
+    try:
+        store = state_mod.StateStore(conn)
+        if status:
+            store.set_status(identity.identity_key, broker_id, status, _utcnow_iso())
+        # The same attempt also advances the opt-out state machine, so the
+        # /optouts page and the autopilot's retry logic see a manual run.
+        recipe = optout_forms.RECIPES.get(broker_id)
+        if record.get("outcome"):
+            store.optouts.record_attempt(
+                identity.identity_key, {**record, "broker_id": broker_id},
+                _utcnow_iso(), channel="form",
+                confirm_expected=bool(getattr(recipe, "confirmation_email", False)),
+                expected_sender=optouts_mod.expected_sender_domain(None, recipe))
+    finally:
+        conn.close()
 
     return RedirectResponse(url="/review", status_code=303)
+
+
+# --- /optouts : the opt-out state machine ------------------------------------
+
+_OPTOUT_TONE = {
+    optouts_mod.QUEUED: "neutral",
+    optouts_mod.SUBMITTED: "progress",
+    optouts_mod.AWAITING_USER_CONFIRM: "action",
+    optouts_mod.REMOVED: "success",
+    optouts_mod.FAILED: "escalated",
+    optouts_mod.NEEDS_USER: "action",
+    optouts_mod.RELISTED: "escalated",
+}
+_OPTOUT_ORDER = (optouts_mod.NEEDS_USER, optouts_mod.AWAITING_USER_CONFIRM,
+                 optouts_mod.RELISTED, optouts_mod.FAILED, optouts_mod.QUEUED,
+                 optouts_mod.SUBMITTED, optouts_mod.REMOVED)
+
+
+def _optout_row_html(row: dict, names: dict) -> str:
+    bid = row["broker_id"]
+    ik = row["identity_key"]
+    state = row["state"]
+    buttons = []
+    action = "/optouts/{}/{}/".format(urllib.parse.quote(ik, safe=""),
+                                      urllib.parse.quote(bid, safe=""))
+    if state == optouts_mod.AWAITING_USER_CONFIRM:
+        sender = row.get("expected_sender") or "the broker"
+        buttons.append(
+            "<form method='post' action='{a}confirm'><button class='btn' "
+            "type='submit'>I clicked the link from {s}</button></form>".format(
+                a=action, s=html.escape(sender)))
+    if state == optouts_mod.NEEDS_USER:
+        buttons.append(
+            "<form method='post' action='{a}done'><button class='btn' "
+            "type='submit'>I handled it</button></form>".format(a=action))
+    if state in (optouts_mod.NEEDS_USER, optouts_mod.FAILED):
+        buttons.append(
+            "<form method='post' action='{a}retry'><button class='btn secondary' "
+            "type='submit'>Retry</button></form>".format(a=action))
+    link = ""
+    if row.get("last_attempt_id"):
+        link = " <a href='/review#attempt-{}'>attempt record</a>".format(
+            html.escape(row["last_attempt_id"]))
+    return """
+<div class="card" id="opt-{bid}">
+  <div class="attempt-head"><div><strong>{name}</strong>
+    <div class="muted">{reason}{link}</div></div>{badge}</div>
+  <div class="row gap">{buttons}</div>
+</div>""".format(
+        bid=html.escape(bid), name=html.escape(names.get(bid) or bid),
+        reason=html.escape(row.get("last_reason") or ""), link=link,
+        badge=style.badge(state.replace("_", " "), _OPTOUT_TONE.get(state, "neutral")),
+        buttons="".join(buttons))
+
+
+@app.get("/optouts", response_class=HTMLResponse)
+def optouts_page(cfg: Config = Depends(get_config)):
+    """Every tracked opt-out, grouped by what it is waiting on."""
+    try:
+        names = {b["id"]: b.get("name") for b in brokers_mod.load_brokers(cfg.brokers_path)}
+    except (OSError, ValueError):
+        names = {}
+    conn = state_mod.init_db(cfg.state_path)
+    try:
+        ostore = optouts_mod.OptoutStore(conn)
+        rows = ostore.list()
+        counts = ostore.counts()
+    finally:
+        conn.close()
+    order = {s: i for i, s in enumerate(_OPTOUT_ORDER)}
+    rows.sort(key=lambda r: (order.get(r["state"], 99), r["broker_id"]))
+    chips = "".join(style.stat_chip(counts.get(s, 0), s.replace("_", " "), _OPTOUT_TONE[s])
+                    for s in _OPTOUT_ORDER)
+    body = """
+<div class="page-head"><h1>Opt-out status</h1></div>
+<p class="muted">Each broker moves queued, submitted, (waiting for your
+confirmation click), then removed. broker-guard never reads your inbox: when a
+broker emails you a link, you are notified and tell it here once you have
+clicked it.</p>
+<div class="chips">{chips}</div>
+{rows}
+""".format(chips=chips, rows="".join(_optout_row_html(r, names) for r in rows)
+           or "<div class='card muted'>No opt-out has been tracked yet.</div>")
+    return style.render_page("Opt-out status", "optouts", body)
+
+
+def _optout_action(identity_key: str, broker_id: str, fn_name: str, cfg: Config):
+    conn = state_mod.init_db(cfg.state_path)
+    try:
+        ostore = optouts_mod.OptoutStore(conn)
+        if ostore.get(identity_key, broker_id) is None:
+            raise HTTPException(status_code=404, detail="no such opt-out")
+        try:
+            changed = getattr(ostore, fn_name)(identity_key, broker_id, _utcnow_iso())
+        except optouts_mod.OptoutStateError:
+            changed = False
+    finally:
+        conn.close()
+    if not changed:
+        raise HTTPException(status_code=409, detail="not in a state that allows that")
+    return RedirectResponse(url="/optouts", status_code=303)
+
+
+@app.post("/optouts/{identity_key}/{broker_id}/confirm")
+def optouts_confirm(identity_key: str, broker_id: str, cfg: Config = Depends(get_config)):
+    """Penn clicked the broker's emailed link."""
+    return _optout_action(identity_key, broker_id, "mark_user_confirmed", cfg)
+
+
+@app.post("/optouts/{identity_key}/{broker_id}/done")
+def optouts_done(identity_key: str, broker_id: str, cfg: Config = Depends(get_config)):
+    """Penn handled a needs-you item by hand."""
+    return _optout_action(identity_key, broker_id, "mark_done_by_user", cfg)
+
+
+@app.post("/optouts/{identity_key}/{broker_id}/retry")
+def optouts_retry(identity_key: str, broker_id: str, cfg: Config = Depends(get_config)):
+    """Put a failed / needs-you item back in the autopilot's queue."""
+    return _optout_action(identity_key, broker_id, "requeue", cfg)

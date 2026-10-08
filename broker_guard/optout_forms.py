@@ -60,7 +60,7 @@ rule is enforced, not documented -- ``assert_no_forbidden`` raises, the
 driver calls it before it opens a browser AND again before it types, and
 ``tests/test_optout_submit.py`` proves both guards bite.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import re
 
 # --- flavors -----------------------------------------------------------------
@@ -334,6 +334,14 @@ class FormRecipe:
     # submit.
     success_markers: tuple = ()
     notes: str = ""
+    # The broker is known (or, for the OneTrust DSAR family, assumed) to email
+    # the requester a link that must be clicked to activate the request.
+    # broker-guard never reads the inbox, so such a request lands in
+    # ``awaiting_user_confirm`` and Penn is told to click it
+    # (optouts.py / notify.py). ``confirmation_sender`` is the domain to look
+    # for; empty means "the broker's own domain".
+    confirmation_email: bool = False
+    confirmation_sender: str = ""
 
 
 # --- the allow-list ----------------------------------------------------------
@@ -1365,6 +1373,25 @@ RECIPES = {
     THATSTHEM.broker_id: THATSTHEM,
     PIPL.broker_id: PIPL,
 }
+
+
+# Recipes whose request is not live until the requester clicks an emailed
+# link. ABGC's own success text says "check your email"; the OneTrust DSAR
+# webform verifies the requester's email address by default. Applied here as
+# data (the recipes above are frozen) so each recipe's literal stays a pure
+# transcription of the form.
+_CONFIRMS_BY_EMAIL = {
+    "advancedbackgroundchecks-com": "",
+    "consumer-canvas-llc": "onetrust.com",
+    "onetrust-com": "onetrust.com",
+    "bolttech-io": "onetrust.com",
+    "credit-com": "onetrust.com",
+}
+for _bid, _sender in _CONFIRMS_BY_EMAIL.items():
+    if _bid in RECIPES:
+        RECIPES[_bid] = replace(RECIPES[_bid], confirmation_email=True,
+                                confirmation_sender=_sender)
+del _bid, _sender
 
 
 # --- staged recipes ----------------------------------------------------------

@@ -535,13 +535,16 @@ def build_dependencies(cfg: Config) -> AutopilotDependencies:
             return {"success": False, "detail": "removal engine disabled"}
         return removal(broker_id, eraser_profile)
 
-    alerting = {"url": boot_cfg.alert_webhook_url, "sink": base.alert_sink}
+    def _alert_key(c):
+        return (c.alert_webhook_url, c.ntfy_url, c.ntfy_topic, c.ntfy_token)
+
+    alerting = {"url": _alert_key(boot_cfg), "sink": base.alert_sink}
 
     def alert_sink(payload):
         live = live_cfg()
-        if live.alert_webhook_url != alerting["url"]:
-            log.info("alert webhook changed; rebuilding alert sink")
-            alerting.update(url=live.alert_webhook_url, sink=build_alert_sink(live))
+        if _alert_key(live) != alerting["url"]:
+            log.info("alert destinations changed; rebuilding alert sink")
+            alerting.update(url=_alert_key(live), sink=build_alert_sink(live))
         return alerting["sink"](payload)
 
     def _confirmation_bridge():
@@ -592,61 +595,147 @@ def has_id_documents_on_file(cfg: Config) -> bool:
     )
 
 
-def run_optout_submission_pass(identities: list, cfg) -> dict:
+def _optout_store(store, cfg):
+    """(OptoutStore, owned_conn) for the pass.
+
+    Uses the scan's own ``StateStore`` when one is wired (one process, one
+    writer). Otherwise opens the state db at ``cfg.state_path`` itself; a cfg
+    with no path (a bare test namespace) gets a throwaway in-memory db, which
+    is still correct because review history is imported into it each pass.
+    """
+    from broker_guard import optouts as optouts_mod
+
+    existing = getattr(store, "optouts", None)
+    if existing is not None:
+        return existing, None
+    from broker_guard import state as state_mod
+
+    conn = state_mod.init_db(getattr(cfg, "state_path", None) or ":memory:")
+    return optouts_mod.OptoutStore(conn), conn
+
+
+def run_optout_submission_pass(identities: list, cfg, store=None, notifier=None,
+                                brokers=None, now=None) -> dict:
     """Automated opt-out FORM submission pass -- the same action the /review
     page's button triggers, but on the sweep's own cadence so no human has to
     click anything.
 
-    Pure orchestration: for every (identity, broker) pair it dedupes against
-    the review folder (the existing audit trail -- one attempt per broker per
-    identity, whatever its outcome, never resubmitted) and otherwise calls
-    ``optout_submit.run_attempt`` (which owns all real browser interaction).
-    ``SubmissionRefused`` is the NORMAL state when opt-out submission is
-    switched off: it is counted as ``submission_disabled``, logged at debug
-    only, and never treated as an error. Any other exception is counted under
-    ``errors`` with a warning that names only the broker id and the exception
-    TYPE (never the message or any field value -- review.py's PII-logging
-    discipline) and the pass moves on to the next pair instead of aborting.
+    State comes from the ``optout_attempts`` table (``optouts.py``), not from
+    the review folder: legacy review JSON is imported into it once
+    (idempotently) and from then on the table decides what is due --
+    never-tried and ``relisted`` brokers, ``failed`` ones whose backoff has
+    elapsed, and rows past their 60-day re-verify date that the scan still
+    sees listed. A request that may already be spent (Submit pressed but
+    unconfirmed), a CAPTCHA stop, or an exhausted retry budget ends in
+    ``needs_user`` and is never resent blindly.
 
-    Returns ``{'attempted': n, 'skipped_existing': n,
-    'submission_disabled': n, 'errors': n}``.
+    Every state change that wants a human (``needs_user``,
+    ``awaiting_user_confirm``) or is worth knowing (``relisted``) is pushed
+    through *notifier* (ntfy + alert log). ``SubmissionRefused`` is the NORMAL
+    state when submission is switched off: counted, logged at debug, never an
+    error. Any other exception is counted under ``errors`` naming only the
+    broker id and exception TYPE (review.py's PII-logging discipline).
+
+    Returns ``{'attempted', 'skipped_existing', 'submission_disabled',
+    'errors', 'notified', 'relisted'}``.
     """
     from broker_guard import optout_forms as optout_forms_mod
+    from broker_guard import optouts as optouts_mod
     from broker_guard import review as review_mod
     from broker_guard import optout_submit as optout_submit_mod
 
+    now = now or utcnow_iso()
+    ostore, owned = _optout_store(store, cfg)
     try:
-        existing = review_mod.load_attempts(review_mod.review_dir(cfg))
-    except Exception as exc:  # unreadable audit trail -> treat as empty, never skip
-        log.warning("review records unreadable; treating as empty",
-                    extra={"error": type(exc).__name__})
-        existing = []
+        try:
+            history = review_mod.load_attempts(review_mod.review_dir(cfg))
+        except Exception as exc:  # unreadable audit trail -> nothing to import
+            log.warning("review records unreadable; nothing to import",
+                        extra={"error": type(exc).__name__})
+            history = []
+        ostore.import_review_records(history, now)
 
-    # A failed attempt that filled nothing never reached the broker (no
-    # browser, a missing profile field, the page never loaded), so it has not
-    # spent the request and must not block the next pass from retrying.
-    existing = [r for r in existing
-                if not (r.get("outcome") == review_mod.OUTCOME_FAILED and not r.get("fields"))]
+        dry = bool(getattr(cfg, "optout_submit_dry_run", True))
+        counts = {"attempted": 0, "skipped_existing": 0, "submission_disabled": 0,
+                  "errors": 0, "notified": 0, "relisted": 0}
+        by_id = {b.get("id"): b for b in (brokers or [])}
 
-    counts = {"attempted": 0, "skipped_existing": 0, "submission_disabled": 0, "errors": 0}
-    for identity in identities:
-        for broker_id in optout_forms_mod.supported_broker_ids():
-            if any(r.get("broker_id") == broker_id and r.get("identity_key") == identity.identity_key
-                   for r in existing):
-                counts["skipped_existing"] += 1
-                continue
-            try:
-                optout_submit_mod.run_attempt(broker_id, identity, cfg)
-                counts["attempted"] += 1
-            except optout_submit_mod.SubmissionRefused:
-                # The expected state when submission is disabled -- not an error.
-                log.debug("opt-out submission refused for broker %s", broker_id)
-                counts["submission_disabled"] += 1
-            except Exception as exc:
-                log.warning("opt-out submission failed for broker %s (%s)",
-                            broker_id, type(exc).__name__)
-                counts["errors"] += 1
-    return counts
+        def _notify(kind, ik, bid, detail=""):
+            if notifier is not None:
+                counts["notified"] += notifier.state_changed(
+                    kind, ostore.get(ik, bid), detail)
+
+        for identity in identities:
+            ik = identity.identity_key
+            if store is not None and hasattr(store, "is_seen"):
+                moved = ostore.reverify(ik, now, lambda bid: store.is_seen(ik, bid))
+                counts["relisted"] += len(moved["relisted"])
+                for bid in moved["relisted"]:
+                    _notify(optouts_mod.RELISTED, ik, bid)
+            for broker_id in optout_forms_mod.supported_broker_ids():
+                if not ostore.is_due(ik, broker_id, now, dry_run=dry):
+                    counts["skipped_existing"] += 1
+                    continue
+                try:
+                    record = optout_submit_mod.run_attempt(broker_id, identity, cfg)
+                    counts["attempted"] += 1
+                except optout_submit_mod.SubmissionRefused:
+                    # The expected state when submission is disabled -- not an error.
+                    log.debug("opt-out submission refused for broker %s", broker_id)
+                    counts["submission_disabled"] += 1
+                    continue
+                except Exception as exc:
+                    log.warning("opt-out submission failed for broker %s (%s)",
+                                broker_id, type(exc).__name__)
+                    counts["errors"] += 1
+                    continue
+                if not isinstance(record, dict) or not record.get("outcome"):
+                    continue
+                recipe = optout_forms_mod.RECIPES.get(broker_id)
+                try:
+                    before = (ostore.get(ik, broker_id) or {}).get("state")
+                    state = ostore.record_attempt(
+                        ik, record, now, channel="form",
+                        confirm_expected=bool(getattr(recipe, "confirmation_email", False)),
+                        expected_sender=optouts_mod.expected_sender_domain(
+                            by_id.get(broker_id), recipe))
+                except Exception as exc:
+                    log.warning("could not record opt-out state for %s (%s)",
+                                broker_id, type(exc).__name__)
+                    counts["errors"] += 1
+                    continue
+                if state != before and state in (optouts_mod.NEEDS_USER,
+                                                 optouts_mod.AWAITING_USER_CONFIRM):
+                    _notify(state, ik, broker_id)
+        return counts
+    finally:
+        if owned is not None:
+            owned.close()
+
+
+def run_optout_digest(cfg, store=None, notifier=None, brokers=None, now=None,
+                       every_s: int = 86400) -> int:
+    """Send the once-a-day 'waiting on your confirmation click' digest.
+
+    No-op (returns 0) when nothing is waiting or one went out within
+    *every_s*; the timestamp is only advanced when the push was delivered, so
+    a down ntfy retries next tick rather than going silent for a day.
+    """
+    if notifier is None:
+        return 0
+    now = now or utcnow_iso()
+    ostore, owned = _optout_store(store, cfg)
+    try:
+        rows = ostore.awaiting_digest()
+        if not rows or not ostore.digest_due(now, every_s):
+            return 0
+        delivered = notifier.digest(rows)
+        if delivered:
+            ostore.set_meta("last_digest_at", now)
+        return delivered
+    finally:
+        if owned is not None:
+            owned.close()
 
 
 @dataclass
@@ -654,6 +743,13 @@ class Intervals:
     scan_seconds: int = 86400
     confirmation_seconds: int = 21600  # check for replies more often than a full re-scan
     optout_seconds: int = 21600  # automated opt-out form submissions, same cadence as confirmation
+    digest_seconds: int = 86400  # "awaiting your confirmation click" digest
+
+
+def _build_notifier(cfg, broker_list):
+    from broker_guard import notify
+
+    return notify.build_notifier(cfg, broker_list)
 
 
 def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals",
@@ -734,6 +830,7 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     elapsed_since_scan = scan_seconds
     elapsed_since_confirmation = intervals.confirmation_seconds
     elapsed_since_optout = intervals.optout_seconds
+    elapsed_since_digest = intervals.digest_seconds
 
     # service.main()'s headless loop calls service.write_heartbeat every
     # cycle, so health.heartbeat_stale has real data to read -- this loop
@@ -821,11 +918,29 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
         # attempt is a fast, harmless SubmissionRefused catch.
         if elapsed_since_optout >= intervals.optout_seconds:
             try:
-                run_optout_submission_pass(_scan_identities(), cfg)
+                # The LIVE config, not the env tier: the submit-enabled and
+                # dry-run switches are UI-editable, and the pass used to read
+                # the boot-time values, so flipping them on /settings had no
+                # effect on the scheduled pass until a container restart.
+                live = settings_mod.effective_config(cfg)
+                notifier = _build_notifier(live, broker_list)
+                run_optout_submission_pass(_scan_identities(), live, store=deps.store,
+                                           notifier=notifier, brokers=broker_list)
             except Exception as exc:
                 log.exception("autopilot opt-out submission pass failed",
                                extra={"error": "{}: {}".format(type(exc).__name__, exc)})
             elapsed_since_optout = 0
+
+        if elapsed_since_digest >= intervals.digest_seconds:
+            try:
+                live = settings_mod.effective_config(cfg)
+                run_optout_digest(live, store=deps.store,
+                                  notifier=_build_notifier(live, broker_list),
+                                  brokers=broker_list, every_s=intervals.digest_seconds)
+            except Exception as exc:
+                log.exception("autopilot optout digest failed",
+                               extra={"error": "{}: {}".format(type(exc).__name__, exc)})
+            elapsed_since_digest = 0
 
         if stop.is_set():
             break
@@ -833,6 +948,7 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
         elapsed_since_scan += tick_seconds
         elapsed_since_confirmation += tick_seconds
         elapsed_since_optout += tick_seconds
+        elapsed_since_digest += tick_seconds
 
 
 def main(argv=None) -> int:  # pragma: no cover - thin CLI wrapper, exercised manually

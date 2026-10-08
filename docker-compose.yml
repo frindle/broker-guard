@@ -267,6 +267,20 @@ services:
       BG_ALERT_WEBHOOK_URL: "${BG_ALERT_WEBHOOK_URL:-}"
       BG_ALERT_LOG_PATH: /logs/alerts.jsonl
 
+      # --- phone notifications via self-hosted ntfy (UI-editable: URL/topic/link) ---
+      # Install "ntfy" from Unraid Community Apps, then set these (here via
+      # .env, or on /settings). Empty URL or topic = ntfy off. Everything that
+      # needs you (a confirmation link to click, a CAPTCHA, a form that needs
+      # hands, a listing that came back) is pushed here with a tap-through link
+      # built from BG_PUBLIC_URL -- the hostname your phone reaches this
+      # dashboard on (behind Cloudflare Access). broker-guard never reads your
+      # inbox, so this is how you find out. The token is only for an ntfy that
+      # has auth enabled; it belongs in .env, never in this tracked file.
+      BG_NTFY_URL: "${BG_NTFY_URL:-}"
+      BG_NTFY_TOPIC: "${BG_NTFY_TOPIC:-}"
+      BG_NTFY_TOKEN: "${BG_NTFY_TOKEN:-}"
+      BG_PUBLIC_URL: "${BG_PUBLIC_URL:-}"
+
       # --- captcha solving (third-party service; optional) ---
       # UI-editable (/settings), where it is write-only: the stored value is
       # never rendered back into the page, same rule as the credit-freeze PIN.

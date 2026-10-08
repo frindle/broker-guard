@@ -82,6 +82,9 @@ NAV_ITEMS = (
     # my name, and what did it look like when you sent it" is a question
     # that deserves to be one click away, not buried in a broker row.
     ("review", "/review", "Opt-out review"),
+    # The per-broker state machine (queued -> submitted -> awaiting your
+    # click -> removed / relisted): what is waiting on Penn, and why.
+    ("optouts", "/optouts", "Opt-out status"),
     ("freeze", "/freeze", "Credit freeze"),
     # The runtime knobs that used to be editable ONLY as env vars in the
     # tracked docker-compose.yml -- and therefore silently reverted by every

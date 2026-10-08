@@ -66,6 +66,11 @@ def init_db(path: str):
         "status TEXT, "
         "updated_at TEXT)"
     )
+    # The opt-out state machine (optouts.py) shares this file so the scan's
+    # forget()/record_appearance() can drive it in the same transaction scope.
+    from broker_guard import optouts
+
+    optouts.init_tables(conn)
     return conn
 
 
@@ -136,6 +141,9 @@ class StateStore:
 
     def __init__(self, conn):
         self.conn = conn
+        from broker_guard import optouts
+
+        self.optouts = optouts.OptoutStore(conn)
 
     @classmethod
     def open(cls, path: str) -> "StateStore":
@@ -153,6 +161,8 @@ class StateStore:
 
     def record_appearance(self, identity_key: str, broker_id: str, seen_at: str) -> None:
         record_presence(self.conn, identity_key, broker_id, seen_at)
+        # A broker we had marked removed is listing us again.
+        self.optouts.mark_relisted(identity_key, broker_id, seen_at)
 
     def touch(self, identity_key: str, broker_id: str, seen_at: str) -> None:
         """Advance last_seen for a broker that was already known."""
@@ -165,6 +175,11 @@ class StateStore:
             (identity_key, broker_id),
         )
         self.conn.commit()
+        # The listing is gone: credit a request we had actually sent.
+        from datetime import datetime, timezone
+
+        self.optouts.mark_removed(
+            identity_key, broker_id, datetime.now(timezone.utc).isoformat())
 
     def set_status(self, identity_key: str, broker_id: str, status: str, updated_at: str) -> None:
         self.conn.execute(

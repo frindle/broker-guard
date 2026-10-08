@@ -168,6 +168,7 @@ cause of the recurring "Playwright detection turned itself off again" reports.
 | `BG_OPTOUT_SUBMIT_ENABLED` | next run started from /review |
 | `BG_OPTOUT_SUBMIT_DRY_RUN` | next run started from /review |
 | `BG_ALERT_WEBHOOK_URL` | next alert |
+| `BG_NTFY_URL`, `BG_NTFY_TOPIC`, `BG_PUBLIC_URL` | next alert / next autopilot tick |
 | `BG_CAPTCHA_API_KEY` | immediately (write-only — never rendered back into the page) |
 | `BG_INTERVAL_SECONDS` | next loop tick — it does not interrupt a sleep already running, so worst case is one confirmation interval (6h by default) |
 
@@ -216,6 +217,9 @@ for a setting that `/settings` can override (see above).
 | `BG_ERASER_BIN` | `eraser` | path to the compiled binary |
 | `BG_ERASER_TIMEOUT_S` | `300` | subprocess timeout |
 | `BG_ALERT_WEBHOOK_URL` | *(unset)* | **UI** your own webhook (HA, ntfy…); unset = file sink only |
+| `BG_NTFY_URL` / `BG_NTFY_TOPIC` | *(unset)* | **UI** your self-hosted ntfy server and topic; both needed, either unset = ntfy off |
+| `BG_NTFY_TOKEN` | *(unset)* | bearer token, only if your ntfy has auth; env-only |
+| `BG_PUBLIC_URL` | *(unset)* | **UI** where your phone reaches the dashboard; makes notifications tappable |
 | `BG_ALERT_LOG_PATH` | `$BG_LOG_DIR/alerts.jsonl` | append-only digest file |
 | `BG_OPTOUT_SUBMIT_ENABLED` | `false` | **UI** enable automated opt-out form submission (see below) |
 | `BG_OPTOUT_SUBMIT_DRY_RUN` | `true` | **UI** — **keep true until you have checked a screenshot**; Submit is never pressed while set |
@@ -228,6 +232,37 @@ Two safety interlocks are on by default: `BG_ERASER_ENABLED=false` and
 `BG_ERASER_DRY_RUN=true`, so no opt-out request is ever transmitted until both
 are deliberately changed. The same pattern guards automated form submission:
 `BG_OPTOUT_SUBMIT_ENABLED=false` and `BG_OPTOUT_SUBMIT_DRY_RUN=true`.
+
+### Opt-out state machine and notifications
+
+Every (profile, broker) opt-out is one row in the `optout_attempts` table of
+`state.sqlite` (`broker_guard/optouts.py`), shown on **Opt-out status**:
+
+```
+queued -> submitted -> awaiting_user_confirm -> removed
+              |                  |                 |
+              v                  v                 v
+           failed            needs_user         relisted -> queued ...
+```
+
+* A form that is known to email you a confirmation link lands in
+  `awaiting_user_confirm`. **broker-guard never reads your inbox** (SMTP-send
+  only; `tests/test_compose_bridge.py` enforces the network isolation), so it
+  tells you instead: an ntfy push naming the sender domain to look for, plus
+  a once-a-day digest. Click the link yourself, then press the button on
+  **Opt-out status**; the next scan marks the row `removed` when the listing
+  disappears.
+* Failures retry with exponential backoff (6h, 12h, 24h, 48h, 3d cap) and go
+  to `needs_user` after five. A request that may already be spent (Submit was
+  pressed but the page did not confirm) is **never** auto-resent.
+* A removed listing that reappears (the scan's `record_appearance`) becomes
+  `relisted` and is resubmitted. Independently every row is re-verified 60
+  days after submission: still listed means `relisted`.
+* Existing review JSON is imported into the table once (idempotent).
+* Notifications (`broker_guard/notify.py`) go to the alert log and, when
+  configured, to your self-hosted **ntfy** (`BG_NTFY_URL`, `BG_NTFY_TOPIC`),
+  each with a tap-through link built from `BG_PUBLIC_URL`. They name the
+  broker and a short reason, never profile values.
 
 ### Automated opt-out submission
 

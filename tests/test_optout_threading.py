@@ -69,7 +69,10 @@ def _pass_with(monkeypatch, existing):
 def test_failed_attempt_that_filled_nothing_is_retried(monkeypatch):
     attempted, counts = _pass_with(monkeypatch, [
         {"broker_id": "thatsthem-com", "identity_key": "k1",
-         "outcome": review.OUTCOME_FAILED, "fields": {}},
+         "outcome": review.OUTCOME_FAILED, "fields": {},
+         # Old enough that the retry backoff (6h after the first failure)
+         # has long since elapsed.
+         "finished_at": "2020-01-01T00:00:00+00:00"},
     ])
     assert attempted == ["thatsthem-com"]
     assert counts["skipped_existing"] == 0
@@ -92,3 +95,15 @@ def test_non_failed_attempt_is_never_resubmitted(monkeypatch):
              "outcome": outcome, "fields": {}},
         ])
         assert attempted == [], outcome
+
+
+def test_failed_attempt_inside_its_backoff_window_waits(monkeypatch):
+    """The old pass retried a nothing-filled failure on EVERY pass (every 6h
+    forever against a dead site); the state table backs off instead."""
+    attempted, counts = _pass_with(monkeypatch, [
+        {"broker_id": "thatsthem-com", "identity_key": "k1",
+         "outcome": review.OUTCOME_FAILED, "fields": {},
+         "finished_at": "2999-01-01T00:00:00+00:00"},
+    ])
+    assert attempted == []
+    assert counts["skipped_existing"] == 1

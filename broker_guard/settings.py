@@ -166,6 +166,25 @@ SETTING_SPECS = (
              "Blank means alerts are written to the log file only.",
     ),
     SettingSpec(
+        key="ntfy_url", env="BG_NTFY_URL", kind="str", is_url=True,
+        label="ntfy server URL",
+        help="Your self-hosted ntfy (Unraid Community Apps), e.g. "
+             "http://10.0.7.143:8090. Blank disables phone notifications. "
+             "Needs a topic below.",
+    ),
+    SettingSpec(
+        key="ntfy_topic", env="BG_NTFY_TOPIC", kind="str",
+        label="ntfy topic",
+        help="The topic your phone subscribes to. Treat it like a password "
+             "if the server has no auth: anyone who knows it can read it.",
+    ),
+    SettingSpec(
+        key="public_base_url", env="BG_PUBLIC_URL", kind="str", is_url=True,
+        label="Dashboard URL for notification links",
+        help="Where your phone reaches this dashboard (the Cloudflare Access "
+             "hostname). Notifications carry a tap-through link built from it.",
+    ),
+    SettingSpec(
         key="eraser_enabled", env="BG_ERASER_ENABLED", kind="bool",
         label="Removal engine enabled",
         help="Let the autopilot drive the vendored eraser engine. Off means no "
