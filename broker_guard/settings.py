@@ -214,6 +214,21 @@ SETTING_SPECS = (
              "OFF sends REAL opt-out requests in your name.",
     ),
     SettingSpec(
+        key="optout_email_enabled", env="BG_OPTOUT_EMAIL_ENABLED", kind="bool",
+        label="Opt-out by email",
+        help="Send statute-specific (CCPA / Nevada NRS 603A.345) opt-out emails "
+             "from your dedicated alias through the Proton Bridge, to brokers' "
+             "own role addresses only. OFF by default; see DRY RUN below. "
+             "Needs BG_OPTOUT_EMAIL_FROM and the SMTP settings in .env.",
+    ),
+    SettingSpec(
+        key="optout_email_dry_run", env="BG_OPTOUT_EMAIL_DRY_RUN", kind="bool",
+        label="Opt-out email DRY RUN",
+        help="ON: each email is composed and saved to the review folder but "
+             "never sent. Read the first few on /review, then turn this OFF to "
+             "send for real (email cannot be recalled).",
+    ),
+    SettingSpec(
         key="captcha_api_key", env="BG_CAPTCHA_API_KEY", kind="str", secret=True,
         label="CAPTCHA solver API key",
         help="Third-party CAPTCHA solving service credential. Optional.",

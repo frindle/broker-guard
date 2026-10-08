@@ -220,6 +220,8 @@ for a setting that `/settings` can override (see above).
 | `BG_NTFY_URL` / `BG_NTFY_TOPIC` | *(unset)* | **UI** your self-hosted ntfy server and topic; both needed, either unset = ntfy off |
 | `BG_NTFY_TOKEN` | *(unset)* | bearer token, only if your ntfy has auth; env-only |
 | `BG_PUBLIC_URL` | *(unset)* | **UI** where your phone reaches the dashboard; makes notifications tappable |
+| `BG_OPTOUT_EMAIL_ENABLED` / `BG_OPTOUT_EMAIL_DRY_RUN` | `false` / `true` | **UI** the email channel's two interlocks (see above) |
+| `BG_OPTOUT_EMAIL_BATCH` | `20` | brokers emailed per autopilot pass |
 | `BG_ALERT_LOG_PATH` | `$BG_LOG_DIR/alerts.jsonl` | append-only digest file |
 | `BG_OPTOUT_SUBMIT_ENABLED` | `false` | **UI** enable automated opt-out form submission (see below) |
 | `BG_OPTOUT_SUBMIT_DRY_RUN` | `true` | **UI** — **keep true until you have checked a screenshot**; Submit is never pressed while set |
@@ -263,6 +265,33 @@ queued -> submitted -> awaiting_user_confirm -> removed
   configured, to your self-hosted **ntfy** (`BG_NTFY_URL`, `BG_NTFY_TOPIC`),
   each with a tap-through link built from `BG_PUBLIC_URL`. They name the
   broker and a short reason, never profile values.
+
+### Opt-out by email (the autopilot's email channel)
+
+For every broker whose recorded `optout_email` passes `optout_email.eligibility`
+(a *role* address — `privacy@`, `ccpa@`… — on the broker's *own* domain; personal
+or off-domain addresses are never written to), the autopilot's email pass
+(every 6 hours) composes one request and sends it through the Proton Bridge
+SMTP transport. The template depends on your home state: **Nevada** cites
+NRS 603A.345 (verified request not to sell covered information, 60-day
+response) and **California** cites Civil Code 1798.105/1798.120/1798.130
+(delete + do not sell/share, 45-day response); everything else gets a generic
+multi-state request. Statute wording was checked against the legislature
+sites; the citations are in `optout_email.py`.
+
+* Same two interlocks as the form channel: `BG_OPTOUT_EMAIL_ENABLED` (default
+  off) and `BG_OPTOUT_EMAIL_DRY_RUN` (default **on** — messages are composed
+  and saved to `/review`, never sent). Both are on `/settings`. Read the first
+  few dry-run messages, then turn DRY RUN off.
+* At most `BG_OPTOUT_EMAIL_BATCH` (20) brokers per pass, paced, so a
+  several-hundred backlog trickles out over days.
+* A broker with a working form recipe is left to the form channel unless that
+  channel gave up (`needs_user`), so no broker is asked twice.
+* The statutory window starts on send. A request still unanswered after it
+  (the SLA comes from `escalation.is_overdue`) moves to `needs_user` with a
+  push notification; filing a regulator complaint stays your call
+  (`escalation.route_escalation` never auto-files).
+* SMTP-send-only is unchanged: no IMAP, no reply reading.
 
 ### Automated opt-out submission
 

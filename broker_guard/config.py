@@ -221,6 +221,9 @@ class Config:
     optout_email_enabled: bool = False
     optout_email_dry_run: bool = True
     optout_email_from: str = ""
+    # Max messages composed/sent per autopilot pass (every 6h by default). A
+    # 650-broker backlog goes out as a trickle, not a burst from one alias.
+    optout_email_batch: int = 20
 
     # --- SMTP transport for the above (broker_guard/smtp_transport.py) ---
     #
@@ -317,6 +320,7 @@ def load_config(env=None) -> Config:
         optout_email_enabled=_env_bool(env, "BG_OPTOUT_EMAIL_ENABLED", False),
         optout_email_dry_run=_env_bool(env, "BG_OPTOUT_EMAIL_DRY_RUN", True),
         optout_email_from=_env_str(env, "BG_OPTOUT_EMAIL_FROM", ""),
+        optout_email_batch=_env_int(env, "BG_OPTOUT_EMAIL_BATCH", 20),
         optout_email_smtp_host=_env_str(env, "BG_OPTOUT_EMAIL_SMTP_HOST", ""),
         optout_email_smtp_port=_env_int(env, "BG_OPTOUT_EMAIL_SMTP_PORT", 25),
         optout_email_smtp_username=_env_str(

@@ -111,9 +111,13 @@ def init_tables(conn) -> None:
         "next_attempt_at TEXT, submitted_at TEXT, removed_at TEXT, "
         "verify_after TEXT, expected_sender TEXT, user_confirmed_at TEXT, "
         "relist_count INTEGER NOT NULL DEFAULT 0, "
-        "created_at TEXT, updated_at TEXT, "
+        "created_at TEXT, updated_at TEXT, sla_due_at TEXT, "
         "PRIMARY KEY (identity_key, broker_id))"
     )
+    # A db created before sla_due_at existed: add the column in place.
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(optout_attempts)")}
+    if "sla_due_at" not in cols:
+        conn.execute("ALTER TABLE optout_attempts ADD COLUMN sla_due_at TEXT")
     conn.execute(
         "CREATE TABLE IF NOT EXISTS optout_events ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, identity_key TEXT, broker_id TEXT, "
@@ -128,7 +132,8 @@ def init_tables(conn) -> None:
 _COLS = ("identity_key", "broker_id", "channel", "state", "attempts",
          "last_attempt_id", "last_reason", "last_dry_run", "next_attempt_at",
          "submitted_at", "removed_at", "verify_after", "expected_sender",
-         "user_confirmed_at", "relist_count", "created_at", "updated_at")
+         "user_confirmed_at", "relist_count", "created_at", "updated_at",
+         "sla_due_at")
 
 
 def _row(cur_row) -> dict:
@@ -230,7 +235,7 @@ class OptoutStore:
 
     def record_attempt(self, ik: str, record: dict, now: str, *,
                        channel: str = "form", confirm_expected: bool = False,
-                       expected_sender: str = "") -> str:
+                       expected_sender: str = "", sla_days: int | None = None) -> str:
         """Fold one review record (``review.save_attempt`` output) into the table.
 
         Returns the resulting state. ``record['outcome']`` mapping:
@@ -261,6 +266,7 @@ class OptoutStore:
                           attempts=row["attempts"] + 1, last_dry_run=0,
                           next_attempt_at=None,
                           expected_sender=expected_sender or row["expected_sender"],
+                          sla_due_at=(_plus_days(now, sla_days) if sla_days else None),
                           **common)
                 return state
             if outcome == "dry_run":
@@ -373,6 +379,35 @@ class OptoutStore:
                     (_plus_days(now, REVERIFY_DAYS), ik, bid))
                 self.conn.commit()
         return out
+
+    def overdue(self, now: str) -> list:
+        """Submitted rows whose statutory response window has passed.
+
+        Uses ``escalation.is_overdue`` so the SLA arithmetic has one home.
+        """
+        from broker_guard import escalation
+
+        out = []
+        for row in self.list(states=(SUBMITTED, AWAITING_USER_CONFIRM)):
+            if row["sla_due_at"] and row["submitted_at"]:
+                days = (_parse(row["sla_due_at"]) - _parse(row["submitted_at"])).days
+                if escalation.is_overdue(row["submitted_at"], now, days):
+                    out.append(row)
+        return out
+
+    def escalate_overdue(self, now: str) -> list:
+        """Move overdue rows to ``needs_user`` (a regulator complaint /
+        follow-up is Penn's call: ``escalation.route_escalation`` never
+        auto-files those). Returns the rows moved."""
+        moved = []
+        for row in self.overdue(now):
+            self._set(row["identity_key"], row["broker_id"], now, NEEDS_USER,
+                      "no response within the statutory window",
+                      last_reason="no response within the statutory window; "
+                                  "follow up or file a complaint",
+                      sla_due_at=None)
+            moved.append(self.get(row["identity_key"], row["broker_id"]))
+        return moved
 
     # -- migration / digest --------------------------------------------------
 

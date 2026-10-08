@@ -4,11 +4,12 @@ Why this exists
 ---------------
 ``optout_submit.py`` can only act on a broker with a hand-verified recipe, and
 84 brokers mapped so far are in ``optout_forms.OPTOUT_BLOCKED`` -- almost all of
-them behind a CAPTCHA this codebase will not solve. But most of those brokers
+them behind a CAPTCHA (solved by the self-hosted chain in captcha.py, or by Penn
+from his phone). But most of those brokers
 publish an email address for exactly this purpose, and the state privacy
 statutes treat a designated email channel as a valid way to make a request. So
 for a large part of the blocked set there is an honest route that needs no
-form-filling at all, and it leaves a timestamped record that is better evidence
+form-filling at all (and no CAPTCHA to defeat), and it leaves a timestamped record that is better evidence
 than a form post which returns no receipt.
 
 THE HARD PRECONDITION, AND WHY IT IS HERE AND NOT IN A CHECKLIST
@@ -222,7 +223,97 @@ def is_eligible(broker_domain: str, email: str) -> bool:
 # Composition
 # --------------------------------------------------------------------------
 
-_SUBJECT = "Request to opt out of the sale or sharing of my personal information"
+# --- state-law request templates ---------------------------------------------
+#
+# Statute wording below was checked against the primary sources on 2026-10-08
+# (not recalled from memory):
+#
+#   California Civil Code (leginfo.legislature.ca.gov)
+#     s.1798.105(a)  "A consumer shall have the right to request that a
+#                    business delete any personal information about the
+#                    consumer which the business has collected from the
+#                    consumer."
+#     s.1798.105(c)(1) the business must delete it, notify service providers
+#                    and contractors, and notify third parties to whom it has
+#                    sold or shared it, "unless this proves impossible or
+#                    involves disproportionate effort".
+#     s.1798.120(a)  "A consumer shall have the right, at any time, to direct a
+#                    business that sells or shares personal information about
+#                    the consumer to third parties not to sell or share the
+#                    consumer's personal information."
+#     s.1798.130(a)(2)(A) respond "within 45 days of receiving a verifiable
+#                    consumer request", extendable once by 45 days with notice
+#                    inside the first 45.
+#
+#   Nevada Revised Statutes ch. 603A (www.leg.state.nv.us/nrs/nrs-603a.html)
+#     NRS 603A.345   a consumer "may, at any time, submit a verified request"
+#                    directing an operator not to sell covered information;
+#                    the operator "shall not make any sale of any covered
+#                    information the operator has collected or will collect";
+#                    it must respond "within 60 days after receipt", extendable
+#                    "by not more than 30 days" with notice; each operator
+#                    "shall establish a designated request address".
+#                    ("Sale", NRS 603A.333: exchange of covered information for
+#                    monetary consideration.) Nevada has NO statutory deletion
+#                    right, so the Nevada template asks for deletion only as a
+#                    voluntary request and does not claim a statute requires it.
+#
+# SLA days per template feed optouts.sla_due_at (escalation.is_overdue).
+
+_NV_BODY = """\
+To whom it may concern,
+
+I am a Nevada consumer. Under NRS 603A.345 I am submitting a verified request
+that you not make any sale of any covered information you have collected, or
+will collect, about me. Please direct this to the designated request address
+you maintain under that section if it is not this one.
+
+I also ask, voluntarily, that you delete the personal information you hold
+about me and stop selling or sharing it under any other privacy law that
+applies to me (including the California Consumer Privacy Act, to the extent it
+does).
+
+So that you can locate my records, the information I am providing is:
+
+{identity_block}
+
+NRS 603A.345 requires a response within 60 days of receipt (extendable by no
+more than 30 days with notice to me). Please confirm in writing when this
+request has been actioned, and tell me if you need anything further from me to
+verify it. If you believe an exemption applies, please say which one and why.
+
+If you have disclosed my information to third parties, please pass this
+request on to them as the applicable law requires.
+
+Thank you.
+
+{full_name}
+"""
+
+_CA_BODY = """\
+To whom it may concern,
+
+I am a California consumer. Under the California Consumer Privacy Act (Civil
+Code 1798.105) I request that you delete the personal information you have
+collected about me, notify your service providers and contractors to do the
+same, and notify the third parties to whom you have sold or shared it. Under
+Civil Code 1798.120 I also direct you not to sell or share my personal
+information.
+
+So that you can locate my records, the information I am providing is:
+
+{identity_block}
+
+Civil Code 1798.130 requires a response within 45 days of receipt (extendable
+once by 45 days with notice to me). Please confirm in writing when this
+request has been actioned, and tell me if you need anything further from me to
+verify my identity. If you believe an exemption applies, please say which one
+and why.
+
+Thank you.
+
+{full_name}
+"""
 
 _BODY = """\
 To whom it may concern,
@@ -250,6 +341,29 @@ Thank you.
 
 {full_name}
 """
+
+_SUBJECT = "Request to opt out of the sale or sharing of my personal information"
+
+# template key -> (subject, body, SLA days)
+TEMPLATES = {
+    "nv": ("Verified request under NRS 603A.345: do not sell my covered information",
+           _NV_BODY, 60),
+    "ca": ("CCPA request: delete my personal information and do not sell or share it",
+           _CA_BODY, 45),
+    "generic": (_SUBJECT, _BODY, 45),
+}
+
+
+def template_for(identity) -> str:
+    """Which statute-specific template applies to *identity*'s home state."""
+    from broker_guard import optout_forms
+
+    state = optout_forms.state_from_addresses(getattr(identity, "addresses", []) or [])
+    return {"Nevada": "nv", "California": "ca"}.get(state, "generic")
+
+
+def sla_days_for(identity) -> int:
+    return TEMPLATES[template_for(identity)][2]
 
 
 def _identity_block(identity) -> str:
@@ -284,12 +398,13 @@ def compose_request(broker_id: str, broker_domain: str, broker_email: str,
     message = EmailMessage()
     message["To"] = broker_email.strip()
     message["From"] = from_address.strip()
-    message["Subject"] = _SUBJECT
+    subject, body, _sla = TEMPLATES[template_for(identity)]
+    message["Subject"] = subject
     reply_to = next(iter(getattr(identity, "emails", []) or []), "")
     if reply_to:
         message["Reply-To"] = reply_to
-    message.set_content(_BODY.format(identity_block=_identity_block(identity),
-                                     full_name=identity.full_name))
+    message.set_content(body.format(identity_block=_identity_block(identity),
+                                    full_name=identity.full_name))
     return message
 
 
@@ -425,7 +540,9 @@ def send_request(broker_id: str, broker_domain: str, broker_email: str,
         record = _record(broker_id, broker_email, identity_key, started_at,
                          review.OUTCOME_DRY_RUN, True,
                          subject=message["Subject"],
-                         body=message.get_content())
+                         body=message.get_content(),
+                         template=template_for(identity),
+                         sla_days=sla_days_for(identity))
         _save(record, directory, cfg)
         return record
 
@@ -444,7 +561,8 @@ def send_request(broker_id: str, broker_domain: str, broker_email: str,
 
     record = _record(broker_id, broker_email, identity_key, started_at,
                      review.OUTCOME_SUBMITTED, False,
-                     subject=message["Subject"])
+                     subject=message["Subject"], template=template_for(identity),
+                     sla_days=sla_days_for(identity))
     _save(record, directory, cfg)
     return record
 

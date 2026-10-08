@@ -1919,6 +1919,8 @@ def settings_post(
     eraser_dry_run: str = Form(""),
     optout_submit_enabled: str = Form(""),
     optout_submit_dry_run: str = Form(""),
+    optout_email_enabled: str | None = Form(None),
+    optout_email_dry_run: str | None = Form(None),
     captcha_api_key: str = Form(""),
     interval_seconds: str = Form(""),
     reset: list[str] = Form([]),
@@ -1951,6 +1953,8 @@ def settings_post(
         "eraser_dry_run": eraser_dry_run,
         "optout_submit_enabled": optout_submit_enabled,
         "optout_submit_dry_run": optout_submit_dry_run,
+        "optout_email_enabled": optout_email_enabled,
+        "optout_email_dry_run": optout_email_dry_run,
         "captcha_api_key": captcha_api_key,
         "interval_seconds": interval_seconds,
     }
@@ -1964,6 +1968,11 @@ def settings_post(
     changes = {}
     for key, raw in submitted.items():
         spec = settings_mod.SPEC_BY_KEY[key]
+        if raw is None and key not in to_reset:
+            # Field absent from the submission (an API client that predates
+            # it): leave the stored value alone rather than coercing "" to
+            # False -- for a DRY RUN switch, "" would mean LIVE.
+            continue
         if key in to_reset:
             # None == delete the stored override == fall back to the env var.
             changes[key] = None

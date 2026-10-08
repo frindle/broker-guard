@@ -713,6 +713,119 @@ def run_optout_submission_pass(identities: list, cfg, store=None, notifier=None,
             owned.close()
 
 
+def run_optout_email_pass(identities: list, brokers: list, cfg, store=None,
+                           notifier=None, transport=None, now=None, sleep=None,
+                           pace_s: float = 5.0) -> dict:
+    """The EMAIL opt-out channel: one statute-specific request per eligible
+    broker, through the Proton Bridge SMTP transport (send only -- replies
+    and confirmation links are Penn's to read; see notify.py).
+
+    Candidates: every broker with a recorded ``optout_email`` that passes
+    ``optout_email.eligibility`` (a role address on the broker's own domain),
+    that the state table says is due. A broker that HAS a working form recipe
+    is left to the form channel unless that channel gave up (``needs_user``),
+    so one broker is never asked twice by two channels.
+
+    Both interlocks apply exactly as before and are not widened here:
+    ``optout_email_enabled`` (default off) and ``optout_email_dry_run``
+    (default on -- the message is composed and recorded, never handed to a
+    transport). At most ``cfg.optout_email_batch`` brokers are handled per
+    pass, paced by *pace_s* between live sends. Also escalates rows whose
+    statutory response window (45 days CA / 60 NV) has passed to ``needs_user``.
+
+    Returns ``{'sent', 'dry_run', 'ineligible', 'disabled', 'errors',
+    'escalated', 'notified'}``.
+    """
+    import time
+
+    from broker_guard import optout_email, optout_forms
+    from broker_guard import optouts as optouts_mod
+    from broker_guard import review as review_mod
+    from broker_guard import smtp_transport
+
+    now = now or utcnow_iso()
+    sleep = sleep or time.sleep
+    counts = {"sent": 0, "dry_run": 0, "ineligible": 0, "disabled": 0,
+              "errors": 0, "escalated": 0, "notified": 0}
+    ostore, owned = _optout_store(store, cfg)
+    try:
+        for row in ostore.escalate_overdue(now):
+            counts["escalated"] += 1
+            if notifier is not None:
+                counts["notified"] += notifier.state_changed(
+                    optouts_mod.NEEDS_USER, row)
+        if not getattr(cfg, "optout_email_enabled", False):
+            counts["disabled"] = 1
+            return counts
+
+        dry = bool(getattr(cfg, "optout_email_dry_run", True))
+        limit = max(0, int(getattr(cfg, "optout_email_batch", 20) or 0))
+        handled = 0
+        live_transport = transport
+        for identity in identities:
+            ik = identity.identity_key
+            for broker in brokers:
+                if handled >= limit:
+                    return counts
+                email = (broker.get("optout_email") or "").strip()
+                if not email:
+                    continue
+                bid = broker["id"]
+                ok, _reason = optout_email.eligibility(broker.get("url", ""), email)
+                if not ok:
+                    counts["ineligible"] += 1
+                    continue
+                row = ostore.get(ik, bid)
+                if bid in optout_forms.RECIPES:
+                    if not (row and row["state"] == optouts_mod.NEEDS_USER
+                            and row["channel"] == "form"):
+                        continue
+                elif not ostore.is_due(ik, bid, now, dry_run=dry):
+                    continue
+                if not dry and live_transport is None:
+                    live_transport = smtp_transport.transport_from_config(cfg)
+                handled += 1
+                try:
+                    record = optout_email.send_request(
+                        bid, broker.get("url", ""), email, identity, cfg,
+                        transport=live_transport, directory=review_mod.review_dir(cfg),
+                        now=None)
+                except optout_email.EmailRefused:
+                    counts["errors"] += 1
+                    continue
+                except Exception as exc:
+                    log.warning("opt-out email failed for broker %s (%s)",
+                                bid, type(exc).__name__)
+                    counts["errors"] += 1
+                    continue
+                before = (row or {}).get("state")
+                try:
+                    state = ostore.record_attempt(
+                        ik, record, now, channel="email",
+                        sla_days=record.get("sla_days"))
+                except Exception as exc:
+                    log.warning("could not record email state for %s (%s)",
+                                bid, type(exc).__name__)
+                    counts["errors"] += 1
+                    continue
+                if record.get("outcome") == review_mod.OUTCOME_SUBMITTED:
+                    counts["sent"] += 1
+                    if not dry:
+                        sleep(pace_s)
+                elif record.get("outcome") == review_mod.OUTCOME_DRY_RUN:
+                    counts["dry_run"] += 1
+                else:
+                    counts["errors"] += 1
+                if (notifier is not None and state != before
+                        and state == optouts_mod.NEEDS_USER):
+                    counts["notified"] += notifier.state_changed(
+                        state, ostore.get(ik, bid))
+        return counts
+    finally:
+        if owned is not None:
+            owned.close()
+
+
 def run_optout_digest(cfg, store=None, notifier=None, brokers=None, now=None,
                        every_s: int = 86400) -> int:
     """Send the once-a-day 'waiting on your confirmation click' digest.
@@ -744,6 +857,7 @@ class Intervals:
     confirmation_seconds: int = 21600  # check for replies more often than a full re-scan
     optout_seconds: int = 21600  # automated opt-out form submissions, same cadence as confirmation
     digest_seconds: int = 86400  # "awaiting your confirmation click" digest
+    email_seconds: int = 21600   # opt-out email channel (batched; see run_optout_email_pass)
 
 
 def _build_notifier(cfg, broker_list):
@@ -831,6 +945,7 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     elapsed_since_confirmation = intervals.confirmation_seconds
     elapsed_since_optout = intervals.optout_seconds
     elapsed_since_digest = intervals.digest_seconds
+    elapsed_since_email = intervals.email_seconds
 
     # service.main()'s headless loop calls service.write_heartbeat every
     # cycle, so health.heartbeat_stale has real data to read -- this loop
@@ -931,6 +1046,17 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
                                extra={"error": "{}: {}".format(type(exc).__name__, exc)})
             elapsed_since_optout = 0
 
+        if elapsed_since_email >= intervals.email_seconds:
+            try:
+                live = settings_mod.effective_config(cfg)
+                run_optout_email_pass(_scan_identities(), broker_list, live,
+                                      store=deps.store,
+                                      notifier=_build_notifier(live, broker_list))
+            except Exception as exc:
+                log.exception("autopilot opt-out email pass failed",
+                               extra={"error": "{}: {}".format(type(exc).__name__, exc)})
+            elapsed_since_email = 0
+
         if elapsed_since_digest >= intervals.digest_seconds:
             try:
                 live = settings_mod.effective_config(cfg)
@@ -949,6 +1075,7 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
         elapsed_since_confirmation += tick_seconds
         elapsed_since_optout += tick_seconds
         elapsed_since_digest += tick_seconds
+        elapsed_since_email += tick_seconds
 
 
 def main(argv=None) -> int:  # pragma: no cover - thin CLI wrapper, exercised manually
