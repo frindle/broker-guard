@@ -16,4 +16,22 @@ case "$(echo "${BG_PLAYWRIGHT_HEADLESS:-false}" | tr '[:upper:]' '[:lower:]')" i
     fi
     ;;
 esac
+# Optional noVNC view of the live browser (CAPTCHA human fallback): x11vnc on
+# the Xvfb display, bridged to a browser by websockify on :6080. FAILS CLOSED:
+# without BG_NOVNC_PASSWORD nothing is started, because an unauthenticated
+# view of a browser holding Penn's filled forms must never exist.
+case "$(echo "${BG_NOVNC:-false}" | tr '[:upper:]' '[:lower:]')" in
+  true|1|yes|on)
+    if [ -z "${DISPLAY:-}" ]; then
+      echo "noVNC requested but there is no display (headless?); not started" >&2
+    elif [ -z "${BG_NOVNC_PASSWORD:-}" ]; then
+      echo "noVNC requested but BG_NOVNC_PASSWORD is unset; not started" >&2
+    elif command -v x11vnc >/dev/null 2>&1 && command -v websockify >/dev/null 2>&1; then
+      x11vnc -storepasswd "$BG_NOVNC_PASSWORD" /tmp/.vncpass >/dev/null 2>&1
+      x11vnc -display "$DISPLAY" -localhost -forever -shared -quiet \
+        -rfbauth /tmp/.vncpass -rfbport 5900 >/dev/null 2>&1 &
+      websockify --web /usr/share/novnc 6080 localhost:5900 >/dev/null 2>&1 &
+    fi
+    ;;
+esac
 exec "$@"

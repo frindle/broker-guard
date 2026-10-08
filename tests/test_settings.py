@@ -225,7 +225,7 @@ def test_save_is_atomic_a_failed_write_leaves_the_old_file_intact(store, tmp_pat
 
 
 def test_save_is_owner_only(store):
-    settings_mod.update_settings(store, {"captcha_api_key": "topsecret"})
+    settings_mod.update_settings(store, {"ntfy_token": "topsecret"})
     assert oct(os.stat(store).st_mode & 0o777) == "0o600"
 
 
@@ -243,7 +243,7 @@ def test_concurrent_updates_do_not_lose_each_others_writes(store):
         {"alert_webhook_url": "https://hook.invalid/x"},
         {"eraser_enabled": True},
         {"eraser_dry_run": False},
-        {"captcha_api_key": "k"},
+        {"ntfy_token": "k"},
     ]
     start = threading.Barrier(len(changes) + 1)
     reader_errors = []

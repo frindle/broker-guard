@@ -55,11 +55,11 @@ DEFAULT_ERASER_CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".eraser", "c
 
 # Keys whose values must never be logged, echoed or written to an alert body.
 SECRET_ENV_KEYS = (
-    "BG_CAPTCHA_API_KEY",
     "BG_ALERT_WEBHOOK_URL",
     "BG_SEARXNG_AUTH",
     "BG_CRYPTO_KEY",
     "BG_NTFY_TOKEN",
+    "BG_NOVNC_PASSWORD",
 )
 
 
@@ -196,7 +196,16 @@ class Config:
     browser_profile_dir: str | None = None
     browser_user_agent: str | None = None
 
-    captcha_api_key: str | None = field(default=None, repr=False)
+    # Self-hosted CAPTCHA pipeline (captcha.py). Off by default.
+    captcha_enabled: bool = False
+    captcha_whisper_url: str | None = None
+    captcha_whisper_model: str = "Systran/faster-whisper-small"
+    captcha_vision_url: str | None = None
+    captcha_vision_model: str = "qwen3-vl:8b"
+    captcha_human_enabled: bool = True
+    captcha_hold_seconds: int = 900
+    captcha_max_tries: int = 3
+    captcha_novnc_url: str | None = None
 
     # --- Automated opt-out form submission (broker_guard/optout_submit.py) ---
     #
@@ -275,7 +284,7 @@ class Config:
         """A dict of this config safe to log: secrets replaced with a marker."""
         out = {}
         for key, value in self.__dict__.items():
-            if key in ("captcha_api_key", "searxng_auth", "alert_webhook_url", "crypto_key",
+            if key in ("searxng_auth", "alert_webhook_url", "crypto_key",
                        "ntfy_token"):
                 out[key] = "<set>" if value else None
             else:
@@ -324,7 +333,15 @@ def load_config(env=None) -> Config:
         browser_stealth=(_env_str(env, "BG_BROWSER_STEALTH") or "").strip().lower(),
         browser_profile_dir=_env_str(env, "BG_BROWSER_PROFILE_DIR"),
         browser_user_agent=_env_str(env, "BG_BROWSER_USER_AGENT"),
-        captcha_api_key=_env_str(env, "BG_CAPTCHA_API_KEY"),
+        captcha_enabled=_env_bool(env, "BG_CAPTCHA_ENABLED", False),
+        captcha_whisper_url=_env_str(env, "BG_CAPTCHA_WHISPER_URL"),
+        captcha_whisper_model=_env_str(env, "BG_CAPTCHA_WHISPER_MODEL", "Systran/faster-whisper-small"),
+        captcha_vision_url=_env_str(env, "BG_CAPTCHA_VISION_URL"),
+        captcha_vision_model=_env_str(env, "BG_CAPTCHA_VISION_MODEL", "qwen3-vl:8b"),
+        captcha_human_enabled=_env_bool(env, "BG_CAPTCHA_HUMAN_ENABLED", True),
+        captcha_hold_seconds=_env_int(env, "BG_CAPTCHA_HOLD_SECONDS", 900),
+        captcha_max_tries=_env_int(env, "BG_CAPTCHA_MAX_TRIES", 3),
+        captcha_novnc_url=_env_str(env, "BG_CAPTCHA_NOVNC_URL"),
         optout_submit_enabled=_env_bool(env, "BG_OPTOUT_SUBMIT_ENABLED", False),
         optout_submit_dry_run=_env_bool(env, "BG_OPTOUT_SUBMIT_DRY_RUN", True),
         optout_email_enabled=_env_bool(env, "BG_OPTOUT_EMAIL_ENABLED", False),
@@ -359,6 +376,9 @@ def load_config(env=None) -> Config:
     _require_http_url("BG_SEARXNG_URL", cfg.searxng_url)
     _require_http_url("BG_ALERT_WEBHOOK_URL", cfg.alert_webhook_url)
     _require_http_url("BG_NTFY_URL", cfg.ntfy_url)
+    _require_http_url("BG_CAPTCHA_WHISPER_URL", cfg.captcha_whisper_url)
+    _require_http_url("BG_CAPTCHA_VISION_URL", cfg.captcha_vision_url)
+    _require_http_url("BG_CAPTCHA_NOVNC_URL", cfg.captcha_novnc_url)
     _require_http_url("BG_PUBLIC_URL", cfg.public_base_url)
 
     if cfg.interval_seconds < 60:

@@ -229,9 +229,40 @@ SETTING_SPECS = (
              "send for real (email cannot be recalled).",
     ),
     SettingSpec(
-        key="captcha_api_key", env="BG_CAPTCHA_API_KEY", kind="str", secret=True,
-        label="CAPTCHA solver API key",
-        help="Third-party CAPTCHA solving service credential. Optional.",
+        key="ntfy_token", env="BG_NTFY_TOKEN", kind="str", secret=True,
+        label="ntfy access token",
+        help="Only if your ntfy server has auth enabled. Write-only: never "
+             "shown again once saved.",
+    ),
+    SettingSpec(
+        key="captcha_enabled", env="BG_CAPTCHA_ENABLED", kind="bool",
+        label="Solve CAPTCHAs (self-hosted)",
+        help="When a form shows a bot check, try the local chain: native pass, "
+             "faster-whisper audio, qwen3-vl vision, then ask you on your phone. "
+             "Only the CAPTCHA image/audio ever reaches a solver. OFF = stop "
+             "and leave the filled form for you.",
+    ),
+    SettingSpec(
+        key="captcha_human_enabled", env="BG_CAPTCHA_HUMAN_ENABLED", kind="bool",
+        label="CAPTCHA phone fallback",
+        help="If the solvers fail, push 'solve 1 CAPTCHA' (needs ntfy) with a "
+             "noVNC link and hold the page up to 15 minutes.",
+    ),
+    SettingSpec(
+        key="captcha_whisper_url", env="BG_CAPTCHA_WHISPER_URL", kind="str", is_url=True,
+        label="faster-whisper URL",
+        help="e.g. http://faster-whisper:8000 (the compose service).",
+    ),
+    SettingSpec(
+        key="captcha_vision_url", env="BG_CAPTCHA_VISION_URL", kind="str", is_url=True,
+        label="Vision model (Ollama) URL",
+        help="e.g. http://10.0.7.143:11434, serving qwen3-vl:8b.",
+    ),
+    SettingSpec(
+        key="captcha_novnc_url", env="BG_CAPTCHA_NOVNC_URL", kind="str", is_url=True,
+        label="noVNC link for the phone push",
+        help="The URL your phone opens to see and click the live browser "
+             "(behind Cloudflare Access).",
     ),
     SettingSpec(
         key="interval_seconds", env="BG_INTERVAL_SECONDS", kind="int",

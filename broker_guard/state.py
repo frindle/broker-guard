@@ -71,6 +71,9 @@ def init_db(path: str):
     from broker_guard import optouts
 
     optouts.init_tables(conn)
+    from broker_guard import captcha as _captcha
+
+    _captcha.init_tables(conn)
     return conn
 
 

@@ -1013,7 +1013,7 @@ SETTINGS_FORM = {
     "alert_webhook_url": "",
     "eraser_enabled": "false",
     "eraser_dry_run": "true",
-    "captcha_api_key": "",
+    "ntfy_token": "",
     "interval_seconds": "86400",
 }
 
@@ -1096,15 +1096,15 @@ def test_settings_reset_checkbox_removes_the_stored_override(client, cfg):
     assert "playwright_enabled" not in settings_mod.load_settings(cfg.settings_path)
 
 
-def test_settings_never_renders_the_captcha_key_back_into_the_page(client, cfg):
+def test_settings_never_renders_the_ntfy_token_back_into_the_page(client, cfg):
     """Same rule as the credit-freeze PIN: a secret goes in, it never comes
     back out over HTTP. A blank secret field means 'keep the stored one', so
     saving the rest of the form cannot silently wipe the key either."""
     from broker_guard import settings as settings_mod
 
-    client.post("/settings", data={**SETTINGS_FORM, "captcha_api_key": "super-secret-key"},
+    client.post("/settings", data={**SETTINGS_FORM, "ntfy_token": "super-secret-key"},
                 follow_redirects=False)
-    assert settings_mod.load_settings(cfg.settings_path)["captcha_api_key"] == "super-secret-key"
+    assert settings_mod.load_settings(cfg.settings_path)["ntfy_token"] == "super-secret-key"
 
     resp = client.get("/settings")
     assert "super-secret-key" not in resp.text
@@ -1113,7 +1113,7 @@ def test_settings_never_renders_the_captcha_key_back_into_the_page(client, cfg):
 
     # Save the form again with the secret field blank -> still stored.
     client.post("/settings", data=SETTINGS_FORM, follow_redirects=False)
-    assert settings_mod.load_settings(cfg.settings_path)["captcha_api_key"] == "super-secret-key"
+    assert settings_mod.load_settings(cfg.settings_path)["ntfy_token"] == "super-secret-key"
 
 
 def test_settings_nav_entry_is_present_on_every_page(client):

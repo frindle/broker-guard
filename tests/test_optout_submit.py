@@ -585,11 +585,10 @@ def test_a_clean_form_is_not_reported_as_a_bot_check():
     assert optout_submit.detect_captcha(FakePage(), RECIPE) is None
 
 
-def test_captcha_module_is_never_used_here():
-    """Policy, asserted: we stop at bot checks, we do not solve them."""
-    source = open(optout_submit.__file__, encoding="utf-8").read()
-    assert "import captcha" not in source
-    assert "captcha.solve" not in source
+def test_captcha_solving_is_opt_in(tmp_path):
+    """Solving is off unless Penn turns it on; the default is still 'stop'."""
+    assert optout_submit._build_captcha(Config())[0] is None
+    assert Config().captcha_enabled is False
 
 
 def test_an_interstitial_is_treated_as_a_bot_check(identity, cfg):

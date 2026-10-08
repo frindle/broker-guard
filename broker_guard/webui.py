@@ -35,6 +35,7 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, Respon
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from broker_guard import brokers as brokers_mod
+from broker_guard import captcha as captcha_mod
 from broker_guard import eraser as eraser_mod
 from broker_guard import eraser_config as eraser_config_mod
 from broker_guard import exposure as exposure_mod
@@ -1921,7 +1922,12 @@ def settings_post(
     optout_submit_dry_run: str = Form(""),
     optout_email_enabled: str | None = Form(None),
     optout_email_dry_run: str | None = Form(None),
-    captcha_api_key: str = Form(""),
+    ntfy_token: str = Form(""),
+    captcha_enabled: str | None = Form(None),
+    captcha_human_enabled: str | None = Form(None),
+    captcha_whisper_url: str | None = Form(None),
+    captcha_vision_url: str | None = Form(None),
+    captcha_novnc_url: str | None = Form(None),
     interval_seconds: str = Form(""),
     reset: list[str] = Form([]),
     cfg: Config = Depends(get_config),
@@ -1955,7 +1961,12 @@ def settings_post(
         "optout_submit_dry_run": optout_submit_dry_run,
         "optout_email_enabled": optout_email_enabled,
         "optout_email_dry_run": optout_email_dry_run,
-        "captcha_api_key": captcha_api_key,
+        "ntfy_token": ntfy_token,
+        "captcha_enabled": captcha_enabled,
+        "captcha_human_enabled": captcha_human_enabled,
+        "captcha_whisper_url": captcha_whisper_url,
+        "captcha_vision_url": captcha_vision_url,
+        "captcha_novnc_url": captcha_novnc_url,
         "interval_seconds": interval_seconds,
     }
 
@@ -2293,6 +2304,18 @@ def _optout_row_html(row: dict, names: dict) -> str:
         buttons="".join(buttons))
 
 
+def _captcha_stats_html(stats: list) -> str:
+    """Per CAPTCHA type and solver: how often it worked. Empty until used."""
+    if not stats:
+        return ""
+    rows = "".join(
+        "<tr><td>{k}</td><td>{s}</td><td>{ok} / {t}</td><td>{r:.0f}%</td></tr>".format(
+            k=html.escape(r["kind"]), s=html.escape(r["solver"]), ok=r["ok"], t=r["total"],
+            r=100 * r["rate"]) for r in stats)
+    return ("<div class='card'><h2>CAPTCHA solvers</h2><table><tr><th>CAPTCHA</th>"
+            "<th>Solver</th><th>Passed</th><th>Rate</th></tr>" + rows + "</table></div>")
+
+
 @app.get("/optouts", response_class=HTMLResponse)
 def optouts_page(cfg: Config = Depends(get_config)):
     """Every tracked opt-out, grouped by what it is waiting on."""
@@ -2305,6 +2328,7 @@ def optouts_page(cfg: Config = Depends(get_config)):
         ostore = optouts_mod.OptoutStore(conn)
         rows = ostore.list()
         counts = ostore.counts()
+        solver_stats = captcha_mod.CaptchaStats(conn).summary()
     finally:
         conn.close()
     order = {s: i for i, s in enumerate(_OPTOUT_ORDER)}
@@ -2318,8 +2342,9 @@ confirmation click), then removed. broker-guard never reads your inbox: when a
 broker emails you a link, you are notified and tell it here once you have
 clicked it.</p>
 <div class="chips">{chips}</div>
+{solvers}
 {rows}
-""".format(chips=chips, rows="".join(_optout_row_html(r, names) for r in rows)
+""".format(chips=chips, solvers=_captcha_stats_html(solver_stats), rows="".join(_optout_row_html(r, names) for r in rows)
            or "<div class='card muted'>No opt-out has been tracked yet.</div>")
     return style.render_page("Opt-out status", "optouts", body)
 

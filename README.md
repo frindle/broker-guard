@@ -169,7 +169,8 @@ cause of the recurring "Playwright detection turned itself off again" reports.
 | `BG_OPTOUT_SUBMIT_DRY_RUN` | next run started from /review |
 | `BG_ALERT_WEBHOOK_URL` | next alert |
 | `BG_NTFY_URL`, `BG_NTFY_TOPIC`, `BG_PUBLIC_URL` | next alert / next autopilot tick |
-| `BG_CAPTCHA_API_KEY` | immediately (write-only — never rendered back into the page) |
+| `BG_CAPTCHA_ENABLED`, `BG_CAPTCHA_HUMAN_ENABLED`, `BG_CAPTCHA_WHISPER_URL`, `BG_CAPTCHA_VISION_URL`, `BG_CAPTCHA_NOVNC_URL` | next opt-out attempt |
+| `BG_NTFY_TOKEN` | next alert (write-only — never rendered back into the page) |
 | `BG_INTERVAL_SECONDS` | next loop tick — it does not interrupt a sleep already running, so worst case is one confirmation interval (6h by default) |
 
 Anything triggered from the dashboard (the **Run scan now** button) picks up
@@ -228,7 +229,13 @@ for a setting that `/settings` can override (see above).
 | `BG_ALERT_LOG_PATH` | `$BG_LOG_DIR/alerts.jsonl` | append-only digest file |
 | `BG_OPTOUT_SUBMIT_ENABLED` | `false` | **UI** enable automated opt-out form submission (see below) |
 | `BG_OPTOUT_SUBMIT_DRY_RUN` | `true` | **UI** — **keep true until you have checked a screenshot**; Submit is never pressed while set |
-| `BG_CAPTCHA_API_KEY` | *(unset)* | **UI** third-party captcha solver key |
+| `BG_CAPTCHA_ENABLED` | `false` | **UI** run the self-hosted CAPTCHA chain (see below) |
+| `BG_CAPTCHA_WHISPER_URL` | compose: `http://faster-whisper:8000` | **UI** faster-whisper endpoint |
+| `BG_CAPTCHA_VISION_URL` / `BG_CAPTCHA_VISION_MODEL` | compose: `http://10.0.7.143:11434` / `qwen3-vl:8b` | **UI** (URL) Ollama vision model |
+| `BG_CAPTCHA_HUMAN_ENABLED` | `true` | **UI** push to your phone when the solvers fail |
+| `BG_CAPTCHA_HOLD_SECONDS` / `BG_CAPTCHA_MAX_TRIES` | `900` / `3` | page hold time / runs per broker per 24 h |
+| `BG_CAPTCHA_NOVNC_URL` | *(unset)* | **UI** link the phone push opens |
+| `BG_NOVNC` / `BG_NOVNC_PASSWORD` | `false` / *(unset)* | start x11vnc + noVNC on :6080 (needs the password; fails closed) |
 | `BG_MAX_RETRIES` | `3` | attempts per network call |
 | `BG_LOG_LEVEL` | `INFO` | log level |
 | `BG_LOG_PII` | `false` | **leave false** — true disables log redaction |
@@ -318,19 +325,39 @@ Because of that, four things must all be true before anything is sent:
 4. `BG_PLAYWRIGHT_ENABLED=true` and the image was built with
    `INSTALL_BROWSERS=true` (the default).
 
-**CAPTCHAs are never solved.** If a bot check is detected, the run stops,
-screenshots the filled-in form, and records the attempt as *needs you* — which
-shows up in the existing **Action needed** badge. It is not bypassed, not
-out-sourced to a solver, not retried.
+**CAPTCHAs: self-hosted solvers first, then you.** (Policy changed 2026-10-08;
+it used to be "never solve".) With `BG_CAPTCHA_ENABLED` off (the default) a bot
+check stops the run: the filled-in form is screenshotted and the attempt is
+recorded as *needs you*. With it on, `broker_guard/captcha.py` tries, in order:
 
-That is the normal outcome for **all five** supported brokers, not an edge
-case: Consumer Canvas, Nielsen and Credit.com carry a BotDetect image CAPTCHA,
-bolttech uses reCAPTCHA v2, and L.S Mobile Apps draws its own security code on
-a canvas. What you get is a screenshot of the completely filled-in form plus
-the audit record — open the form, type the code, press Submit yourself. Turning
-DRY RUN off therefore does not currently change the outcome for any supported
-broker; it only removes the last interlock for when a CAPTCHA-free form is
-added.
+1. **native**: wait a few seconds; a headful browser on the home IP often
+   passes Turnstile / reCAPTCHA v3 by itself;
+2. **audio**: reCAPTCHA's audio challenge, transcribed by the `faster-whisper`
+   compose service (Unraid GPU);
+3. **vision**: image-grid tiles and distorted-text images, read by
+   `qwen3-vl:8b` on the Unraid Ollama (`BG_CAPTCHA_VISION_URL`);
+4. **you**: an ntfy push "Solve 1 CAPTCHA for <broker>" with a link
+   (`BG_CAPTCHA_NOVNC_URL`) to the live browser over noVNC. The page is held up
+   to `BG_CAPTCHA_HOLD_SECONDS` (15 min) and the submit continues the moment
+   it is solved.
+
+Only the CAPTCHA's own image or audio (and its one-line target such as
+"traffic lights") ever reaches a solver: never the filled form, never a page
+screenshot, and nothing leaves your LAN (the third-party solver key was
+removed). Attempts are paced (`BG_CAPTCHA_MAX_TRIES` runs per broker per 24 h)
+and the per-type, per-solver success rate is shown on **Opt-out status**.
+noVNC is off unless `BG_NOVNC=true` **and** `BG_NOVNC_PASSWORD` is set; put
+its port (6080) behind Cloudflare Access.
+
+The selectors for reCAPTCHA v2 and image CAPTCHAs are exercised against fakes
+only. Before trusting the channel, run a few brokers in dry run with
+`BG_CAPTCHA_ENABLED=true` and read the review screenshots.
+
+For the five originally supported brokers this changes the outcome from "always
+stops" to "solved or handed to you": Consumer Canvas, Nielsen and Credit.com
+carry a BotDetect image CAPTCHA, bolttech uses reCAPTCHA v2, and L.S Mobile
+Apps draws its own security code on a canvas (that one has no selector the
+vision step can read, so it still reaches you).
 
 Two things to check against your own profile before running these:
 

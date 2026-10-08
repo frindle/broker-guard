@@ -293,7 +293,7 @@ def test_the_settings_form_actually_saves_the_switches(client, cfg):
         "playwright_enabled": "", "searxng_url": "", "searxng_min_interval_s": "2.0",
         "searxng_jitter_s": "1.0", "alert_webhook_url": "", "eraser_enabled": "",
         "eraser_dry_run": "on", "optout_submit_enabled": "on",
-        "optout_submit_dry_run": "on", "captcha_api_key": "",
+        "optout_submit_dry_run": "on", "ntfy_token": "",
         "interval_seconds": "86400",
     }, follow_redirects=False)
 

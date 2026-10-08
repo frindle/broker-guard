@@ -24,20 +24,19 @@ Four interlocks, and all four must be open
 Turning 1 on and 2 off are two separate acts, on purpose. Neither alone
 can cause a real submission.
 
-The CAPTCHA rule is "stop", never "solve"
---------------------------------------------
-If a bot check is detected, this module screenshots the filled form,
-records the attempt as ``needs_manual_action`` and closes the page. It does
-not solve, bypass, out-source or retry it. ``captcha.py`` exists in this
-repo and is deliberately NOT imported here.
-
-That is not a rare edge case for the first broker we support: Consumer
-Canvas's OneTrust form carries a mandatory BotDetect image CAPTCHA, so a
-REAL submission to it will always stop here. The useful artifact in that
-case is the screenshot of the fully-filled form plus the audit record --
-Penn opens the form, types the six characters, and presses Submit himself,
-with everything else already done. That is an honest outcome, not a
-failure, and the review page says so.
+The CAPTCHA rule: self-hosted solvers, then Penn
+-------------------------------------------------
+(Changed 2026-10-08; this used to be "stop, never solve".) When a bot check
+is detected and ``Config.captcha_enabled`` is on, ``captcha.CaptchaPipeline``
+tries, in order: a native pass (a real headful browser on the home IP often
+clears Turnstile/reCAPTCHA v3 by itself), the audio challenge via a local
+faster-whisper, image grids and text via a local vision model, and finally a
+human fallback (an ntfy push with a noVNC link; the live page is held for
+up to 15 minutes). Only the CAPTCHA's own image/audio ever reaches a solver,
+never the filled form or a screenshot, and nothing leaves the LAN. With
+``captcha_enabled`` off (the default) or when every solver fails, the old
+behaviour stands: screenshot the filled form, record ``needs_manual_action``
+and close the page for Penn to finish by hand.
 
 Because bailing out is the safe direction, CAPTCHA detection here is
 deliberately BROAD -- the opposite tuning from ``browser.bot_wall_reason``,
@@ -58,6 +57,7 @@ import concurrent.futures
 import logging
 from datetime import datetime, timezone
 
+from broker_guard import captcha as captcha_mod
 from broker_guard import optout_forms, review
 from broker_guard.browser import bot_wall_reason
 from broker_guard.playwright_checks import is_safe_url
@@ -413,8 +413,30 @@ def _record(recipe, identity_key, started_at, outcome, dry_run, **extra) -> dict
     return base
 
 
+def _wait_out_wall(page, captcha, text, title):
+    """Give a transient interstitial a few seconds to clear on its own.
+
+    The "native" step of the CAPTCHA chain for whole-page challenges (a
+    Cloudflare "just a moment" page usually passes for a real headful browser
+    on a residential IP). Only runs when solving is enabled. Returns the
+    page's (wall_reason, text, title) after waiting.
+    """
+    wall = bot_wall_reason(text, title, None)
+    waited = 0.0
+    limit = float(getattr(captcha, "native_wait_s", 0) or 0)
+    while wall and waited < limit:
+        try:
+            page.wait_for_timeout(2500)
+            text, title = page.inner_text("body"), page.title()
+        except Exception:
+            break
+        waited += 2.5
+        wall = bot_wall_reason(text, title, None)
+    return wall, text, title
+
+
 def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
-                  dry_run=None, now=None, alert_sink=None) -> dict:
+                  dry_run=None, now=None, alert_sink=None, captcha=None) -> dict:
     """Run one opt-out submission attempt and persist its audit record.
 
     Returns the saved record dict. NEVER raises for an ordinary failure --
@@ -510,6 +532,8 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
         except Exception:
             text, title = "", ""
         wall = bot_wall_reason(text, title, None)
+        if wall and captcha is not None:
+            wall, text, title = _wait_out_wall(page, captcha, text, title)
         if wall:
             screenshot = _screenshot(page)
             record = _record(
@@ -527,23 +551,43 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
         screenshot = _screenshot(page)
 
         found = detect_captcha(page, recipe)
+        solved = None
+        if found and captcha is not None:
+            kind = captcha_mod.kind_from_selector(found)
+            outcome = captcha.run(
+                captcha_mod.PlaywrightCaptchaDriver(page, recipe), recipe.broker_id, kind,
+                broker_name=getattr(recipe, "name", None) or recipe.broker_id)
+            # Audit summary only: kind, winning solver, per-solver outcomes.
+            solved = {"kind": kind, "solver": outcome.get("solver"), "ok": bool(outcome.get("ok")),
+                      "attempts": outcome.get("attempts", [])}
+            if outcome.get("ok"):
+                found = None
+                screenshot = _screenshot(page)
+            else:
+                why = outcome.get("reason") or "no solver passed"
+                found_reason = ("bot check present on the form ({}); self-hosted solvers "
+                                "did not clear it ({}); form was filled but NOT submitted "
+                                "-- finish it by hand".format(found, why))
         if found:
-            # Policy: stop. Never solve, never bypass, never retry.
+            if solved is None:
+                found_reason = ("bot check present on the form ({}); form was filled but NOT "
+                                "submitted -- finish it by hand".format(found))
+            extra = {"captcha": solved} if solved else {}
             record = _record(
                 recipe, identity_key, started_at, review.OUTCOME_NEEDS_MANUAL,
-                effective_dry_run,
-                reason="bot check present on the form ({}); form was filled but NOT "
-                       "submitted -- finish it by hand".format(found),
+                effective_dry_run, reason=found_reason,
                 detected=found, fields=applied["filled"], choices=applied["chosen"],
-                missing=[], manual_action_source="captcha_fallback",
+                missing=[], manual_action_source="captcha_fallback", **extra,
             )
             return _finish(record, screenshot)
+        solved_extra = {"captcha": solved} if solved else {}
 
         if effective_dry_run:
             record = _record(
                 recipe, identity_key, started_at, review.OUTCOME_DRY_RUN, True,
                 reason="dry run: form filled, Submit deliberately not pressed",
                 fields=applied["filled"], choices=applied["chosen"], missing=[],
+                **solved_extra,
             )
             return _finish(record, screenshot)
 
@@ -565,6 +609,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
                    "check the screenshot before re-trying",
             fields=applied["filled"], choices=applied["chosen"], missing=[],
             confirmation_text=(result_text or "")[:_CONFIRMATION_CHARS],
+            **solved_extra,
         )
         return _finish(record, screenshot)
 
@@ -646,9 +691,35 @@ def _run_attempt(broker_id, identity, cfg, dry_run, alert_sink) -> dict:
         log.warning("browser unavailable for opt-out attempt",
                     extra={"error": _safe_error(exc)})
         submitter = None
+    pipeline, conn = _build_captcha(cfg)
     try:
         return submit_optout(recipe, identity, cfg, submitter=submitter,
-                             dry_run=dry_run, alert_sink=alert_sink)
+                             dry_run=dry_run, alert_sink=alert_sink, captcha=pipeline)
     finally:
         if submitter is not None:
             submitter.close()
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+
+def _build_captcha(cfg):
+    """(pipeline, owned_conn) -- ``(None, None)`` when solving is off.
+
+    Never raises: a solver that cannot be built degrades to the old "stop"
+    behaviour rather than costing the attempt.
+    """
+    if not getattr(cfg, "captcha_enabled", False):
+        return None, None
+    conn = None
+    try:
+        from broker_guard import sinks, state as state_mod
+
+        path = getattr(cfg, "state_path", None)
+        conn = state_mod.init_db(path) if path else None
+        return captcha_mod.build_pipeline(cfg, conn=conn, notify=sinks.build_ntfy_sink(cfg)), conn
+    except Exception as exc:
+        log.warning("captcha pipeline unavailable", extra={"error": _safe_error(exc)})
+        return None, conn

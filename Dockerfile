@@ -48,7 +48,7 @@ WORKDIR /app
 # ca-certificates is needed for HTTPS to SearXNG and broker sites; tini gives
 # us correct PID 1 signal handling so `docker stop` reaches the service loop.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates tini xvfb \
+ && apt-get install -y --no-install-recommends ca-certificates tini xvfb x11vnc novnc websockify \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./

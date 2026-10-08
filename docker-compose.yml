@@ -8,6 +8,25 @@
 # bottom for where a static homelab IP would be wired in.
 
 services:
+  # Self-hosted speech-to-text for reCAPTCHA's audio challenge. Internal only
+  # (no published port); broker-guard reaches it as http://faster-whisper:8000.
+  # Needs the NVIDIA runtime on Unraid (Nvidia-Driver plugin). Nothing calls
+  # it until BG_CAPTCHA_ENABLED is on. Remove this service and set
+  # BG_CAPTCHA_WHISPER_URL to an existing endpoint if you already run one.
+  faster-whisper:
+    image: ghcr.io/speaches-ai/speaches:latest-cuda
+    container_name: broker-guard-whisper
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      WHISPER__MODEL: Systran/faster-whisper-small
+    volumes:
+      - whisper-models:/home/ubuntu/.cache/huggingface/hub
+    security_opt:
+      - no-new-privileges:true
+
   broker-guard:
     build:
       context: .
@@ -59,6 +78,11 @@ services:
     # published ports on principle, full stop.
     ports:
       - "${BG_WEB_PORT:-8000}:${BG_WEB_PORT:-8000}"
+      # noVNC (the phone view of the live browser for the CAPTCHA human
+      # fallback). Nothing listens on 6080 unless BG_NOVNC=true AND a
+      # BG_NOVNC_PASSWORD is set (docker-entrypoint.sh fails closed). Put it
+      # behind Cloudflare Access like the dashboard.
+      - "${BG_NOVNC_PORT:-6080}:6080"
 
     volumes:
       # PERSISTENT STATE + PII. None of this is baked into the image; all of it
@@ -87,7 +111,7 @@ services:
       # BG_PLAYWRIGHT_ENABLED, BG_SEARXNG_URL, BG_SEARXNG_MIN_INTERVAL_S,
       # BG_SEARXNG_JITTER_S, BG_ALERT_WEBHOOK_URL, BG_ERASER_ENABLED,
       # BG_ERASER_DRY_RUN, BG_OPTOUT_SUBMIT_ENABLED, BG_OPTOUT_SUBMIT_DRY_RUN,
-      # BG_CAPTCHA_API_KEY and BG_INTERVAL_SECONDS are all
+      # BG_CAPTCHA_ENABLED and BG_INTERVAL_SECONDS are all
       # still read from here -- but only as the FALLBACK tier. Precedence is:
       #
       #     saved in /data/settings.json  >  the variable below  >  the
@@ -293,10 +317,24 @@ services:
       BG_NTFY_TOKEN: "${BG_NTFY_TOKEN:-}"
       BG_PUBLIC_URL: "${BG_PUBLIC_URL:-}"
 
-      # --- captcha solving (third-party service; optional) ---
-      # UI-editable (/settings), where it is write-only: the stored value is
-      # never rendered back into the page, same rule as the credit-freeze PIN.
-      BG_CAPTCHA_API_KEY: "${BG_CAPTCHA_API_KEY:-}"
+      # --- CAPTCHA solving: self-hosted only (captcha.py) ---
+      # Chain: native pass -> faster-whisper audio -> qwen3-vl vision -> you,
+      # on your phone over noVNC. Only the CAPTCHA image/audio reaches a
+      # solver; nothing leaves the LAN. OFF by default (a bot check then just
+      # stops the attempt, as before). UI-editable on /settings.
+      BG_CAPTCHA_ENABLED: "${BG_CAPTCHA_ENABLED:-false}"
+      BG_CAPTCHA_WHISPER_URL: "${BG_CAPTCHA_WHISPER_URL:-http://faster-whisper:8000}"
+      BG_CAPTCHA_VISION_URL: "${BG_CAPTCHA_VISION_URL:-http://10.0.7.143:11434}"
+      BG_CAPTCHA_VISION_MODEL: "${BG_CAPTCHA_VISION_MODEL:-qwen3-vl:8b}"
+      BG_CAPTCHA_HUMAN_ENABLED: "${BG_CAPTCHA_HUMAN_ENABLED:-true}"
+      BG_CAPTCHA_HOLD_SECONDS: "${BG_CAPTCHA_HOLD_SECONDS:-900}"
+      BG_CAPTCHA_MAX_TRIES: "${BG_CAPTCHA_MAX_TRIES:-3}"
+      # Where your phone opens the live browser, e.g.
+      # https://bg-vnc.example.com/vnc.html?autoconnect=1&resize=scale
+      BG_CAPTCHA_NOVNC_URL: "${BG_CAPTCHA_NOVNC_URL:-}"
+      # Consumed by docker-entrypoint.sh: x11vnc + noVNC on :6080.
+      BG_NOVNC: "${BG_NOVNC:-false}"
+      BG_NOVNC_PASSWORD: "${BG_NOVNC_PASSWORD:-}"
 
       # --- logging ---
       BG_LOG_LEVEL: INFO
@@ -320,6 +358,9 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+volumes:
+  whisper-models:
 
 # ---------------------------------------------------------------------------
 # HOMELAB NETWORKING -- default network_mode above is commented out, so a
