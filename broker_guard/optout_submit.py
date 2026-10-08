@@ -225,7 +225,7 @@ def _select_field(page, selector: str, value: str) -> None:
     page.select_option(selector, label=value)
 
 
-def apply_recipe(page, recipe, resolved: dict) -> dict:
+def apply_recipe(page, recipe, resolved: dict, id_loader=None) -> dict:
     """Run every step of *recipe* on *page*, in order.
 
     Returns ``{"filled": {label: value}, "chosen": [label, ...]}`` -- the
@@ -266,6 +266,10 @@ def apply_recipe(page, recipe, resolved: dict) -> dict:
             value = resolved["values"].get(step.selector)
             if not value:
                 continue
+            if step.kind == "file":
+                _upload_redacted_id(page, step, value, id_loader)
+                filled[step.label] = "[redacted ID image]"
+                continue
             if step.kind == "combo":
                 _fill_combo(page, step.selector, value)
             elif step.kind == "select":
@@ -278,6 +282,24 @@ def apply_recipe(page, recipe, resolved: dict) -> dict:
         else:
             raise TypeError("unknown recipe step: {!r}".format(type(step).__name__))
     return {"filled": filled, "chosen": chosen}
+
+
+def _upload_redacted_id(page, step, marker: str, id_loader) -> None:
+    """Attach the REDACTED ID copy to a file input, from memory.
+
+    *id_loader* is a ``idredact.RedactedIdLoader`` -- an object that can only
+    read ``<side>.redacted.enc``. The decrypted bytes go to the browser as an
+    in-memory ``set_input_files`` payload, so there is no plaintext file to
+    clean up (a path would have to live until the form is submitted, because
+    Chromium reads it then).
+    """
+    from broker_guard import idredact
+
+    side = str(marker).split(":", 1)[-1]
+    data = id_loader.load(side) if id_loader is not None else None
+    if not data:
+        raise RuntimeError("no redacted {} ID available to upload".format(side))
+    page.set_input_files(step.selector, idredact.upload_payload(data, side))
 
 
 def _screenshot(page) -> bytes | None:
@@ -449,7 +471,7 @@ def _wait_out_wall(page, captcha, text, title):
 
 def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
                   dry_run=None, now=None, alert_sink=None, captcha=None,
-                  allow_candidate=False) -> dict:
+                  allow_candidate=False, id_loader=None) -> dict:
     """Run one opt-out submission attempt and persist its audit record.
 
     Returns the saved record dict. NEVER raises for an ordinary failure --
@@ -502,7 +524,11 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
         _promote_learned(cfg, recipe, saved)
         return saved
 
-    resolved = optout_forms.resolve_fields(recipe, identity)
+    if id_loader is None:
+        from broker_guard import idredact
+        id_loader = idredact.loader_from_config(cfg)
+    id_sides = tuple(id_loader.sides()) if id_loader is not None else ()
+    resolved = optout_forms.resolve_fields(recipe, identity, id_sides=id_sides)
     if resolved["missing"]:
         # Refuse to send a half-filled DSAR under Penn's name: the broker
         # answers it and the request is spent. Recorded so the reason is
@@ -561,7 +587,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
             )
             return _finish(record, screenshot)
 
-        applied = apply_recipe(page, recipe, resolved)
+        applied = apply_recipe(page, recipe, resolved, id_loader=id_loader)
 
         # Screenshot the FILLED form. This is the artifact that makes a
         # bail-out useful: it is exactly what a human would finish by hand.

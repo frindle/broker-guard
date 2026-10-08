@@ -1254,9 +1254,10 @@ the CLI.</p>
       <div class="field"><input type="file" name="file"></div>
       <button type="submit" class="btn secondary">Upload</button>
     </form>
+    <div class="encnote" style="margin-top:12px;">{redact_links}</div>
   </div>
 </div>
-""".format(rows=rows_html, edit_card=edit_card)
+""".format(rows=rows_html, edit_card=edit_card, redact_links=_redact_links_html(cfg))
     return style.render_page("Profile", "identity", body)
 
 
@@ -1389,6 +1390,114 @@ async def upload_id_document(
 
     log.info("id-document stored", extra={"side": side, "bytes": len(raw)})
     return {"side": side, "stored": True}
+
+
+def _redact_links_html(cfg) -> str:
+    from broker_guard import idredact
+
+    parts = []
+    for side in ID_DOC_SIDES:
+        if not os.path.exists(os.path.join(cfg.id_documents_dir, "{}.enc".format(side))):
+            continue
+        state = "redacted copy saved" if idredact.has_redacted(cfg.id_documents_dir, side) \
+            else "NOT redacted - will not be sent"
+        parts.append('<a href="/identity/id-document/redact?side={s}">Redact {s}</a> ({st})'.format(
+            s=side, st=state))
+    return " &middot; ".join(parts) or ("Upload an ID side, then redact it here. Only the redacted "
+                                          "copy is ever sent to a broker.")
+
+
+_REDACT_JS = """
+const c=document.getElementById('cv'),x=c.getContext('2d'),img=document.getElementById('src');
+let boxes=[],cur=null;
+function fit(){c.width=img.naturalWidth;c.height=img.naturalHeight;c.style.width='100%';draw();}
+function draw(){x.drawImage(img,0,0);x.fillStyle='#000';
+ for(const b of boxes.concat(cur?[cur]:[])){x.fillRect(b[0]*c.width,b[1]*c.height,(b[2]-b[0])*c.width,(b[3]-b[1])*c.height);}
+ document.getElementById('boxes').value=JSON.stringify(boxes);document.getElementById('n').textContent=boxes.length;}
+function pt(e){const r=c.getBoundingClientRect(),t=e.touches?e.touches[0]:e;
+ return [Math.min(1,Math.max(0,(t.clientX-r.left)/r.width)),Math.min(1,Math.max(0,(t.clientY-r.top)/r.height))];}
+function down(e){e.preventDefault();const p=pt(e);cur=[p[0],p[1],p[0],p[1]];}
+function move(e){if(!cur)return;e.preventDefault();const p=pt(e);cur[2]=p[0];cur[3]=p[1];draw();}
+function up(){if(cur&&Math.abs(cur[2]-cur[0])>0.005&&Math.abs(cur[3]-cur[1])>0.005)boxes.push(cur);cur=null;draw();}
+c.addEventListener('mousedown',down);c.addEventListener('mousemove',move);window.addEventListener('mouseup',up);
+c.addEventListener('touchstart',down);c.addEventListener('touchmove',move);c.addEventListener('touchend',up);
+document.getElementById('undo').onclick=()=>{boxes.pop();draw();};
+if(img.complete)fit();else img.onload=fit;
+"""
+
+
+def _data_uri(raw: bytes) -> str:
+    import io as _io
+
+    from PIL import Image
+
+    try:
+        fmt = (Image.open(_io.BytesIO(raw)).format or "PNG").lower()
+    except Exception:
+        fmt = "png"
+    return "data:image/{};base64,{}".format(fmt, base64.b64encode(raw).decode("ascii"))
+
+
+@app.get("/identity/id-document/redact", response_class=HTMLResponse)
+def redact_id_page(side: str = "front", cfg: Config = Depends(get_config)):
+    """One-time local redaction editor: drag boxes over what must be blacked out."""
+    from broker_guard import idredact
+
+    if side not in ID_DOC_SIDES:
+        raise HTTPException(status_code=400, detail="side must be 'front' or 'back'")
+    if not cfg.crypto_key:
+        raise HTTPException(status_code=500, detail="BG_CRYPTO_KEY is not configured")
+    original = idredact.load_original(cfg.id_documents_dir, side, cfg.crypto_key)
+    if original is None:
+        raise HTTPException(status_code=404, detail="upload the {} image first".format(side))
+    redacted = idredact.RedactedIdLoader(cfg.id_documents_dir, cfg.crypto_key).load(side)
+    preview = ""
+    if redacted:
+        preview = ('<div class="card"><h2>Current redacted copy</h2><img alt="redacted" '
+                   'style="max-width:100%" src="{}"></div>'.format(_data_uri(redacted)))
+    body = """
+<div class="card">
+  <h2>Redact {side}</h2>
+  <p>Drag boxes over everything that must NOT be sent: the ID number, the photo, the date of
+  birth and any barcode. Leave your <b>name and address visible</b>. Rendered locally; the
+  original never leaves this box and only the redacted copy is ever sent to a broker.</p>
+  <canvas id="cv" style="border:1px solid #888;touch-action:none;cursor:crosshair"></canvas>
+  <img id="src" alt="" style="display:none" src="{src}">
+  <form method="post" action="/identity/id-document/redact">
+    <input type="hidden" name="side" value="{side}">
+    <input type="hidden" name="boxes" id="boxes" value="[]">
+    <button type="button" class="btn secondary" id="undo">Undo last box</button>
+    <button type="submit" class="btn">Save redacted copy (<span id="n">0</span> boxes)</button>
+  </form>
+</div>{preview}
+<script>{js}</script>
+""".format(side=side, src=_data_uri(original), preview=preview, js=_REDACT_JS)
+    resp = HTMLResponse(style.render_page("Redact ID", "identity", body))
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.post("/identity/id-document/redact")
+def redact_id_post(side: str = Form(...), boxes: str = Form(...),
+                   cfg: Config = Depends(get_config)):
+    from broker_guard import idredact
+
+    if side not in ID_DOC_SIDES:
+        raise HTTPException(status_code=400, detail="side must be 'front' or 'back'")
+    if not cfg.crypto_key:
+        raise HTTPException(status_code=500, detail="BG_CRYPTO_KEY is not configured")
+    try:
+        parsed = json.loads(boxes)
+        if not isinstance(parsed, list):
+            raise ValueError
+    except ValueError:
+        raise HTTPException(status_code=400, detail="boxes must be a JSON list")
+    try:
+        size = idredact.redact_and_store(cfg.id_documents_dir, side, parsed, cfg.crypto_key)
+    except idredact.RedactionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    log.info("id redaction saved", extra={"side": side, "boxes": len(parsed), "bytes": size})
+    return RedirectResponse(url="/identity/id-document/redact?side={}".format(side), status_code=303)
 
 
 # --- /exposure : breach-exposure panel --------------------------------------

@@ -52,6 +52,25 @@ profile -> brokers -> serpwatch -> playwright_checks -> state -> alert -> eraser
   auto-send, `photo_id`/`kba` -> queued for a human) plus periodic
   confirmation and reappearance re-scanning
 
+## Redacted ID upload
+
+Some brokers will not process a request without a photo ID. broker-guard never
+sends your original. On **Profile > Government ID**, upload a side, then open
+**Redact front/back** and drag black boxes over the ID number, photo, date of
+birth and any barcode (leave your name and address visible). Pillow renders the
+boxes locally (PNG, exact black, metadata dropped) and the redacted copy is
+stored Fernet-encrypted next to the original as `<side>.redacted.enc`.
+
+- A recipe field with `kind="file"` and source `id_front` / `id_back` uploads
+  only that redacted copy, handed to the browser from memory (nothing
+  plaintext is written to disk, so there is nothing to clean up).
+- `photo_id` brokers are auto-sent once a redacted front exists; until then
+  they queue as `needs_document`.
+- Rows that want the ID's number/photo, an SSN, a DOB or a KBA stay
+  `needs_user` (`optout_forms.OUT_OF_SCOPE_ID_DEMAND`). `searchbug-com`,
+  `apollointeractive-com` and `warmly-ai` need only a photo ID scan and become
+  automatable once their file recipe is written and dry-run verified.
+
 ## Running
 
 ```bash
@@ -195,7 +214,7 @@ for a setting that `/settings` can override (see above).
 | `BG_BROKERS_PATH` | `/data/brokers.json` | broker dataset (no PII) |
 | `BG_STATE_PATH` | `/data/state.sqlite` | presence history db |
 | `BG_LOG_DIR` | `/logs` | log + heartbeat directory |
-| `BG_ID_DOCUMENTS_DIR` | `data/id_documents` | encrypted ID-document uploads (web UI only) |
+| `BG_ID_DOCUMENTS_DIR` | `data/id_documents` | encrypted ID-document uploads and their redacted copies (`front.enc`, `front.redacted.enc`; web UI only) |
 | `BG_FREEZE_STATE_PATH` | `data/freeze_state.json` | credit-freeze tracker state (web UI only) |
 | `BG_SETTINGS_PATH` | `data/settings.json` | UI-editable settings store (see above); env-only, a store cannot relocate itself |
 | `BG_REVIEW_DIR` | `data/review` | opt-out submission audit trail (JSON record + screenshot per attempt); env-only |

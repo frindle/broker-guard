@@ -28,18 +28,16 @@ anything else         queue (fail SAFE toward a human, never a     needs_review
 (unknown kind)        silent auto-send and never a silent drop)
 ====================  =========================================  ================================
 
-Why ``photo_id`` always queues, even with an ID document on file
+``photo_id`` and the redacted ID
 ------------------------------------------------------------------
-The vendored eraser CLI's ``fill`` command (browser-automates opt-out forms)
-takes no per-broker argument and no documented way to attach a specific
-file -- see ``eraser.build_eraser_fill_cmd``'s docstring, confirmed against
-``vendor/eraser/docs/commands.md``. There is currently nowhere to hand a
-stored ID image to eraser automatically for one specific broker, so
-``decide_action`` queues every ``photo_id`` broker as ``needs_document``
-regardless of whether documents are on file. ``has_id_documents`` is kept as
-an explicit parameter (rather than deleted) so this stays visibly a policy
-choice tied to a documented CLI limitation, not an oversight -- and so it is
-the one line to change if eraser ever grows a per-broker attach flag.
+``photo_id`` brokers queue as ``needs_document`` UNTIL a REDACTED copy of the
+owner's ID is on file (``idredact``: name and address visible; number, photo,
+DOB and barcode blacked out, Fernet-encrypted). ``has_id_documents`` now means
+exactly that -- the original upload alone is not enough, because the original
+is never sent anywhere. With a redacted copy the broker is auto-sent, and a
+recipe's ``kind="file"`` step attaches only that redacted copy. Brokers that
+demand an UNREDACTED ID or an SSN are not ``photo_id`` here at all; they are
+classified ``needs_user`` in ``optout_forms.OUT_OF_SCOPE_ID_DEMAND``.
 
 Confirmation, honestly
 ------------------------
@@ -100,6 +98,8 @@ def decide_action(kind: str, has_id_documents: bool = False) -> dict:
     if kind in AUTO_SEND_KINDS:
         return {"action": "auto_send", "queue_status": None}
     if kind == "photo_id":
+        if has_id_documents:      # a REDACTED copy is on file (see has_id_documents_on_file)
+            return {"action": "auto_send", "queue_status": None}
         return {"action": "queue", "queue_status": STATUS_NEEDS_DOCUMENT}
     if kind == "kba":
         return {"action": "queue", "queue_status": STATUS_NEEDS_REVIEW}
@@ -584,15 +584,12 @@ def build_dependencies(cfg: Config) -> AutopilotDependencies:
 
 
 def has_id_documents_on_file(cfg: Config) -> bool:
-    """True only when BOTH front and back ID images are stored (see
-    webui.upload_id_document) -- a single side is not enough to attempt
-    anything with, were an attach path to ever exist."""
-    import os
+    """True when a REDACTED copy of the ID's front is stored (see
+    ``idredact``). The un-redacted upload alone does not count: only the
+    redacted copy is ever sent to a broker."""
+    from broker_guard import idredact
 
-    return all(
-        os.path.exists(os.path.join(cfg.id_documents_dir, f"{side}.enc"))
-        for side in ("front", "back")
-    )
+    return idredact.has_redacted(cfg.id_documents_dir, "front")
 
 
 def _optout_store(store, cfg):

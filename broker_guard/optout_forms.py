@@ -253,6 +253,10 @@ class Field:
     always pick a FIXED literal) has to vary with the profile; ``listbox_button``
     is a collapsed ``role=combobox`` button (ACHCOOP's State field) that must
     be clicked open before its matching ``role=option`` exists to click.
+    ``file`` is an ``<input type=file>``: its source must be ``id_front`` or
+    ``id_back`` and what is uploaded is ONLY the REDACTED copy of that side
+    (see ``idredact``); with no redacted copy on file the field counts as
+    missing and the attempt refuses rather than sending nothing.
     """
 
     selector: str
@@ -24349,6 +24353,62 @@ OPTOUT_OUT_OF_SCOPE = {
 }
 
 
+# How each ID-DEMANDING out-of-scope row is handled now that a REDACTED ID can
+# be sent (Penn, 2026-10-08). Keyed by the same ids as OPTOUT_OUT_OF_SCOPE
+# (proved by tests). The prose above says why each row was refused; this is
+# the structured verdict on the document it asks for:
+#
+#   redacted_id  -- wants a photo ID scan (name/address are what it checks).
+#                   A redacted copy satisfies it, so these become automatable
+#                   once a kind="file" recipe is written and dry-run verified
+#                   (``warmly-ai`` has the selector on record: file-2).
+#   unredacted   -- wants the ID's number/photo/DOB, or proof of victim
+#                   status: a redacted copy would be refused. needs_user.
+#   ssn          -- wants an SSN (or last 4). Never volunteered. needs_user.
+#   dob          -- wants a date of birth. Never volunteered. needs_user.
+#   kba          -- knowledge-based / multi-stage identity verification. needs_user.
+#   selection    -- the person must pick their own record from a list. needs_user.
+OUT_OF_SCOPE_ID_DEMAND: dict = {
+    "searchbug-com": "redacted_id",
+    "apollointeractive-com": "redacted_id",
+    "warmly-ai": "redacted_id",
+    "peoplewhiz-com": "selection",
+    "pimeyes-com": "unredacted",
+    "mugshots-com": "unredacted",
+    "nctue-com": "unredacted",
+    "lexisnexis-com": "ssn",
+    "forewarn-com": "ssn",
+    "equifax-com": "kba",
+    "theworknumber-com": "kba",
+    "demystdata-com": "dob",
+    "mylife-com": "dob",
+    "intelius-com": "dob",
+    "truthfinder-com": "dob",
+    "ussearch-com": "dob",
+    "yobi-ventures": "dob",
+}
+
+REDACTABLE_ID_DEMANDS = frozenset({"redacted_id"})
+
+
+def id_demand(broker_id: str) -> str | None:
+    """The ID demand recorded for an out-of-scope row, or None."""
+    return OUT_OF_SCOPE_ID_DEMAND.get(broker_id)
+
+
+def out_of_scope_disposition(broker_id: str, redacted_id_on_file: bool = False) -> str:
+    """``automatable`` or ``needs_user`` for an OPTOUT_OUT_OF_SCOPE row.
+
+    Only a ``redacted_id`` demand can become automatable, and only when a
+    redacted copy exists; everything else (unredacted ID, SSN, DOB, KBA, a
+    record the person must pick, or any other out-of-scope shape) stays
+    ``needs_user``.
+    """
+    if id_demand(broker_id) in REDACTABLE_ID_DEMANDS and redacted_id_on_file:
+        return "automatable"
+    return "needs_user"
+
+
 class RecipeNotFound(KeyError):
     """No verified form recipe exists for this broker."""
 
@@ -24674,7 +24734,10 @@ def phone_for_form(phones) -> str:
     return ""
 
 
-def resolve_fields(recipe: FormRecipe, identity) -> dict:
+ID_FILE_SOURCES = {"id_front": "front", "id_back": "back"}
+
+
+def resolve_fields(recipe: FormRecipe, identity, id_sides=()) -> dict:
     """Map *identity* onto *recipe*'s fields.
 
     Returns ``{"values": {selector: text}, "labels": {selector: label},
@@ -24693,6 +24756,16 @@ def resolve_fields(recipe: FormRecipe, identity) -> dict:
     values, labels, missing = {}, {}, []
     for f in recipe_fields(recipe):
         labels[f.selector] = f.label
+        if f.kind == "file" or f.source in ID_FILE_SOURCES:
+            side = ID_FILE_SOURCES.get(f.source)
+            if f.kind != "file" or side is None:
+                raise ValueError("an id_* source needs a kind='file' field: "
+                                 "{!r}".format(f.label))
+            if side in id_sides:
+                values[f.selector] = "redacted-id:" + side   # a marker, never image data
+            elif f.required:
+                missing.append(f.label + " (no redacted ID on file)")
+            continue
         if f.source == "literal":
             text = f.value
         elif f.source == "full_name":

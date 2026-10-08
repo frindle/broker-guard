@@ -89,14 +89,13 @@ def test_decide_action_table(kind, expected_action, expected_status):
     assert decision["queue_status"] == expected_status
 
 
-def test_decide_action_photo_id_queues_even_with_documents_on_file():
-    """No documented per-broker eraser attach path exists (see
-    eraser.build_eraser_fill_cmd) -- having ID docs on file does not change
-    the outcome today. This test pins that as an intentional policy, not a
-    bug, so a future accidental change is caught."""
-    without_docs = autopilot.decide_action("photo_id", has_id_documents=False)
-    with_docs = autopilot.decide_action("photo_id", has_id_documents=True)
-    assert without_docs == with_docs == {"action": "queue", "queue_status": autopilot.STATUS_NEEDS_DOCUMENT}
+def test_decide_action_photo_id_auto_sends_only_with_a_redacted_copy():
+    without = autopilot.decide_action("photo_id", has_id_documents=False)
+    with_redacted = autopilot.decide_action("photo_id", has_id_documents=True)
+    assert without == {"action": "queue", "queue_status": autopilot.STATUS_NEEDS_DOCUMENT}
+    assert with_redacted == {"action": "auto_send", "queue_status": None}
+    # the redacted copy never loosens any OTHER kind
+    assert autopilot.decide_action("kba", has_id_documents=True)["action"] == "queue"
 
 
 # --- run_scan_cycle ------------------------------------------------------------
@@ -376,20 +375,19 @@ def test_run_forever_writes_failed_heartbeat_on_scan_exception(monkeypatch, tmp_
     assert "scan blew up" in payload["error"]
 
 
-def test_has_id_documents_on_file_requires_both_sides(tmp_path):
+def test_has_id_documents_on_file_needs_the_redacted_copy_not_the_original(tmp_path):
+    import os
+
     from broker_guard.config import Config
 
     cfg = Config(id_documents_dir=str(tmp_path / "docs"))
     assert autopilot.has_id_documents_on_file(cfg) is False
-
-    import os
-
     os.makedirs(cfg.id_documents_dir, exist_ok=True)
-    with open(os.path.join(cfg.id_documents_dir, "front.enc"), "w") as fh:
-        fh.write("x")
-    assert autopilot.has_id_documents_on_file(cfg) is False  # only one side
-
-    with open(os.path.join(cfg.id_documents_dir, "back.enc"), "w") as fh:
+    for name in ("front.enc", "back.enc"):          # originals only
+        with open(os.path.join(cfg.id_documents_dir, name), "w") as fh:
+            fh.write("x")
+    assert autopilot.has_id_documents_on_file(cfg) is False
+    with open(os.path.join(cfg.id_documents_dir, "front.redacted.enc"), "w") as fh:
         fh.write("x")
     assert autopilot.has_id_documents_on_file(cfg) is True
 
