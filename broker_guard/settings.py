@@ -569,5 +569,6 @@ def detection_fingerprint(cfg) -> tuple:
     return tuple(getattr(cfg, key, None) for key in DETECTION_KEYS) + (
         cfg.searxng_auth, cfg.searxng_timeout_s, cfg.searxng_engines,
         cfg.playwright_timeout_ms, cfg.playwright_headless,
+        cfg.browser_stealth, cfg.browser_profile_dir, cfg.browser_user_agent,
         cfg.max_retries, cfg.retry_base_delay_s,
     )

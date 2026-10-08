@@ -210,7 +210,10 @@ for a setting that `/settings` can override (see above).
 | `BG_SEARXNG_MIN_INTERVAL_S` | `2.0` | **UI** minimum seconds between two SearXNG requests (see below) |
 | `BG_SEARXNG_JITTER_S` | `1.0` | **UI** extra uniform `0..N` seconds added to that gap |
 | `BG_PLAYWRIGHT_ENABLED` | `false` | **UI** enable headless browser checks |
-| `BG_PLAYWRIGHT_HEADLESS` | `true` | run Chromium headless |
+| `BG_PLAYWRIGHT_HEADLESS` | `true` (compose: `false`) | `false` runs Chromium headful under Xvfb (started by `docker-entrypoint.sh`); falls back to headless if there is no display |
+| `BG_BROWSER_PROFILE_DIR` | unset (compose: `/data/browser-profile`) | persistent per-leg Chromium profiles (cookies and consent state survive restarts) |
+| `BG_BROWSER_STEALTH` | unset | `patchright` or `rebrowser`: open-source patched Playwright fork (build with `--build-arg BROWSER_STEALTH=patchright`); stock Playwright if absent |
+| `BG_BROWSER_USER_AGENT` | unset | override the UA; leave unset so the browser reports its native one |
 | `BG_PLAYWRIGHT_TIMEOUT_MS` | `30000` | per-page timeout |
 | `BG_ERASER_ENABLED` | `false` | **UI** enable the removal engine |
 | `BG_ERASER_DRY_RUN` | `true` | **UI** — **keep true until you mean it**; no request is sent while set |
@@ -490,6 +493,18 @@ follow it.
 
 Networking is plain bridge; see the commented `macvlan` block at the bottom of
 `docker-compose.yml` for where a static homelab IP would go.
+
+## Real browser on the home IP
+
+`broker_guard/browser_launch.py` is the single Chromium launcher for both the
+detection checker and the opt-out submitter. It uses the browser's native user
+agent (the old hard-coded Linux string was itself a bot tell), runs headful under
+Xvfb in the container, keeps a persistent profile per leg, and can swap in
+patchright/rebrowser behind a flag. Egress is the home residential IP; nothing
+is proxied. `tools/reprobe_blocked.py` re-loads every `OPTOUT_BLOCKED` and
+`SEARCH_BLOCKED` page (GET only, no PII, no submit) and reports which walls were
+fingerprint false positives:
+`docker compose exec broker-guard python tools/reprobe_blocked.py`.
 
 ## Reuse (do not reimplement)
 - Removal engine: **eraser** (vendored under `vendor/eraser/`), called via CLI.

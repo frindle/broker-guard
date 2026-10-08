@@ -188,6 +188,13 @@ class Config:
     playwright_enabled: bool = False
     playwright_timeout_ms: int = 30000
     playwright_headless: bool = True
+    # Phase 3: one browser launcher (browser_launch.py). "" = stock Playwright;
+    # "patchright" / "rebrowser" = open-source patched forks (fall back to
+    # stock if not installed). profile_dir persists cookies/consent state per
+    # leg; user_agent None = the browser's NATIVE UA (never hard-code one).
+    browser_stealth: str = ""
+    browser_profile_dir: str | None = None
+    browser_user_agent: str | None = None
 
     captcha_api_key: str | None = field(default=None, repr=False)
 
@@ -314,6 +321,9 @@ def load_config(env=None) -> Config:
         playwright_enabled=_env_bool(env, "BG_PLAYWRIGHT_ENABLED", False),
         playwright_timeout_ms=_env_int(env, "BG_PLAYWRIGHT_TIMEOUT_MS", 30000),
         playwright_headless=_env_bool(env, "BG_PLAYWRIGHT_HEADLESS", True),
+        browser_stealth=(_env_str(env, "BG_BROWSER_STEALTH") or "").strip().lower(),
+        browser_profile_dir=_env_str(env, "BG_BROWSER_PROFILE_DIR"),
+        browser_user_agent=_env_str(env, "BG_BROWSER_USER_AGENT"),
         captcha_api_key=_env_str(env, "BG_CAPTCHA_API_KEY"),
         optout_submit_enabled=_env_bool(env, "BG_OPTOUT_SUBMIT_ENABLED", False),
         optout_submit_dry_run=_env_bool(env, "BG_OPTOUT_SUBMIT_DRY_RUN", True),

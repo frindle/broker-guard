@@ -310,7 +310,7 @@ class SearchChecker(PlaywrightChecker):
                     pass
 
 
-def make_page_action(timeout_ms: int = 30000, headless: bool = True):
+def make_page_action(timeout_ms: int = 30000, headless: bool = True, **launch):
     """``browser.make_page_action``, but search-form aware.
 
     Same contract and the same graceful degradation when Playwright is
@@ -319,4 +319,4 @@ def make_page_action(timeout_ms: int = 30000, headless: bool = True):
     from broker_guard.browser import make_page_action as _make
 
     return _make(timeout_ms=timeout_ms, headless=headless,
-                 checker_factory=SearchChecker)
+                 checker_factory=SearchChecker, **launch)

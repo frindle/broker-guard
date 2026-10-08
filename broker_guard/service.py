@@ -486,7 +486,10 @@ def build_detection(cfg: Config) -> tuple:
 
     page_action = None
     if cfg.playwright_enabled:
-        page_action, closer = make_page_action(cfg.playwright_timeout_ms, cfg.playwright_headless)
+        page_action, closer = make_page_action(
+            cfg.playwright_timeout_ms, cfg.playwright_headless,
+            stealth=cfg.browser_stealth, profile_dir=cfg.browser_profile_dir,
+            user_agent=cfg.browser_user_agent)
         closers.append(closer)
 
     return searx_search, page_action, closers
@@ -543,8 +546,13 @@ def run_recipe_check(cfg) -> int:
     from broker_guard.optout_submit import OptOutSubmitter
     from broker_guard.sinks import build_alert_sink
 
-    submitter = OptOutSubmitter(timeout_ms=cfg.playwright_timeout_ms,
-                                headless=cfg.playwright_headless)
+    submitter = OptOutSubmitter(
+        timeout_ms=getattr(cfg, "playwright_timeout_ms", 30000),
+        headless=getattr(cfg, "playwright_headless", True),
+        stealth=getattr(cfg, "browser_stealth", "") or "",
+        profile_dir=getattr(cfg, "browser_profile_dir", None) or None,
+        user_agent=getattr(cfg, "browser_user_agent", None) or None,
+    )
     try:
         submitter.start()
     except Exception as exc:

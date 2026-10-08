@@ -300,31 +300,41 @@ class OptOutSubmitter:
     """
 
     def __init__(self, timeout_ms: int = 30000, headless: bool = True,
-                 user_agent: str | None = None):
+                 user_agent: str | None = None, stealth: str = "",
+                 profile_dir: str | None = None):
         self.timeout_ms = timeout_ms
         self.headless = headless
-        self.user_agent = user_agent or (
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-        )
+        # None == the browser's NATIVE user agent (see browser_launch).
+        self.user_agent = user_agent or None
+        self.stealth = stealth
+        self.profile_dir = profile_dir
         self._playwright = None
         self._browser = None
 
-    def start(self):
-        from playwright.sync_api import sync_playwright
+    @classmethod
+    def from_config(cls, cfg):
+        return cls(timeout_ms=getattr(cfg, "playwright_timeout_ms", 30000),
+                   headless=getattr(cfg, "playwright_headless", True),
+                   stealth=getattr(cfg, "browser_stealth", "") or "",
+                   profile_dir=getattr(cfg, "browser_profile_dir", None) or None,
+                   user_agent=getattr(cfg, "browser_user_agent", None) or None)
 
-        self._playwright = sync_playwright().start()
-        self._browser = self._playwright.chromium.launch(headless=self.headless)
+    def start(self):
+        from broker_guard.browser_launch import BrowserSession
+
+        self._browser = BrowserSession(
+            headless=self.headless, stealth=self.stealth,
+            profile_dir=self.profile_dir, leg="submit",
+            user_agent=self.user_agent).start()
         return self
 
     def close(self):
-        for obj, stop in ((self._browser, "close"), (self._playwright, "stop")):
-            if obj is not None:
-                try:
-                    getattr(obj, stop)()
-                except Exception as exc:  # pragma: no cover - teardown best effort
-                    log.warning("submitter teardown failed",
-                                extra={"error": _safe_error(exc)})
+        if self._browser is not None:
+            try:
+                self._browser.close()
+            except Exception as exc:  # pragma: no cover - teardown best effort
+                log.warning("submitter teardown failed",
+                            extra={"error": _safe_error(exc)})
         self._browser = self._playwright = None
 
     def __enter__(self):
@@ -334,11 +344,10 @@ class OptOutSubmitter:
         self.close()
 
     def new_page(self):
-        context = self._browser.new_context(
-            user_agent=self.user_agent,
-            accept_downloads=False,
-            java_script_enabled=True,
-        )
+        kwargs = {"accept_downloads": False, "java_script_enabled": True}
+        if self.user_agent:
+            kwargs["user_agent"] = self.user_agent
+        context = self._browser.new_context(**kwargs)
         context.set_default_timeout(self.timeout_ms)
         return context, context.new_page()
 
@@ -627,6 +636,9 @@ def _run_attempt(broker_id, identity, cfg, dry_run, alert_sink) -> dict:
     submitter = OptOutSubmitter(
         timeout_ms=getattr(cfg, "playwright_timeout_ms", 30000),
         headless=getattr(cfg, "playwright_headless", True),
+        stealth=getattr(cfg, "browser_stealth", "") or "",
+        profile_dir=getattr(cfg, "browser_profile_dir", None) or None,
+        user_agent=getattr(cfg, "browser_user_agent", None) or None,
     )
     try:
         submitter.start()

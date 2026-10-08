@@ -34,6 +34,9 @@ RUN go build -o /build/eraser-bin ./cmd/eraser
 FROM python:3.12-slim AS base
 
 ARG INSTALL_BROWSERS=true
+# "" (default) | patchright | rebrowser: bake an open-source stealth-patched
+# Playwright fork into the image; selected at runtime by BG_BROWSER_STEALTH.
+ARG BROWSER_STEALTH=
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -45,7 +48,7 @@ WORKDIR /app
 # ca-certificates is needed for HTTPS to SearXNG and broker sites; tini gives
 # us correct PID 1 signal handling so `docker stop` reaches the service loop.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates tini \
+ && apt-get install -y --no-install-recommends ca-certificates tini xvfb \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
@@ -60,11 +63,19 @@ RUN if [ "$INSTALL_BROWSERS" = "true" ]; then \
         echo "skipping browser install (INSTALL_BROWSERS=$INSTALL_BROWSERS)" ; \
     fi
 
+RUN if [ "$BROWSER_STEALTH" = "patchright" ]; then \
+        pip install --no-cache-dir patchright && patchright install chromium ; \
+    elif [ "$BROWSER_STEALTH" = "rebrowser" ]; then \
+        pip install --no-cache-dir rebrowser-playwright && rebrowser_playwright install chromium ; \
+    fi
+
 # Application code only. Nothing PII-bearing is copied in: profile.local.json,
 # the state db and the logs all arrive via mounted volumes at runtime, and
 # .dockerignore keeps them out of the build context entirely.
 COPY broker_guard/ ./broker_guard/
+COPY tools/reprobe_blocked.py ./tools/reprobe_blocked.py
 COPY profile.example.json ./profile.example.json
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # The bundled broker source dataset (public, no PII -- see
 # broker_normalize.ensure_brokers_file) and eraser's own broker list (for
@@ -76,7 +87,7 @@ COPY --from=eraser-builder /build/eraser/data/brokers.yaml ./vendor/eraser/data/
 # The compiled eraser binary -- baked in, no manual host-side `go build`
 # step and no Go toolchain needed on the deploy host at all.
 COPY --from=eraser-builder /build/eraser-bin /opt/eraser/bin/eraser
-RUN chmod 755 /opt/eraser/bin/eraser
+RUN chmod 755 /opt/eraser/bin/eraser /usr/local/bin/docker-entrypoint.sh
 
 # Run unprivileged. /data and /logs are created here so the volume mounts land
 # on directories this user owns.
@@ -107,4 +118,4 @@ HEALTHCHECK --interval=5m --timeout=15s --start-period=2m --retries=3 \
 # entirely via BG_SERVE_WEB / --serve-web, read inside broker_guard.service,
 # not via this entrypoint/CMD -- the default headless deployment is exactly
 # as it was.
-ENTRYPOINT ["/usr/bin/tini", "--", "python", "-m", "broker_guard"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/docker-entrypoint.sh", "python", "-m", "broker_guard"]

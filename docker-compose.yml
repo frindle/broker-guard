@@ -182,7 +182,16 @@ services:
       # the only way to set it. Requires INSTALL_BROWSERS=true at build time
       # above, which is already the default in this file.
       BG_PLAYWRIGHT_ENABLED: "${BG_PLAYWRIGHT_ENABLED:-false}"
-      BG_PLAYWRIGHT_HEADLESS: "true"
+      # Headful Chromium under Xvfb (started by docker-entrypoint.sh) looks
+      # like a real browser to Cloudflare/PerimeterX; "true" restores headless.
+      BG_PLAYWRIGHT_HEADLESS: "${BG_PLAYWRIGHT_HEADLESS:-false}"
+      # Persistent per-leg Chromium profiles (cookies/consent survive restarts).
+      BG_BROWSER_PROFILE_DIR: /data/browser-profile
+      # "" (stock) | patchright | rebrowser. Needs the fork pip-installed in
+      # the image (BROWSER_STEALTH build arg); falls back to stock if absent.
+      BG_BROWSER_STEALTH: "${BG_BROWSER_STEALTH:-}"
+      # Leave unset: the browser's native UA is the least detectable one.
+      # BG_BROWSER_USER_AGENT: ""
       BG_PLAYWRIGHT_TIMEOUT_MS: "30000"
 
       # --- removal engine ---

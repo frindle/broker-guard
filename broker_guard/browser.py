@@ -134,30 +134,40 @@ class PlaywrightChecker:
     """
 
     def __init__(self, timeout_ms: int = 30000, headless: bool = True,
-                 user_agent: str | None = None):
+                 user_agent: str | None = None, stealth: str = "",
+                 profile_dir: str | None = None):
         self.timeout_ms = timeout_ms
         self.headless = headless
-        self.user_agent = user_agent or (
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-        )
+        # None == the browser's NATIVE user agent. The old hard-coded
+        # stale hard-coded Linux UA string was itself a bot tell (see browser_launch).
+        self.user_agent = user_agent or None
+        self.stealth = stealth
+        self.profile_dir = profile_dir
         self._playwright = None
         self._browser = None
 
-    def start(self):
-        from playwright.sync_api import sync_playwright
+    @classmethod
+    def from_config(cls, cfg, **kwargs):
+        return cls(timeout_ms=cfg.playwright_timeout_ms, headless=cfg.playwright_headless,
+                   stealth=getattr(cfg, "browser_stealth", "") or "",
+                   profile_dir=getattr(cfg, "browser_profile_dir", None) or None,
+                   user_agent=getattr(cfg, "browser_user_agent", None) or None, **kwargs)
 
-        self._playwright = sync_playwright().start()
-        self._browser = self._playwright.chromium.launch(headless=self.headless)
+    def start(self):
+        from broker_guard.browser_launch import BrowserSession
+
+        self._browser = BrowserSession(
+            headless=self.headless, stealth=self.stealth,
+            profile_dir=self.profile_dir, leg="checker",
+            user_agent=self.user_agent).start()
         return self
 
     def close(self):
-        for obj, stop in ((self._browser, "close"), (self._playwright, "stop")):
-            if obj is not None:
-                try:
-                    getattr(obj, stop)()
-                except Exception as exc:  # pragma: no cover - teardown best effort
-                    log.warning("browser teardown failed", extra={"error": str(exc)})
+        if self._browser is not None:
+            try:
+                self._browser.close()
+            except Exception as exc:  # pragma: no cover - teardown best effort
+                log.warning("browser teardown failed", extra={"error": str(exc)})
         self._browser = self._playwright = None
 
     def __enter__(self):
@@ -175,11 +185,10 @@ class PlaywrightChecker:
         blocked resource types -- instead of growing a second, divergent
         copy of it.
         """
-        context = self._browser.new_context(
-            user_agent=self.user_agent,
-            accept_downloads=False,
-            java_script_enabled=True,
-        )
+        kwargs = {"accept_downloads": False, "java_script_enabled": True}
+        if self.user_agent:
+            kwargs["user_agent"] = self.user_agent
+        context = self._browser.new_context(**kwargs)
         context.set_default_timeout(self.timeout_ms)
         page = context.new_page()
         page.route(
@@ -249,7 +258,7 @@ class PlaywrightChecker:
 
 
 def make_page_action(timeout_ms: int = 30000, headless: bool = True,
-                     checker_factory=None):
+                     checker_factory=None, **launch):
     """Return (page_action, closer). Degrades to an error-reporting stub.
 
     The returned page_action never raises: an unavailable browser becomes an
@@ -270,7 +279,7 @@ def make_page_action(timeout_ms: int = 30000, headless: bool = True,
 
         return unavailable, lambda: None
 
-    checker = factory(timeout_ms=timeout_ms, headless=headless)
+    checker = factory(timeout_ms=timeout_ms, headless=headless, **launch)
     try:
         checker.start()
     except Exception as exc:
