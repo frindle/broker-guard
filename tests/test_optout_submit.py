@@ -331,13 +331,17 @@ def test_exactly_the_hand_verified_brokers_are_turned_on():
     fields off the page. This test failing means someone added one without
     saying so -- which is the failure mode the allow-list exists to prevent.
     """
-    assert optout_forms.supported_broker_ids() == [
+    assert optout_forms.supported_broker_ids() == sorted([
         "achcoop-com", "advancedbackgroundchecks-com", "bigdbm-com",
         "bolttech-io", "consumer-canvas-llc", "courtrecords-us",
         "credit-com", "lsmapps-com", "onetrust-com", "peopledatalabs-com",
         "pipl-com", "recordsfinder-com", "revealphoneowner-com",
         "searchpublicrecords-com", "staterecords-org", "thatsthem-com",
-    ]
+        # promoted from STAGED_RECIPES on 2026-10-08 after a clean dry run
+        "careerbuilder-com", "convex-com", "enigma-com", "lionsharemarketing-com",
+        "listsonline-com", "porchgroupmedia-com", "propertychecker-com",
+        "upscapital-com", "verifyrecords-com",
+    ])
     # Three of these changed on 2026-09-23, and the change is a BUG FIX, not
     # a new broker: "bolttech" -> "bolttech-io",
     # "ls-mobile-apps-holdings-ltd" -> "lsmapps-com" and "nielsen" ->

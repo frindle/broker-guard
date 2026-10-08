@@ -206,6 +206,14 @@ class Config:
     captcha_hold_seconds: int = 900
     captcha_max_tries: int = 3
     captcha_novnc_url: str | None = None
+    # Assisted recipe learning (assisted.py / recipe_store.py). Off by default.
+    assist_enabled: bool = False
+    assist_batch: int = 3
+    assist_llm_url: str | None = None
+    assist_llm_model: str = "qwen3-vl:8b"
+    learned_recipes_path: str | None = None
+    # Weekly read-only re-validation of every recipe's page.
+    recipe_health_enabled: bool = True
 
     # --- Automated opt-out form submission (broker_guard/optout_submit.py) ---
     #
@@ -342,6 +350,12 @@ def load_config(env=None) -> Config:
         captcha_hold_seconds=_env_int(env, "BG_CAPTCHA_HOLD_SECONDS", 900),
         captcha_max_tries=_env_int(env, "BG_CAPTCHA_MAX_TRIES", 3),
         captcha_novnc_url=_env_str(env, "BG_CAPTCHA_NOVNC_URL"),
+        assist_enabled=_env_bool(env, "BG_ASSIST_ENABLED", False),
+        assist_batch=_env_int(env, "BG_ASSIST_BATCH", 3),
+        assist_llm_url=_env_str(env, "BG_ASSIST_LLM_URL"),
+        assist_llm_model=_env_str(env, "BG_ASSIST_LLM_MODEL", "qwen3-vl:8b"),
+        learned_recipes_path=_env_str(env, "BG_LEARNED_RECIPES_PATH"),
+        recipe_health_enabled=_env_bool(env, "BG_RECIPE_HEALTH_ENABLED", True),
         optout_submit_enabled=_env_bool(env, "BG_OPTOUT_SUBMIT_ENABLED", False),
         optout_submit_dry_run=_env_bool(env, "BG_OPTOUT_SUBMIT_DRY_RUN", True),
         optout_email_enabled=_env_bool(env, "BG_OPTOUT_EMAIL_ENABLED", False),
@@ -377,6 +391,7 @@ def load_config(env=None) -> Config:
     _require_http_url("BG_ALERT_WEBHOOK_URL", cfg.alert_webhook_url)
     _require_http_url("BG_NTFY_URL", cfg.ntfy_url)
     _require_http_url("BG_CAPTCHA_WHISPER_URL", cfg.captcha_whisper_url)
+    _require_http_url("BG_ASSIST_LLM_URL", cfg.assist_llm_url)
     _require_http_url("BG_CAPTCHA_VISION_URL", cfg.captcha_vision_url)
     _require_http_url("BG_CAPTCHA_NOVNC_URL", cfg.captcha_novnc_url)
     _require_http_url("BG_PUBLIC_URL", cfg.public_base_url)

@@ -97,6 +97,11 @@ USAGE
 -----
     python3 tools/probe_broker_forms.py targets.json out.json
     python3 tools/probe_broker_forms.py targets.json out.json --head
+    python3 tools/probe_broker_forms.py targets.json out.json --accept-consent
+
+``--accept-consent`` clicks the cookie banner's accept button before reading
+(portals such as OneTrust render nothing until it is dismissed). It is opt-in
+because a click is an action; the default remains strictly read-only.
 
 ``targets.json`` is ``[[broker_id, url], ...]``. Output is a JSON object keyed
 by broker_id. Errors are recorded per target rather than raised: a DNS failure
@@ -141,6 +146,22 @@ JS = r"""
     // human to fill, so a recipe must decline it explicitly.
     if (st.display === 'none' || st.visibility === 'hidden' ||
         st.opacity === '0' || parseInt(st.left || '0') < -999) o.invis = 1;
+    // React headless widgets (fusion92, demyst): a combobox BUTTON whose id
+    // is regenerated per render and a SELECT with no name and no id. Report
+    // the ARIA role and a structural path (tag:nth-of-type chain up to the
+    // form) so a recipe can anchor on something that survives a re-render.
+    const role = e.getAttribute('role');
+    if (role) o.role = role;
+    if (e.getAttribute('aria-haspopup')) o.popup = e.getAttribute('aria-haspopup');
+    if (e.getAttribute('aria-controls')) o.ctl = 1;
+    if (!e.name && !e.id || role === 'combobox') {
+      const parts = [];
+      for (let n = e; n && n.nodeType === 1 && n.tagName !== 'FORM' && n !== document.body; n = n.parentElement) {
+        const sib = [...n.parentElement.children].filter(c => c.tagName === n.tagName);
+        parts.unshift(n.tagName.toLowerCase() + ':nth-of-type(' + (sib.indexOf(n) + 1) + ')');
+      }
+      o.path = parts.join(' > ').slice(-200);
+    }
     if (e.tagName === 'BUTTON') o.txt = e.innerText.trim().slice(0, 40);
     if (e.type === 'submit' && e.value) o.txt = e.value.slice(0, 40);
     if (e.type === 'checkbox' || e.type === 'radio') o.v = (e.value || '').slice(0, 60);
@@ -150,7 +171,7 @@ JS = r"""
     }
     return o;
   };
-  const sel = 'input,select,textarea,button';
+  const sel = 'input,select,textarea,button,[role=combobox]';
   const forms = [...document.querySelectorAll('form')].map(f => ({
     id: f.id, cl: cls(f).slice(0, 40), act: f.action, m: f.method,
     f: [...f.querySelectorAll(sel)].map(pick)
@@ -175,18 +196,40 @@ JS = r"""
 }
 """
 
-# A stock headless UA string is itself a bot signal on some broker sites, and
-# the point of this tool is to see what an ordinary visitor sees.
-UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
+# The browser's NATIVE user agent is used (no override): a pinned UA that
+# disagrees with the real build is itself a bot signal.
 
 
-def probe_one(url, headed=False):
+# Cookie-banner accept buttons, tried in order when --accept-consent is given.
+# Clicking is an ACTION, so it is opt-in: the default probe stays read-only.
+CONSENT_SELECTORS = (
+    "#onetrust-accept-btn-handler", "#truste-consent-button", ".osano-cm-accept-all",
+    "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll",
+    "button:text-is('Accept all' i)", "button:text-is('Accept' i)",
+    "button:text-is('Allow all' i)", "button:text-is('I agree' i)",
+)
+
+
+def accept_consent(page):
+    """Click the first cookie-banner accept button found. True if one was."""
+    for selector in CONSENT_SELECTORS:
+        try:
+            el = page.query_selector(selector)
+            if el is not None:
+                el.click()
+                page.wait_for_timeout(800)
+                return True
+        except Exception:  # noqa: BLE001 -- a banner that fights back is not the finding
+            continue
+    return False
+
+
+def probe_one(url, headed=False, accept=False):
     """Render ONE url and return its description. Runs in a child process."""
     rec = {"url": url}
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=not headed)
-        ctx = browser.new_context(user_agent=UA)
+        ctx = browser.new_context()
         page = ctx.new_page()
         if True:  # indentation kept so the body below reads unchanged
             try:
@@ -196,7 +239,15 @@ def probe_one(url, headed=False):
                 rec["final"] = page.url
                 # Consent portals and SPAs need a beat after DOMContentLoaded
                 # before their form exists to be read.
-                page.wait_for_timeout(2500)
+                # Wait for the form itself (a consent portal or React SPA builds
+                # it client-side), not a fixed beat; then a short settle.
+                try:
+                    page.wait_for_selector("form, input, select, textarea", timeout=15000)
+                except Exception:  # noqa: BLE001 -- no form ever rendered IS a finding
+                    rec["no_form_rendered"] = True
+                if accept:
+                    rec["consent_accepted"] = accept_consent(page)
+                page.wait_for_timeout(1500)
                 rec.update(page.evaluate(JS))
                 # Same-origin policy makes this the ONLY way to see a form
                 # that a broker embeds rather than serves. hireright.com's
@@ -228,7 +279,7 @@ def probe_one(url, headed=False):
     return rec
 
 
-def probe(targets, headed=False, out_path=None):
+def probe(targets, headed=False, out_path=None, accept=False):
     """Render each (broker_id, url) and return {broker_id: description}.
 
     EACH TARGET RUNS IN ITS OWN CHILD PROCESS, killed if it overruns
@@ -248,6 +299,8 @@ def probe(targets, headed=False, out_path=None):
         cmd = [sys.executable, os.path.abspath(__file__), "--one", url]
         if headed:
             cmd.append("--head")
+        if accept:
+            cmd.append("--accept-consent")
         try:
             done = subprocess.run(cmd, capture_output=True, text=True,
                                   timeout=TARGET_BUDGET_S)
@@ -271,14 +324,16 @@ def probe(targets, headed=False, out_path=None):
 
 def main(argv):
     if "--one" in argv:
-        rec = probe_one(argv[argv.index("--one") + 1], headed="--head" in argv)
+        rec = probe_one(argv[argv.index("--one") + 1], headed="--head" in argv,
+                        accept="--accept-consent" in argv)
         json.dump(rec, sys.stdout)
         return 0
     if len(argv) < 3:
         print(__doc__.strip().split("USAGE")[-1], file=sys.stderr)
         return 2
     targets = json.load(open(argv[1]))
-    out = probe(targets, headed="--head" in argv, out_path=argv[2])
+    out = probe(targets, headed="--head" in argv, out_path=argv[2],
+                accept="--accept-consent" in argv)
     json.dump(out, open(argv[2], "w"), indent=0)
     print("wrote %s: %d targets" % (argv[2], len(out)), file=sys.stderr)
     return 0

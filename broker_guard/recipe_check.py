@@ -172,6 +172,42 @@ def check_all(new_page, search_recipes=None, optout_recipes=None) -> list:
     return reports
 
 
+def run_with_browser(cfg, submitter=None) -> list:
+    """Probe every recipe in a freshly opened browser. Raises if none opens.
+
+    The shared body of ``--check-recipes`` and the autopilot's weekly job.
+    Read only: pages are opened and queried, nothing is typed or sent.
+    """
+    from broker_guard.optout_submit import OptOutSubmitter
+
+    owned = submitter is None
+    if owned:
+        submitter = OptOutSubmitter(
+            timeout_ms=getattr(cfg, "playwright_timeout_ms", 30000),
+            headless=getattr(cfg, "playwright_headless", True),
+            stealth=getattr(cfg, "browser_stealth", "") or "",
+            profile_dir=getattr(cfg, "browser_profile_dir", None) or None,
+            user_agent=getattr(cfg, "browser_user_agent", None) or None)
+        submitter.start()
+    contexts = []
+
+    def new_page():
+        context, page = submitter.new_page()
+        contexts.append(context)
+        return page
+
+    try:
+        return check_all(new_page)
+    finally:
+        for context in contexts:
+            try:
+                context.close()
+            except Exception:
+                pass
+        if owned:
+            submitter.close()
+
+
 def drift_events(reports, at: str | None = None) -> list:
     """``recipe_drift`` events for the reports that found real drift."""
     events = []

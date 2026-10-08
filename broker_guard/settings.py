@@ -229,6 +229,21 @@ SETTING_SPECS = (
              "send for real (email cannot be recalled).",
     ),
     SettingSpec(
+        key="assist_enabled", env="BG_ASSIST_ENABLED", kind="bool",
+        label="Learn recipes for unmapped brokers",
+        help="Read an unmapped broker's real opt-out form, build a candidate "
+             "recipe with a local model (labels only), and dry-run fill it. "
+             "Nothing is submitted: you approve each candidate on /recipes, "
+             "and it is promoted only after one confirmed real submission. "
+             "Needs browser checks and opt-out submission switched on.",
+    ),
+    SettingSpec(
+        key="recipe_health_enabled", env="BG_RECIPE_HEALTH_ENABLED", kind="bool",
+        label="Weekly recipe health check",
+        help="Once a week, open every recipe's page (read only: nothing typed "
+             "or submitted) and alert you when a selector no longer matches.",
+    ),
+    SettingSpec(
         key="ntfy_token", env="BG_NTFY_TOKEN", kind="str", secret=True,
         label="ntfy access token",
         help="Only if your ntfy server has auth enabled. Write-only: never "

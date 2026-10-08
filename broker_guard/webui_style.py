@@ -85,6 +85,9 @@ NAV_ITEMS = (
     # The per-broker state machine (queued -> submitted -> awaiting your
     # click -> removed / relisted): what is waiting on Penn, and why.
     ("optouts", "/optouts", "Opt-out status"),
+    # Recipes learned from live forms by the assisted filler, waiting for
+    # a human to look at the dry-run screenshot and approve them.
+    ("recipes", "/recipes", "Learned recipes"),
     ("freeze", "/freeze", "Credit freeze"),
     # The runtime knobs that used to be editable ONLY as env vars in the
     # tracked docker-compose.yml -- and therefore silently reverted by every

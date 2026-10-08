@@ -317,6 +317,18 @@ services:
       BG_NTFY_TOKEN: "${BG_NTFY_TOKEN:-}"
       BG_PUBLIC_URL: "${BG_PUBLIC_URL:-}"
 
+      # --- recipe coverage (assisted.py, recipe_store.py, recipe_check.py) ---
+      # Learn a candidate recipe from an unmapped broker's real form (a local
+      # model sees field LABELS only), dry-run fill it, and ask you to approve
+      # on /recipes. Needs browser checks + opt-out submission enabled. OFF.
+      BG_ASSIST_ENABLED: "${BG_ASSIST_ENABLED:-false}"
+      BG_ASSIST_BATCH: "${BG_ASSIST_BATCH:-3}"
+      BG_ASSIST_LLM_URL: "${BG_ASSIST_LLM_URL:-http://10.0.7.143:11434}"
+      BG_ASSIST_LLM_MODEL: "${BG_ASSIST_LLM_MODEL:-qwen3-vl:8b}"
+      BG_LEARNED_RECIPES_PATH: /data/learned-recipes.json
+      # Weekly read-only re-validation of every recipe's page (needs browser checks).
+      BG_RECIPE_HEALTH_ENABLED: "${BG_RECIPE_HEALTH_ENABLED:-true}"
+
       # --- CAPTCHA solving: self-hosted only (captcha.py) ---
       # Chain: native pass -> faster-whisper audio -> qwen3-vl vision -> you,
       # on your phone over noVNC. Only the CAPTCHA image/audio reaches a

@@ -44,6 +44,7 @@ from broker_guard import optout_forms
 from broker_guard import optout_submit
 from broker_guard import optouts as optouts_mod
 from broker_guard import profile as profile_mod
+from broker_guard import recipe_store as recipe_store_mod
 from broker_guard import progress as progress_mod
 from broker_guard import profiles as profiles_mod
 from broker_guard import review as review_mod
@@ -1928,6 +1929,8 @@ def settings_post(
     captcha_whisper_url: str | None = Form(None),
     captcha_vision_url: str | None = Form(None),
     captcha_novnc_url: str | None = Form(None),
+    assist_enabled: str | None = Form(None),
+    recipe_health_enabled: str | None = Form(None),
     interval_seconds: str = Form(""),
     reset: list[str] = Form([]),
     cfg: Config = Depends(get_config),
@@ -1967,6 +1970,8 @@ def settings_post(
         "captcha_whisper_url": captcha_whisper_url,
         "captcha_vision_url": captcha_vision_url,
         "captcha_novnc_url": captcha_novnc_url,
+        "assist_enabled": assist_enabled,
+        "recipe_health_enabled": recipe_health_enabled,
         "interval_seconds": interval_seconds,
     }
 
@@ -2347,6 +2352,97 @@ clicked it.</p>
 """.format(chips=chips, solvers=_captcha_stats_html(solver_stats), rows="".join(_optout_row_html(r, names) for r in rows)
            or "<div class='card muted'>No opt-out has been tracked yet.</div>")
     return style.render_page("Opt-out status", "optouts", body)
+
+
+# --- /recipes : learned recipes awaiting approval ------------------------------
+
+def _recipe_card_html(row: dict, names: dict) -> str:
+    bid = row["broker_id"]
+    recipe = row.get("recipe") or {}
+    state = row["state"]
+    tone = {"candidate": "action", "approved": "progress", "live": "success",
+            "rejected": "neutral", "unbuildable": "neutral"}.get(state, "neutral")
+    fields = "".join(
+        "<li>{} <span class='muted'>({})</span></li>".format(
+            html.escape(str(s.get("label"))), html.escape(str(s.get("source") or s.get("option_label") or "choice")))
+        for s in (recipe.get("steps") or []))
+    unmapped = row.get("unmapped") or []
+    shot = ("<p><a href='/review/{}/screenshot'>Dry-run screenshot</a></p>".format(
+        html.escape(str(row["dry_run_record"]))) if row.get("dry_run_record") and row.get("screenshot") else "")
+    buttons = ""
+    if state == "candidate" and not unmapped and row.get("dry_run_record"):
+        buttons += ("<form method='post' action='/recipes/{0}/approve' style='display:inline'>"
+                    "<button class='btn'>Approve</button></form> ").format(html.escape(bid))
+    if state in ("candidate", "approved"):
+        buttons += ("<form method='post' action='/recipes/{0}/reject' style='display:inline'>"
+                    "<button class='btn secondary'>Reject</button></form>").format(html.escape(bid))
+    if state in ("rejected", "unbuildable"):
+        buttons += ("<form method='post' action='/recipes/{0}/reopen' style='display:inline'>"
+                    "<button class='btn secondary'>Try again</button></form>").format(html.escape(bid))
+    warn = ("<p><strong>Cannot be approved yet.</strong> Unresolved: {}</p>".format(
+        html.escape("; ".join(unmapped))) if unmapped else "")
+    return ("<div class='card' id='{id}'><h2>{name} {badge}</h2><p class='muted'>{url}</p>"
+            "{reason}{warn}<ul>{fields}</ul>{shot}{buttons}</div>").format(
+        id=html.escape(bid), name=html.escape(names.get(bid) or bid),
+        badge=style.badge(state, tone), url=html.escape(str(recipe.get("url") or "")),
+        reason=("<p class='muted'>{}</p>".format(html.escape(str(row.get("reason")))) if row.get("reason") else ""),
+        warn=warn, fields=fields, shot=shot, buttons=buttons)
+
+
+@app.get("/recipes", response_class=HTMLResponse)
+def recipes_page(cfg: Config = Depends(get_config)):
+    """Learned recipes: approve the dry-run, then the first real submit promotes it."""
+    try:
+        names = {b["id"]: b.get("name") for b in brokers_mod.load_brokers(cfg.brokers_path)}
+    except (OSError, ValueError):
+        names = {}
+    rows = recipe_store_mod.RecipeStore(recipe_store_mod.store_path(cfg)).list()
+    order = {"candidate": 0, "approved": 1, "live": 2, "rejected": 3, "unbuildable": 4}
+    rows.sort(key=lambda r: (order.get(r["state"], 9), r["broker_id"]))
+    body = """
+<div class="page-head"><h1>Learned recipes</h1></div>
+<p class="muted">For brokers nobody has transcribed, broker-guard reads the real
+form, maps its fields (the local model only ever sees field labels) and fills it
+as a dry run. Nothing is sent until you approve a recipe here <em>and</em> real
+submission is on; the first confirmed submission makes it permanent.</p>
+{cards}
+""".format(cards="".join(_recipe_card_html(r, names) for r in rows)
+           or "<div class='card muted'>Nothing learned yet. Turn on "
+              "&quot;Learn recipes for unmapped brokers&quot; in Settings.</div>")
+    return style.render_page("Learned recipes", "recipes", body)
+
+
+def _recipe_action(broker_id: str, new_state: str, cfg: Config):
+    store = recipe_store_mod.RecipeStore(recipe_store_mod.store_path(cfg))
+    entry = store.get(broker_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="no such recipe")
+    if new_state == recipe_store_mod.APPROVED and (
+            entry.get("unmapped") or not entry.get("dry_run_record")):
+        raise HTTPException(status_code=409,
+                            detail="needs a clean dry run with nothing unresolved first")
+    if new_state == recipe_store_mod.CANDIDATE and entry.get("state") == recipe_store_mod.UNBUILDABLE:
+        store.forget(broker_id)
+        return RedirectResponse(url="/recipes", status_code=303)
+    if not store.transition(broker_id, new_state, now=_utcnow_iso()):
+        raise HTTPException(status_code=409, detail="not in a state that allows that")
+    recipe_store_mod.register_all(store)
+    return RedirectResponse(url="/recipes", status_code=303)
+
+
+@app.post("/recipes/{broker_id}/approve")
+def recipes_approve(broker_id: str, cfg: Config = Depends(get_config)):
+    return _recipe_action(broker_id, recipe_store_mod.APPROVED, cfg)
+
+
+@app.post("/recipes/{broker_id}/reject")
+def recipes_reject(broker_id: str, cfg: Config = Depends(get_config)):
+    return _recipe_action(broker_id, recipe_store_mod.REJECTED, cfg)
+
+
+@app.post("/recipes/{broker_id}/reopen")
+def recipes_reopen(broker_id: str, cfg: Config = Depends(get_config)):
+    return _recipe_action(broker_id, recipe_store_mod.CANDIDATE, cfg)
 
 
 def _optout_action(identity_key: str, broker_id: str, fn_name: str, cfg: Config):

@@ -614,6 +614,157 @@ def _optout_store(store, cfg):
     return optouts_mod.OptoutStore(conn), conn
 
 
+def _register_learned(cfg) -> list:
+    """Make approved/live learned recipes part of the allow-list (best effort)."""
+    try:
+        from broker_guard import recipe_store
+
+        return recipe_store.register_all(recipe_store.RecipeStore(recipe_store.store_path(cfg)))
+    except Exception as exc:
+        log.warning("learned recipes unavailable", extra={"error": type(exc).__name__})
+        return []
+
+
+def run_assisted_pass(identities: list, brokers: list, cfg, notifier=None, now=None,
+                      label_mapper=None, submitter=None) -> dict:
+    """Learn candidate recipes for a few unmapped brokers, dry-run them, ask Penn.
+
+    Gated on ``assist_enabled`` AND ``optout_submit_enabled`` AND browser
+    checks. Per pass it handles at most ``assist_batch`` brokers from
+    ``OPTOUT_UNDECIDED`` that have an opt-out URL and no stored entry. For
+    each: read the real form, build a candidate, DRY-RUN fill it with the
+    first identity (never submitted; ``submit_optout`` refuses a candidate
+    that is not a dry run), and push "review this recipe" to ntfy. Nothing
+    becomes live without approval on /recipes plus one confirmed real submit.
+
+    Returns ``{'skipped': reason}`` or counts.
+    """
+    from broker_guard import assisted, recipe_store
+    from broker_guard import optout_forms as forms
+    from broker_guard import optout_submit as submit_mod
+
+    if not getattr(cfg, "assist_enabled", False):
+        return {"skipped": "assist disabled"}
+    if not (getattr(cfg, "optout_submit_enabled", False) and getattr(cfg, "playwright_enabled", False)):
+        return {"skipped": "needs browser checks and opt-out submission enabled"}
+    if not identities:
+        return {"skipped": "no identity"}
+    now = now or utcnow_iso()
+    store = recipe_store.RecipeStore(recipe_store.store_path(cfg))
+    _register_learned(cfg)
+    known = {r["broker_id"] for r in store.list()}
+    batch = []
+    for broker in brokers or []:
+        bid = broker.get("id")
+        if (bid in forms.OPTOUT_UNDECIDED and bid not in forms.RECIPES and bid not in known
+                and (broker.get("optout_url") or broker.get("url"))):
+            batch.append(broker)
+        if len(batch) >= max(1, int(getattr(cfg, "assist_batch", 3))):
+            break
+    counts = {"tried": 0, "candidates": 0, "unbuildable": 0, "dry_runs": 0, "errors": 0}
+    if not batch:
+        return counts
+
+    llm_url = getattr(cfg, "assist_llm_url", None) or getattr(cfg, "captcha_vision_url", None)
+    if label_mapper is None and llm_url:
+        label_mapper = assisted.LlmLabelMapper(
+            llm_url, model=getattr(cfg, "assist_llm_model", "qwen3-vl:8b"))
+
+    def work():
+        sub = submitter
+        owned = sub is None
+        if owned:
+            sub = submit_mod.OptOutSubmitter(
+                timeout_ms=getattr(cfg, "playwright_timeout_ms", 30000),
+                headless=getattr(cfg, "playwright_headless", True),
+                stealth=getattr(cfg, "browser_stealth", "") or "",
+                profile_dir=getattr(cfg, "browser_profile_dir", None) or None,
+                user_agent=getattr(cfg, "browser_user_agent", None) or None)
+            sub.start()
+        try:
+            for broker in batch:
+                counts["tried"] += 1
+                ctx = page = None
+                try:
+                    ctx, page = sub.new_page()
+                    result = assisted.assist_broker(page, broker, label_mapper=label_mapper)
+                except Exception as exc:
+                    counts["errors"] += 1
+                    log.warning("assisted read failed", extra={
+                        "broker_id": broker.get("id"), "error": type(exc).__name__})
+                    continue
+                finally:
+                    for obj in (page, ctx):
+                        try:
+                            if obj is not None:
+                                obj.close()
+                        except Exception:
+                            pass
+                if result.get("status") != "candidate":
+                    store.mark_unbuildable(broker["id"], result.get("reason") or result.get("status"), now)
+                    counts["unbuildable"] += 1
+                    continue
+                recipe = result["recipe"]
+                store.add_candidate(recipe, platform=result.get("platform"),
+                                    unmapped=list(result.get("unmapped") or []) + list(result.get("problems") or []),
+                                    now=now)
+                counts["candidates"] += 1
+                if not result.get("ok"):
+                    continue
+                try:
+                    record = submit_mod.submit_optout(
+                        recipe, identities[0], cfg, submitter=sub, dry_run=True,
+                        allow_candidate=True)
+                except Exception as exc:
+                    counts["errors"] += 1
+                    log.warning("assisted dry run failed", extra={
+                        "broker_id": broker.get("id"), "error": type(exc).__name__})
+                    continue
+                store.set_dry_run(broker["id"], record.get("id"), record.get("screenshot"))
+                counts["dry_runs"] += 1
+                if notifier is not None:
+                    base = (getattr(cfg, "public_base_url", None) or "").rstrip("/")
+                    notifier.send({
+                        "title": "Review a learned opt-out recipe",
+                        "message": "{} was learned from its live form and dry-run filled. "
+                                   "Look at the screenshot and approve or reject it.".format(
+                                       broker.get("name") or broker["id"]),
+                        "ntfy": {"priority": 3, "tags": ["mag"],
+                                 **({"click": base + "/recipes#" + broker["id"]} if base else {})}})
+        finally:
+            if owned:
+                sub.close()
+
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        pool.submit(work).result()
+    return counts
+
+
+def run_recipe_health_pass(cfg, notifier=None, alert_sink=None, now=None, check=None) -> dict:
+    """Weekly: re-validate every recipe's page; alert on real drift. Read only."""
+    from broker_guard import recipe_check
+
+    if not getattr(cfg, "recipe_health_enabled", True) or not getattr(cfg, "playwright_enabled", False):
+        return {"skipped": "recipe health check off"}
+    _register_learned(cfg)
+    now = now or utcnow_iso()
+    run = check or (lambda: recipe_check.run_with_browser(cfg))
+    reports = run()
+    events = recipe_check.drift_events(reports, at=now)
+    if events and alert_sink is not None:
+        alert_sink({"now_iso": now, "recipe_drift": events})
+    if events and notifier is not None:
+        notifier.send({
+            "title": "Opt-out recipe broke",
+            "message": "{} recipe(s) no longer match their page: {}".format(
+                len(events), ", ".join(sorted({e.get("broker_id") or "?" for e in events}))[:300]),
+            "ntfy": {"priority": 4, "tags": ["wrench"]}})
+    return {"checked": len(reports), "drift": len(events),
+            "blocked": sum(1 for r in reports if r.get("status") in ("blocked", "transient"))}
+
+
 def run_optout_submission_pass(identities: list, cfg, store=None, notifier=None,
                                 brokers=None, now=None) -> dict:
     """Automated opt-out FORM submission pass -- the same action the /review
@@ -645,6 +796,7 @@ def run_optout_submission_pass(identities: list, cfg, store=None, notifier=None,
     from broker_guard import optout_submit as optout_submit_mod
 
     now = now or utcnow_iso()
+    _register_learned(cfg)
     ostore, owned = _optout_store(store, cfg)
     try:
         try:
@@ -858,6 +1010,8 @@ class Intervals:
     optout_seconds: int = 21600  # automated opt-out form submissions, same cadence as confirmation
     digest_seconds: int = 86400  # "awaiting your confirmation click" digest
     email_seconds: int = 21600   # opt-out email channel (batched; see run_optout_email_pass)
+    assist_seconds: int = 21600  # assisted recipe learning (small batches)
+    recipe_health_seconds: int = 604800  # weekly active re-validation of every recipe
 
 
 def _build_notifier(cfg, broker_list):
@@ -946,6 +1100,8 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
     elapsed_since_optout = intervals.optout_seconds
     elapsed_since_digest = intervals.digest_seconds
     elapsed_since_email = intervals.email_seconds
+    elapsed_since_assist = intervals.assist_seconds
+    elapsed_since_health = intervals.recipe_health_seconds
 
     # service.main()'s headless loop calls service.write_heartbeat every
     # cycle, so health.heartbeat_stale has real data to read -- this loop
@@ -1057,6 +1213,28 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
                                extra={"error": "{}: {}".format(type(exc).__name__, exc)})
             elapsed_since_email = 0
 
+        if elapsed_since_assist >= intervals.assist_seconds:
+            try:
+                live = settings_mod.effective_config(cfg)
+                run_assisted_pass(_scan_identities(), broker_list, live,
+                                  notifier=_build_notifier(live, broker_list))
+            except Exception as exc:
+                log.exception("autopilot assisted-recipe pass failed",
+                               extra={"error": type(exc).__name__})
+            elapsed_since_assist = 0
+
+        if elapsed_since_health >= intervals.recipe_health_seconds:
+            try:
+                live = settings_mod.effective_config(cfg)
+                from broker_guard.sinks import build_alert_sink
+
+                run_recipe_health_pass(live, notifier=_build_notifier(live, broker_list),
+                                       alert_sink=build_alert_sink(live))
+            except Exception as exc:
+                log.exception("autopilot recipe health pass failed",
+                               extra={"error": type(exc).__name__})
+            elapsed_since_health = 0
+
         if elapsed_since_digest >= intervals.digest_seconds:
             try:
                 live = settings_mod.effective_config(cfg)
@@ -1076,6 +1254,8 @@ def run_forever(cfg: Config, deps: AutopilotDependencies, intervals: "Intervals"
         elapsed_since_optout += tick_seconds
         elapsed_since_digest += tick_seconds
         elapsed_since_email += tick_seconds
+        elapsed_since_assist += tick_seconds
+        elapsed_since_health += tick_seconds
 
 
 def main(argv=None) -> int:  # pragma: no cover - thin CLI wrapper, exercised manually

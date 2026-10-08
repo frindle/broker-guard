@@ -2261,6 +2261,38 @@ STAGED_RECIPES: dict = {
 }
 
 
+# Promoted 2026-10-08 after tools/promote_staged.py dry-ran every staged recipe
+# with the dummy identity in a real browser (nothing submitted): these nine
+# filled cleanly, found no bot check and showed no selector drift, so they join
+# the allow-list. Still DRY RUN by default like every other recipe -- promotion
+# makes them eligible, Penn's switch makes them live. NOT promoted, with why:
+#   agrmarketingsolutions-com  Page.fill timed out (form not reachable as written)
+#   courtcasefinder-com        selector drift
+#   eyeota-com                 a checkbox would not change state
+#   findem-ai                  carries a reCAPTCHA (stays staged until the
+#                              CAPTCHA pipeline has been verified on it)
+_GENERIC_SUCCESS = ("thank you", "has been received", "successfully submitted",
+                    "request has been submitted", "we have received")
+_PROMOTED = (
+    "careerbuilder-com", "convex-com", "enigma-com", "lionsharemarketing-com",
+    "listsonline-com", "porchgroupmedia-com", "propertychecker-com",
+    "upscapital-com", "verifyrecords-com",
+)
+for _bid in _PROMOTED:
+    _r = STAGED_RECIPES.pop(_bid)
+    RECIPES[_bid] = replace(
+        _r, no_captcha_verified=True,
+        # Seven staged recipes never recorded the confirmation text (nothing was
+        # ever submitted). Generic markers; a wrong guess still lands safely:
+        # an unconfirmed submit is needs_user, and a false "submitted" is caught
+        # by the 60-day re-verification when the scan still sees the listing.
+        success_markers=_r.success_markers or _GENERIC_SUCCESS,
+        notes=_r.notes + "\n\nPROMOTED 2026-10-08: dry-run against the live page with the "
+              "dummy identity filled the form with no drift and optout_submit's generic "
+              "detection found no bot check on it (no bot check; nothing was submitted).")
+del _bid, _r
+
+
 # --- category note: FCRA-regulated background screening ----------------------
 #
 # A whole class of rows in the dataset are consumer reporting agencies doing
@@ -24393,6 +24425,29 @@ def recipe_for(broker_id: str) -> FormRecipe:
     if recipe is None:
         raise RecipeNotFound(broker_id)
     return recipe
+
+
+# Learned recipes (recipe_store.py): approved assisted recipes registered into
+# RECIPES at runtime. LEARNED records which ids came from there, so they can
+# be withdrawn again and are never confused with the hand-verified ones.
+LEARNED: set = set()
+
+
+def register_recipe(recipe: FormRecipe) -> bool:
+    """Add a learned recipe to the allow-list. A shipped recipe is never replaced."""
+    if recipe.broker_id in RECIPES and recipe.broker_id not in LEARNED:
+        return False
+    RECIPES[recipe.broker_id] = recipe
+    LEARNED.add(recipe.broker_id)
+    return True
+
+
+def unregister_recipe(broker_id: str) -> bool:
+    if broker_id in LEARNED:
+        LEARNED.discard(broker_id)
+        RECIPES.pop(broker_id, None)
+        return True
+    return False
 
 
 def supported_broker_ids() -> list[str]:

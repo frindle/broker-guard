@@ -214,6 +214,9 @@ for a setting that `/settings` can override (see above).
 | `BG_PLAYWRIGHT_HEADLESS` | `true` (compose: `false`) | `false` runs Chromium headful under Xvfb (started by `docker-entrypoint.sh`); falls back to headless if there is no display |
 | `BG_BROWSER_PROFILE_DIR` | unset (compose: `/data/browser-profile`) | persistent per-leg Chromium profiles (cookies and consent state survive restarts) |
 | `BG_BROWSER_STEALTH` | unset | `patchright` or `rebrowser`: open-source patched Playwright fork (build with `--build-arg BROWSER_STEALTH=patchright`); stock Playwright if absent |
+| `BG_ASSIST_ENABLED` / `BG_ASSIST_BATCH` | `false` / `3` | **UI** (enabled) learn candidate recipes for unmapped brokers, N per pass |
+| `BG_ASSIST_LLM_URL` / `BG_ASSIST_LLM_MODEL` | compose: Unraid Ollama / `qwen3-vl:8b` | label-mapping model (labels only) |
+| `BG_RECIPE_HEALTH_ENABLED` | `true` | **UI** weekly read-only recipe re-validation |
 | `BG_BROWSER_USER_AGENT` | unset | override the UA; leave unset so the browser reports its native one |
 | `BG_PLAYWRIGHT_TIMEOUT_MS` | `30000` | per-page timeout |
 | `BG_ERASER_ENABLED` | `false` | **UI** enable the removal engine |
@@ -520,6 +523,38 @@ follow it.
 
 Networking is plain bridge; see the commented `macvlan` block at the bottom of
 `docker-compose.yml` for where a static homelab IP would go.
+
+## Recipe coverage at scale
+
+Hand-written `FormRecipe`s cover a handful of brokers; the rest are reached by:
+
+* **Platform detection** (`platforms.py`): OneTrust, DataGrail, MineOS, TrustArc,
+  Osano, Ketch, Transcend, Securiti, Cognism and generic form builders are
+  recognised from the page, so the right cookie banner is accepted and the
+  request is known to be email-verified. No per-platform selectors are shipped:
+  an unread selector would be a fabrication.
+* **Assisted filler** (`assisted.py`, `BG_ASSIST_ENABLED`, off by default): for
+  `OPTOUT_UNDECIDED` brokers it reads the real form, maps every control to a
+  profile field (keywords first; a local model for the leftovers, which sees
+  **labels only**), never touches SSN / DOB / ID upload / hidden controls, and
+  stores a *candidate* in `/data/learned-recipes.json`. A candidate can only be
+  **dry-run** filled (`submit_optout` refuses anything else). You review the
+  screenshot on **Learned recipes** (`/recipes`) and approve; an approved recipe
+  joins the allow-list, and its first confirmed real submission promotes it to
+  `live`. A required field it cannot map blocks approval.
+* **Weekly recipe health** (`BG_RECIPE_HEALTH_ENABLED`, on, needs browser checks):
+  every recipe's page is opened (nothing typed or sent) and a selector that no
+  longer matches raises an ntfy push and a `recipe_drift` alert instead of
+  failing silently. Blocked pages are not drift.
+* **Prober fixes** in `tools/probe_broker_forms.py`: it waits for the form
+  (consent portals, React SPAs), has an opt-in `--accept-consent`, and reports
+  ARIA comboboxes with a structural path (fusion92, demyst).
+* **Staged recipes**: `tools/promote_staged.py` dry-runs each `STAGED_RECIPES`
+  entry with the dummy identity and reports pass / blocked / drift. On
+  2026-10-08 nine passed and were promoted into `RECIPES` (careerbuilder, convex,
+  enigma, lionshare, listsonline/everleads, porchgroupmedia, propertychecker,
+  upscapital, verifyrecords); four stay staged (agr-marketing: fill timeout,
+  courtcasefinder: drift, eyeota: checkbox, findem: reCAPTCHA).
 
 ## Real browser on the home IP
 

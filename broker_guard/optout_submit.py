@@ -352,6 +352,18 @@ class OptOutSubmitter:
         return context, context.new_page()
 
 
+def _promote_learned(cfg, recipe, record: dict) -> None:
+    """A learned recipe that just made a real, confirmed submission goes live."""
+    if recipe.broker_id not in optout_forms.LEARNED:
+        return
+    try:
+        from broker_guard import recipe_store
+
+        recipe_store.note_outcome(cfg, recipe.broker_id, record, now=_utcnow().isoformat())
+    except Exception as exc:  # promotion bookkeeping must never cost the audit record
+        log.warning("could not promote learned recipe", extra={"error": _safe_error(exc)})
+
+
 def _notify_drift(alert_sink, record: dict, recipe) -> None:
     """Tell the alert sink when THIS broker's form stopped matching its recipe.
 
@@ -436,7 +448,8 @@ def _wait_out_wall(page, captcha, text, title):
 
 
 def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
-                  dry_run=None, now=None, alert_sink=None, captcha=None) -> dict:
+                  dry_run=None, now=None, alert_sink=None, captcha=None,
+                  allow_candidate=False) -> dict:
     """Run one opt-out submission attempt and persist its audit record.
 
     Returns the saved record dict. NEVER raises for an ordinary failure --
@@ -454,7 +467,10 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
         raise SubmissionRefused(
             "automated opt-out submission is off (set BG_OPTOUT_SUBMIT_ENABLED, "
             "or turn it on in Settings)")
-    if not optout_forms.is_supported(recipe.broker_id):
+    if allow_candidate and dry_run is not True:
+        # An unapproved learned recipe may be filled to be PHOTOGRAPHED, never sent.
+        raise SubmissionRefused("a candidate recipe may only be dry-run")
+    if not optout_forms.is_supported(recipe.broker_id) and not allow_candidate:
         raise SubmissionRefused(
             "no verified form recipe for {!r}".format(recipe.broker_id))
     if not is_safe_url(recipe.url):
@@ -483,6 +499,7 @@ def submit_optout(recipe, identity, cfg, submitter=None, directory=None,
         """
         saved = review.save_attempt(directory, record, screenshot)
         _notify_drift(alert_sink, saved, recipe)
+        _promote_learned(cfg, recipe, saved)
         return saved
 
     resolved = optout_forms.resolve_fields(recipe, identity)
