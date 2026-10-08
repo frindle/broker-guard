@@ -317,3 +317,61 @@ def test_no_brokers_means_no_sweep_and_no_error():
                                  _Deps(searx_search=lambda q: []),
                                  progress=_progress(), sleep=lambda s: None)
     assert result.pairs == {}
+
+
+# --- error reason on /brokers ---------------------------------------------
+
+def _entry(progress, identity, broker_id):
+    return progress.snapshot(include_brokers=True)["brokers"][
+        progress_mod.entry_key(identity.identity_key, broker_id)]
+
+
+def test_a_browser_leg_failure_records_its_redacted_message_and_kind():
+    ann = _identity("Ann", "Example")
+    progress = _progress()
+
+    def page_action(check):
+        return {"error": "net::ERR_NAME_NOT_RESOLVED at https://x.invalid/search?name=Ann"}
+
+    sweep_mod.run_sweep([ann], BROKERS[:1],
+                        _Deps(searx_search=lambda q: [], page_action=page_action),
+                        progress=progress, order=BROKERS[:1], sleep=lambda s: None)
+
+    entry = _entry(progress, ann, "alpha")
+    assert entry["outcome"] == "error"
+    assert "ERR_NAME_NOT_RESOLVED" in entry["reason"]
+    assert "?name=" not in entry["reason"] and "Ann" not in entry["reason"]
+    assert entry["error_kind"] == "dns"
+
+
+def test_a_serp_only_failure_records_the_serp_reason():
+    ann = _identity("Ann", "Example")
+    progress = _progress()
+
+    def search(query):
+        raise SearxError("majority of engines unresponsive")
+
+    sweep_mod.run_sweep([ann], BROKERS[:1], _Deps(searx_search=search),
+                        progress=progress, order=BROKERS[:1], sleep=lambda s: None)
+
+    entry = _entry(progress, ann, "alpha")
+    assert entry["outcome"] == "error"
+    assert entry["reason"] == "search (SERP) check failed"
+
+
+def test_clean_and_hit_outcomes_carry_no_reason():
+    ann = _identity("Ann", "Example")
+    clean = _progress()
+    sweep_mod.run_sweep([ann], BROKERS[:1],
+                        _Deps(searx_search=lambda q: [],
+                              page_action=lambda check: {"found": False}),
+                        progress=clean, order=BROKERS[:1], sleep=lambda s: None)
+    assert _entry(clean, ann, "alpha")["outcome"] == "checked"
+    assert "reason" not in _entry(clean, ann, "alpha")
+
+    hit = _progress()
+    sweep_mod.run_sweep([ann], BROKERS[:1],
+                        _Deps(searx_search=lambda q: [{"url": "https://alpha.invalid/p/ann", "title": "Ann Example"}]),
+                        progress=hit, order=BROKERS[:1], sleep=lambda s: None)
+    assert _entry(hit, ann, "alpha")["outcome"] == "hit"
+    assert "reason" not in _entry(hit, ann, "alpha")

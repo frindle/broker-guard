@@ -258,12 +258,20 @@ def _check_pair(broker: dict, identity, deps, progress, stats: dict,
         stats["browser"][browser_outcome] = stats["browser"].get(browser_outcome, 0) + 1
 
     outcome = _display_outcome(pair, serp_outcome)
+    # WHY it errored, shown on /brokers: the browser leg's own failure message
+    # when that leg ran and failed, else it was the SERP leg.
+    reason = None
+    if outcome == "error":
+        reason = (pair.browser.get("error")
+                  if pair.browser is not None and not pair.browser["checked"]
+                  else "search (SERP) check failed")
     progress.set_identity(identity.identity_key)
     progress.record_outcome(
         pair.broker_id, outcome,
         hits=max(serp_hits, 1) if outcome == "hit" else 0,
         errors=1 if outcome == "error" else 0,
         replace=replace,
+        reason=reason,
     )
     return pair
 
