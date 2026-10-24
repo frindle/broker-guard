@@ -286,7 +286,7 @@ def _autopilot_cfg(tmp_path, store, profile_file, brokers_file):
         profile_path=profile_file, brokers_path=brokers_file,
         state_path=str(tmp_path / "state.sqlite"), log_dir=str(tmp_path / "logs"),
         alert_log_path=str(tmp_path / "alerts.jsonl"),
-        settings_path=store,
+        settings_path=store, removal_enabled=True,
     )
 
 

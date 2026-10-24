@@ -385,7 +385,7 @@ def test_scheduled_pass_runs_on_the_live_config_not_the_boot_env(monkeypatch, tm
 
     cfg = Config(profile_path=profile_file, brokers_path=brokers_file,
                  state_path=str(tmp_path / "s.sqlite"), log_dir=str(tmp_path / "logs"),
-                 settings_path=str(tmp_path / "set.json"), optout_submit_enabled=False)
+                 settings_path=str(tmp_path / "set.json"), optout_submit_enabled=False, removal_enabled=True)
     settings_mod.update_settings(cfg.settings_path, {"optout_submit_enabled": True})
     seen = []
     monkeypatch.setattr(autopilot, "run_scan_cycles", lambda *a, **k: {
