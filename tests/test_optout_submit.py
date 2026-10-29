@@ -733,7 +733,7 @@ def test_both_switches_are_ui_editable_and_survive_a_redeploy(settings_store):
 
     settings_mod.update_settings(settings_store, {"optout_submit_enabled": True})
     cfg = settings_mod.effective_config(
-        Config(settings_path=settings_store, optout_submit_enabled=False),
+        Config(settings_path=settings_store, optout_submit_enabled=False, removal_enabled=True),
         settings_store)
     assert cfg.optout_submit_enabled is True
 

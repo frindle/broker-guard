@@ -232,6 +232,7 @@ class Config:
     # acts. That is the point: neither one alone can cause a real submission.
     optout_submit_enabled: bool = False
     optout_submit_dry_run: bool = True
+    removal_enabled: bool = False
 
     # --- Opt-out by email (broker_guard/optout_email.py) ---
     #
@@ -358,6 +359,7 @@ def load_config(env=None) -> Config:
         recipe_health_enabled=_env_bool(env, "BG_RECIPE_HEALTH_ENABLED", True),
         optout_submit_enabled=_env_bool(env, "BG_OPTOUT_SUBMIT_ENABLED", False),
         optout_submit_dry_run=_env_bool(env, "BG_OPTOUT_SUBMIT_DRY_RUN", True),
+        removal_enabled=_env_bool(env, "BG_REMOVAL_ENABLED", False),
         optout_email_enabled=_env_bool(env, "BG_OPTOUT_EMAIL_ENABLED", False),
         optout_email_dry_run=_env_bool(env, "BG_OPTOUT_EMAIL_DRY_RUN", True),
         optout_email_from=_env_str(env, "BG_OPTOUT_EMAIL_FROM", ""),

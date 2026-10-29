@@ -290,6 +290,7 @@ for a setting that `/settings` can override (see above).
 | `BG_OPTOUT_EMAIL_ENABLED` / `BG_OPTOUT_EMAIL_DRY_RUN` | `false` / `true` | **UI** the email channel's two interlocks (see above) |
 | `BG_OPTOUT_EMAIL_BATCH` | `20` | brokers emailed per autopilot pass |
 | `BG_ALERT_LOG_PATH` | `$BG_LOG_DIR/alerts.jsonl` | append-only digest file |
+| `BG_REMOVAL_ENABLED` | `false` | env only. Master switch for the dormant removal code: while false, the eraser, opt-out form, opt-out email and assist switches are forced off whatever the UI settings say. broker-guard only finds listings |
 | `BG_OPTOUT_SUBMIT_ENABLED` | `false` | **UI** enable automated opt-out form submission (see below) |
 | `BG_OPTOUT_SUBMIT_DRY_RUN` | `true` | **UI** — **keep true until you have checked a screenshot**; Submit is never pressed while set |
 | `BG_CAPTCHA_ENABLED` | `false` | **UI** run the self-hosted CAPTCHA chain (see below) |

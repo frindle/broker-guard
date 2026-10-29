@@ -132,6 +132,9 @@ class SettingSpec:
     is_url: bool = False
 
 
+REMOVAL_KEYS = ("eraser_enabled", "optout_submit_enabled",
+                       "optout_email_enabled", "assist_enabled")
+
 SETTING_SPECS = (
     SettingSpec(
         key="playwright_enabled", env="BG_PLAYWRIGHT_ENABLED", kind="bool",
@@ -600,6 +603,9 @@ def effective_config(cfg, path: str | None = None):
     for key, value in stored.items():
         spec = SPEC_BY_KEY[key]
         overlay[key] = to_config_value(spec, value)
+    if not cfg.removal_enabled:
+        for key in REMOVAL_KEYS:
+            overlay[key] = False
     return dataclasses.replace(cfg, **overlay)
 
 

@@ -245,6 +245,9 @@ services:
       # Also requires BG_PLAYWRIGHT_ENABLED and a browser in the image
       # (INSTALL_BROWSERS=true, the default). Only brokers with a
       # hand-verified recipe in broker_guard/optout_forms.py are eligible.
+      # Master switch: while false (default) every removal path below is forced
+      # off in the effective config, whatever the dashboard settings say.
+      BG_REMOVAL_ENABLED: "${BG_REMOVAL_ENABLED:-false}"
       BG_OPTOUT_SUBMIT_ENABLED: "${BG_OPTOUT_SUBMIT_ENABLED:-false}"
       BG_OPTOUT_SUBMIT_DRY_RUN: "${BG_OPTOUT_SUBMIT_DRY_RUN:-true}"
 
