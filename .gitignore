@@ -60,3 +60,7 @@ letters/
 complaints/
 audit-log.jsonl
 escalation-rules.json
+graphify-out/
+.DS_Store
+*.log
+.claude/
