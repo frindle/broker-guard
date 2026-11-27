@@ -64,3 +64,6 @@ graphify-out/
 .DS_Store
 *.log
 .claude/
+
+# update.sh: commit the image was last built from
+.last-built-sha
